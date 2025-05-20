@@ -9,7 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  firebase_auth: ^4.17.4
   firebase_core: ^2.1.1
+  google_sign_in: ^6.3.0
 
 dev_dependencies:
   flutter_test:
