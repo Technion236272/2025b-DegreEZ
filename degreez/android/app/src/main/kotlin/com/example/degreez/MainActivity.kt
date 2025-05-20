@@ -1,4 +1,4 @@
-package com.technion.android.degreez
+package com.technion.android.degreEZ
 
 import io.flutter.embedding.android.FlutterActivity
 

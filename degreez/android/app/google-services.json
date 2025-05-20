@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "557089994187",
+    "project_id": "degreez-fbec6",
+    "storage_bucket": "degreez-fbec6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557089994187:android:ca0bf2a0953eaaff43f24e",
+        "android_client_info": {
+          "package_name": "com.technion.android.degreEZ"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8iN4-UUl_Jt5aD8idU3orbjxu3EjxeNc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
