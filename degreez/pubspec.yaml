@@ -15,7 +15,8 @@ dependencies:
   provider: ^6.1.1
   flutter_dotenv: ^5.2.1
   cloud_firestore: ^4.17.5
-
+  http: ^1.1.0
+  shared_preferences: ^2.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

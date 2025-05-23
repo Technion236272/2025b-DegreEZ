@@ -1,9 +1,8 @@
-// providers/student_notifier.dart (Enhanced)
+// providers/student_notifier.dart (Enhanced with CourseService integration)
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../models/student_model.dart';
+import '../services/course_service.dart';
 
 class StudentNotifier with ChangeNotifier {
   // Student data
@@ -13,13 +12,43 @@ class StudentNotifier with ChangeNotifier {
 
   // Student's courses with details
   Map<String, List<StudentCourse>> _coursesBySemester = {};
-  Map<String, CourseDetails> _courseDetailsCache = {};
+  Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
+  
+  // Current semester info (automatically fetched)
+  SemesterInfo? _currentSemester;
 
   // Getters
   StudentModel? get student => _student;
   bool get isLoading => _isLoading;
   String get error => _error;
   Map<String, List<StudentCourse>> get coursesBySemester => _coursesBySemester;
+  SemesterInfo? get currentSemester => _currentSemester;
+
+  // Initialize and fetch the latest semester
+  Future<void> initialize() async {
+    await _fetchLatestSemester();
+  }
+
+  // Fetch the latest available semester from the repository
+  Future<void> _fetchLatestSemester() async {
+    try {
+      final semesters = await CourseService.getAvailableSemesters();
+      if (semesters.isNotEmpty) {
+        // Get the most recent semester (they should be sorted)
+        _currentSemester = semesters.first;
+        debugPrint('Latest semester: ${_currentSemester!.semesterName}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching latest semester: $e');
+      // Fallback to a default semester if API fails
+      _currentSemester = SemesterInfo(
+        year: 2024,
+        semester: 200, // Winter
+        startDate: '',
+        endDate: '',
+      );
+    }
+  }
 
   // Fetch student data from Firestore
   Future<void> fetchStudentData(String userId) async {
@@ -28,6 +57,11 @@ class StudentNotifier with ChangeNotifier {
     notifyListeners();
 
     try {
+      // Initialize semester info if not already done
+      if (_currentSemester == null) {
+        await initialize();
+      }
+
       final docSnapshot = await FirebaseFirestore.instance
           .collection('Students')
           .doc(userId)
@@ -78,7 +112,7 @@ class StudentNotifier with ChangeNotifier {
           final courseData = courseDoc.data();
           final studentCourse = StudentCourse.fromFirestore(courseData);
           
-          // Fetch course details if not cached
+          // Fetch course details using CourseService
           await _fetchCourseDetailsIfNeeded(studentCourse.courseId);
           
           courses.add(studentCourse);
@@ -86,43 +120,50 @@ class StudentNotifier with ChangeNotifier {
 
         _coursesBySemester[semesterKey] = courses;
       }
+      
+      notifyListeners();
     } catch (e) {
       debugPrint('Error loading student courses: $e');
     }
   }
 
-  // Fetch course details from SAP API only when needed
+  // Fetch course details from SAP API using CourseService
   Future<void> _fetchCourseDetailsIfNeeded(String courseId) async {
     if (_courseDetailsCache.containsKey(courseId)) {
       return; // Already cached
     }
 
+    if (_currentSemester == null) {
+      await _fetchLatestSemester();
+    }
+
+    if (_currentSemester == null) {
+      debugPrint('No semester info available');
+      return;
+    }
+
     try {
-      // Current semester - you might make this dynamic
-      const year = '2024';
-      const semester = '200'; // Winter
+      debugPrint('Fetching course details for $courseId from ${_currentSemester!.semesterName}');
       
-      final url = 'https://michael-maltsev.github.io/technion-sap-info-fetcher/courses_$year-$semester.json';
-      final response = await http.get(Uri.parse(url));
+      final courseDetails = await CourseService.getCourseDetails(
+        _currentSemester!.year,
+        _currentSemester!.semester,
+        courseId,
+      );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> coursesJson = json.decode(response.body);
-        
-        final courseData = coursesJson.firstWhere(
-          (course) => course['general']['מספר מקצוע'] == courseId,
-          orElse: () => null,
-        );
-
-        if (courseData != null) {
-          _courseDetailsCache[courseId] = CourseDetails.fromSapJson(courseData);
-        }
+      if (courseDetails != null) {
+        _courseDetailsCache[courseId] = courseDetails;
+        debugPrint('Successfully cached details for course $courseId');
+        notifyListeners(); // Notify listeners to update UI
+      } else {
+        debugPrint('Course $courseId not found in ${_currentSemester!.semesterName}');
       }
     } catch (e) {
       debugPrint('Error fetching course details for $courseId: $e');
     }
   }
 
-  // Get course with details
+  // Get course with details (updated return type)
   StudentCourseWithDetails? getCourseWithDetails(String semesterKey, String courseId) {
     final studentCourse = _coursesBySemester[semesterKey]?.firstWhere(
       (course) => course.courseId == courseId,
@@ -139,7 +180,7 @@ class StudentNotifier with ChangeNotifier {
     );
   }
 
-  // Add course to student's semester
+  // Add course to student's semester (with automatic detail fetching)
   Future<bool> addCourseToSemester(String semesterKey, StudentCourse course) async {
     if (_student == null) return false;
 
@@ -177,7 +218,7 @@ class StudentNotifier with ChangeNotifier {
       // Update local state
       _coursesBySemester.putIfAbsent(semesterKey, () => []).add(course);
       
-      // Fetch course details
+      // Fetch course details immediately
       await _fetchCourseDetailsIfNeeded(course.courseId);
       
       return true;
@@ -191,14 +232,37 @@ class StudentNotifier with ChangeNotifier {
     }
   }
 
+  // Search for courses in the current semester
+  Future<List<CourseSearchResult>> searchCourses({
+    String? courseId,
+    String? courseName,
+    String? faculty,
+  }) async {
+    if (_currentSemester == null) {
+      await _fetchLatestSemester();
+    }
+
+    if (_currentSemester == null) {
+      return [];
+    }
+
+    return await CourseService.searchCourses(
+      year: _currentSemester!.year,
+      semester: _currentSemester!.semester,
+      courseId: courseId,
+      courseName: courseName,
+      faculty: faculty,
+    );
+  }
+
   // Helper method to calculate semester number
   int _calculateSemesterNumber(String semesterKey) {
-    // This is a simple implementation - you might want to make it more sophisticated
-    // based on your semester naming convention
     if (semesterKey.toLowerCase().contains('winter')) {
-      return 1; // Or extract year and calculate properly
+      return 1;
     } else if (semesterKey.toLowerCase().contains('spring')) {
       return 2;
+    } else if (semesterKey.toLowerCase().contains('summer')) {
+      return 3;
     }
     return 1; // Default
   }
@@ -249,6 +313,12 @@ class StudentNotifier with ChangeNotifier {
           .set(student.toFirestore());
       
       _student = student;
+      
+      // Initialize semester info after creating student
+      if (_currentSemester == null) {
+        await initialize();
+      }
+      
       return true;
     } catch (e) {
       _error = 'Error creating student: $e';
@@ -267,11 +337,22 @@ class StudentNotifier with ChangeNotifier {
     for (final course in courses) {
       final details = _courseDetailsCache[course.courseId];
       if (details != null) {
-        total += double.tryParse(details.points) ?? 0.0;
+        total += details.creditPoints;
       }
     }
     
     return total;
+  }
+
+  // Check if course details are loading
+  bool isCourseDetailsLoading(String courseId) {
+    return !_courseDetailsCache.containsKey(courseId) && _currentSemester != null;
+  }
+
+  // Force refresh course details (useful for retry)
+  Future<void> refreshCourseDetails(String courseId) async {
+    _courseDetailsCache.remove(courseId);
+    await _fetchCourseDetailsIfNeeded(courseId);
   }
 
   // Clear all data (for sign out)
@@ -279,6 +360,7 @@ class StudentNotifier with ChangeNotifier {
     _student = null;
     _coursesBySemester.clear();
     _courseDetailsCache.clear();
+    _currentSemester = null;
     _error = '';
     notifyListeners();
   }
@@ -331,73 +413,9 @@ class StudentCourse {
   }
 }
 
-class CourseDetails {
-  final String courseNumber;
-  final String name;
-  final String syllabus;
-  final String faculty;
-  final String points;
-  final String prerequisites;
-  final List<ScheduleEntry> schedule;
-
-  CourseDetails({
-    required this.courseNumber,
-    required this.name,
-    required this.syllabus,
-    required this.faculty,
-    required this.points,
-    required this.prerequisites,
-    required this.schedule,
-  });
-
-  factory CourseDetails.fromSapJson(Map<String, dynamic> json) {
-    final general = json['general'] as Map<String, dynamic>;
-    final scheduleList = json['schedule'] as List<dynamic>;
-    
-    return CourseDetails(
-      courseNumber: general['מספר מקצוע'] ?? '',
-      name: general['שם מקצוע'] ?? '',
-      syllabus: general['סילבוס'] ?? '',
-      faculty: general['פקולטה'] ?? '',
-      points: general['נקודות'] ?? '',
-      prerequisites: general['מקצועות קדם'] ?? '',
-      schedule: scheduleList.map((s) => ScheduleEntry.fromJson(s)).toList(),
-    );
-  }
-}
-
-class ScheduleEntry {
-  final int group;
-  final String type;
-  final String day;
-  final String time;
-  final String building;
-  final String staff;
-
-  ScheduleEntry({
-    required this.group,
-    required this.type,
-    required this.day,
-    required this.time,
-    required this.building,
-    required this.staff,
-  });
-
-  factory ScheduleEntry.fromJson(Map<String, dynamic> json) {
-    return ScheduleEntry(
-      group: json['קבוצה'] ?? 0,
-      type: json['סוג'] ?? '',
-      day: json['יום'] ?? '',
-      time: json['שעה'] ?? '',
-      building: json['בניין'] ?? '',
-      staff: json['מרצה/מתרגל'] ?? '',
-    );
-  }
-}
-
 class StudentCourseWithDetails {
   final StudentCourse studentCourse;
-  final CourseDetails? courseDetails;
+  final EnhancedCourseDetails? courseDetails;
 
   StudentCourseWithDetails({
     required this.studentCourse,

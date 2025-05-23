@@ -12,28 +12,24 @@ import 'pages/home_page.dart';
 import 'pages/student_courses_page.dart';
 
 Future<void> main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env"); // Load .env
   
-
   // Initialize Firebase
   // Check if Firebase is already initialized
   try {
     Firebase.app();
   } catch (e) {
-    debugPrint("Firebase app is not  initialized");
+    debugPrint("Firebase app is not initialized");
     // Initialize Firebase only if no app exists
     await Firebase.initializeApp(
-       name: "DegreEZ",
+      name: "DegreEZ",
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
   
   runApp(const MyApp());
 }
-
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -43,20 +39,25 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LogInNotifier()),
-        ChangeNotifierProvider(create: (_) => StudentNotifier()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final studentNotifier = StudentNotifier();
+            // Initialize the semester info when the provider is created
+            studentNotifier.initialize();
+            return studentNotifier;
+          }
+        ),
       ],
       child: MaterialApp(
         title: 'DegreEZ',
         theme: ThemeData.light(),
-        // home: const SignInPage(),
         initialRoute: '/',
         routes: {
           '/': (context) => SignInPage(),
           '/home_page': (context) => HomePage(),
           '/courses': (context) => const StudentCoursesPage(),
         }
-    )
+      )
     );
-    
   }
 }
