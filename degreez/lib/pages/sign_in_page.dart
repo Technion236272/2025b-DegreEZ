@@ -60,7 +60,7 @@ class SignInPage extends StatelessWidget {
                       minWidth: 300,
                       maxWidth: 400,
                     ),
-                    child: loginNotifier.isSignedIn
+                    child: loginNotifier.isSignedIn == true
                         // const UserInfoWidget()  will be replaced with a rerouting to the home page
                         // when the user is signed in, we will use the Navigator to push the home page
                         // Navigator.pushNamed(context, '/home_page');

@@ -9,6 +9,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/login_notifier.dart';
 import 'providers/student_notifier.dart';
 import 'pages/home_page.dart';
+import 'pages/student_courses_page.dart';
+
 Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => SignInPage(),
           '/home_page': (context) => HomePage(),
+          '/courses': (context) => const StudentCoursesPage(),
         }
     )
     );
