@@ -1,9 +1,11 @@
 // providers/student_notifier.dart (Enhanced with CourseService integration)
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
-
+import 'package:calendar_view/calendar_view.dart';
+import '../widgets/course_calendar_panel.dart';
 class StudentNotifier with ChangeNotifier {
   // Student data
   StudentModel? _student;
@@ -354,6 +356,95 @@ class StudentNotifier with ChangeNotifier {
     _courseDetailsCache.remove(courseId);
     await _fetchCourseDetailsIfNeeded(courseId);
   }
+// In student_notifier.dart
+List<CalendarEventData> getCalendarEvents() {
+  final events = <CalendarEventData>[];
+  
+  for (final semesterEntry in _coursesBySemester.entries) {
+    final courses = semesterEntry.value;
+    
+    for (final course in courses) {
+      final courseDetails = _courseDetailsCache[course.courseId];
+      
+      if (courseDetails != null) {
+        for (final schedule in courseDetails.schedule) {
+          // Parse schedule and create calendar events
+          final event = _createCalendarEventFromSchedule(course, courseDetails, schedule);
+          if (event != null) events.add(event);
+        }
+      }
+    }
+  }
+  
+  return events;
+}
+
+CalendarEventData? _createCalendarEventFromSchedule(
+  StudentCourse course, 
+  EnhancedCourseDetails details, 
+  ScheduleEntry schedule
+) {
+  // Parse Hebrew day names and times to create calendar events
+  final dayMap = {
+    'א': DateTime.sunday,
+    'ב': DateTime.monday, 
+    'ג': DateTime.tuesday,
+    'ד': DateTime.wednesday,
+    'ה': DateTime.thursday,
+    'ו': DateTime.friday,
+    'ש': DateTime.saturday,
+  };
+  
+  final dayNum = dayMap[schedule.day];
+  if (dayNum == null) return null;
+  
+  // Parse time (format: "14:30 - 16:30")
+  final timeParts = schedule.time.split(' - ');
+  if (timeParts.length != 2) return null;
+  
+  final startTime = _parseTime(timeParts[0]);
+  final endTime = _parseTime(timeParts[1]);
+  if (startTime == null || endTime == null) return null;
+  
+  // Create event for next occurrence of this day
+  final now = DateTime.now();
+  final daysUntilTarget = (dayNum - now.weekday) % 7;
+  final targetDate = now.add(Duration(days: daysUntilTarget));
+  
+  return CalendarEventData(
+    date: targetDate,
+    title: details.name,
+    description: '${course.courseId} - ${schedule.fullLocation}',
+    startTime: DateTime(
+      targetDate.year,
+      targetDate.month, 
+      targetDate.day,
+      startTime.hour,
+      startTime.minute,
+    ),
+    endTime: DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day, 
+      endTime.hour,
+      endTime.minute,
+    ),
+    color: Colors.blue, // Customize color as needed //!!??
+  );
+}
+
+DateTime? _parseTime(String timeStr) {
+  final parts = timeStr.split(':');
+  if (parts.length != 2) return null;
+  
+  final hour = int.tryParse(parts[0]);
+  final minute = int.tryParse(parts[1]);
+  
+  if (hour == null || minute == null) return null;
+  
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day, hour, minute);
+}
 
   // Clear all data (for sign out)
   void clear() {

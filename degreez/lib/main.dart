@@ -1,6 +1,8 @@
+// lib/main.dart - Updated to include CalendarControllerProvider
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:calendar_view/calendar_view.dart'; // Add this import
 
 import 'services/firebase_options.dart';
 import 'pages/sign_in_page.dart';
@@ -10,6 +12,7 @@ import 'providers/login_notifier.dart';
 import 'providers/student_notifier.dart';
 import 'pages/home_page.dart';
 import 'pages/student_courses_page.dart';
+import 'pages/home_page.dart'; // Your new calendar page
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,16 +51,20 @@ class MyApp extends StatelessWidget {
           }
         ),
       ],
-      child: MaterialApp(
-        title: 'DegreEZ',
-        theme: ThemeData.light(),
-        initialRoute: '/',
-        routes: {
-          '/': (context) => SignInPage(),
-          '/home_page': (context) => HomePage(),
-          '/courses': (context) => const StudentCoursesPage(),
-        }
-      )
+      child: CalendarControllerProvider( // 🎯 This is the key addition!
+        controller: EventController(),
+        child: MaterialApp(
+          title: 'DegreEZ',
+          theme: ThemeData.light(),
+          initialRoute: '/',
+          routes: {
+            '/': (context) => SignInPage(),
+            '/home_page': (context) => CalendarHomePage(), // Keep for backward compatibility
+            '/calendar_home': (context) => CalendarHomePage(), // New calendar home
+            '/courses': (context) => const StudentCoursesPage(),
+          }
+        ),
+      ),
     );
   }
 }

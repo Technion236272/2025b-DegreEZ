@@ -59,7 +59,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
     // If student data exists, navigate to home page
     if (student != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(context, '/home_page', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/calendar_home', (route) => false);
       });
       return const Center(child: CircularProgressIndicator());
     }
