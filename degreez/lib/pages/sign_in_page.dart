@@ -8,7 +8,7 @@ import '../widgets/user_info_widget.dart';
 /// Main sign-in page that shows either sign-in button or user info based on auth state
 class SignInPage extends StatelessWidget {
   const SignInPage({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

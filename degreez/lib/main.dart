@@ -13,12 +13,7 @@ Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env"); // Load .env
-  MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => StudentNotifier()),
-      ChangeNotifierProvider(create: (_) => LogInNotifier()),
-    ],
-  );
+  
 
   // Initialize Firebase
   // Check if Firebase is already initialized
@@ -43,7 +38,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LogInNotifier()),
+        ChangeNotifierProvider(create: (_) => StudentNotifier()),
+      ],
+      child: MaterialApp(
         title: 'DegreEZ',
         theme: ThemeData.light(),
         // home: const SignInPage(),
@@ -52,6 +52,7 @@ class MyApp extends StatelessWidget {
           '/': (context) => SignInPage(),
           '/home_page': (context) => HomePage(),
         }
+    )
     );
     
   }
