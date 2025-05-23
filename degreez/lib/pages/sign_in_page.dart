@@ -13,7 +13,7 @@ class SignInPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Sign-In Demo'),
+        title: const Text('Google Sign-In'),
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
@@ -40,6 +40,11 @@ class SignInPage extends StatelessWidget {
           }
 
           // Show different UI based on authentication state
+          if (loginNotifier.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -56,8 +61,12 @@ class SignInPage extends StatelessWidget {
                       maxWidth: 400,
                     ),
                     child: loginNotifier.isSignedIn
-                        // User is signed in, show user info and sign out button
-                        ? const UserInfoWidget()
+                        // const UserInfoWidget()  will be replaced with a rerouting to the home page
+                        // when the user is signed in, we will use the Navigator to push the home page
+                        // Navigator.pushNamed(context, '/home_page');
+                        // which will add the data of the user to a student model
+                        // and then we will use the provider to set the data of the user
+                        ? const UserInfoWidget() 
                         // User is not signed in, show sign-in button
                         : Column(
                             mainAxisSize: MainAxisSize.min,

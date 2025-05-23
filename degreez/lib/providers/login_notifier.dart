@@ -24,7 +24,7 @@ class LogInNotifier extends ChangeNotifier {
     // Listen for authentication state changes
     _auth.authStateChanges().listen((User? user) {
       _user = user;
-      print("Auth state changed: User is ${user != null ? 'signed in' : 'signed out'}");
+      debugPrint("Auth state changed: User is ${user != null ? 'signed in' : 'signed out'}");
       notifyListeners();
     });
   }
@@ -32,7 +32,7 @@ class LogInNotifier extends ChangeNotifier {
   // Initialize user on startup
   void _initUser() {
     _user = _auth.currentUser;
-    print("Init user: ${_user?.displayName ?? 'No user'}");
+    debugPrint("Init user: ${_user?.displayName ?? 'No user'}");
   }
   
   /// Sign in with Google account
@@ -41,24 +41,24 @@ class LogInNotifier extends ChangeNotifier {
     _errorMessage = null;
     
     try {
-      print("Starting Google Sign-In process");
+      debugPrint("Starting Google Sign-In process");
       
       // Begin interactive sign-in process
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       // Abort if sign in was unsuccessful or user canceled
       if (googleUser == null) {
-        print("Google Sign-In canceled by user");
+        debugPrint("Google Sign-In canceled by user");
         _setLoading(false);
         return null;
       }
       
-      print("Google Sign-In successful: ${googleUser.email}");
+      debugPrint("Google Sign-In successful: ${googleUser.email}");
       
       // Obtain auth details from request
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       
-      print("Got Google authentication tokens");
+      debugPrint("Got Google authentication tokens");
       
       // Create new credential for Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
@@ -67,13 +67,13 @@ class LogInNotifier extends ChangeNotifier {
       );
       
       // Sign in to Firebase with the Google OAuth credential
-      print("Signing in to Firebase with Google credential");
+      debugPrint("Signing in to Firebase with Google credential");
       final UserCredential userCredential = 
           await _auth.signInWithCredential(credential);
       
       // Update the user
       _user = userCredential.user;
-      print("Firebase sign-in successful: ${_user?.displayName ?? _user?.email ?? 'Unknown user'}");
+      debugPrint("Firebase sign-in successful: ${_user?.displayName ?? _user?.email ?? 'Unknown user'}");
       
       _setLoading(false);
       notifyListeners();
@@ -81,7 +81,7 @@ class LogInNotifier extends ChangeNotifier {
       return _user;
       
     } catch (e) {
-      print("Error in signInWithGoogle: $e");
+      debugPrint("Error in signInWithGoogle: $e");
       _errorMessage = e.toString();
       _setLoading(false);
       notifyListeners();
@@ -94,20 +94,20 @@ class LogInNotifier extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      print("Signing out");
+      debugPrint("Signing out");
       await Future.wait([
         _auth.signOut(),
         _googleSignIn.signOut(),
       ]);
       
       _user = null;
-      print("Sign out complete");
+      debugPrint("Sign out complete");
       
       _setLoading(false);
       notifyListeners();
       
     } catch (e) {
-      print("Error signing out: $e");
+      debugPrint("Error signing out: $e");
       _errorMessage = e.toString();
       _setLoading(false);
       notifyListeners();

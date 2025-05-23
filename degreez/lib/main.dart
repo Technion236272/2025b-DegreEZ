@@ -3,43 +3,56 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 import 'services/firebase_options.dart';
-import 'providers/login_notifier.dart';
-import 'screens/sign_in_page.dart';
+import 'pages/sign_in_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
-  // Ensure Flutter binding is initialized
+import 'providers/login_notifier.dart';
+import 'providers/student_notifier.dart';
+import 'pages/home_page.dart';
+Future<void> main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Check if Firebase app is already initialized
+  await dotenv.load(fileName: ".env"); // Load .env
+  MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => StudentNotifier()),
+      ChangeNotifierProvider(create: (_) => LogInNotifier()),
+    ],
+  );
+
+  // Initialize Firebase
+  // Check if Firebase is already initialized
   try {
     Firebase.app();
   } catch (e) {
+    debugPrint("Firebase app is not  initialized");
     // Initialize Firebase only if no app exists
     await Firebase.initializeApp(
-       name: "dev project",
+       name: "DegreEZ",
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
   
-  // Run the app
   runApp(const MyApp());
 }
+
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LogInNotifier(),
-      child: MaterialApp(
-        title: 'Google Sign-In Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
-        home: const SignInPage(),
-      ),
+    return  MaterialApp(
+        title: 'DegreEZ',
+        theme: ThemeData.light(),
+        // home: const SignInPage(),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => SignInPage(),
+          '/home_page': (context) => HomePage(),
+        }
     );
+    
   }
 }

@@ -25,14 +25,9 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
       child: loginNotifier.isLoading
           ? const CircularProgressIndicator()
           : OutlinedButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.white),
-                shape: MaterialStateProperty.all(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(40),
-                  ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white, 
                 ),
-              ),
               onPressed: () async {
                 try {
                   // Attempt to sign in with Google
