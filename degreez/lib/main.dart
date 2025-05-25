@@ -3,12 +3,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
 import 'services/firebase_options.dart';
-import 'pages/sign_in_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'providers/login_notifier.dart';
 import 'providers/student_notifier.dart';
 import 'pages/home_page.dart';
+import 'pages/login_page.dart';
+
 Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,11 +46,26 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'DegreEZ',
-        theme: ThemeData.light(),
+//         theme: ThemeData.light().copyWith(
+//   scaffoldBackgroundColor: Colors.white,
+//   canvasColor: Colors.white,
+//   cardColor: Colors.white,
+//   colorScheme: const ColorScheme.dark(
+//     surface: Colors.white,
+//   ),
+// ),
+        theme: ThemeData.dark().copyWith(
+  scaffoldBackgroundColor: Colors.black,
+  canvasColor: Colors.black,
+  cardColor: Colors.black,
+  colorScheme: const ColorScheme.dark(
+    surface: Colors.black,
+  ),
+),
         // home: const SignInPage(),
         initialRoute: '/',
         routes: {
-          '/': (context) => SignInPage(),
+          '/': (context) => LoginPage(),
           '/home_page': (context) => HomePage(),
         }
     )

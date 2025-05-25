@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
 import '../providers/student_notifier.dart';
 import '../models/student_model.dart';
-import '../pages/home_page.dart';
 
 class UserInfoWidget extends StatefulWidget {
   const UserInfoWidget({super.key});
