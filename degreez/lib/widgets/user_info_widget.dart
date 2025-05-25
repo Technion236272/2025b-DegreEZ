@@ -47,16 +47,19 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
     if (user == null) {
       return const SizedBox.shrink();
     }
-
+    // Fetch student data using StudentNotifier
+    // This is a placeholder. In a real app, you would fetch the student data
+    // final student = studentNotifier.fetchStudentData(user.uid);
+    final student = studentNotifier.student;
     // If student data is loading, show loader
     if (studentNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     // If student data exists, navigate to home page
-    if (studentNotifier.student != null) {
+    if (student != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(context, '/home_page', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/calendar_home', (route) => false);
       });
       return const Center(child: CircularProgressIndicator());
     }
