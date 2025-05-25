@@ -12,7 +12,20 @@
           "package_name": "com.technion.android.degreEZ"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "557089994187-l8o1v8u49g6qaie3um7cihmi5muqe86m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.technion.android.degreEZ",
+            "certificate_hash": "4b5a6fea6f5c8857cdd582c53531e5b7aa529b7a"
+          }
+        },
+        {
+          "client_id": "557089994187-d56u01e54h57it36mk13i9d2as572uch.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC8iN4-UUl_Jt5aD8idU3orbjxu3EjxeNc"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "557089994187-d56u01e54h57it36mk13i9d2as572uch.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
