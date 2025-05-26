@@ -31,7 +31,7 @@ class HomePage extends StatelessWidget {
       ),
       body: Center(
         child: student == null
-            ? const Text('Welcome!')
+            ? const Text('Loading Profile ...')
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
