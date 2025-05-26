@@ -70,8 +70,7 @@ class StudentNotifier with ChangeNotifier {
           .get();
 
       if (docSnapshot.exists) {
-        _student = StudentModel.fromFirestore(
-            docSnapshot.data() as Map<String, dynamic>);
+        _student = StudentModel.fromFirestore(docSnapshot);
         
         // After fetching student, load their courses
         await _loadStudentCourses(userId);
@@ -455,6 +454,55 @@ DateTime? _parseTime(String timeStr) {
     _error = '';
     notifyListeners();
   }
+
+
+  void setStudent(StudentModel newStudent) {
+  _student = newStudent;
+  notifyListeners();
+}
+
+
+void updateStudentProfile({
+  required String name,
+  required String major,
+  required String preferences,
+  required String faculty,
+  required String catalog,
+  required int semester,
+}) async {
+  if (_student == null) return;
+
+  final updatedStudent = _student!.copyWith(
+    name: name,
+    major: major,
+    preferences: preferences,
+    faculty: faculty,
+    catalog: catalog,
+    semester: semester,
+  );
+
+  _student = updatedStudent;
+  notifyListeners();
+
+  try {
+    await FirebaseFirestore.instance
+        .collection('Students')
+        .doc(_student!.id)
+        .update({
+          'Name': name,
+          'Major': major,
+          'Preferences': preferences,
+          'Faculty': faculty,
+          'Catalog': catalog,
+          'Semester': semester,
+        });
+  } catch (e) {
+    print('🔥 Failed to update profile: $e');
+  }
+}
+
+
+
 }
 
 // Simplified models to match your database structure
