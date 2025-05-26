@@ -11,11 +11,11 @@ class StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: Colors.purple.shade700, size: 32),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 32),
         const SizedBox(height: 4),
         Text(
           value,
-          style:  TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple.shade700),
+          style:  TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
         ),
         Text(
           label,
