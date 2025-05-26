@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:calendar_view/calendar_view.dart'; // Add this import
 
 import 'services/firebase_options.dart';
-import 'pages/sign_in_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'providers/login_notifier.dart';
@@ -13,6 +12,8 @@ import 'providers/student_notifier.dart';
 import 'pages/home_page.dart';
 import 'pages/student_courses_page.dart';
 import 'pages/home_page.dart'; // Your new calendar page
+
+import 'pages/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,10 +56,25 @@ class MyApp extends StatelessWidget {
         controller: EventController(),
         child: MaterialApp(
           title: 'DegreEZ',
-          theme: ThemeData.light(),
+  //         theme: ThemeData.light().copyWith(
+//   scaffoldBackgroundColor: Colors.white,
+//   canvasColor: Colors.white,
+//   cardColor: Colors.white,
+//   colorScheme: const ColorScheme.dark(
+//     surface: Colors.white,
+//   ),
+// ),
+        theme: ThemeData.dark().copyWith(
+  scaffoldBackgroundColor: Colors.black,
+  canvasColor: Colors.black,
+  cardColor: Colors.black,
+  colorScheme: const ColorScheme.dark(
+    surface: Colors.black,
+  ),
+),
           initialRoute: '/',
           routes: {
-            '/': (context) => SignInPage(),
+            '/': (context) => LoginPage(),
             '/home_page': (context) => CalendarHomePage(), // Keep for backward compatibility
             '/calendar_home': (context) => CalendarHomePage(), // New calendar home
             '/courses': (context) => const StudentCoursesPage(),
