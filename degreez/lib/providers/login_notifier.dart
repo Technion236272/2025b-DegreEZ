@@ -1,22 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// A provider class that manages authentication state using Google Sign-In and Firebase Auth.
 class LogInNotifier extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   
+  
   // Private field to store the current user
   User? _user;
   String? _errorMessage;
   bool _isLoading = false;
+  bool _newUser = true;
   
   // Getters
   User? get user => _user;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
   bool get isSignedIn => _user != null;
+  bool get newUser => _newUser;
   
   // Constructor: listen to auth state changes
   LogInNotifier() {
@@ -25,6 +29,10 @@ class LogInNotifier extends ChangeNotifier {
     _auth.authStateChanges().listen((User? user) {
       _user = user;
       debugPrint("Auth state changed: User is ${user != null ? 'signed in' : 'signed out'}");
+      if(user != null)
+      {
+        _newUser = false;
+      }
       notifyListeners();
     });
   }
@@ -66,6 +74,32 @@ class LogInNotifier extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
       
+      // Check if user is new
+
+      try {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(googleAuth.idToken)
+          .get();
+
+        debugPrint('googleAuth.idToken = ${googleAuth.idToken}');
+        debugPrint('docSnapshot = $docSnapshot');
+
+      if (docSnapshot.exists) {
+        debugPrint('This is a veteran Student');
+        _newUser = false;
+      } else {
+        debugPrint('Student not found');
+        _newUser = true;
+      }
+    } catch (e) {
+      debugPrint('Error fetching student data: $e');
+      _newUser = true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+
       // Sign in to Firebase with the Google OAuth credential
       debugPrint("Signing in to Firebase with Google credential");
       final UserCredential userCredential = 

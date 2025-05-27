@@ -116,6 +116,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
           ),
         ],
       ),
+
       drawer: _buildSideDrawer(
         context,
         loginNotifier,
