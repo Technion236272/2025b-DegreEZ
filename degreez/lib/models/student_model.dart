@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 // models/student_model.dart
 class StudentModel {
   final String id;
@@ -20,11 +22,14 @@ class StudentModel {
     required this.catalog,
   });
 
-// Factory constructor to create a StudentModel from Firestore data
+  // Factory constructor to create a StudentModel from Firestore data
   // This assumes that the Firestore document has fields with the same names as the class properties
-  factory StudentModel.fromFirestore(Map<String, dynamic> data) {
+  factory StudentModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data()!;
     return StudentModel(
-      id: data['Id'] ?? '',
+      id: doc.id, //  this is the real Firestore document ID
       name: data['Name'] ?? '',
       major: data['Major'] ?? '',
       faculty: data['Faculty'] ?? '',
@@ -48,5 +53,22 @@ class StudentModel {
     };
   }
 
-  
+  StudentModel copyWith({
+    String? name,
+    String? major,
+    String? preferences,
+    String? catalog,
+    String? faculty,
+    int? semester,
+  }) {
+    return StudentModel(
+      id: id,
+      name: name ?? this.name,
+      major: major ?? this.major,
+      faculty: faculty ?? this.faculty,
+      preferences: preferences ?? this.preferences,
+      semester: semester ?? this.semester,
+      catalog: catalog ?? this.catalog,
+    );
+  }
 }
