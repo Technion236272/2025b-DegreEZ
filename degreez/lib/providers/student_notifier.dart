@@ -501,6 +501,48 @@ void updateStudentProfile({
   }
 }
 
+Future<void> addSemester(String semesterName, BuildContext context) async {
+  if (_coursesBySemester.containsKey(semesterName)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Semester "$semesterName" already exists'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return;
+  }
+
+  _coursesBySemester[semesterName] = [];
+  notifyListeners();
+
+  try {
+    final studentId = _student?.id;
+    if (studentId == null) return;
+
+    final semesterNumber = _coursesBySemester.length;
+    final createdAt = DateTime.now();
+
+    await FirebaseFirestore.instance
+        .collection('Students')
+        .doc(studentId)
+        .collection('Courses-per-Semesters')
+        .doc(semesterName)
+        .set({
+          'semesterName': semesterName,
+          'semesterNumber': semesterNumber,
+          'createdAt': createdAt,
+        });
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to add semester: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
 
 
 }

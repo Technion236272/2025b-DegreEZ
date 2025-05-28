@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/student_notifier.dart';
 import '../services/course_service.dart';
+
 class DegreeProgressPage extends StatelessWidget {
   const DegreeProgressPage({super.key});
 
@@ -34,7 +35,7 @@ class DegreeProgressPage extends StatelessWidget {
           }
 
           final semesters = studentNotifier.coursesBySemester;
-          
+
           if (semesters.isEmpty) {
             return const Center(
               child: Column(
@@ -58,14 +59,14 @@ class DegreeProgressPage extends StatelessWidget {
 
           // Detect device orientation
           final orientation = MediaQuery.of(context).orientation;
-          
+
           return SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header with degree progress summary
                 _buildProgressHeader(context, studentNotifier),
-                
+
                 // Semester list
                 Expanded(
                   child: ListView.builder(
@@ -78,10 +79,18 @@ class DegreeProgressPage extends StatelessWidget {
                         'name': semesterKey,
                         'courses': semesters[semesterKey]!,
                       };
-                      
+
                       return orientation == Orientation.portrait
-                          ? _buildVerticalSemesterSection(context, semester, studentNotifier)
-                          : _buildHorizontalSemesterSection(context, semester, studentNotifier);
+                          ? _buildVerticalSemesterSection(
+                            context,
+                            semester,
+                            studentNotifier,
+                          )
+                          : _buildHorizontalSemesterSection(
+                            context,
+                            semester,
+                            studentNotifier,
+                          );
                     },
                   ),
                 ),
@@ -90,22 +99,122 @@ class DegreeProgressPage extends StatelessWidget {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddSemesterDialog(context);
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-  Widget _buildProgressHeader(BuildContext context, StudentNotifier studentNotifier) {
-    final totalCourses = studentNotifier.coursesBySemester.values
-        .expand((courses) => courses)
-        .length;
-    
+void _showAddSemesterDialog(BuildContext context) {
+  // Auto-select season based on the current month
+  final month = DateTime.now().month;
+  String selectedSeason;
+  if (month <= 2) {
+    selectedSeason = 'Winter';
+  } else if (month <= 6) {
+    selectedSeason = 'Spring';
+  } else {
+    selectedSeason = 'Summer';
+  }
+
+  int selectedYear = DateTime.now().year;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Add New Semester'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Season dropdown
+                DropdownButtonFormField<String>(
+                  value: selectedSeason,
+                  decoration: const InputDecoration(labelText: 'Semester'),
+                  items: ['Winter', 'Spring', 'Summer'].map((season) {
+                    return DropdownMenuItem<String>(
+                      value: season,
+                      child: Text(season),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedSeason = value;
+                      });
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                // Year dropdown: from 5 years ago to 5 years ahead
+                DropdownButtonFormField<int>(
+                  value: selectedYear,
+                  decoration: const InputDecoration(labelText: 'Year'),
+                  items: List.generate(11, (index) {
+                    int year = DateTime.now().year - 5 + index;
+                    return DropdownMenuItem<int>(
+                      value: year,
+                      child: Text(year.toString()),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedYear = value;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final semesterName = '$selectedSeason $selectedYear';
+                  Provider.of<StudentNotifier>(context, listen: false)
+                      .addSemester(semesterName, context);
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+
+  Widget _buildProgressHeader(
+    BuildContext context,
+    StudentNotifier studentNotifier,
+  ) {
+    final totalCourses =
+        studentNotifier.coursesBySemester.values
+            .expand((courses) => courses)
+            .length;
+
     final totalCredits = studentNotifier.coursesBySemester.keys
         .map((semester) => studentNotifier.getTotalCreditsForSemester(semester))
         .fold<double>(0.0, (sum, credits) => sum + credits);
-    
-    final completedCourses = studentNotifier.coursesBySemester.values
-        .expand((courses) => courses)
-        .where((course) => course.finalGrade.isNotEmpty)
-        .length;
+
+    final completedCourses =
+        studentNotifier.coursesBySemester.values
+            .expand((courses) => courses)
+            .where((course) => course.finalGrade.isNotEmpty)
+            .length;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -120,7 +229,7 @@ class DegreeProgressPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          
+
           if (studentNotifier.student != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -131,9 +240,9 @@ class DegreeProgressPage extends StatelessWidget {
               ),
             ),
           ],
-          
+
           const SizedBox(height: 16),
-          
+
           // Progress summary cards
           Row(
             children: [
@@ -168,14 +277,20 @@ class DegreeProgressPage extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -209,10 +324,16 @@ class DegreeProgressPage extends StatelessWidget {
   }
 
   // Vertical layout for portrait mode
-  Widget _buildVerticalSemesterSection(BuildContext context, Map<String, dynamic> semester, StudentNotifier studentNotifier) {
+  Widget _buildVerticalSemesterSection(
+    BuildContext context,
+    Map<String, dynamic> semester,
+    StudentNotifier studentNotifier,
+  ) {
     final courses = semester['courses'] as List<StudentCourse>;
     final semesterName = semester['name'] as String;
-    final totalCredits = studentNotifier.getTotalCreditsForSemester(semesterName);
+    final totalCredits = studentNotifier.getTotalCreditsForSemester(
+      semesterName,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +360,9 @@ class DegreeProgressPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -254,24 +377,46 @@ class DegreeProgressPage extends StatelessWidget {
             ],
           ),
         ),
-        
+
         // Grid of courses
-        GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.4,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-          ),
-          itemCount: courses.length,
-          itemBuilder: (context, index) {
-            final course = courses[index];
-            final courseWithDetails = studentNotifier.getCourseWithDetails(semesterName, course.courseId);
-            return _buildCourseCard(context, course, courseWithDetails?.courseDetails);
-          },
-        ),
+        courses.isEmpty
+            ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: Text(
+                  'No courses in this semester',
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            )
+            : GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.4,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: courses.length,
+              itemBuilder: (context, index) {
+                final course = courses[index];
+                final courseWithDetails = studentNotifier.getCourseWithDetails(
+                  semesterName,
+                  course.courseId,
+                );
+                return _buildCourseCard(
+                  context,
+                  course,
+                  courseWithDetails?.courseDetails,
+                );
+              },
+            ),
         const SizedBox(height: 10),
         const Divider(),
       ],
@@ -279,10 +424,16 @@ class DegreeProgressPage extends StatelessWidget {
   }
 
   // Horizontal layout for landscape mode
-  Widget _buildHorizontalSemesterSection(BuildContext context, Map<String, dynamic> semester, StudentNotifier studentNotifier) {
+  Widget _buildHorizontalSemesterSection(
+    BuildContext context,
+    Map<String, dynamic> semester,
+    StudentNotifier studentNotifier,
+  ) {
     final courses = semester['courses'] as List<StudentCourse>;
     final semesterName = semester['name'] as String;
-    final totalCredits = studentNotifier.getTotalCreditsForSemester(semesterName);
+    final totalCredits = studentNotifier.getTotalCreditsForSemester(
+      semesterName,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +460,9 @@ class DegreeProgressPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -324,23 +477,43 @@ class DegreeProgressPage extends StatelessWidget {
             ],
           ),
         ),
-        
+
         // Horizontal row of courses
-        SizedBox(
-          height: 120,
-          child: Row(
-            children: List.generate(courses.length, (index) {
-              final course = courses[index];
-              final courseWithDetails = studentNotifier.getCourseWithDetails(semesterName, course.courseId);
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: _buildHorizontalCourseCard(context, course, courseWithDetails?.courseDetails),
+        courses.isEmpty
+            ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: Text(
+                  'No courses in this semester',
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
-              );
-            }),
-          ),
-        ),
+              ),
+            )
+            : SizedBox(
+              height: 120,
+              child: Row(
+                children: List.generate(courses.length, (index) {
+                  final course = courses[index];
+                  final courseWithDetails = studentNotifier
+                      .getCourseWithDetails(semesterName, course.courseId);
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: _buildHorizontalCourseCard(
+                        context,
+                        course,
+                        courseWithDetails?.courseDetails,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
         const SizedBox(height: 10),
         const Divider(),
       ],
@@ -348,15 +521,17 @@ class DegreeProgressPage extends StatelessWidget {
   }
 
   // Vertical course card for portrait mode
-  Widget _buildCourseCard(BuildContext context, StudentCourse course, EnhancedCourseDetails? courseDetails) {
+  Widget _buildCourseCard(
+    BuildContext context,
+    StudentCourse course,
+    EnhancedCourseDetails? courseDetails,
+  ) {
     final hasGrade = course.finalGrade.isNotEmpty;
     final courseColor = _getCourseColor(course.courseId);
-    
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: courseColor,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -379,7 +554,10 @@ class DegreeProgressPage extends StatelessWidget {
                 ),
                 if (courseDetails != null && courseDetails.points.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white24,
                       borderRadius: BorderRadius.circular(6),
@@ -410,14 +588,13 @@ class DegreeProgressPage extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(
-                    Icons.grade,
-                    size: 14,
-                    color: Colors.white70,
-                  ),
+                  Icon(Icons.grade, size: 14, color: Colors.white70),
                   const SizedBox(width: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: _getGradeColor(course.finalGrade),
                       borderRadius: BorderRadius.circular(8),
@@ -441,15 +618,17 @@ class DegreeProgressPage extends StatelessWidget {
   }
 
   // Horizontal course card for landscape mode
-  Widget _buildHorizontalCourseCard(BuildContext context, StudentCourse course, EnhancedCourseDetails? courseDetails) {
+  Widget _buildHorizontalCourseCard(
+    BuildContext context,
+    StudentCourse course,
+    EnhancedCourseDetails? courseDetails,
+  ) {
     final hasGrade = course.finalGrade.isNotEmpty;
     final courseColor = _getCourseColor(course.courseId);
-    
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: courseColor,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -473,7 +652,10 @@ class DegreeProgressPage extends StatelessWidget {
                 ),
                 if (courseDetails != null && courseDetails.points.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white24,
                       borderRadius: BorderRadius.circular(6),
@@ -552,7 +734,7 @@ class DegreeProgressPage extends StatelessWidget {
       if (numericGrade >= 60) return Colors.red.shade600;
       return Colors.grey.shade600;
     }
-    
+
     // Handle non-numeric grades
     switch (grade.toLowerCase()) {
       case 'pass':
