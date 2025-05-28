@@ -34,7 +34,8 @@ class DegreeProgressPage extends StatelessWidget {
             );
           }
 
-          final semesters = studentNotifier.coursesBySemester;
+          final semesters = studentNotifier.sortedCoursesBySemester;
+
 
           if (semesters.isEmpty) {
             return const Center(

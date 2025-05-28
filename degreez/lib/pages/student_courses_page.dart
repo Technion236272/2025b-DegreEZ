@@ -48,7 +48,9 @@ class StudentCoursesPage extends StatelessWidget {
                     onPressed: () {
                       // Retry loading
                       if (studentNotifier.student != null) {
-                        studentNotifier.fetchStudentData(studentNotifier.student!.id);
+                        studentNotifier.fetchStudentData(
+                          studentNotifier.student!.id,
+                        );
                       }
                     },
                     child: const Text('Retry'),
@@ -101,7 +103,7 @@ class StudentCoursesPage extends StatelessWidget {
                     style: const TextStyle(color: Colors.blue, fontSize: 12),
                   ),
                 ),
-              
+
               // Courses list
               Expanded(
                 child: ListView.builder(
@@ -110,27 +112,39 @@ class StudentCoursesPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final semester = coursesBySemester.keys.elementAt(index);
                     final courses = coursesBySemester[semester]!;
-                    final totalCredits = studentNotifier.getTotalCreditsForSemester(semester);
+                    final totalCredits = studentNotifier
+                        .getTotalCreditsForSemester(semester);
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
                       child: ExpansionTile(
                         title: Text(
                           semester,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         subtitle: Text(
                           '${courses.length} courses • ${totalCredits.toStringAsFixed(1)} credits',
                           style: const TextStyle(color: Colors.grey),
                         ),
-                        children: courses.map((course) {
-                          final courseWithDetails = studentNotifier.getCourseWithDetails(semester, course.courseId);
-                          return CourseListItem(
-                            semesterKey: semester,
-                            courseWithDetails: courseWithDetails,
-                            onRefresh: () => studentNotifier.refreshCourseDetails(course.courseId),
-                          );
-                        }).toList(),
+                        children:
+                            courses.map((course) {
+                              final courseWithDetails = studentNotifier
+                                  .getCourseWithDetails(
+                                    semester,
+                                    course.courseId,
+                                  );
+                              return CourseListItem(
+                                semesterKey: semester,
+                                courseWithDetails: courseWithDetails,
+                                onRefresh:
+                                    () => studentNotifier.refreshCourseDetails(
+                                      course.courseId,
+                                    ),
+                              );
+                            }).toList(),
                       ),
                     );
                   },
@@ -145,10 +159,11 @@ class StudentCoursesPage extends StatelessWidget {
 
   void _showCourseSearchDialog(BuildContext context) {
     final searchController = TextEditingController();
-    
+
     showDialog(
       context: context,
-      builder: (context) => CourseSearchDialog(searchController: searchController),
+      builder:
+          (context) => CourseSearchDialog(searchController: searchController),
     );
   }
 
@@ -158,68 +173,80 @@ class StudentCoursesPage extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Course Manually'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: courseIdController,
-              decoration: const InputDecoration(
-                labelText: 'Course ID',
-                hintText: 'e.g., 02340124',
-              ),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Add Course Manually'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: courseIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Course ID',
+                    hintText: 'e.g., 02340124',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Course Name',
+                    hintText: 'e.g., Introduction to Programming',
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Course Name',
-                hintText: 'e.g., Introduction to Programming',
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final courseId = courseIdController.text.trim();
-              final name = nameController.text.trim();
-              
-              if (courseId.isEmpty || name.isEmpty) return;
+              ElevatedButton(
+                onPressed: () async {
+                  final courseId = courseIdController.text.trim();
+                  final name = nameController.text.trim();
 
-              final course = StudentCourse(
-                courseId: courseId,
-                name: name,
-                finalGrade: '',
-                lectureTime: '',
-                tutorialTime: '',
-              );
+                  if (courseId.isEmpty || name.isEmpty) return;
 
-              final success = await context.read<StudentNotifier>()
-                  .addCourseToSemester('Winter 2024-25', course);
-
-              if (context.mounted) {
-                Navigator.pop(context);
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Course added successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
+                  final course = StudentCourse(
+                    courseId: courseId,
+                    name: name,
+                    finalGrade: '',
+                    lectureTime: '',
+                    tutorialTime: '',
                   );
-                }
-              }
-            },
-            child: const Text('Add'),
+
+                  final now = DateTime.now();
+                  final season = _getSeason(now.month);
+                  final semesterName = '$season ${now.year}';
+
+                  final success = await context
+                      .read<StudentNotifier>()
+                      .addCourseToSemester(semesterName, course);
+
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Course added successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
+  }
+
+  String _getSeason(int month) {
+    if (month <= 2 || month == 12) return 'Winter';
+    if (month >= 3 && month <= 6) return 'Spring';
+    return 'Summer';
   }
 }
 
@@ -267,15 +294,10 @@ class _CourseSearchDialogState extends State<CourseSearchDialog> {
             ),
             const SizedBox(height: 16),
             if (isSearching)
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (searchResults.isEmpty && widget.searchController.text.isNotEmpty)
-              const Expanded(
-                child: Center(
-                  child: Text('No courses found'),
-                ),
-              )
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (searchResults.isEmpty &&
+                widget.searchController.text.isNotEmpty)
+              const Expanded(child: Center(child: Text('No courses found')))
             else
               Expanded(
                 child: ListView.builder(
@@ -283,7 +305,7 @@ class _CourseSearchDialogState extends State<CourseSearchDialog> {
                   itemBuilder: (context, index) {
                     final result = searchResults[index];
                     final course = result.course;
-                    
+
                     return Card(
                       child: ListTile(
                         title: Text('${course.courseNumber} - ${course.name}'),
@@ -293,8 +315,13 @@ class _CourseSearchDialogState extends State<CourseSearchDialog> {
                             Text('Faculty: ${course.faculty}'),
                             Text('Credits: ${course.points}'),
                             if (course.hasPrerequisites)
-                              Text('Prerequisites: ${course.prerequisites}', 
-                                style: const TextStyle(fontSize: 12, color: Colors.orange)),
+                              Text(
+                                'Prerequisites: ${course.prerequisites}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange,
+                                ),
+                              ),
                           ],
                         ),
                         trailing: ElevatedButton(
@@ -342,11 +369,11 @@ class _CourseSearchDialogState extends State<CourseSearchDialog> {
       setState(() {
         isSearching = false;
       });
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Search failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Search failed: $e')));
       }
     }
   }
@@ -359,9 +386,14 @@ class _CourseSearchDialogState extends State<CourseSearchDialog> {
       lectureTime: '',
       tutorialTime: '',
     );
+    final now = DateTime.now();
+    final season = _getSeason(now.month);
+    final semester = '$season ${now.year}';
 
-    final success = await context.read<StudentNotifier>()
-        .addCourseToSemester('Winter 2024-25', course);
+    final success = await context.read<StudentNotifier>().addCourseToSemester(
+      semester,
+      course,
+    );
 
     if (mounted) {
       if (success) {
@@ -381,6 +413,12 @@ class _CourseSearchDialogState extends State<CourseSearchDialog> {
         );
       }
     }
+  }
+
+  String _getSeason(int month) {
+    if (month <= 2 || month == 12) return 'Winter';
+    if (month >= 3 && month <= 6) return 'Spring';
+    return 'Summer';
   }
 }
 
@@ -437,13 +475,21 @@ class CourseListItem extends StatelessWidget {
                           const SizedBox(width: 8),
                           const Text(
                             'Loading course details...',
-                            style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                           if (onRefresh != null) ...[
                             const SizedBox(width: 8),
                             GestureDetector(
                               onTap: onRefresh,
-                              child: const Icon(Icons.refresh, size: 16, color: Colors.blue),
+                              child: const Icon(
+                                Icons.refresh,
+                                size: 16,
+                                color: Colors.blue,
+                              ),
                             ),
                           ],
                         ],
@@ -451,12 +497,18 @@ class CourseListItem extends StatelessWidget {
                     ] else ...[
                       Text(
                         courseDetails!.faculty,
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                       if (courseDetails!.points.isNotEmpty)
                         Text(
                           '${courseDetails!.points} נקודות',
-                          style: const TextStyle(color: Colors.blue, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                          ),
                         ),
                     ],
                   ],
@@ -464,7 +516,10 @@ class CourseListItem extends StatelessWidget {
               ),
               if (studentCourse.finalGrade.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getGradeColor(studentCourse.finalGrade),
                     borderRadius: BorderRadius.circular(12),
@@ -482,18 +537,18 @@ class CourseListItem extends StatelessWidget {
                 ),
             ],
           ),
-          
+
           // Course details
           if (!isLoading && courseDetails != null) ...[
             const SizedBox(height: 8),
-            
+
             // Prerequisites
             if (courseDetails.hasPrerequisites)
               Text(
                 'Prerequisites: ${courseDetails.prerequisites}',
                 style: const TextStyle(fontSize: 12, color: Colors.orange),
               ),
-            
+
             // Syllabus (truncated)
             if (courseDetails.syllabus.isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -502,7 +557,7 @@ class CourseListItem extends StatelessWidget {
                 style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
             ],
-            
+
             // Schedule info
             if (courseDetails.schedule.isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -510,13 +565,20 @@ class CourseListItem extends StatelessWidget {
                 'Schedule: ${courseDetails.schedule.length} time slots',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
-              ...courseDetails.schedule.take(2).map((schedule) => Padding(
-                padding: const EdgeInsets.only(left: 16, top: 2),
-                child: Text(
-                  '${schedule.type}: ${schedule.day} ${schedule.time} (${schedule.fullLocation})',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              )),
+              ...courseDetails.schedule
+                  .take(2)
+                  .map(
+                    (schedule) => Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 2),
+                      child: Text(
+                        '${schedule.type}: ${schedule.day} ${schedule.time} (${schedule.fullLocation})',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
               if (courseDetails.schedule.length > 2)
                 const Padding(
                   padding: EdgeInsets.only(left: 16, top: 2),
@@ -526,7 +588,7 @@ class CourseListItem extends StatelessWidget {
                   ),
                 ),
             ],
-            
+
             // Exams info
             if (courseDetails.hasExams) ...[
               const SizedBox(height: 4),
@@ -536,7 +598,7 @@ class CourseListItem extends StatelessWidget {
               ),
             ],
           ],
-          
+
           const Divider(height: 1),
         ],
       ),
@@ -559,45 +621,51 @@ class CourseListItem extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Grade'),
-        content: TextField(
-          controller: gradeController,
-          decoration: const InputDecoration(
-            labelText: 'Final Grade',
-            hintText: 'e.g., 85',
-          ),
-          keyboardType: TextInputType.number,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final grade = gradeController.text.trim();
-              if (grade.isEmpty) return;
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Add Grade'),
+            content: TextField(
+              controller: gradeController,
+              decoration: const InputDecoration(
+                labelText: 'Final Grade',
+                hintText: 'e.g., 85',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final grade = gradeController.text.trim();
+                  if (grade.isEmpty) return;
 
-              final success = await context.read<StudentNotifier>()
-                  .updateCourseGrade(semesterKey, courseWithDetails!.studentCourse.courseId, grade);
+                  final success = await context
+                      .read<StudentNotifier>()
+                      .updateCourseGrade(
+                        semesterKey,
+                        courseWithDetails!.studentCourse.courseId,
+                        grade,
+                      );
 
-              if (context.mounted) {
-                Navigator.pop(context);
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Grade updated successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Save'),
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Grade updated successfully!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
