@@ -108,94 +108,96 @@ class DegreeProgressPage extends StatelessWidget {
     );
   }
 
-void _showAddSemesterDialog(BuildContext context) {
-  // Auto-select season based on the current month
-  final month = DateTime.now().month;
-  String selectedSeason;
-  if (month <= 2) {
-    selectedSeason = 'Winter';
-  } else if (month <= 6) {
-    selectedSeason = 'Spring';
-  } else {
-    selectedSeason = 'Summer';
-  }
+  void _showAddSemesterDialog(BuildContext context) {
+    // Auto-select season based on the current month
+    final month = DateTime.now().month;
+    String selectedSeason;
+    if (month <= 2) {
+      selectedSeason = 'Winter';
+    } else if (month <= 6) {
+      selectedSeason = 'Spring';
+    } else {
+      selectedSeason = 'Summer';
+    }
 
-  int selectedYear = DateTime.now().year;
+    int selectedYear = DateTime.now().year;
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Add New Semester'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Season dropdown
-                DropdownButtonFormField<String>(
-                  value: selectedSeason,
-                  decoration: const InputDecoration(labelText: 'Semester'),
-                  items: ['Winter', 'Spring', 'Summer'].map((season) {
-                    return DropdownMenuItem<String>(
-                      value: season,
-                      child: Text(season),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedSeason = value;
-                      });
-                    }
-                  },
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add New Semester'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Season dropdown
+                  DropdownButtonFormField<String>(
+                    value: selectedSeason,
+                    decoration: const InputDecoration(labelText: 'Semester'),
+                    items:
+                        ['Winter', 'Spring', 'Summer'].map((season) {
+                          return DropdownMenuItem<String>(
+                            value: season,
+                            child: Text(season),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedSeason = value;
+                        });
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Year dropdown: from 5 years ago to 5 years ahead
+                  DropdownButtonFormField<int>(
+                    value: selectedYear,
+                    decoration: const InputDecoration(labelText: 'Year'),
+                    items: List.generate(11, (index) {
+                      int year = DateTime.now().year - 5 + index;
+                      return DropdownMenuItem<int>(
+                        value: year,
+                        child: Text(year.toString()),
+                      );
+                    }),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedYear = value;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
                 ),
-
-                const SizedBox(height: 12),
-
-                // Year dropdown: from 5 years ago to 5 years ahead
-                DropdownButtonFormField<int>(
-                  value: selectedYear,
-                  decoration: const InputDecoration(labelText: 'Year'),
-                  items: List.generate(11, (index) {
-                    int year = DateTime.now().year - 5 + index;
-                    return DropdownMenuItem<int>(
-                      value: year,
-                      child: Text(year.toString()),
-                    );
-                  }),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedYear = value;
-                      });
-                    }
+                TextButton(
+                  onPressed: () {
+                    final semesterName = '$selectedSeason $selectedYear';
+                    Provider.of<StudentNotifier>(
+                      context,
+                      listen: false,
+                    ).addSemester(semesterName, context);
+                    Navigator.of(context).pop();
                   },
+                  child: const Text('Add'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  final semesterName = '$selectedSeason $selectedYear';
-                  Provider.of<StudentNotifier>(context, listen: false)
-                      .addSemester(semesterName, context);
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
-
+            );
+          },
+        );
+      },
+    );
+  }
 
   Widget _buildProgressHeader(
     BuildContext context,
@@ -324,77 +326,82 @@ void _showAddSemesterDialog(BuildContext context) {
   }
 
   // Vertical layout for portrait mode
-  Widget _buildVerticalSemesterSection(
-    BuildContext context,
-    Map<String, dynamic> semester,
-    StudentNotifier studentNotifier,
-  ) {
-    final courses = semester['courses'] as List<StudentCourse>;
-    final semesterName = semester['name'] as String;
-    final totalCredits = studentNotifier.getTotalCreditsForSemester(
-      semesterName,
-    );
+Widget _buildVerticalSemesterSection(
+  BuildContext context,
+  Map<String, dynamic> semester,
+  StudentNotifier studentNotifier,
+) {
+  final courses = semester['courses'] as List<StudentCourse>;
+  final semesterName = semester['name'] as String;
+  final totalCredits = studentNotifier.getTotalCreditsForSemester(semesterName);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 20, bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                semesterName,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onPrimaryContainer.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${totalCredits.toStringAsFixed(1)} credits',
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        margin: const EdgeInsets.only(top: 20, bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Text(
+                  semesterName,
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${totalCredits.toStringAsFixed(1)} credits',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                _confirmDeleteSemester(context, semesterName);
+              },
+            ),
+          ],
         ),
+      ),
 
-        // Grid of courses
-        courses.isEmpty
-            ? Padding(
+      // Display message if no courses
+      courses.isEmpty
+          ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Center(
                 child: Text(
                   'No courses in this semester',
                   style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
               ),
             )
-            : GridView.builder(
+          : GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -406,22 +413,18 @@ void _showAddSemesterDialog(BuildContext context) {
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index];
-                final courseWithDetails = studentNotifier.getCourseWithDetails(
-                  semesterName,
-                  course.courseId,
-                );
-                return _buildCourseCard(
-                  context,
-                  course,
-                  courseWithDetails?.courseDetails,
-                );
+                final courseWithDetails =
+                    studentNotifier.getCourseWithDetails(semesterName, course.courseId);
+                return _buildCourseCard(context, course, courseWithDetails?.courseDetails);
               },
             ),
-        const SizedBox(height: 10),
-        const Divider(),
-      ],
-    );
-  }
+
+      const SizedBox(height: 10),
+      const Divider(),
+    ],
+  );
+}
+
 
   // Horizontal layout for landscape mode
   Widget _buildHorizontalSemesterSection(
@@ -446,33 +449,49 @@ void _showAddSemesterDialog(BuildContext context) {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                semesterName,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      semesterName,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimaryContainer.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${totalCredits.toStringAsFixed(1)} credits',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onPrimaryContainer.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${totalCredits.toStringAsFixed(1)} credits',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  _confirmDeleteSemester(context, semesterName);
+                },
               ),
             ],
           ),
@@ -517,6 +536,38 @@ void _showAddSemesterDialog(BuildContext context) {
         const SizedBox(height: 10),
         const Divider(),
       ],
+    );
+  }
+
+  void _confirmDeleteSemester(BuildContext context, String semesterName) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Semester'),
+            content: Text(
+              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Provider.of<StudentNotifier>(
+                    context,
+                    listen: false,
+                  ).deleteSemester(semesterName, context);
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
     );
   }
 

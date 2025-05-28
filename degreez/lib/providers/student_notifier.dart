@@ -545,6 +545,35 @@ Future<void> addSemester(String semesterName, BuildContext context) async {
 
 
 
+Future<void> deleteSemester(String semesterName, BuildContext context) async {
+  final studentId = _student?.id;
+  if (studentId == null) return;
+
+  try {
+    // Delete from Firestore
+    await FirebaseFirestore.instance
+        .collection('Students')
+        .doc(studentId)
+        .collection('Courses-per-Semesters')
+        .doc(semesterName)
+        .delete();
+
+    // Delete from local map
+    _coursesBySemester.remove(semesterName);
+    notifyListeners();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Deleted semester "$semesterName"')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to delete: $e')),
+    );
+  }
+}
+
+
+
 }
 
 // Simplified models to match your database structure
