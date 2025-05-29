@@ -36,7 +36,6 @@ class DegreeProgressPage extends StatelessWidget {
 
           final semesters = studentNotifier.sortedCoursesBySemester;
 
-
           if (semesters.isEmpty) {
             return const Center(
               child: Column(
@@ -327,82 +326,103 @@ class DegreeProgressPage extends StatelessWidget {
   }
 
   // Vertical layout for portrait mode
-Widget _buildVerticalSemesterSection(
-  BuildContext context,
-  Map<String, dynamic> semester,
-  StudentNotifier studentNotifier,
-) {
-  final courses = semester['courses'] as List<StudentCourse>;
-  final semesterName = semester['name'] as String;
-  final totalCredits = studentNotifier.getTotalCreditsForSemester(semesterName);
+  Widget _buildVerticalSemesterSection(
+    BuildContext context,
+    Map<String, dynamic> semester,
+    StudentNotifier studentNotifier,
+  ) {
+    final courses = semester['courses'] as List<StudentCourse>;
+    final semesterName = semester['name'] as String;
+    final totalCredits = studentNotifier.getTotalCreditsForSemester(
+      semesterName,
+    );
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        margin: const EdgeInsets.only(top: 20, bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Text(
-                  semesterName,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${totalCredits.toStringAsFixed(1)} credits',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 20, bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    semesterName,
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
-                ),
-              ],
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () {
-                _confirmDeleteSemester(context, semesterName);
-              },
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onPrimaryContainer.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${totalCredits.toStringAsFixed(1)} credits',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.blue),
+                    tooltip: 'Add Course',
+                    onPressed: () {
+                      _showAddCourseDialog(context, semesterName);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    tooltip: 'Delete Semester',
+                    onPressed: () {
+                      _confirmDeleteSemester(context, semesterName);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
 
-      // Display message if no courses
-      courses.isEmpty
-          ? Padding(
+        // Display message if no courses
+        courses.isEmpty
+            ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Center(
                 child: Text(
                   'No courses in this semester',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
               ),
             )
-          : GridView.builder(
+            : GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -414,18 +434,23 @@ Widget _buildVerticalSemesterSection(
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index];
-                final courseWithDetails =
-                    studentNotifier.getCourseWithDetails(semesterName, course.courseId);
-                return _buildCourseCard(context, course, courseWithDetails?.courseDetails);
+                final courseWithDetails = studentNotifier.getCourseWithDetails(
+                  semesterName,
+                  course.courseId,
+                );
+                return _buildCourseCard(
+                  context,
+                  course,
+                  courseWithDetails?.courseDetails,
+                );
               },
             ),
 
-      const SizedBox(height: 10),
-      const Divider(),
-    ],
-  );
-}
-
+        const SizedBox(height: 10),
+        const Divider(),
+      ],
+    );
+  }
 
   // Horizontal layout for landscape mode
   Widget _buildHorizontalSemesterSection(
@@ -537,6 +562,156 @@ Widget _buildVerticalSemesterSection(
         const SizedBox(height: 10),
         const Divider(),
       ],
+    );
+  }
+
+  void _showAddCourseDialog(BuildContext context, String semesterName) {
+    final searchController = TextEditingController();
+    List<CourseSearchResult> results = [];
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> search(String query) async {
+              if (query.trim().isEmpty) return;
+              setState(() => isLoading = true);
+
+              final isId = RegExp(r'^\d+$').hasMatch(query);
+              final courseId = isId ? query : null;
+              final courseName = isId ? null : query;
+              print('SEARCH: id=$courseId, name=$courseName');
+
+              final fetched = await Provider.of<StudentNotifier>(
+                context,
+                listen: false,
+              ).searchCourses(courseId: courseId, courseName: courseName);
+
+              if (!context.mounted) return; // <--- CRITICAL LINE
+
+              if (fetched.isEmpty) {
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //     SnackBar(content: Text('No course found matching "$query"')),
+                //     );
+                setState(() {
+                  results = [];
+                  isLoading = false;
+                });
+                return;
+              }
+
+              setState(() {
+                results = fetched;
+                isLoading = false;
+              });
+            }
+
+            return AlertDialog(
+              title: Text('Add Course to $semesterName'),
+              content: SizedBox(
+                width: 300, // or any fixed width
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                        labelText: 'Course ID or Name',
+                        hintText: 'e.g. 02340114 or Data Structures',
+                      ),
+                      onChanged: (value) {
+                        if (value.length > 3) search(value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    if (isLoading)
+                      const CircularProgressIndicator()
+                    else if (results.isEmpty &&
+                        searchController.text.isNotEmpty)
+                      const Text('No courses found.'),
+                    if (results.isNotEmpty)
+                      SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: results.length,
+                          itemBuilder: (context, index) {
+                            final courseResult = results[index];
+                            final c = courseResult.course;
+
+                            if (c == null ||
+                                c.courseNumber == null ||
+                                c.name == null) {
+                              return const ListTile(
+                                title: Text('Invalid course data'),
+                                subtitle: Text('Missing course information'),
+                              );
+                            }
+                            return ListTile(
+                              title: Text('${c.courseNumber} - ${c.name}'),
+                              subtitle: Text(
+                                '${c.points} points • ${c.faculty}',
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () async {
+                                  final course = StudentCourse(
+                                    courseId: c.courseNumber,
+                                    name: c.name,
+                                    finalGrade: '',
+                                    lectureTime: '',
+                                    tutorialTime: '',
+                                  );
+                                  final success =
+                                      await Provider.of<StudentNotifier>(
+                                        context,
+                                        listen: false,
+                                      ).addCourseToSemester(
+                                        semesterName,
+                                        course,
+                                      );
+
+                                  if (!context.mounted) return;
+
+                                  if (success) {
+                                    Navigator.of(ctx).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Course added to $semesterName',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Failed to add course'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
