@@ -246,6 +246,7 @@ class StudentNotifier with ChangeNotifier {
     String? courseId,
     String? courseName,
     String? faculty,
+    int pastSemestersToInclude = 0,
   }) async {
     if (_currentSemester == null) {
       await _fetchLatestSemester();
@@ -255,13 +256,80 @@ class StudentNotifier with ChangeNotifier {
       return [];
     }
 
-    return await CourseService.searchCourses(
-      year: _currentSemester!.year,
-      semester: _currentSemester!.semester,
-      courseId: courseId,
-      courseName: courseName,
-      faculty: faculty,
-    );
+    if (pastSemestersToInclude == 0) {
+      return await CourseService.searchCourses(
+        year: _currentSemester!.year,
+        semester: _currentSemester!.semester,
+        courseId: courseId,
+        courseName: courseName,
+        faculty: faculty,
+      );
+    } else {
+      // ✅ Fetch all semesters from API
+      final allSemesters = await CourseService.getAvailableSemesters();
+      print('📅 All semesters fetched:');
+      for (var s in allSemesters) {
+        print('  ${s.semester} ${s.year}');
+      }
+      // ✅ Sort them based on custom order (Winter < Spring < Summer)
+      allSemesters.sort(CourseService.compareSemesters);
+
+      print('📅 Sorted semesters:');
+      for (var s in allSemesters) {
+        print('  ${s.semester} ${s.year}');
+      }
+
+      print(
+        '🎯 Current semester: ${_currentSemester!.semester} ${_currentSemester!.year}',
+      );
+
+      // ✅ Find the current semester index
+      final currentIndex = allSemesters.indexWhere(
+        (s) =>
+            s.year == _currentSemester!.year &&
+            s.semester == _currentSemester!.semester,
+      );
+
+      print('🔢 Current index in sorted list: $currentIndex');
+
+      if (currentIndex == -1) {
+        print('❌ Current semester not found in available semesters.');
+        return [];
+      }
+
+      final fromIndex = (currentIndex - pastSemestersToInclude).clamp(
+        0,
+        allSemesters.length - 1,
+      );
+      print('🔍 Searching from index $fromIndex to $currentIndex');
+      final selectedSemesters = allSemesters.sublist(
+        fromIndex,
+        currentIndex + 1,
+      );
+
+      print('📚 Semesters to search in:');
+      for (var s in selectedSemesters) {
+        print('  ${s.semester} ${s.year}');
+      }
+      final Map<String, CourseSearchResult> resultMap = {};
+
+      for (final sem in selectedSemesters) {
+        final res = await CourseService.searchCourses(
+          year: sem.year,
+          semester: sem.semester,
+          courseId: courseId,
+          courseName: courseName,
+          faculty: faculty,
+        );
+
+        for (final r in res) {
+          // Add only if not already present (keeps first occurrence)
+          resultMap.putIfAbsent(r.course.courseNumber, () => r);
+        }
+      }
+
+      return resultMap.values.toList();
+    }
   }
 
   // Helper method to calculate semester number
@@ -591,14 +659,20 @@ class StudentNotifier with ChangeNotifier {
   Map<String, List<StudentCourse>> get sortedCoursesBySemester {
     final List<String> semesterNames = _coursesBySemester.keys.toList();
 
-    semesterNames.sort((a, b) { // Sort semesters by year and season
-      final parsedA = _parseSemester(a); //turns "Spring 2025" into {season: "Spring", year: 2025}
+    semesterNames.sort((a, b) {
+      // Sort semesters by year and season
+      final parsedA = _parseSemester(
+        a,
+      ); //turns "Spring 2025" into {season: "Spring", year: 2025}
       final parsedB = _parseSemester(b);
 
       final yearComparison = parsedA.year.compareTo(parsedB.year);
-      if (yearComparison != 0) return yearComparison;// If years are different , sort by year
+      if (yearComparison != 0)
+        return yearComparison; // If years are different , sort by year
 
-      return _seasonOrder(parsedA.season).compareTo(_seasonOrder(parsedB.season));
+      return _seasonOrder(
+        parsedA.season,
+      ).compareTo(_seasonOrder(parsedB.season));
     });
 
     return {for (final name in semesterNames) name: _coursesBySemester[name]!};
@@ -617,13 +691,12 @@ class StudentNotifier with ChangeNotifier {
     }
   }
 
-({String season, int year}) _parseSemester(String semesterName) {
-  final parts = semesterName.split(' ');
-  final season = parts[0];
-  final year = (parts.length > 1) ? int.tryParse(parts[1]) ?? 0 : 0;
-  return (season: season, year: year);
-}
-
+  ({String season, int year}) _parseSemester(String semesterName) {
+    final parts = semesterName.split(' ');
+    final season = parts[0];
+    final year = (parts.length > 1) ? int.tryParse(parts[1]) ?? 0 : 0;
+    return (season: season, year: year);
+  }
 }
 
 // Simplified models to match your database structure

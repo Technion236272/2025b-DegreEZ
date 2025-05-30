@@ -64,8 +64,9 @@ class DegreeProgressPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with degree progress summary
-                _buildProgressHeader(context, studentNotifier),
+                // Header with degree progress summary only in portrait mode.
+                if (orientation == Orientation.portrait)
+                  _buildProgressHeader(context, studentNotifier),
 
                 // Semester list
                 Expanded(
@@ -513,11 +514,23 @@ class DegreeProgressPage extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  _confirmDeleteSemester(context, semesterName);
-                },
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.blue),
+                    tooltip: 'Add Course',
+                    onPressed: () {
+                      _showAddCourseDialog(context, semesterName);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    tooltip: 'Delete Semester',
+                    onPressed: () {
+                      _confirmDeleteSemester(context, semesterName);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -587,7 +600,11 @@ class DegreeProgressPage extends StatelessWidget {
               final fetched = await Provider.of<StudentNotifier>(
                 context,
                 listen: false,
-              ).searchCourses(courseId: courseId, courseName: courseName);
+              ).searchCourses(
+                courseId: courseId,
+                courseName: courseName,
+                pastSemestersToInclude: 4,
+              );
 
               if (!context.mounted) return; // <--- CRITICAL LINE
 
@@ -611,9 +628,9 @@ class DegreeProgressPage extends StatelessWidget {
             return AlertDialog(
               title: Text('Add Course to $semesterName'),
               content: SizedBox(
-                width: 300, // or any fixed width
+                height: MediaQuery.of(context).size.height * 0.4, // or 0.6
+                width: 400,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: searchController,
@@ -632,10 +649,8 @@ class DegreeProgressPage extends StatelessWidget {
                         searchController.text.isNotEmpty)
                       const Text('No courses found.'),
                     if (results.isNotEmpty)
-                      SizedBox(
-                        height: 200,
+                      Expanded(
                         child: ListView.builder(
-                          shrinkWrap: true,
                           itemCount: results.length,
                           itemBuilder: (context, index) {
                             final courseResult = results[index];

@@ -200,6 +200,26 @@ class CourseService {
     if (hours == null || minutes == null) return null;
     return hours * 60 + minutes;
   }
+
+
+  static int semesterOrderValue(int semesterCode) {
+  // 200 = Winter, 201 = Spring, 202 = Summer
+  switch (semesterCode) {
+    case 200: return 0; // Winter
+    case 201: return 1; // Spring
+    case 202: return 2; // Summer
+    default: return 3;
+  }
+}
+
+static int compareSemesters(SemesterInfo a, SemesterInfo b) {
+if (a.year != b.year) {
+    return a.year.compareTo(b.year);
+  } else {
+    return semesterOrderValue(a.semester).compareTo(semesterOrderValue(b.semester));
+  }
+}
+
 }
 
 // Enhanced models with all available data
