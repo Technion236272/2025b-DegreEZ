@@ -1,3 +1,4 @@
+import 'package:degreez/widgets/grade_sticker.dart';
 import 'package:flutter/material.dart';
 import 'package:degreez/color/color_palette.dart';
 import '../providers/student_notifier.dart';
@@ -49,7 +50,7 @@ class _CourseCardState extends State<CourseCard> {
             child: Container(
               width: double.infinity, // ✅ full width
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.accentColorDim,
+                color: AppColorsDarkMode.accentColor,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
@@ -66,7 +67,7 @@ class _CourseCardState extends State<CourseCard> {
                         course.courseId,
                         style: const TextStyle(
                           fontSize: 10,
-                          color: Colors.white70,
+                          color: AppColorsDarkMode.secondaryColor,
                           fontWeight: FontWeight.w500,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -121,7 +122,7 @@ class _CourseCardState extends State<CourseCard> {
             child: Container(
               padding: EdgeInsets.only(right: 3,left: 1,top: 3,bottom: 2),
               width: double.infinity,
-              color: Colors.green,
+              color: AppColorsDarkMode.secondaryColor,
               child: AutoSizeText(
               maxLines: 3,
               minFontSize: 7,
@@ -130,7 +131,7 @@ class _CourseCardState extends State<CourseCard> {
               style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColorsDarkMode.accentColor,
                 
               ),
             ),
@@ -140,34 +141,18 @@ class _CourseCardState extends State<CourseCard> {
             flex: 2,
             child: Container(
               width: double.infinity,
-              color: Colors.blue,
-              child: const if (hasGrade) ...[
-              const SizedBox(height: 4),
-              Row(
+              color: AppColorsDarkMode.secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.grade, size: 14, color: Colors.white70),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getGradeColor(course.finalGrade),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      course.finalGrade,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  if(hasGrade)...[ GradeSticker(grade: course.finalGrade),
+               (double.tryParse(course.finalGrade)! > 55)
+                 ? Icon(Icons.clear, color: AppColorsDarkMode.accentColor,size: 20)
+                 : Icon(Icons.check_rounded, color: AppColorsDarkMode.accentColor,size: 20,),] 
+                     
+                    
                 ],
               ),
-            ],
             ),
           ),
         ],
