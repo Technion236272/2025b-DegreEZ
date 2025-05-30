@@ -191,7 +191,7 @@ class StudentCoursesPage extends StatelessWidget {
                   controller: nameController,
                   decoration: const InputDecoration(
                     labelText: 'Course Name',
-                    hintText: 'e.g., Introduction to Programming',
+                    hintText: 'e.g., פיסיקה 2',
                   ),
                 ),
               ],

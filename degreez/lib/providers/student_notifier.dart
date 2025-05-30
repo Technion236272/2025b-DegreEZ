@@ -267,19 +267,19 @@ class StudentNotifier with ChangeNotifier {
     } else {
       // ✅ Fetch all semesters from API
       final allSemesters = await CourseService.getAvailableSemesters();
-      print('📅 All semesters fetched:');
+      debugPrint('📅 All semesters fetched:');
       for (var s in allSemesters) {
-        print('  ${s.semester} ${s.year}');
+        debugPrint('  ${s.semester} ${s.year}');
       }
       // ✅ Sort them based on custom order (Winter < Spring < Summer)
       allSemesters.sort(CourseService.compareSemesters);
 
-      print('📅 Sorted semesters:');
+      debugPrint('📅 Sorted semesters:');
       for (var s in allSemesters) {
-        print('  ${s.semester} ${s.year}');
+        debugPrint('  ${s.semester} ${s.year}');
       }
 
-      print(
+      debugPrint(
         '🎯 Current semester: ${_currentSemester!.semester} ${_currentSemester!.year}',
       );
 
@@ -290,10 +290,10 @@ class StudentNotifier with ChangeNotifier {
             s.semester == _currentSemester!.semester,
       );
 
-      print('🔢 Current index in sorted list: $currentIndex');
+      debugPrint('🔢 Current index in sorted list: $currentIndex');
 
       if (currentIndex == -1) {
-        print('❌ Current semester not found in available semesters.');
+        debugPrint('❌ Current semester not found in available semesters.');
         return [];
       }
 
@@ -301,15 +301,15 @@ class StudentNotifier with ChangeNotifier {
         0,
         allSemesters.length - 1,
       );
-      print('🔍 Searching from index $fromIndex to $currentIndex');
+      debugPrint('🔍 Searching from index $fromIndex to $currentIndex');
       final selectedSemesters = allSemesters.sublist(
         fromIndex,
         currentIndex + 1,
       );
 
-      print('📚 Semesters to search in:');
+      debugPrint('📚 Semesters to search in:');
       for (var s in selectedSemesters) {
-        print('  ${s.semester} ${s.year}');
+        debugPrint('  ${s.semester} ${s.year}');
       }
       final Map<String, CourseSearchResult> resultMap = {};
 
@@ -583,7 +583,7 @@ class StudentNotifier with ChangeNotifier {
             'Semester': semester,
           });
     } catch (e) {
-      print('🔥 Failed to update profile: $e');
+      debugPrint('🔥 Failed to update profile: $e');
     }
   }
 
