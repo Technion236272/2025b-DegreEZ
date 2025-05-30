@@ -21,6 +21,7 @@ dependencies:
   flutter_week_view: ^1.4.3
   intl: ^0.18.0
   url_launcher: ^6.1.10
+  auto_size_text: ^3.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

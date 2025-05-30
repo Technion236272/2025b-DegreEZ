@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
 import '../widgets/google_sign_in_button.dart';
 import '../widgets/user_info_widget.dart';
+import '../color/color_palette.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,9 +14,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:AppColorsDarkMode.mainColor,
       body: Consumer<LogInNotifier>(
         builder: (context, loginNotifier, _) {
           // Display error message if any
@@ -71,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFFCBAAD),
+                              color: AppColorsDarkMode.secondaryColor,
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -80,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                             'Your academic journey made easy',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color(0xAAFCBAAD),
+                              color: AppColorsDarkMode.secondaryColorDim,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -100,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
 
                               Text(
                                 'Sign in with your Google account to continue',
-                                style: TextStyle(color: Color(0xAAFCBAAD)),
+                                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
                               ),
 
                               const SizedBox(height: 24),
@@ -116,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xAAFCBAAD),
+                                  color: AppColorsDarkMode.secondaryColorDim,
                                 ),
                               ),
                               const SizedBox(height: 24), // Add some spacing

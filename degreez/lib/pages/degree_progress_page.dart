@@ -1,8 +1,10 @@
 // lib/pages/degree_progress_page.dart
+import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/student_notifier.dart';
 import '../services/course_service.dart';
+import '../widgets/course_card.dart';
 
 class DegreeProgressPage extends StatelessWidget {
   const DegreeProgressPage({super.key});
@@ -10,7 +12,7 @@ class DegreeProgressPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: AppColorsDarkMode.mainColor,
       body: Consumer<StudentNotifier>(
         builder: (context, studentNotifier, _) {
           if (studentNotifier.isLoading) {
@@ -101,6 +103,8 @@ class DegreeProgressPage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColorsDarkMode.accentColor,
+        foregroundColor: AppColorsDarkMode.secondaryColor,
         onPressed: () {
           _showAddSemesterDialog(context);
         },
@@ -345,7 +349,7 @@ class DegreeProgressPage extends StatelessWidget {
           margin: const EdgeInsets.only(top: 20, bottom: 10),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
+            color: AppColorsDarkMode.accentColor,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -359,7 +363,7 @@ class DegreeProgressPage extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      color: AppColorsDarkMode.secondaryColor,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -369,9 +373,7 @@ class DegreeProgressPage extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onPrimaryContainer.withOpacity(0.2),
+                      color: AppColorsDarkMode.secondaryColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -379,7 +381,7 @@ class DegreeProgressPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        color: AppColorsDarkMode.accentColor,
                       ),
                     ),
                   ),
@@ -388,14 +390,20 @@ class DegreeProgressPage extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.add, color: Colors.blue),
+                    icon: const Icon(
+                      Icons.add,
+                      color: AppColorsDarkMode.secondaryColor,
+                    ),
                     tooltip: 'Add Course',
                     onPressed: () {
                       _showAddCourseDialog(context, semesterName);
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(
+                      Icons.delete,
+                      color: AppColorsDarkMode.secondaryColor,
+                    ),
                     tooltip: 'Delete Semester',
                     onPressed: () {
                       _confirmDeleteSemester(context, semesterName);
@@ -427,10 +435,10 @@ class DegreeProgressPage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.4,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                crossAxisCount: 4,
+                childAspectRatio: 1,
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 2,
               ),
               itemCount: courses.length,
               itemBuilder: (context, index) {
@@ -439,10 +447,10 @@ class DegreeProgressPage extends StatelessWidget {
                   semesterName,
                   course.courseId,
                 );
-                return _buildCourseCard(
-                  context,
-                  course,
-                  courseWithDetails?.courseDetails,
+                return CourseCard(
+                  direction: DirectionValues.vertical,
+                  course: course,
+                  courseDetails: courseWithDetails?.courseDetails,
                 );
               },
             ),
@@ -562,11 +570,11 @@ class DegreeProgressPage extends StatelessWidget {
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: _buildHorizontalCourseCard(
-                        context,
-                        course,
-                        courseWithDetails?.courseDetails,
-                      ),
+                      child:  CourseCard(
+                  direction: DirectionValues.horizontal,
+                  course: course,
+                  courseDetails: courseWithDetails?.courseDetails,
+                )
                     ),
                   );
                 }),
@@ -762,231 +770,5 @@ class DegreeProgressPage extends StatelessWidget {
     );
   }
 
-  // Vertical course card for portrait mode
-  Widget _buildCourseCard(
-    BuildContext context,
-    StudentCourse course,
-    EnhancedCourseDetails? courseDetails,
-  ) {
-    final hasGrade = course.finalGrade.isNotEmpty;
-    final courseColor = _getCourseColor(course.courseId);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: courseColor,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    course.courseId,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (courseDetails != null && courseDetails.points.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      courseDetails.points,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              course.name,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (hasGrade) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.grade, size: 14, color: Colors.white70),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getGradeColor(course.finalGrade),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      course.finalGrade,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Horizontal course card for landscape mode
-  Widget _buildHorizontalCourseCard(
-    BuildContext context,
-    StudentCourse course,
-    EnhancedCourseDetails? courseDetails,
-  ) {
-    final hasGrade = course.finalGrade.isNotEmpty;
-    final courseColor = _getCourseColor(course.courseId);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: courseColor,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    course.courseId,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (courseDetails != null && courseDetails.points.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      courseDetails.points,
-                      style: const TextStyle(
-                        fontSize: 8,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            Expanded(
-              child: Center(
-                child: Text(
-                  course.name,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            if (hasGrade)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _getGradeColor(course.finalGrade),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  course.finalGrade,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getCourseColor(String courseId) {
-    final hash = courseId.hashCode;
-    final colors = [
-      Colors.blue.shade700,
-      Colors.green.shade700,
-      Colors.purple.shade700,
-      Colors.orange.shade700,
-      Colors.teal.shade700,
-      Colors.red.shade700,
-      Colors.indigo.shade700,
-      Colors.cyan.shade700,
-      Colors.deepPurple.shade700,
-      Colors.brown.shade700,
-    ];
-    return colors[hash.abs() % colors.length];
-  }
-
-  Color _getGradeColor(String grade) {
-    final numericGrade = int.tryParse(grade);
-    if (numericGrade != null) {
-      if (numericGrade >= 90) return Colors.green.shade600;
-      if (numericGrade >= 80) return Colors.blue.shade600;
-      if (numericGrade >= 70) return Colors.orange.shade600;
-      if (numericGrade >= 60) return Colors.red.shade600;
-      return Colors.grey.shade600;
-    }
-
-    // Handle non-numeric grades
-    switch (grade.toLowerCase()) {
-      case 'pass':
-      case 'p':
-        return Colors.green.shade600;
-      case 'fail':
-      case 'f':
-        return Colors.red.shade600;
-      default:
-        return Colors.grey.shade600;
-    }
-  }
+ 
 }
