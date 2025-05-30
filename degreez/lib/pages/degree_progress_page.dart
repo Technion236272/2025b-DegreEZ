@@ -1,17 +1,27 @@
 // lib/pages/degree_progress_page.dart
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/student_notifier.dart';
 import '../services/course_service.dart';
 import '../widgets/course_card.dart';
 
-class DegreeProgressPage extends StatelessWidget {
+class DegreeProgressPage extends StatefulWidget {
   const DegreeProgressPage({super.key});
 
   @override
+  State<DegreeProgressPage> createState() => _DegreeProgressPageState();
+}
+
+class _DegreeProgressPageState extends State<DegreeProgressPage> {
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
+
+    return ChangeNotifierProvider(
+ create: (ctx) => CustomizedDiagramNotifier(),
+ child: 
+Scaffold(
       backgroundColor: AppColorsDarkMode.mainColor,
       body: Consumer<StudentNotifier>(
         builder: (context, studentNotifier, _) {
@@ -110,7 +120,7 @@ class DegreeProgressPage extends StatelessWidget {
         },
         child: const Icon(Icons.add),
       ),
-    );
+    ),);
   }
 
   void _showAddSemesterDialog(BuildContext context) {
@@ -236,6 +246,7 @@ class DegreeProgressPage extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
+          IconButton(onPressed: context.read<CustomizedDiagramNotifier>().switchPalette, icon: Icon(Icons.palette,color: AppColorsDarkMode.secondaryColor,)),
 
           if (studentNotifier.student != null) ...[
             const SizedBox(height: 8),
@@ -644,7 +655,7 @@ class DegreeProgressPage extends StatelessWidget {
                       controller: searchController,
                       decoration: const InputDecoration(
                         labelText: 'Course ID or Name',
-                        hintText: 'e.g. 02340114 or Data Structures',
+                        hintText: 'e.g. 02340114 or פיסיקה 2',
                       ),
                       onChanged: (value) {
                         if (value.length > 3) search(value);

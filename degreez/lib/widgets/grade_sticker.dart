@@ -1,8 +1,7 @@
-import 'dart:ffi';
-
-import 'package:auto_size_text/auto_size_text.dart';
+import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:degreez/color/color_palette.dart';
+import 'package:provider/provider.dart';
 
 class GradeSticker extends StatefulWidget {
   final String grade;
@@ -19,13 +18,13 @@ class _GradeStickerState extends State<GradeSticker> {
       width: 20,
       height: 20,
       decoration: BoxDecoration(
-        border: Border.all(color: AppColorsDarkMode.accentColor, width: 1), // background color
+        border: Border.all(color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG, width: 1), // background color
         shape: BoxShape.circle,
       ),
       child: Center(
         child: Text(
               widget.grade.trim(),
-              style: TextStyle(color: AppColorsDarkMode.accentColor,fontSize: 7, fontWeight: FontWeight.w900),
+              style: TextStyle(color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,fontSize: 7, fontWeight: FontWeight.w900),
             ),
       ),
     );

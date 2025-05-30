@@ -1,6 +1,7 @@
+import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
 import 'package:flutter/material.dart';
-import 'package:degreez/color/color_palette.dart';
+import 'package:provider/provider.dart';
 import '../providers/student_notifier.dart';
 import '../services/course_service.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -34,15 +35,15 @@ class _CourseCardState extends State<CourseCard> {
   Widget _buildVertical(
     BuildContext context,
     StudentCourse course,
-    EnhancedCourseDetails? courseDetails,
+    EnhancedCourseDetails? courseDetails
   ) {
     final hasGrade = course.finalGrade.isNotEmpty;
-    final courseColor = _getCourseColor(course.courseId);
 
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      color: courseColor,
+      // color: provider.cardColorPalette!.cardBG(course.courseId),
+      color:  context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),
       child: Column(
         children: [
           Expanded(
@@ -50,7 +51,7 @@ class _CourseCardState extends State<CourseCard> {
             child: Container(
               width: double.infinity, // ✅ full width
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.accentColor,
+                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarBG,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
@@ -65,9 +66,9 @@ class _CourseCardState extends State<CourseCard> {
                       padding: EdgeInsets.only(left: 3),
                       child: Text(
                         course.courseId,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
-                          color: AppColorsDarkMode.secondaryColor,
+                          color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarText,
                           fontWeight: FontWeight.w500,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -80,7 +81,7 @@ class _CourseCardState extends State<CourseCard> {
                       flex: 3, // 30%
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColorsDarkMode.secondaryColorDimDD,
+                          color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarMarkBG,
                           borderRadius: BorderRadius.only(
                             topRight: Radius.circular(8),
                           ),
@@ -94,16 +95,16 @@ class _CourseCardState extends State<CourseCard> {
                                 child: Icon(
                                   Icons.school,
                                   size: 8,
-                                  color: AppColorsDarkMode.accentColor,
+                                  color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarMarkText,
                                 ),
                               ),
                               Expanded(
                                 flex: 9,
                                 child: Text(
                                   courseDetails.points.contains(".")?courseDetails.points:"${courseDetails.points}.0",
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
-                                    color: AppColorsDarkMode.accentColor,
+                                    color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarMarkText,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -122,16 +123,15 @@ class _CourseCardState extends State<CourseCard> {
             child: Container(
               padding: EdgeInsets.only(right: 3,left: 1,top: 3,bottom: 2),
               width: double.infinity,
-              color: AppColorsDarkMode.secondaryColor,
               child: AutoSizeText(
               maxLines: 3,
               minFontSize: 7,
               textDirection:TextDirection.rtl,
               course.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: AppColorsDarkMode.accentColor,
+                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,
                 
               ),
             ),
@@ -140,21 +140,28 @@ class _CourseCardState extends State<CourseCard> {
           Expanded(
             flex: 2,
             child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
               width: double.infinity,
-              color: AppColorsDarkMode.secondaryColor,
+              child: Padding(padding: EdgeInsets.only(right: 1,left: 1),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if(hasGrade)...[ GradeSticker(grade: course.finalGrade),
                (double.tryParse(course.finalGrade)! > 55)
-                 ? Icon(Icons.clear, color: AppColorsDarkMode.accentColor,size: 20)
-                 : Icon(Icons.check_rounded, color: AppColorsDarkMode.accentColor,size: 20,),] 
-                     
+                 ? Icon(Icons.clear, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18)
+                 : Icon(Icons.check_rounded, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18,),] 
+                  
                     
                 ],
-              ),
+              ),)
             ),
           ),
+          SizedBox(height: 2,)
         ],
       ),
     );
