@@ -16,6 +16,7 @@ class CourseCardColorPalette{
   final Color _topBarMarkBG = Colors.black;
   final Color _topBarMarkText = Colors.black;
   final Color _cardFG = Colors.black;
+  final Color _cardFGdim = Colors.black;
   final Color _cardBG = Colors.black;
   
   get id => _id;
@@ -24,6 +25,7 @@ class CourseCardColorPalette{
   get topBarMarkBG => _topBarMarkBG;
   get topBarMarkText => _topBarMarkText;
   get cardFG => _cardFG;
+  get cardFGdim => _cardFGdim;
 
   Color cardBG([String? courseId]){
     return _cardBG;
@@ -60,6 +62,9 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
   @override
   get cardFG => AppColorsDarkMode.accentColor;
   
+  @override
+  get cardFGdim => Color(0x4441221C);
+  
 }
 
 class CourseCardColorPalette2 extends CourseCardColorPalette
@@ -86,6 +91,10 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
 
   @override
   get cardFG => AppColorsDarkMode.secondaryColor;
+
+   @override
+  get cardFGdim => Color(0x44FCBAAD);
+  
 
   Color _getCourseColor(String courseId) {
     final hash = courseId.hashCode;

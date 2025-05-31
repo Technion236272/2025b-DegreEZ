@@ -383,6 +383,34 @@ class StudentNotifier with ChangeNotifier {
     }
   }
 
+
+  // Update course grade
+  Future<bool> updateCourseNote(
+    String semesterKey,
+    String courseId,
+    String note,
+  ) async {
+    if (_student == null) return false;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(_student!.id)
+          .collection('Courses-per-Semesters')
+          .doc(semesterKey)
+          .collection('Courses')
+          .doc(courseId)
+          .update({'Note': note});
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Error updating note: $e';
+      return false;
+    }
+  }
+
+
   // Create and save a new student model
   Future<bool> createStudent(StudentModel student) async {
     _isLoading = true;
@@ -706,6 +734,7 @@ class StudentCourse {
   final String finalGrade;
   final String lectureTime;
   final String tutorialTime;
+  final String? note;
 
   StudentCourse({
     required this.courseId,
@@ -713,6 +742,7 @@ class StudentCourse {
     required this.finalGrade,
     required this.lectureTime,
     required this.tutorialTime,
+    this.note,
   });
 
   factory StudentCourse.fromFirestore(Map<String, dynamic> data) {
@@ -722,6 +752,7 @@ class StudentCourse {
       finalGrade: data['Final_grade'] ?? '',
       lectureTime: data['Lecture_time'] ?? '',
       tutorialTime: data['Tutorial_time'] ?? '',
+      note: data['Note'] ?? '',
     );
   }
 
@@ -732,6 +763,7 @@ class StudentCourse {
       'Final_grade': finalGrade,
       'Lecture_time': lectureTime,
       'Tutorial_time': tutorialTime,
+      'Note': note ?? '',
     };
   }
 
@@ -742,6 +774,7 @@ class StudentCourse {
       finalGrade: finalGrade ?? this.finalGrade,
       lectureTime: lectureTime,
       tutorialTime: tutorialTime,
+      note: note,
     );
   }
 }

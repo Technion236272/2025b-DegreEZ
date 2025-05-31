@@ -1,5 +1,6 @@
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
+import 'package:degreez/widgets/note_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/student_notifier.dart';
@@ -12,11 +13,13 @@ class CourseCard extends StatefulWidget {
   final DirectionValues direction;
   final StudentCourse course;
   final EnhancedCourseDetails? courseDetails;
+  final String semester;
 
   const CourseCard({
     super.key,
     required this.direction,
     required this.course,
+    required this.semester,
     this.courseDetails,
   });
 
@@ -25,6 +28,8 @@ class CourseCard extends StatefulWidget {
 }
 
 class _CourseCardState extends State<CourseCard> {
+  bool _hasNote = false;
+
   @override
   Widget build(BuildContext context) {
     return (widget.direction == DirectionValues.vertical)
@@ -37,15 +42,39 @@ class _CourseCardState extends State<CourseCard> {
     StudentCourse course,
     EnhancedCourseDetails? courseDetails
   ) {
+    if (widget.course.note != '')
+    {
+      setState(() {
+        _hasNote = true;
+      });
+    }
+    
     final hasGrade = course.finalGrade.isNotEmpty;
+    debugPrint(
+      'Note: fetchedStartNote:${course.note}',
+      );
 
-    return Card(
+    return GestureDetector(
+      onLongPress: () async {
+        final result = await notePopup(context,
+        course,
+        widget.semester,
+        course.note);
+        if (result) {
+      setState(() {
+        _hasNote = true;
+      });
+      }
+      },
+      
+      child: Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       // color: provider.cardColorPalette!.cardBG(course.courseId),
       color:  context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),
       child: Column(
         children: [
+          //Card Top Bar (Course number and points)
           Expanded(
             flex: 2,
             child: Container(
@@ -118,6 +147,7 @@ class _CourseCardState extends State<CourseCard> {
               ),
             ),
           ),
+          //Card Middle (Course name)
           Expanded(
             flex: 6,
             child: Container(
@@ -130,13 +160,14 @@ class _CourseCardState extends State<CourseCard> {
               course.name,
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,
                 
               ),
             ),
             ),
           ),
+          //Card Bottom (Icons Tray)
           Expanded(
             flex: 2,
             child: Container(
@@ -151,20 +182,35 @@ class _CourseCardState extends State<CourseCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if(hasGrade)...[ GradeSticker(grade: course.finalGrade),
+
+                hasGrade ? GradeSticker(grade: course.finalGrade) 
+                : Icon(Icons.work_off_outlined, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),size: 18,),
+                
+                _hasNote ?
+                Icon(Icons.edit_note_rounded,
+                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,
+                size: 18,)
+                : Icon(Icons.edit_note_rounded,
+                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFGdim,
+                size: 18,),
+
+                  if(hasGrade)...[
                (double.tryParse(course.finalGrade)! > 55)
-                 ? Icon(Icons.clear, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18)
-                 : Icon(Icons.check_rounded, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18,),] 
-                  
-                    
-                ],
+                 ? Icon(Icons.check_rounded, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18)
+                 : Icon(Icons.clear, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18,),
+                 ]
+                 else Icon(Icons.work_off_outlined, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),size: 18,),
+                 
+                // NotePopupButton(),
+                
+                ]
               ),)
             ),
           ),
           SizedBox(height: 2,)
         ],
       ),
-    );
+    ),);
   }
 
   // Horizontal course card for landscape mode
