@@ -53,16 +53,16 @@ Scaffold(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timeline, size: 64, color: Colors.grey),
+                  Icon(Icons.timeline, size: 64, color: AppColorsDarkMode.secondaryColorDim),
                   SizedBox(height: 16),
                   Text(
                     'No courses to display',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    style: TextStyle(fontSize: 18, color: AppColorsDarkMode.secondaryColorDim),
                   ),
                   SizedBox(height: 8),
                   Text(
                     'Add courses to see your degree progress',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
                   ),
                 ],
               ),
@@ -74,12 +74,14 @@ Scaffold(
 
           return SafeArea(
             child: Column(
+              
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header with degree progress summary only in portrait mode.
                 if (orientation == Orientation.portrait)
                   _buildProgressHeader(context, studentNotifier),
 
+                Padding(padding: EdgeInsets.only(left: 25),child: Text("Press and hold down on a course to add notes to it",style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),),
                 // Semester list
                 Expanded(
                   child: ListView.builder(
@@ -434,9 +436,7 @@ Scaffold(
                 child: Text(
                   'No courses in this semester',
                   style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
+                    color: AppColorsDarkMode.secondaryColorDim,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -462,12 +462,10 @@ Scaffold(
                   direction: DirectionValues.vertical,
                   course: course,
                   courseDetails: courseWithDetails?.courseDetails,
+                  semester: semesterName,
                 );
               },
             ),
-
-        const SizedBox(height: 10),
-        const Divider(),
       ],
     );
   }
@@ -585,6 +583,7 @@ Scaffold(
                   direction: DirectionValues.horizontal,
                   course: course,
                   courseDetails: courseWithDetails?.courseDetails,
+                  semester: semesterName,
                 )
                     ),
                   );
@@ -754,14 +753,20 @@ Scaffold(
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Delete Semester'),
+            shape: RoundedRectangleBorder(
+      side: BorderSide(color:  AppColorsDarkMode.secondaryColor, width: 2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+            backgroundColor: AppColorsDarkMode.accentColor,
+            title: const Text('Delete Semester',style: TextStyle(color: AppColorsDarkMode.secondaryColor),),
             content: Text(
-              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
+              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',style: TextStyle(color: AppColorsDarkMode.secondaryColor),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: const Text('Cancel',
+                  style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),
               ),
               TextButton(
                 onPressed: () async {
@@ -769,11 +774,12 @@ Scaffold(
                     context,
                     listen: false,
                   ).deleteSemester(semesterName, context);
+                  if (!mounted) return;
                   Navigator.of(ctx).pop();
                 },
                 child: const Text(
                   'Delete',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: AppColorsDarkMode.secondaryColor,fontWeight:FontWeight.w700),
                 ),
               ),
             ],
