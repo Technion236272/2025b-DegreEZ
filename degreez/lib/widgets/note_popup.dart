@@ -1,5 +1,7 @@
 import 'package:degreez/color/color_palette.dart';
-import 'package:degreez/providers/student_notifier.dart';
+import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/providers/course_provider.dart';
+import 'package:degreez/models/student_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,10 +12,11 @@ Future<bool> notePopup(
   String? startNote,
 ) async {
   final TextEditingController controller = TextEditingController();
-  final notifier = context.read<StudentNotifier>();
-  debugPrint(
-    'Note: startNote:$startNote',
-  );
+  final studentProvider = context.read<StudentProvider>();
+  final courseProvider = context.read<CourseProvider>();
+  
+  debugPrint('Note: startNote:$startNote');
+  
   await showDialog(
     context: context,
     builder: (_) {
@@ -51,18 +54,52 @@ Future<bool> notePopup(
               ),
             ),
           ),
+          // Add action buttons
+          Padding(
+            padding: EdgeInsets.all(10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColorsDarkMode.accentColorDim),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (studentProvider.hasStudent) {
+                      await courseProvider.updateCourseNote(
+                        studentProvider.student!.id,
+                        semesterName,
+                        course.courseId,
+                        controller.text,
+                      );
+                    }
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColorsDarkMode.accentColor,
+                  ),
+                  child: Text(
+                    'Save',
+                    style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       );
     },
   );
 
-  notifier.updateCourseNote(semesterName, course.courseId, controller.text);
-
   debugPrint(
-    'Note: semesterKey:$semesterName, courseId:${course.courseId}, note:${controller.text});',
+    'Note: semesterKey:$semesterName, courseId:${course.courseId}, note:${controller.text}',
   );
 
-  return controller.text != '';
+  return controller.text.isNotEmpty;
 }
 
 class LinePainter extends CustomPainter {
