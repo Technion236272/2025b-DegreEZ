@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
 import 'package:calendar_view/calendar_view.dart';
-import '../widgets/course_calendar_panel.dart';
 
 class StudentNotifier with ChangeNotifier {
   // Student data

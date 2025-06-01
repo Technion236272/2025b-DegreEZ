@@ -41,6 +41,13 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                       // Call the onSignInComplete callback if provided
                       widget.onSignInComplete!();
                     }
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/sign_up_page',
+                        (route) => false,
+                      );
+                    });
                   } catch (e) {
                     // Show error dialog on failure
                     if (mounted) {
@@ -69,12 +76,10 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         ),
                         child: Center(
                           child: SizedBox(
-                        width: 300,
-                        height: 300,
-                        child:  Image.asset(
-                            'assets/google_g_icon.png',
+                            width: 300,
+                            height: 300,
+                            child: Image.asset('assets/google_g_icon.png'),
                           ),
-                      ),
                         ),
                       ),
                       const SizedBox(width: 12.0),

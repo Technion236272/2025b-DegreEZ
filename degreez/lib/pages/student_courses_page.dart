@@ -496,15 +496,15 @@ class CourseListItem extends StatelessWidget {
                       ),
                     ] else ...[
                       Text(
-                        courseDetails!.faculty,
+                        courseDetails.faculty,
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 12,
                         ),
                       ),
-                      if (courseDetails!.points.isNotEmpty)
+                      if (courseDetails.points.isNotEmpty)
                         Text(
-                          '${courseDetails!.points} נקודות',
+                          '${courseDetails.points} נקודות',
                           style: const TextStyle(
                             color: Colors.blue,
                             fontSize: 12,
@@ -539,7 +539,7 @@ class CourseListItem extends StatelessWidget {
           ),
 
           // Course details
-          if (!isLoading && courseDetails != null) ...[
+          if (!isLoading) ...[
             const SizedBox(height: 8),
 
             // Prerequisites

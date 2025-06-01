@@ -7,6 +7,8 @@ class AppColorsDarkMode {
   static const Color secondaryColorDimDD = Color(0xDDFCBAAD);
   static const Color accentColor = Color(0xFF41221C);
   static const Color accentColorDim = Color(0xCC41221C);
+  static const Color errorColor = Color(0xFFA0221C);
+  static const Color errorColorDim = Color(0xCCA0221C);
 }
 
 class CourseCardColorPalette{
