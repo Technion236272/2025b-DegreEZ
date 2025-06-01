@@ -52,30 +52,43 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
+
+  Future<bool> userHasData(context,id) async {
+    final loginNotifier = Provider.of<LogInNotifier>(context);
+    final studentNotifier = Provider.of<StudentNotifier>(context);
+    await context.read<StudentNotifier>().fetchStudentData(id);
+    return context.read<StudentNotifier>().error() == '';
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    context.read<StudentNotifier>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
+    debugPrint('yaay');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint("entered SignUp Page");
-    final loginNotifier = Provider.of<LogInNotifier>(context);
-    final studentNotifier = Provider.of<StudentNotifier>(context);
-
+    final loginNotifier = context.watch<LogInNotifier>();
+    final studentNotifier = context.watch<StudentNotifier>();
+    
     final user = loginNotifier.user;
-    if (user == null) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-      throw AsyncError("user is null and still in SignUp page", null);
-    }
-
+    
     // Fetch student data using StudentNotifier
     // This is a placeholder. In a real app, you would fetch the student data
     // final student = studentNotifier.fetchStudentData(user.uid);
     final student = studentNotifier.student;
-
+    
     // If student data is loading, show loader
     if (studentNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     // If student data exists, navigate to home page
-    if (student != null) {
+    if (context.watch<StudentNotifier>().error == '' && student!=null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -87,22 +100,26 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     // If student data does not exist, show form to create it
-
-    return Scaffold(
+    return (student==null && context.watch<StudentNotifier>().error == '')
+    ?  const Center(child: CircularProgressIndicator())
+    : Scaffold(
       body: Consumer<LogInNotifier>(
         builder: (context, loginNotifier, _) {
           // If student data exists, and student is veteran
-          if (loginNotifier.newUser == false && student != null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              studentNotifier.fetchStudentData(loginNotifier.user!.uid);
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/home_page',
-                (route) => false,
-              );
-            });
-            return const Center(child: CircularProgressIndicator());
-          }
+          // if (loginNotifier.newUser == false ) {
+          //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+          //     await studentNotifier.fetchStudentData(loginNotifier.user!.uid);
+              
+          //     if (!mounted) return;
+          //    studentNotifier.error == '' ? 
+          //     Navigator.pushNamedAndRemoveUntil(
+          //       context,
+          //       '/home_page',
+          //       (route) => false,
+          //     ): null;
+          //   });
+          //   return const Center(child: CircularProgressIndicator());
+          // }
 
           // if (loginNotifier.stayedSignedIn == true) {
           //   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -116,7 +133,9 @@ class _SignUpPageState extends State<SignUpPage> {
           //   return const Center(child: CircularProgressIndicator());
           // }
 
-          return Padding(
+          return loginNotifier.isLoading || user == null
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
             padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
@@ -215,31 +234,20 @@ class _SignUpPageState extends State<SignUpPage> {
                       style: TextStyle(color: AppColorsDarkMode.secondaryColor),
                     ),
                   ),
-                  // TextButton(
-                  //   onPressed: () async {
-                  //     studentNotifier.clear();
-                  //     await loginNotifier.signOut();
-                  //     if (context.mounted) {
-                  //       Navigator.of(
-                  //         context,
-                  //       ).pushNamedAndRemoveUntil('/', (route) => false);
-                  //     }
-                  //   },
-                  //   child: const Text(
-                  //     'Sign out and return',
-                  //     style: TextStyle(
-                  //       color: AppColorsDarkMode.secondaryColorDim,
-                  //     ),
-                  //   ),
-                  // ),
-                  if (studentNotifier.error.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        studentNotifier.error,
-                        style: const TextStyle(color: Colors.red),
+                  TextButton(
+                    onPressed: () async {
+                      final rootNavigator = Navigator.of(context, rootNavigator: true);
+                      studentNotifier.clear();
+                      await loginNotifier.signOut();
+                      rootNavigator.pushNamedAndRemoveUntil('/', (route) => false);
+                    },
+                    child: const Text(
+                      'Sign out and return',
+                      style: TextStyle(
+                        color: AppColorsDarkMode.secondaryColorDim,
                       ),
                     ),
+                  ),
                 ],
               ),
             ),

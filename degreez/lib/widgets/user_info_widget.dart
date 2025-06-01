@@ -74,11 +74,12 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
           if (loginNotifier.newUser == false) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
             studentNotifier.fetchStudentData(loginNotifier.user!.uid);
+            studentNotifier.error == '' ? 
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/home_page',
                 (route) => false,
-              );
+              ): null;
             });
             return const Center(child: CircularProgressIndicator());
           }
