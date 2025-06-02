@@ -92,10 +92,9 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     }).toList();
   }
   @override
-  Widget build(BuildContext context) {
-    return Dialog(
+  Widget build(BuildContext context) {    return Dialog(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
+        width: MediaQuery.of(context).size.width * 0.85, // Reduced from 0.9 to fix overflow
         height: MediaQuery.of(context).size.height * 0.75, // Reduced from 0.8 to 0.75
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -219,9 +218,8 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                 ),
               ),
             ),
-            
-            // Action Buttons
-            const Divider(),
+              // Action Buttons
+            // const Divider(),
             Row(
               children: [
                 TextButton(
@@ -234,11 +232,6 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                   child: const Text('Clear All'),
                 ),
                 const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
                     widget.onSelectionChanged(selectedLectureTime, selectedTutorialTime);

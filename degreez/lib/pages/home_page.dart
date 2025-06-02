@@ -242,22 +242,22 @@ class _CalendarHomePageState extends State<CalendarHomePage>
             
             const Divider(),
             
-            // Add Course - New menu item for easier access
-            ListTile(
-              leading: const Icon(Icons.add_circle_outline),
-              title: const Text('Add Course'),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddCoursePage(),
-                  ),
-                );
-              },
-            ),
+            // // Add Course - New menu item for easier access
+            // ListTile(
+            //   leading: const Icon(Icons.add_circle_outline),
+            //   title: const Text('Add Course'),
+            //   onTap: () {
+            //     Navigator.pop(context); // Close drawer
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => const AddCoursePage(),
+            //       ),
+            //     );
+            //   },
+            // ),
             
-            const Divider(),
+            // const Divider(),
             
             // Sign out
             ListTile(
