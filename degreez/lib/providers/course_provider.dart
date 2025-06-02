@@ -55,6 +55,10 @@ class CourseProvider with ChangeNotifier {
   CourseLoadingState _loadingState = const CourseLoadingState();
   String? _error;
   Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
+  SemesterInfo? _currentSemester;
+
+  SemesterInfo? get currentSemester => _currentSemester;
+
 
   // Getters
   List<StudentCourse> getCoursesForSemester(String semesterKey) {
@@ -575,4 +579,116 @@ int _seasonOrder(String season) {
     }
   }
 
+ // Search for courses in the current semester
+  Future<List<CourseSearchResult>> searchCourses({
+    String? courseId,
+    String? courseName,
+    String? faculty,
+    int pastSemestersToInclude = 0,
+  }) async {
+    if (_currentSemester == null) {
+      await _fetchLatestSemester();
+    }
+
+    if (_currentSemester == null) {
+      return [];
+    }
+
+    if (pastSemestersToInclude == 0) {
+      return await CourseService.searchCourses(
+        year: _currentSemester!.year,
+        semester: _currentSemester!.semester,
+        courseId: courseId,
+        courseName: courseName,
+        faculty: faculty,
+      );
+    } else {
+      // ✅ Fetch all semesters from API
+      final allSemesters = await CourseService.getAvailableSemesters();
+      debugPrint('📅 All semesters fetched:');
+      for (var s in allSemesters) {
+        debugPrint('  ${s.semester} ${s.year}');
+      }
+      // ✅ Sort them based on custom order (Winter < Spring < Summer)
+      allSemesters.sort(CourseService.compareSemesters);
+
+      debugPrint('📅 Sorted semesters:');
+      for (var s in allSemesters) {
+        debugPrint('  ${s.semester} ${s.year}');
+      }
+
+      debugPrint(
+        '🎯 Current semester: ${_currentSemester!.semester} ${_currentSemester!.year}',
+      );
+
+      // ✅ Find the current semester index
+      final currentIndex = allSemesters.indexWhere(
+        (s) =>
+            s.year == _currentSemester!.year &&
+            s.semester == _currentSemester!.semester,
+      );
+
+      debugPrint('🔢 Current index in sorted list: $currentIndex');
+
+      if (currentIndex == -1) {
+        debugPrint('❌ Current semester not found in available semesters.');
+        return [];
+      }
+
+      final fromIndex = (currentIndex - pastSemestersToInclude).clamp(
+        0,
+        allSemesters.length - 1,
+      );
+      debugPrint('🔍 Searching from index $fromIndex to $currentIndex');
+      final selectedSemesters = allSemesters.sublist(
+        fromIndex,
+        currentIndex + 1,
+      );
+
+      debugPrint('📚 Semesters to search in:');
+      for (var s in selectedSemesters) {
+        debugPrint('  ${s.semester} ${s.year}');
+      }
+      final Map<String, CourseSearchResult> resultMap = {};
+
+      for (final sem in selectedSemesters) {
+        final res = await CourseService.searchCourses(
+          year: sem.year,
+          semester: sem.semester,
+          courseId: courseId,
+          courseName: courseName,
+          faculty: faculty,
+        );
+
+        for (final r in res) {
+          // Add only if not already present (keeps first occurrence)
+          resultMap.putIfAbsent(r.course.courseNumber, () => r);
+        }
+      }
+
+      return resultMap.values.toList();
+    }
+  }
+
+
+  // Fetch the latest available semester from the repository
+  Future<void> _fetchLatestSemester() async {
+    try {
+      final semesters = await CourseService.getAvailableSemesters();
+      if (semesters.isNotEmpty) {
+        // Get the most recent semester (they should be sorted)
+        _currentSemester = semesters.first;
+        debugPrint('Latest semester: ${_currentSemester!.semesterName}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching latest semester: $e');
+      // Fallback to a default semester if API fails
+      _currentSemester = SemesterInfo(
+        year: 2024,
+        semester: 200, // Winter
+        startDate: '',
+        endDate: '',
+      );
+    }
+  }
 }

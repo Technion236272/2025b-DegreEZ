@@ -66,7 +66,7 @@ class StudentProvider with ChangeNotifier {
   }
 
   // Update student profile with optimistic update
-  Future<bool> updateProfile({
+  Future<bool> updateStudentProfile({
     required String name,
     required String major,
     required String preferences,

@@ -4,6 +4,7 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/services/course_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
@@ -32,7 +33,7 @@ Scaffold(
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (studentNotifier.error != '') {
+          if (studentNotifier.error != '' && studentNotifier.error != null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -597,7 +598,7 @@ Scaffold(
   }
 */
 
-/*
+
   void _showAddCourseDialog(BuildContext context, String semesterName) {
     final searchController = TextEditingController();
     List<CourseSearchResult> results = [];
@@ -617,10 +618,7 @@ Scaffold(
               final courseName = isId ? null : query;
               print('SEARCH: id=$courseId, name=$courseName');
 
-              final fetched = await Provider.of<StudentProvider>(
-                context,
-                listen: false,
-              ).searchCourses(
+              final fetched = await context.read<CourseProvider>().searchCourses(
                 courseId: courseId,
                 courseName: courseName,
                 pastSemestersToInclude: 4,
@@ -704,7 +702,7 @@ Scaffold(
                                         context,
                                         listen: false,
                                       ).addCourseToSemester(
-                                        studentNotiier,
+                                        context.read<StudentProvider>().student!.id,
                                         semesterName,
                                         course,
                                       );
@@ -750,8 +748,8 @@ Scaffold(
       },
     );
   }
-*/
-void _showAddCourseDialog(BuildContext context, String semesterName){}
+
+// void _showAddCourseDialog(BuildContext context, String semesterName){}
 
   void _confirmDeleteSemester(BuildContext context, String semesterName,String studentId) {
     showDialog(

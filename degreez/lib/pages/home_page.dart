@@ -241,6 +241,21 @@ class _CalendarHomePageState extends State<CalendarHomePage>
             ),
             
             const Divider(),
+            _buildDrawerItem(
+              isSelected: _currentPage == 'Log Out',
+              icon: Icons.logout,
+              title: 'Log Out',
+              onTap: () async {
+                studentProvider.clear();
+                context.read<CourseProvider>().clear();
+                await loginNotifier.signOut();
+                if (context.mounted) {
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/', (route) => false);
+                }
+              },
+            ),
             
             // // Add Course - New menu item for easier access
             // ListTile(
@@ -260,17 +275,17 @@ class _CalendarHomePageState extends State<CalendarHomePage>
             // const Divider(),
             
             // Sign out
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Sign Out'),
-              onTap: () {
-                // Clear providers before signing out
-                context.read<StudentProvider>().clear();
-                context.read<CourseProvider>().clear();
-                loginNotifier.signOut();
-                Navigator.pop(context);
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.logout, color: Colors.red),
+            //   title: const Text('Sign Out'),
+            //   onTap: () {
+            //     // Clear providers before signing out
+            //     context.read<StudentProvider>().clear();
+            //     context.read<CourseProvider>().clear();
+            //     loginNotifier.signOut();
+            //     Navigator.pop(context);
+            //   },
+            // ),
           ],
         ),
       ),
@@ -536,79 +551,104 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     );
   }
 
-  Widget _buildProfileView(StudentProvider studentProvider, CourseProvider courseProvider) {
-    final student = studentProvider.student;
-    
+  Widget _buildProfileView(StudentProvider studentNotifier,CourseProvider courseNotifier) {
+    final student = studentNotifier.student;
     if (student == null) {
-      return const Center(
-        child: Text('No student data available'),
-      );
+      return const Center(child: Text('No student profile found'));
     }
 
-    final totalCourses = courseProvider.coursesBySemester.values
-        .fold<int>(0, (sum, courses) => sum + courses.length);
-        
+    final totalCredits = courseNotifier.coursesBySemester.keys
+        .map((semester) => courseNotifier.getTotalCreditsForSemester(semester))
+        .fold<double>(0.0, (sum, credits) => sum + credits);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Student Info Card
           Card(
+            color: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Student Profile',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.white70),
+                        onPressed:
+                            () => _showEditProfileDialog(
+                              context,
+                              studentNotifier,
+                            ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
                   ProfileInfoRow(label: 'Name', value: student.name),
                   ProfileInfoRow(label: 'Major', value: student.major),
                   ProfileInfoRow(label: 'Faculty', value: student.faculty),
-                  ProfileInfoRow(label: 'Semester', value: student.semester.toString()),
+                  ProfileInfoRow(
+                    label: 'Current Semester',
+                    value: student.semester.toString(),
+                  ),
                   ProfileInfoRow(label: 'Catalog', value: student.catalog),
                   if (student.preferences.isNotEmpty)
-                    ProfileInfoRow(label: 'Interests', value: student.preferences),
+                    ProfileInfoRow(
+                      label: 'Preferences',
+                      value: student.preferences,
+                    ),
                 ],
               ),
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Statistics
-          Text(
-            'Statistics',
-            style: Theme.of(context).textTheme.titleLarge,
+          const SizedBox(height: 20),
+          const Text(
+            'Course Statistics',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Expanded(
-                child: StatCard(
-                  label: 'Total Courses',
-                  value: totalCourses.toString(),
-                  icon: Icons.school,
-                ),
+              StatCard(
+                icon: Icons.calendar_today,
+                label: 'Semesters',
+                value: courseNotifier.coursesBySemester.length.toString(),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: StatCard(
-                  label: 'Semesters',
-                  value: courseProvider.coursesBySemester.length.toString(),
-                  icon: Icons.calendar_today,
-                ),
+              StatCard(
+                icon: Icons.school,
+                label: 'Courses',
+                value:
+                    courseNotifier.coursesBySemester.values
+                        .expand((courses) => courses)
+                        .length
+                        .toString(),
+              ),
+              StatCard(
+                icon: Icons.star,
+                label: 'Credits',
+                value: totalCredits.toStringAsFixed(1),
               ),
             ],
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Edit Profile Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _showEditProfileDialog(context, student),
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit Profile'),
-            ),
           ),
         ],
       ),
@@ -979,9 +1019,79 @@ class _CalendarHomePageState extends State<CalendarHomePage>
   }
 
   // Placeholder method for edit profile
-  void _showEditProfileDialog(BuildContext context, StudentModel student) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit profile functionality coming soon!')),
+    void _showEditProfileDialog(BuildContext context, StudentProvider notifier) {
+    final student = notifier.student!;
+    final nameController = TextEditingController(text: student.name);
+    final majorController = TextEditingController(text: student.major);
+    final preferencesController = TextEditingController(
+      text: student.preferences,
+    );
+    final catalogController = TextEditingController(text: student.catalog);
+    final facultyController = TextEditingController(text: student.faculty);
+    final semesterController = TextEditingController(
+      text: student.semester.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: majorController,
+                decoration: const InputDecoration(labelText: 'Major'),
+              ),
+              TextField(
+                controller: facultyController,
+                decoration: const InputDecoration(labelText: 'Faculty'),
+              ),
+              TextField(
+                controller: semesterController,
+                decoration: const InputDecoration(labelText: 'Semester'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: catalogController,
+                decoration: const InputDecoration(labelText: 'Catalog'),
+              ),
+              TextField(
+                controller: preferencesController,
+                decoration: const InputDecoration(labelText: 'Preferences'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+
+
+                notifier.updateStudentProfile(
+                  name: nameController.text,
+                  major: majorController.text,
+                  preferences: preferencesController.text,
+                  faculty: facultyController.text,
+                  catalog: catalogController.text,
+                  semester: student.semester,
+                );
+                Navigator.of(context).pop();
+              },
+
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
