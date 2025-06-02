@@ -1,4 +1,5 @@
-// lib/main.dart - Complete migration to new providers + Color Theme Provider
+// lib/main.dart - Updated to include CalendarControllerProvider
+import 'package:degreez/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';

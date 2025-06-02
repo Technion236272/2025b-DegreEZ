@@ -7,7 +7,7 @@ class StudentModel {
   final String major;
   final String faculty;
   final String preferences;
-  final String semester; // Changed from int to String
+  final String semester;
   final String catalog; // selecting the catalog for the student
 
   StudentModel({
@@ -55,7 +55,7 @@ class StudentModel {
     String? preferences,
     String? catalog,
     String? faculty,
-    String? semester, // Changed from int to String
+    String? semester,
   }) {
     return StudentModel(
       id: id,

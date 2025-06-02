@@ -13,7 +13,6 @@ class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
-
 class _LoginPageState extends State<LoginPage> {
   bool _hasHandledPostLogin = false;
 
@@ -42,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
               );
             });
           }
+          //NEW CODE AREA START
 
           // Handle post-login flow
           if (loginNotifier.isSignedIn && !_hasHandledPostLogin) {
@@ -102,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           }
-
+          //NEW CODE AREA END
           // Show login form if not signed in
           return SafeArea(
             child: Center(

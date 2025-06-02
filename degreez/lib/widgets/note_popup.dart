@@ -119,8 +119,8 @@ class LinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = AppColorsDarkMode.accentColor;
-    final intialOffset = offsetY + distanceToBaseline;
-    for (double y = intialOffset; y < size.height; y = y + lineHeight) {
+    final initialOffset = offsetY + distanceToBaseline;
+    for (double y = initialOffset; y < size.height; y = y + lineHeight) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
   }

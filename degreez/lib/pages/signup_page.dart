@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/login_notifier.dart';
@@ -37,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
   );
 
   // Catalog Selection Not Implemented Yet
-  final RegExp _catalogValidator = RegExp(r'');
+  // final RegExp _catalogValidator = RegExp(r'');
 
   // Dispose the controllers when the widget is removed from the widget tree
   // This is important to free up resources and avoid memory leaks
@@ -56,7 +54,7 @@ class _SignUpPageState extends State<SignUpPage> {
   void initState() {
     super.initState();
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    // context.read<StudentProvider>().fetchStudent(context.read<LogInNotifier>().user!.uid);
+    // context.read<StudentProvider>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
     // });
   }
 
@@ -64,7 +62,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     debugPrint("entered SignUp Page");
     final loginNotifier = context.watch<LogInNotifier>();
-    final studentProvider = context.watch<StudentProvider>();
+    final studentNotifier = context.watch<StudentProvider>();
 
     if (loginNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -74,28 +72,28 @@ class _SignUpPageState extends State<SignUpPage> {
 
     // Fetch student data using StudentProvider
     // This is a placeholder. In a real app, you would fetch the student data
-    // final student = studentProvider.fetchStudent(user.uid);
+    // final student = studentNotifier.fetchStudentData(user.uid);
     if (context.watch<StudentProvider>().isLoading == false &&
-        studentProvider.student == null &&
-        context.read<StudentProvider>().error == null) {
+        studentNotifier.student == null &&
+        context.read<StudentProvider>().error == '') {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         context.read<StudentProvider>().isLoading == false
-            ? await context.read<StudentProvider>().fetchStudent(
+            ? await context.read<StudentProvider>().fetchStudentData(
               context.read<LogInNotifier>().user!.uid,
             )
             : null;
       });
     }
 
-    final student = studentProvider.student;
+    final student = studentNotifier.student;
 
     // If student data is loading, show loader
-    if (studentProvider.isLoading) {
+    if (studentNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     // If student data exists, navigate to home page
-    if (context.watch<StudentProvider>().error == null && student != null) {
+    if (context.watch<StudentProvider>().error == '' && student != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -107,7 +105,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     // If student data does not exist, show form to create it
-    return (student == null && context.watch<StudentProvider>().error == null)
+    return (student == null && context.watch<StudentProvider>().error == '')
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
           body: Consumer<LogInNotifier>(
@@ -115,10 +113,10 @@ class _SignUpPageState extends State<SignUpPage> {
               // If student data exists, and student is veteran
               // if (loginNotifier.newUser == false ) {
               //   WidgetsBinding.instance.addPostFrameCallback((_) async {
-              //     await studentProvider.fetchStudent(loginNotifier.user!.uid);
+              //     await studentNotifier.fetchStudentData(loginNotifier.user!.uid);
 
               //     if (!mounted) return;
-              //    studentProvider.error == null ?
+              //    studentNotifier.error == '' ?
               //     Navigator.pushNamedAndRemoveUntil(
               //       context,
               //       '/home_page',
@@ -130,7 +128,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
               // if (loginNotifier.stayedSignedIn == true) {
               //   WidgetsBinding.instance.addPostFrameCallback((_) {
-              //     studentProvider.fetchStudent(loginNotifier.user!.uid);
+              //     studentNotifier.fetchStudentData(loginNotifier.user!.uid);
               //     Navigator.pushNamedAndRemoveUntil(
               //       context,
               //       '/',
@@ -158,293 +156,112 @@ class _SignUpPageState extends State<SignUpPage> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            'Hello ${user.displayName ?? user.email ?? 'Student'}!',
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColorDim,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Name field
-                          TextFormField(
+                          textFormFieldWithStyle(
+                            label: 'Name',
                             controller: _nameController,
-                            decoration: InputDecoration(
-                              labelText: 'Full Name',
-                              labelStyle: TextStyle(
-                                color: AppColorsDarkMode.secondaryColorDim,
-                              ),
-                              hintText: 'Enter your full name',
-                              prefixIcon: Icon(
-                                Icons.person,
-                                color: AppColorsDarkMode.secondaryColor,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColorDim,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColor,
-                                ),
-                              ),
-                            ),
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
-                            ),
-                            validator: (value) {
-                              if (value == null || 
-                                  value.isEmpty || 
-                                  !_nameValidator.hasMatch(value)) {
-                                return 'Please enter a valid name';
-                              }
-                              return null;
-                            },
+                            example: 'e.g. Steve Harvey',
+                            validatorRegex: _nameValidator,
+                            errorMessage: "Really? an empty name ...",
                           ),
-                          const SizedBox(height: 16),
-
-                          // Major field
-                          TextFormField(
+                          textFormFieldWithStyle(
+                            label: 'Major',
                             controller: _majorController,
-                            decoration: InputDecoration(
-                              labelText: 'Major',
-                              labelStyle: TextStyle(
-                                color: AppColorsDarkMode.secondaryColorDim,
-                              ),
-                              hintText: 'e.g., Computer Science',
-                              prefixIcon: Icon(
-                                Icons.school,
-                                color: AppColorsDarkMode.secondaryColor,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColorDim,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColor,
-                                ),
-                              ),
-                            ),
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
-                            ),
-                            validator: (value) {
-                              if (value == null || 
-                                  value.isEmpty || 
-                                  !_majorValidator.hasMatch(value)) {
-                                return 'Please enter a valid major';
-                              }
-                              return null;
-                            },
+                            example: 'e.g. Data Analysis',
+                            validatorRegex: _majorValidator,
+                            errorMessage:
+                                "Invalid Input! remember to write the major in English",
                           ),
-                          const SizedBox(height: 16),
-
-                          // Faculty field
-                          TextFormField(
+                          textFormFieldWithStyle(
+                            label: 'Faculty',
                             controller: _facultyController,
-                            decoration: InputDecoration(
-                              labelText: 'Faculty',
-                              labelStyle: TextStyle(
-                                color: AppColorsDarkMode.secondaryColorDim,
-                              ),
-                              hintText: 'e.g., Engineering',
-                              prefixIcon: Icon(
-                                Icons.business,
-                                color: AppColorsDarkMode.secondaryColor,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColorDim,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColor,
-                                ),
-                              ),
-                            ),
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
-                            ),
-                            validator: (value) {
-                              if (value == null || 
-                                  value.isEmpty || 
-                                  !_facultyValidator.hasMatch(value)) {
-                                return 'Please enter a valid faculty';
-                              }
-                              return null;
-                            },
+                            example: 'e.g. Computer Science',
+                            validatorRegex: _facultyValidator,
+                            errorMessage:
+                                "Invalid Input! remember to write the faculty in English",
                           ),
-                          const SizedBox(height: 16),
-
-                          // Current Semester field - Changed to String format
-                          TextFormField(
+                          textFormFieldWithStyle(
+                            label: 'Semester',
                             controller: _semesterController,
-                            decoration: InputDecoration(
-                              labelText: 'Current Semester',
-                              labelStyle: TextStyle(
-                                color: AppColorsDarkMode.secondaryColorDim,
-                              ),
-                              hintText: 'e.g., Winter 2024 or Spring 2024-25',
-                              prefixIcon: Icon(
-                                Icons.calendar_today,
-                                color: AppColorsDarkMode.secondaryColor,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColorDim,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColor,
-                                ),
-                              ),
-                            ),
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your current semester';
-                              }
-                              // Validate semester format (e.g., "Winter 2024" or "Spring 2024-25")
-                              if (!_semesterValidator.hasMatch(value)) {
-                                return 'Format: Season Year (e.g., Winter 2024)';
-                              }
-                              return null;
-                            },
+                            example: 'e.g. Winter 2024-25 or Summer 2021',
+                            validatorRegex: _semesterValidator,
+                            errorMessage:
+                                "should match this template 'Winter 2024-25'",
                           ),
-                          const SizedBox(height: 16),
-
-                          // Catalog field
-                          TextFormField(
-                            controller: _catalogController,
-                            decoration: InputDecoration(
-                              labelText: 'Catalog Year',
-                              labelStyle: TextStyle(
-                                color: AppColorsDarkMode.secondaryColorDim,
-                              ),
-                              hintText: 'e.g., 2023-2024',
-                              prefixIcon: Icon(
-                                Icons.book,
-                                color: AppColorsDarkMode.secondaryColor,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColorDim,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColor,
-                                ),
-                              ),
-                            ),
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your catalog year';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Preferences field (optional)
-                          TextFormField(
+                          textFormFieldWithStyle(
+                            label: 'Preferences',
                             controller: _preferencesController,
-                            decoration: InputDecoration(
-                              labelText: 'Preferences (Optional)',
-                              labelStyle: TextStyle(
-                                color: AppColorsDarkMode.secondaryColorDim,
-                              ),
-                              hintText: 'Any special preferences or notes',
-                              prefixIcon: Icon(
-                                Icons.note,
+                            example:
+                                "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
+                            validatorRegex: _preferencesValidator,
+                            lineNum: 3,
+                          ),
+
+                          // Should be changed to Catalog Picker
+
+                          // TextFormField(
+                          //   controller: _catalogController,
+                          //   decoration: const InputDecoration(labelText: 'Catalog'),
+                          //   validator:
+                          //       (v) => v == null || v.isEmpty ? 'Required' : null,
+                          // ),
+                          const SizedBox(height: 24),
+                          TextButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColorsDarkMode.accentColor,
+                            ),
+                            onPressed: () async {
+                              if (_formKey.currentState?.validate() != true)
+                                return;
+
+                              final student = StudentModel(
+                                id: user.uid,
+                                name: _nameController.text.trim(),
+                                major: _majorController.text.trim(),
+                                faculty: _facultyController.text.trim(),
+                                preferences: _preferencesController.text.trim(),
+                                semester: _semesterController.text.trim(),
+                                catalog: _catalogController.text.trim(),
+                              );
+
+                              // Create student using StudentProvider
+                              final success = await studentNotifier
+                                  .createStudent(student);
+
+                              if (success && context.mounted) {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/home_page',
+                                  (route) => false,
+                                );
+                              }
+                            },
+                            child: const Text(
+                              'Save & Continue',
+                              style: TextStyle(
                                 color: AppColorsDarkMode.secondaryColor,
                               ),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColorDim,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: AppColorsDarkMode.secondaryColor,
-                                ),
-                              ),
                             ),
-                            style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
-                            ),
-                            maxLines: 3,
                           ),
-                          const SizedBox(height: 32),
-
-                          // Submit button
-                          ElevatedButton(
-                            onPressed: studentProvider.isLoading
-                                ? null
-                                : () => _submitForm(context, user, studentProvider),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColorsDarkMode.secondaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                          TextButton(
+                            onPressed: () async {
+                              final rootNavigator = Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              );
+                              studentNotifier.clear();
+                              await loginNotifier.signOut();
+                              rootNavigator.pushNamedAndRemoveUntil(
+                                '/',
+                                (route) => false,
+                              );
+                            },
+                            child: const Text(
+                              'Sign out and return',
+                              style: TextStyle(
+                                color: AppColorsDarkMode.secondaryColorDim,
                               ),
                             ),
-                            child: studentProvider.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  )
-                                : Text(
-                                    'Complete Profile',
-                                    style: TextStyle(
-                                      color: AppColorsDarkMode.mainColor,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
                           ),
-
-                          const SizedBox(height: 16),
-
-                          // Error message
-                          if (studentProvider.error != null) ...[
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.red.shade300),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.error, color: Colors.red.shade700),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      studentProvider.error!,
-                                      style: TextStyle(color: Colors.red.shade700),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -453,32 +270,65 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         );
   }
+}
 
-  Future<void> _submitForm(BuildContext context, user, StudentProvider studentProvider) async {
-    if (_formKey.currentState!.validate()) {
-      // Create a new student model
-      final newStudent = StudentModel(
-        id: user.uid, // Use Firebase Auth UID
-        name: _nameController.text.trim(),
-        major: _majorController.text.trim(),
-        faculty: _facultyController.text.trim(),
-        preferences: _preferencesController.text.trim(),
-        semester: _semesterController.text.trim(), // Now stored as String
-        catalog: _catalogController.text.trim(),
-      );
+textFormFieldWithStyle({
+  required String label,
+  required TextEditingController controller,
+  required String example,
+  required RegExp validatorRegex,
+  int? lineNum,
+  String? errorMessage,
+}) {
+  return Padding(
+    padding: EdgeInsets.only(top: 10, bottom: 10),
+    child: TextFormField(
+      textAlign: TextAlign.start,
+      maxLines: lineNum ?? 1,
+      controller: controller,
+      cursorColor: AppColorsDarkMode.secondaryColor,
+      decoration: InputDecoration(
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.secondaryColor,
+            width: 2.0,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.errorColor,
+            width: 2.0,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+        ),
+        alignLabelWithHint: true,
+        labelText: label,
+        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
+        hoverColor: AppColorsDarkMode.secondaryColor,
+        hintText: example,
+        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+      ),
+      style: TextStyle(color: AppColorsDarkMode.secondaryColor, fontSize: 15),
+      validator: (value) {
+        if (value == null) {
+          return 'This field is required.';
+        }
 
-      // Save the student to Firestore using StudentProvider
-      final success = await studentProvider.createStudent(newStudent);
+        if (!validatorRegex.hasMatch(value)) {
+          debugPrint("value = $value");
+          if (value == '') {
+            return 'This field is required.';
+          }
+          return errorMessage ?? 'Invalid Input';
+        }
 
-      if (success && mounted) {
-        // Navigate to home page
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/calendar_home',
-          (route) => false,
-        );
-      }
-      // Error handling is done automatically through the provider's error state
-    }
-  }
+        return null; // Input is valid
+      },
+    ),
+  );
 }

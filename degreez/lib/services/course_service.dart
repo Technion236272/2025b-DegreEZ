@@ -328,7 +328,7 @@ class SemesterInfo {
     }
   }
 
-  String get semesterKey => '${semesterName.replaceAll(' ', ' ')}';
+  String get semesterKey => semesterName.replaceAll(' ', ' ');
 }
 
 class CourseSearchResult {
