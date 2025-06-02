@@ -1,6 +1,5 @@
 // lib/mixins/course_event_mixin.dart
 import 'package:flutter/material.dart';
-import 'package:calendar_view/calendar_view.dart';
 
 enum CourseEventType { lecture, tutorial, lab }
 
@@ -41,11 +40,11 @@ mixin CourseEventMixin {
     
     switch (state) {
       case CourseEventState.selected:
-        return baseColor.withOpacity(0.85);
+        return baseColor;
       case CourseEventState.conflicted:
-        return Colors.red.withOpacity(0.85);
+        return Colors.red;
       default:
-        return baseColor.withOpacity(0.7);
+        return baseColor;
     }
   }
 
@@ -62,7 +61,6 @@ mixin CourseEventMixin {
         return 1.0;
     }
   }
-
   // Get text style based on state
   TextStyle getEventTextStyle(CourseEventState state) {
     return TextStyle(
@@ -72,7 +70,7 @@ mixin CourseEventMixin {
       fontWeight: state == CourseEventState.selected 
           ? FontWeight.bold 
           : FontWeight.normal,
-      fontSize: 12,
+      fontSize: 10,
     );
   }
 
@@ -98,13 +96,20 @@ mixin CourseEventMixin {
       case CourseEventType.lab:
         return Icons.science;
     }
-  }
-
-  // Format event title
+  }  // Format event title
   String formatEventTitle(String courseName, CourseEventType type, int? groupNumber) {
-    final typeStr = type.name.toUpperCase();
-    final groupStr = groupNumber != null ? ' G$groupNumber' : '';
-    return '$typeStr$groupStr\n$courseName';
+    // final typeStr = type.name.toUpperCase();
+    // final groupStr = groupNumber != null ? ' G$groupNumber' : '';
+    // return '$typeStr$groupStr\n$courseName';
+    // i want to return type first, then course name with line break for better fitting
+    switch (type) {
+      case CourseEventType.lecture:
+        return '(L)\n$courseName';
+      case CourseEventType.tutorial:
+        return '(T)\n$courseName';
+      case CourseEventType.lab:
+        return '(Lab)\n$courseName';
+    }
   }
 
   // Parse course event type from Hebrew text

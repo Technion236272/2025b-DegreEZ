@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
-import '../providers/course_data_provider.dart';
 import '../models/student_model.dart';
 
 class UserInfoWidget extends StatefulWidget {
@@ -266,7 +265,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
                       padding: const EdgeInsets.all(12),
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red,
                         border: Border.all(color: Colors.red),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -322,7 +321,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
 
     final loginNotifier = context.read<LogInNotifier>();
     final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
+    // final courseProvider = context.read<CourseProvider>();
     
     final user = loginNotifier.user!;
 

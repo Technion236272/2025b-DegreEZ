@@ -7,21 +7,22 @@ import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
+import '../mixins/course_event_mixin.dart';
 import 'schedule_selection_dialog.dart';
 
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
   
   const CourseCalendarPanel({
-    Key? key, 
+    super.key, 
     required this.eventController,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseCalendarPanel> createState() => _CourseCalendarPanelState();
 }
 
-class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
+class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEventMixin {
   bool _isExpanded = false;
 
   @override
@@ -81,11 +82,17 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
                         ),
                       )
                     else
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: allCourses.length,
-                        itemBuilder: (context, index) {
+                      Container(
+                        constraints: const BoxConstraints(
+                          maxHeight: 240, // Approximate height for 3 items (80px each)
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: allCourses.length > 3 
+                              ? const AlwaysScrollableScrollPhysics()
+                              : const NeverScrollableScrollPhysics(),
+                          itemCount: allCourses.length,
+                          itemBuilder: (context, index) {
                           final course = allCourses[index];
                           
                           return FutureBuilder(
@@ -231,7 +238,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
                             },
                           );
                         },
-                      ),
+                      ))
                   ],
                 ),
               ),
@@ -356,7 +363,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         if (timeRange == null) continue;
         
         final event = CalendarEventData(
-          title: '${course.name} (${schedule.type})',
+          title: formatEventTitle(course.name, _parseEventType(schedule.type), schedule.group > 0 ? schedule.group : null),
           description: _buildEventDescription(course, schedule),
           date: eventDate,
           startTime: timeRange['start']!,
@@ -604,5 +611,18 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
       'saturday': DateTime.saturday,
     };
     return dayMap[englishDay.toLowerCase()];
+  }
+
+  CourseEventType _parseEventType(String eventType) {
+    switch (eventType.toLowerCase()) {
+      case 'lecture':
+        return CourseEventType.lecture;
+      case 'tutorial':
+        return CourseEventType.tutorial;
+      case 'lab':
+        return CourseEventType.lab;
+      default:
+        return CourseEventType.lecture; // Default fallback
+    }
   }
 }

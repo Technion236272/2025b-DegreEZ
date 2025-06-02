@@ -24,7 +24,7 @@ class CourseService {
         return semesters;
       }
     } catch (e) {
-      print('Error fetching semesters: $e');
+      throw Exception('Error fetching semesters: $e');
     }
     return [];
   }
@@ -46,7 +46,7 @@ class CourseService {
         return courses;
       }
     } catch (e) {
-      print('Error fetching courses for $year-$semester: $e');
+      throw Exception('Error fetching courses for $year-$semester: $e');
     }
     return [];
   }
@@ -168,26 +168,26 @@ class CourseService {
     
     return score;
   }
-
   static bool _timesOverlap(String time1, String time2) {
     // Parse time strings like "14:30 - 16:30" and check for overlap
-    final parseTime = (String timeStr) {
-      final parts = timeStr.split(' - ');
-      if (parts.length != 2) return null;
-      
-      final start = _parseTimeString(parts[0]);
-      final end = _parseTimeString(parts[1]);
-      if (start == null || end == null) return null;
-      
-      return {'start': start, 'end': end};
-    };
+    final timeRange1 = _parseTimeRange(time1);
+    final timeRange2 = _parseTimeRange(time2);
     
-    final parsed1 = parseTime(time1);
-    final parsed2 = parseTime(time2);
+    if (timeRange1 == null || timeRange2 == null) return false;
     
-    if (parsed1 == null || parsed2 == null) return false;
+    // Check if ranges overlap: start1 < end2 && start2 < end1
+    return timeRange1.start < timeRange2.end && timeRange2.start < timeRange1.end;
+  }
+
+  static TimeRange? _parseTimeRange(String timeStr) {
+    final parts = timeStr.split(' - ');
+    if (parts.length != 2) return null;
     
-    return parsed1['start']! < parsed2['end']! && parsed2['start']! < parsed1['end']!;
+    final start = _parseTimeString(parts[0]);
+    final end = _parseTimeString(parts[1]);
+    if (start == null || end == null) return null;
+    
+    return TimeRange(start, end);
   }
 
   static int? _parseTimeString(String timeStr) {
@@ -321,9 +321,9 @@ class SemesterInfo {
 
   String get semesterName {
     switch (semester) {
-      case 200: return 'Winter ${year}-${year + 1}';
-      case 201: return 'Spring ${year}';
-      case 202: return 'Summer ${year}';
+      case 200: return 'Winter $year-${year + 1}';
+      case 201: return 'Spring $year';
+      case 202: return 'Summer $year';
       default: return 'Semester $semester $year';
     }
   }
@@ -383,4 +383,12 @@ class ScheduleEntry {
   }
 
   bool get hasStaff => staff.isNotEmpty;
+}
+
+// Helper class for time range operations
+class TimeRange {
+  final int start;
+  final int end;
+
+  TimeRange(this.start, this.end);
 }

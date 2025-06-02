@@ -232,9 +232,9 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color, width: 1),
       ),
       child: Column(
         children: [
@@ -385,9 +385,9 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.brown.shade800.withOpacity(0.3),
+              color: Colors.brown.shade800,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.brown.shade600.withOpacity(0.5)),
+              border: Border.all(color: Colors.brown.shade600),
             ),
             child: Row(
               children: [
@@ -446,7 +446,7 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey.shade900.withOpacity(0.3),
+                color: Colors.grey.shade900,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade700),
               ),
@@ -489,9 +489,9 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
         height: 100,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: courseColor.withOpacity(colorThemeProvider.isClassic ? 1.0 : 0.8),
+          color: courseColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: courseColor.withOpacity(0.9)),
+          border: Border.all(color: courseColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

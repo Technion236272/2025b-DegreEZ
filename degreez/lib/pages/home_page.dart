@@ -27,7 +27,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
   int _viewMode = 0; // 0: Week View, 1: Day View
   final TextEditingController _searchController = TextEditingController();
   bool _hasInitializedData = false;
-  String _searchQuery = '';
+  final _searchQuery = '';
 
   @override
   void initState() {
@@ -111,7 +111,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('$_currentPage'),
+            title: Text(_currentPage),
             centerTitle: true,
             actions: [
               Consumer<CourseDataProvider>(
@@ -206,7 +206,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${student.major}',
+                        student.major,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -775,11 +775,8 @@ class _CalendarHomePageState extends State<CalendarHomePage>
         debugPrint('Failed to parse time range: ${schedule.time}');
         continue;
       }
-      
-      // Get event type and create appropriate event
+        // Get event type and create appropriate event
       final eventType = parseCourseEventType(schedule.type);
-      final isSelected = (eventType == CourseEventType.lecture && selectedLecture != null) ||
-                        (eventType == CourseEventType.tutorial && selectedTutorial != null);
       
       // Check for time conflicts before adding the event
       final hasConflict = _hasTimeConflict(timeRange['start']!, timeRange['end']!);
@@ -795,10 +792,9 @@ class _CalendarHomePageState extends State<CalendarHomePage>
           _eventController.remove(conflictingEvent);
         }
       }
-      
-      final event = CalendarEventData(
+        final event = CalendarEventData(
         date: eventDate,
-        title: _formatSelectedEventTitle(course.name, eventType, schedule, isSelected),
+        title: formatEventTitle(course.name, eventType, schedule.group > 0 ? schedule.group : null),
         description: _buildEventDescription(course, schedule, semester),
         startTime: timeRange['start']!,
         endTime: timeRange['end']!,
@@ -865,7 +861,6 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       }
     }
   }
-
   CalendarEventData? _createEventFromTimeString(
     StudentCourse course,
     String timeString,
@@ -900,16 +895,18 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     
     if (timeRange == null) return null;
     
+    // Convert eventType string to CourseEventType for consistent formatting
+    final courseEventType = _parseEventType(eventType);
+    
     return CalendarEventData(
       date: eventDate,
-      title: '$eventType\n${course.name}',
+      title: formatEventTitle(course.name, courseEventType, null),
       description: '${course.courseId} - $semester\n$eventType: $timeString',
       startTime: timeRange['start']!,
       endTime: timeRange['end']!,
       color: color,
     );
   }
-
   int? _parseEnglishDay(String englishDay) {
     final dayMap = {
       'sunday': DateTime.sunday,
@@ -921,6 +918,20 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       'saturday': DateTime.saturday,
     };
     return dayMap[englishDay.toLowerCase()];
+  }
+
+  // Helper method to convert eventType string to CourseEventType
+  CourseEventType _parseEventType(String eventType) {
+    switch (eventType.toLowerCase()) {
+      case 'lecture':
+        return CourseEventType.lecture;
+      case 'tutorial':
+        return CourseEventType.tutorial;
+      case 'lab':
+        return CourseEventType.lab;
+      default:
+        return CourseEventType.lecture; // Default fallback
+    }
   }
 
   String _buildEventDescription(StudentCourse course, ScheduleEntry schedule, String semester) {
@@ -971,14 +982,13 @@ class _CalendarHomePageState extends State<CalendarHomePage>
   void _showEditProfileDialog(BuildContext context, StudentModel student) {
     // Keep your existing implementation
   }
-
   void _showCourseSearchAndSelect() {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
+          height: MediaQuery.of(context).size.height * 0.75, // Reduced from 0.8 to 0.75
           child: _CourseSearchWidget(
             onCourseSelected: (course) {
               Navigator.pop(context);

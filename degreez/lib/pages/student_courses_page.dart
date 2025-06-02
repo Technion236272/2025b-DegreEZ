@@ -394,14 +394,13 @@ class _StudentCoursesPageState extends State<StudentCoursesPage> {
     
     return total;
   }
-
   void _showCourseSearchDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.8,
+          height: MediaQuery.of(context).size.height * 0.75, // Reduced from 0.8 to 0.75
           child: _CourseSearchWidget(
             onCourseSelected: (course) {
               Navigator.pop(context);

@@ -1,6 +1,5 @@
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:flutter/material.dart';
-import 'package:degreez/color/color_palette.dart';
 import 'package:provider/provider.dart';
 
 class GradeSticker extends StatefulWidget {
