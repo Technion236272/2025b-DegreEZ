@@ -1,10 +1,12 @@
 // lib/pages/degree_progress_page.dart
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/models/student_model.dart';
+import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
+import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/services/course_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/student_notifier.dart';
-import '../services/course_service.dart';
 import '../widgets/course_card.dart';
 
 class DegreeProgressPage extends StatefulWidget {
@@ -15,6 +17,7 @@ class DegreeProgressPage extends StatefulWidget {
 }
 
 class _DegreeProgressPageState extends State<DegreeProgressPage> {
+  
   @override
   Widget build(BuildContext context) {
 
@@ -23,13 +26,14 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
  child: 
 Scaffold(
       backgroundColor: AppColorsDarkMode.mainColor,
-      body: Consumer<StudentNotifier>(
+      body: Consumer<StudentProvider>(
         builder: (context, studentNotifier, _) {
-          if (studentNotifier.isLoading) {
+          final courseNotifier = context.read<CourseProvider>();
+          if (studentNotifier.isLoading && studentNotifier.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (studentNotifier.error.isNotEmpty) {
+          if (studentNotifier.error != '' && studentNotifier.error != null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -46,7 +50,7 @@ Scaffold(
             );
           }
 
-          final semesters = studentNotifier.sortedCoursesBySemester;
+          final semesters = courseNotifier.sortedCoursesBySemester;
 
           if (semesters.isEmpty) {
             return const Center(
@@ -78,8 +82,8 @@ Scaffold(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header with degree progress summary only in portrait mode.
-                if (orientation == Orientation.portrait)
-                  _buildProgressHeader(context, studentNotifier),
+                // if (orientation == Orientation.portrait)
+                //   _buildProgressHeader(context, studentNotifier),
 
                 Padding(padding: EdgeInsets.only(left: 25),child: Text("Press and hold down on a course to add notes to it",style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),),
                 // Semester list
@@ -101,7 +105,7 @@ Scaffold(
                             semester,
                             studentNotifier,
                           )
-                          : _buildHorizontalSemesterSection(
+                          : _buildVerticalSemesterSection(
                             context,
                             semester,
                             studentNotifier,
@@ -200,10 +204,7 @@ Scaffold(
                 TextButton(
                   onPressed: () {
                     final semesterName = '$selectedSeason $selectedYear';
-                    Provider.of<StudentNotifier>(
-                      context,
-                      listen: false,
-                    ).addSemester(semesterName, context);
+                    context.read<CourseProvider>().addSemester(context.read<StudentProvider>().student!.id, semesterName);
                     Navigator.of(context).pop();
                   },
                   child: const Text('Add'),
@@ -215,10 +216,10 @@ Scaffold(
       },
     );
   }
-
+/*
   Widget _buildProgressHeader(
     BuildContext context,
-    StudentNotifier studentNotifier,
+    StudentProvider studentNotifier,
   ) {
     final totalCourses =
         studentNotifier.coursesBySemester.values
@@ -303,7 +304,7 @@ Scaffold(
       ),
     );
   }
-
+*/
   Widget _buildSummaryCard(
     BuildContext context,
     String title,
@@ -347,11 +348,11 @@ Scaffold(
   Widget _buildVerticalSemesterSection(
     BuildContext context,
     Map<String, dynamic> semester,
-    StudentNotifier studentNotifier,
+    StudentProvider studentNotifier,
   ) {
     final courses = semester['courses'] as List<StudentCourse>;
     final semesterName = semester['name'] as String;
-    final totalCredits = studentNotifier.getTotalCreditsForSemester(
+    final totalCredits = context.read<CourseProvider>().getTotalCreditsForSemester(
       semesterName,
     );
 
@@ -419,7 +420,7 @@ Scaffold(
                     ),
                     tooltip: 'Delete Semester',
                     onPressed: () {
-                      _confirmDeleteSemester(context, semesterName);
+                      _confirmDeleteSemester(context, semesterName,studentNotifier.student!.id);
                     },
                   ),
                 ],
@@ -454,7 +455,7 @@ Scaffold(
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index];
-                final courseWithDetails = studentNotifier.getCourseWithDetails(
+                final courseWithDetails = context.read<CourseProvider>().getCourseWithDetails(
                   semesterName,
                   course.courseId,
                 );
@@ -469,12 +470,12 @@ Scaffold(
       ],
     );
   }
-
+/*
   // Horizontal layout for landscape mode
   Widget _buildHorizontalSemesterSection(
     BuildContext context,
     Map<String, dynamic> semester,
-    StudentNotifier studentNotifier,
+    StudentProvider studentNotifier,
   ) {
     final courses = semester['courses'] as List<StudentCourse>;
     final semesterName = semester['name'] as String;
@@ -544,7 +545,7 @@ Scaffold(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     tooltip: 'Delete Semester',
                     onPressed: () {
-                      _confirmDeleteSemester(context, semesterName);
+                      _confirmDeleteSemester(context, semesterName,studentNotifier.student!.id);
                     },
                   ),
                 ],
@@ -595,6 +596,8 @@ Scaffold(
       ],
     );
   }
+*/
+
 
   void _showAddCourseDialog(BuildContext context, String semesterName) {
     final searchController = TextEditingController();
@@ -615,10 +618,7 @@ Scaffold(
               final courseName = isId ? null : query;
               print('SEARCH: id=$courseId, name=$courseName');
 
-              final fetched = await Provider.of<StudentNotifier>(
-                context,
-                listen: false,
-              ).searchCourses(
+              final fetched = await context.read<CourseProvider>().searchCourses(
                 courseId: courseId,
                 courseName: courseName,
                 pastSemestersToInclude: 4,
@@ -698,10 +698,11 @@ Scaffold(
                                     tutorialTime: '',
                                   );
                                   final success =
-                                      await Provider.of<StudentNotifier>(
+                                      await Provider.of<CourseProvider>(
                                         context,
                                         listen: false,
                                       ).addCourseToSemester(
+                                        context.read<StudentProvider>().student!.id,
                                         semesterName,
                                         course,
                                       );
@@ -748,7 +749,9 @@ Scaffold(
     );
   }
 
-  void _confirmDeleteSemester(BuildContext context, String semesterName) {
+// void _showAddCourseDialog(BuildContext context, String semesterName){}
+
+  void _confirmDeleteSemester(BuildContext context, String semesterName,String studentId) {
     showDialog(
       context: context,
       builder:
@@ -770,10 +773,10 @@ Scaffold(
               ),
               TextButton(
                 onPressed: () async {
-                  await Provider.of<StudentNotifier>(
+                  await Provider.of<CourseProvider>(
                     context,
                     listen: false,
-                  ).deleteSemester(semesterName, context);
+                  ).deleteSemester(studentId,semesterName);
                   if (!mounted) return;
                   Navigator.of(ctx).pop();
                 },

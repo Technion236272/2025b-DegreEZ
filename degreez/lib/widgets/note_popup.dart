@@ -1,7 +1,10 @@
 import 'package:degreez/color/color_palette.dart';
-import 'package:degreez/providers/student_notifier.dart';
+import 'package:degreez/models/student_model.dart';
+import 'package:degreez/providers/course_provider.dart';
+import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 
 Future<bool> notePopup(
   BuildContext context,
@@ -10,7 +13,8 @@ Future<bool> notePopup(
   String? startNote,
 ) async {
   final TextEditingController controller = TextEditingController();
-  final notifier = context.read<StudentNotifier>();
+  final notifierStudent = context.read<StudentProvider>();
+  final notifierCourse = context.read<CourseProvider>();
   debugPrint(
     'Note: startNote:$startNote',
   );
@@ -56,7 +60,7 @@ Future<bool> notePopup(
     },
   );
 
-  notifier.updateCourseNote(semesterName, course.courseId, controller.text);
+  notifierCourse.updateCourseNote(notifierStudent.student!.id,semesterName, course.courseId, controller.text);
 
   debugPrint(
     'Note: semesterKey:$semesterName, courseId:${course.courseId}, note:${controller.text});',

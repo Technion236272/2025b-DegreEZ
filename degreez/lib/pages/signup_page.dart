@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/login_notifier.dart';
-import 'package:degreez/providers/student_notifier.dart';
+import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +35,7 @@ class _SignUpPageState extends State<SignUpPage> {
   );
 
   // Catalog Selection Not Implemented Yet
-  final RegExp _catalogValidator = RegExp(r'');
+  // final RegExp _catalogValidator = RegExp(r'');
 
   // Dispose the controllers when the widget is removed from the widget tree
   // This is important to free up resources and avoid memory leaks
@@ -56,7 +54,7 @@ class _SignUpPageState extends State<SignUpPage> {
   void initState() {
     super.initState();
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    // context.read<StudentNotifier>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
+    // context.read<StudentProvider>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
     // });
   }
 
@@ -64,7 +62,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     debugPrint("entered SignUp Page");
     final loginNotifier = context.watch<LogInNotifier>();
-    final studentNotifier = context.watch<StudentNotifier>();
+    final studentNotifier = context.watch<StudentProvider>();
 
     if (loginNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -72,15 +70,15 @@ class _SignUpPageState extends State<SignUpPage> {
 
     final user = loginNotifier.user;
 
-    // Fetch student data using StudentNotifier
+    // Fetch student data using StudentProvider
     // This is a placeholder. In a real app, you would fetch the student data
     // final student = studentNotifier.fetchStudentData(user.uid);
-    if (context.watch<StudentNotifier>().isLoading == false &&
+    if (context.watch<StudentProvider>().isLoading == false &&
         studentNotifier.student == null &&
-        context.read<StudentNotifier>().error == '') {
+        context.read<StudentProvider>().error == '') {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        context.read<StudentNotifier>().isLoading == false
-            ? await context.read<StudentNotifier>().fetchStudentData(
+        context.read<StudentProvider>().isLoading == false
+            ? await context.read<StudentProvider>().fetchStudentData(
               context.read<LogInNotifier>().user!.uid,
             )
             : null;
@@ -95,7 +93,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     // If student data exists, navigate to home page
-    if (context.watch<StudentNotifier>().error == '' && student != null) {
+    if (context.watch<StudentProvider>().error == '' && student != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -107,7 +105,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     // If student data does not exist, show form to create it
-    return (student == null && context.watch<StudentNotifier>().error == '')
+    return (student == null && context.watch<StudentProvider>().error == '')
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
           body: Consumer<LogInNotifier>(
@@ -225,7 +223,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 catalog: _catalogController.text.trim(),
                               );
 
-                              // Create student using StudentNotifier
+                              // Create student using StudentProvider
                               final success = await studentNotifier
                                   .createStudent(student);
 

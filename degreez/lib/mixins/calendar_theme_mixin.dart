@@ -97,8 +97,7 @@ mixin CalendarDarkThemeMixin {
       ),
     );
   }
-  
-  /// Build an event tile with dark theme styling
+    /// Build an event tile with dark theme styling
   Widget buildEventTile(
     BuildContext context,
     DateTime date, 
@@ -119,14 +118,13 @@ mixin CalendarDarkThemeMixin {
     
     return Container(
       margin: const EdgeInsets.all(2),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: filteredEvents.first.color ?? Theme.of(context).colorScheme.primary,
+      padding: const EdgeInsets.all(2),      decoration: BoxDecoration(
+        color: filteredEvents.first.color,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         filteredEvents.first.title,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
+        style: const TextStyle(color: Colors.white, fontSize: 8),
         overflow: TextOverflow.ellipsis,
       ),
     );
