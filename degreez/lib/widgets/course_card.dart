@@ -146,7 +146,7 @@ class _CourseCardState extends State<CourseCard> {
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: widget.colorPalette.gradeBG,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Center(
@@ -155,7 +155,7 @@ class _CourseCardState extends State<CourseCard> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: widget.colorPalette.gradeText,
+                                color: Colors.black,
                               ),
                             ),
                           ),
