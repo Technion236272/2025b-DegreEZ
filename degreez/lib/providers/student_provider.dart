@@ -72,7 +72,7 @@ class StudentProvider with ChangeNotifier {
     required String preferences,
     required String faculty,
     required String catalog,
-    required int semester,
+    required String semester, // Changed from int to String
   }) async {
     if (_student == null) return false;
 
@@ -100,7 +100,7 @@ class StudentProvider with ChangeNotifier {
             'Preferences': preferences,
             'Faculty': faculty,
             'Catalog': catalog,
-            'Semester': semester,
+            'Semester': semester, // Now stored as String
           });
       
       _error = null;

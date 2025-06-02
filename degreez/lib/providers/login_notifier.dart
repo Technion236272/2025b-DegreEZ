@@ -14,6 +14,7 @@ class LogInNotifier extends ChangeNotifier {
   String? _errorMessage;
   bool _isLoading = false;
   bool _newUser = true;
+  bool _stayedSignedIn = false;
   
   // Getters
   User? get user => _user;
@@ -21,6 +22,7 @@ class LogInNotifier extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSignedIn => _user != null;
   bool get newUser => _newUser;
+  bool get stayedSignedIn => _stayedSignedIn;
   
   // Constructor: listen to auth state changes
   LogInNotifier() {
@@ -41,6 +43,9 @@ class LogInNotifier extends ChangeNotifier {
   void _initUser() {
     _user = _auth.currentUser;
     debugPrint("Init user: ${_user?.displayName ?? 'No user'}");
+    if (_user != null) {
+      _stayedSignedIn = true;
+    }
   }
   
   /// Sign in with Google account

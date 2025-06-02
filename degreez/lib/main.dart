@@ -18,6 +18,7 @@ import 'providers/color_theme_provider.dart';
 import 'pages/student_courses_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'pages/signup_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
             '/home_page': (context) => CalendarHomePage(),
             '/calendar_home': (context) => CalendarHomePage(),
             '/courses': (context) => const StudentCoursesPage(),
+            '/sign_up_page': (context) => const SignUpPage(),
           },
         ),
       ),

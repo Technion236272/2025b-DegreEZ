@@ -7,7 +7,7 @@ class StudentModel {
   final String major;
   final String faculty;
   final String preferences;
-  final int semester;
+  final String semester; // Changed from int to String
   final String catalog; // selecting the catalog for the student
 
   StudentModel({
@@ -31,7 +31,7 @@ class StudentModel {
       major: data['Major'] ?? '',
       faculty: data['Faculty'] ?? '',
       preferences: data['Preferences'] ?? '',
-      semester: data['Semester'] ?? 1,
+      semester: data['Semester']?.toString() ?? '1', // Convert to String and provide default
       catalog: data['Catalog'] ?? '',
     );
   }
@@ -44,7 +44,7 @@ class StudentModel {
       'Major': major,
       'Faculty': faculty,
       'Preferences': preferences,
-      'Semester': semester,
+      'Semester': semester, // Now stored as String
       'Catalog': catalog,
     };
   }
@@ -55,7 +55,7 @@ class StudentModel {
     String? preferences,
     String? catalog,
     String? faculty,
-    int? semester,
+    String? semester, // Changed from int to String
   }) {
     return StudentModel(
       id: id,

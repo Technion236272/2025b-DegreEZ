@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/login_notifier.dart';
+import '../providers/student_provider.dart';
+import '../providers/course_provider.dart';
 import '../widgets/google_sign_in_button.dart';
-import '../widgets/user_info_widget.dart';
 import '../color/color_palette.dart';
 
 class LoginPage extends StatefulWidget {
@@ -14,13 +15,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  
+  bool _hasHandledPostLogin = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:AppColorsDarkMode.mainColor,
-      body: Consumer<LogInNotifier>(
-        builder: (context, loginNotifier, _) {
+      backgroundColor: AppColorsDarkMode.mainColor,
+      body: Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
+        builder: (context, loginNotifier, studentProvider, courseProvider, _) {
           // Display error message if any
           if (loginNotifier.errorMessage != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -41,15 +43,67 @@ class _LoginPageState extends State<LoginPage> {
             });
           }
 
-          return loginNotifier.isSignedIn
-                        // const UserInfoWidget()  will be replaced with a rerouting to the home page
-                        // when the user is signed in, we will use the Navigator to push the home page
-                        // Navigator.pushNamed(context, '/home_page');
-                        // which will add the data of the user to a student model
-                        // and then we will use the provider to set the data of the user
-                        ? const UserInfoWidget() 
-                        // User is not signed in, show sign-in button
-                        : SafeArea(
+          // Handle post-login flow
+          if (loginNotifier.isSignedIn && !_hasHandledPostLogin) {
+            _hasHandledPostLogin = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              if (!mounted) return;
+
+              final user = loginNotifier.user!;
+              
+              // Try to fetch existing student data
+              final studentExists = await studentProvider.fetchStudent(user.uid);
+              
+              if (!mounted) return;
+
+              if (studentExists && studentProvider.hasStudent) {
+                // Existing user - load courses and go to home
+                await courseProvider.loadStudentCourses(user.uid);
+                if (mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/calendar_home',
+                    (route) => false,
+                  );
+                }
+              } else {
+                // New user - go to signup page
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/sign_up_page',
+                  (route) => false,
+                );
+              }
+            });
+
+            // Show loading state while handling post-login
+            return Scaffold(
+              backgroundColor: AppColorsDarkMode.mainColor,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: AppColorsDarkMode.secondaryColor,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      loginNotifier.stayedSignedIn 
+                          ? 'Welcome back! Loading your data...'
+                          : 'Setting up your account...',
+                      style: TextStyle(
+                        color: AppColorsDarkMode.secondaryColor,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // Show login form if not signed in
+          return SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 child: Padding(
@@ -103,7 +157,8 @@ class _LoginPageState extends State<LoginPage> {
 
                               Text(
                                 'Sign in with your Google account to continue',
-                                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                                style: TextStyle(
+                                    color: AppColorsDarkMode.secondaryColorDim),
                               ),
 
                               const SizedBox(height: 24),
@@ -122,11 +177,9 @@ class _LoginPageState extends State<LoginPage> {
                                   color: AppColorsDarkMode.secondaryColorDim,
                                 ),
                               ),
-                              const SizedBox(height: 24), // Add some spacing
+                              const SizedBox(height: 24),
 
-                              const SizedBox(
-                                height: 16,
-                              ), // Existing help text spacing
+                              const SizedBox(height: 16),
                             ],
                           ),
                         ),
