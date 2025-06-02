@@ -142,14 +142,13 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
     
     return parts.join('\n');
   }
-
   DateTime _getWeekStart(DateTime date) {
     final weekday = date.weekday;
-    return date.subtract(Duration(days: weekday - 1));
+    return date.subtract(Duration(days: weekday % 7));
   }
 
   DateTime _getDateForWeekday(DateTime weekStart, int targetWeekday) {
-    final daysToAdd = (targetWeekday - 1) % 7;
+    final daysToAdd = targetWeekday == DateTime.sunday ? 0 : targetWeekday;
     return weekStart.add(Duration(days: daysToAdd));
   }
 

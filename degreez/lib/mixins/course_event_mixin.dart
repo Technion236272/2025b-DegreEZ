@@ -141,15 +141,14 @@ mixin CourseEventMixin {
     };
     return dayMap[hebrewDay] ?? DateTime.monday;
   }
-
-  // Convert DateTime weekday constant to day offset from Monday
+  // Convert DateTime weekday constant to day offset from Sunday
   // This is needed because DateTime.weekday uses 1=Monday, 7=Sunday
-  // but we need offsets like Monday=0, Tuesday=1, ..., Sunday=6
+  // but we need offsets like Sunday=0, Monday=1, ..., Saturday=6
   int getWeekdayOffset(int weekday) {
     if (weekday == DateTime.sunday) {
-      return 6; // Sunday is 6 days after Monday
+      return 0; // Sunday is the first day of the week
     } else {
-      return weekday - 1; // Monday=0, Tuesday=1, etc.
+      return weekday; // Monday=1, Tuesday=2, etc.
     }
   }
 

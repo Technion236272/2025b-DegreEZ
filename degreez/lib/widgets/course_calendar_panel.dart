@@ -323,9 +323,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
     }
 
     try {
-      // Get the current week's Monday
+      // Get the current week's Sunday
       final now = DateTime.now();
-      final monday = now.subtract(Duration(days: now.weekday - 1));
+      final sunday = now.subtract(Duration(days: now.weekday % 7));
       
       final courseColor = colorThemeProvider.getCourseColor(course.courseId);
       int eventsAdded = 0;
@@ -351,7 +351,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         final dayOfWeek = _parseHebrewDay(schedule.day);
         if (dayOfWeek == null) continue;
         
-        final eventDate = monday.add(Duration(days: dayOfWeek - 1));
+        final eventDate = sunday.add(Duration(days: (dayOfWeek == DateTime.sunday) ? 0 : dayOfWeek));
         final timeRange = _parseTimeRange(schedule.time, eventDate);
         if (timeRange == null) continue;
         
@@ -370,7 +370,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
       
       // If no detailed schedule, try to create events from stored times
       if (eventsAdded == 0) {
-        eventsAdded += _addBasicTimeEvents(course, monday, courseColor);
+        eventsAdded += _addBasicTimeEvents(course, sunday, courseColor);
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -513,7 +513,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
     return parts.join('\n');
   }
 
-  int _addBasicTimeEvents(StudentCourse course, DateTime monday, Color courseColor) {
+  int _addBasicTimeEvents(StudentCourse course, DateTime sunday, Color courseColor) {
     int eventsAdded = 0;
     
     // Create events from stored lecture time
@@ -522,7 +522,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         course, 
         course.lectureTime, 
         'Lecture', 
-        monday,
+        sunday,
         courseColor,
       );
       if (lectureEvent != null) {
@@ -537,7 +537,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         course, 
         course.tutorialTime, 
         'Tutorial', 
-        monday,
+        sunday,
         courseColor,
       );
       if (tutorialEvent != null) {
@@ -575,8 +575,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
     
     if (dayOfWeek == null || timePart.isEmpty) return null;
     
-    // Convert DateTime weekday to correct offset from Monday
-    final dayOffset = dayOfWeek == DateTime.sunday ? 6 : dayOfWeek - 1;
+    // Convert DateTime weekday to correct offset from Sunday
+    final dayOffset = dayOfWeek == DateTime.sunday ? 0 : dayOfWeek;
     
     final eventDate = weekStart.add(Duration(days: dayOffset));
     final timeRange = _parseTimeRange(timePart, eventDate);

@@ -14,7 +14,6 @@ import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
 import '../services/course_service.dart';
-
 class CalendarHomePage extends StatefulWidget {
   const CalendarHomePage({super.key});
 
@@ -644,16 +643,24 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     debugPrint('=== Updating calendar events with schedule selection ===');
     // Clear existing events
     _eventController.removeWhere((event) => true);
-    
-    // Get current week start (Monday)
+      // Get current week start (Sunday)
     final now = DateTime.now();
-    final currentWeekStart = now.subtract(Duration(days: now.weekday - 1));
-    debugPrint('Current week start (Monday): $currentWeekStart');
-    
+    final currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
+    debugPrint('Current week start (Sunday): $currentWeekStart');
+
     final semesterCount = courseProvider.coursesBySemester.length;
     debugPrint('Found $semesterCount semesters with courses');
     
+    final courseDataProvider = context.read<CourseDataProvider>();
+    
     for (final semesterEntry in courseProvider.coursesBySemester.entries) {
+      // process only the current semester
+      if (courseDataProvider.currentSemester != null && 
+          semesterEntry.key != courseDataProvider.currentSemester!.semesterName) {
+        debugPrint('Skipping semester "${semesterEntry.key}" as it is not the current semester');
+        continue;
+      }
+
       final semester = semesterEntry.key;
       final courses = semesterEntry.value;
       debugPrint('Processing semester "$semester" with ${courses.length} courses');
@@ -883,10 +890,9 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       // English day name
       dayOfWeek = _parseEnglishDay(dayPart);
     }
+      if (dayOfWeek == null || timePart.isEmpty) return null;
     
-    if (dayOfWeek == null || timePart.isEmpty) return null;
-    
-    // Convert DateTime weekday to correct offset from Monday
+    // Convert DateTime weekday to correct offset from Sunday
     final dayOffset = getWeekdayOffset(dayOfWeek);
     
     final eventDate = weekStart.add(Duration(days: dayOffset));
