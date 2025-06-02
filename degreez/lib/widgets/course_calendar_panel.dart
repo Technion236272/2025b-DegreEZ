@@ -28,9 +28,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
   Widget build(BuildContext context) {
     return Consumer4<StudentProvider, CourseProvider, CourseDataProvider, ColorThemeProvider>(
       builder: (context, studentProvider, courseProvider, courseDataProvider, colorThemeProvider, _) {
-        final allCourses = courseProvider.coursesBySemester.values
-            .expand((courses) => courses)
-            .toList();
+        // final allCourses = courseProvider.coursesBySemester.values
+        //     .expand((courses) => courses)
+        //     .toList();
+        // i want to show only the courses of the current semester
+        final currentSemester = courseDataProvider.currentSemester?.semesterName;
+        final allCourses = currentSemester != null 
+            ? courseProvider.coursesBySemester[currentSemester] ?? []
+            : courseProvider.coursesBySemester.values.expand((courses) => courses).toList();
 
         return Card(
           elevation: 2,

@@ -56,6 +56,9 @@ class CourseProvider with ChangeNotifier {
   String? _error;
 
   // Getters
+  List<StudentCourse> getCoursesForSemester(String semesterKey) {
+    return _coursesBySemester[semesterKey] ?? [];
+  }
   Map<String, List<StudentCourse>> get coursesBySemester => Map.unmodifiable(_coursesBySemester);
   CourseLoadingState get loadingState => _loadingState;
   String? get error => _error;

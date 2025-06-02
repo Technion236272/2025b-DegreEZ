@@ -112,7 +112,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('DegreEZ - $_currentPage'),
+            title: Text('$_currentPage'),
             centerTitle: true,
             actions: [
               Consumer<CourseDataProvider>(
@@ -122,6 +122,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Center(
                         child: Text(
+                          // the current semester's name
                           courseDataProvider.currentSemester!.semesterName,
                           style: const TextStyle(fontSize: 12),
                         ),
@@ -314,40 +315,6 @@ class _CalendarHomePageState extends State<CalendarHomePage>
   Widget _buildCalendarView(CourseProvider courseProvider) {
     return Column(
       children: [
-        // Search Bar - only visible in Week View
-        if (_viewMode == 0)
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search courses...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            _searchQuery = '';
-                          });
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
-          ),
-        
         // Course List Panel
         if (courseProvider.hasAnyCourses)
           CourseCalendarPanel(eventController: _eventController),
