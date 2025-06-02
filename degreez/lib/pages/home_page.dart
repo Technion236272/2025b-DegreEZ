@@ -1,3 +1,4 @@
+// lib/pages/home_page.dart - Updated to use AddCoursePage
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../pages/student_courses_page.dart';
 import '../pages/degree_progress_page.dart';
+import '../pages/add_course_page.dart'; // Added new import
 import '../widgets/profile/profile_info_row.dart';
 import '../widgets/profile/stat_card.dart';
 import '../widgets/course_calendar_panel.dart';
@@ -14,6 +16,7 @@ import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
 import '../services/course_service.dart';
+
 class CalendarHomePage extends StatefulWidget {
   const CalendarHomePage({super.key});
 
@@ -154,11 +157,19 @@ class _CalendarHomePageState extends State<CalendarHomePage>
                   ),
                 )
               : body,
-          // Simplified FAB - removed the configure button
+          // Updated FAB - now navigates to AddCoursePage
           floatingActionButton: _currentPage == 'Calendar'
               ? FloatingActionButton(
-                  onPressed: _showCourseSearchAndSelect,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddCoursePage(),
+                      ),
+                    );
+                  },
                   child: const Icon(Icons.add),
+                  tooltip: 'Add Course',
                 )
               : null,
         );
@@ -195,37 +206,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
               ),
-              otherAccountsPictures: student != null ? [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        student.major,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      Text(
-                        'S${student.semester}',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ] : null,
-            ),
+              ),
             
             // Navigation Items
             _buildDrawerItem(
@@ -257,6 +238,23 @@ class _CalendarHomePageState extends State<CalendarHomePage>
               title: 'GPA Calculator',
               isSelected: _currentPage == 'GPA Calculator',
               onTap: () => _changePage('GPA Calculator'),
+            ),
+            
+            const Divider(),
+            
+            // Add Course - New menu item for easier access
+            ListTile(
+              leading: const Icon(Icons.add_circle_outline),
+              title: const Text('Add Course'),
+              onTap: () {
+                Navigator.pop(context); // Close drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddCoursePage(),
+                  ),
+                );
+              },
             ),
             
             const Divider(),
@@ -861,6 +859,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       }
     }
   }
+
   CalendarEventData? _createEventFromTimeString(
     StudentCourse course,
     String timeString,
@@ -907,6 +906,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       color: color,
     );
   }
+
   int? _parseEnglishDay(String englishDay) {
     final dayMap = {
       'sunday': DateTime.sunday,
@@ -978,235 +978,10 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     return '$typeStr$groupStr$selectedIndicator\n$courseName';
   }
 
-  // Placeholder methods
+  // Placeholder method for edit profile
   void _showEditProfileDialog(BuildContext context, StudentModel student) {
-    // Keep your existing implementation
-  }
-  void _showCourseSearchAndSelect() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.75, // Reduced from 0.8 to 0.75
-          child: _CourseSearchWidget(
-            onCourseSelected: (course) {
-              Navigator.pop(context);
-              _showAddCourseFromSearchDialog(context, course);
-            },
-          ),
-        ),
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Edit profile functionality coming soon!')),
     );
-  }
-
-  void _showAddCourseFromSearchDialog(BuildContext context, EnhancedCourseDetails courseDetails) {
-    final semesterController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add ${courseDetails.name}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Course ID: ${courseDetails.courseNumber}'),
-            Text('Credits: ${courseDetails.creditPoints}'),
-            Text('Faculty: ${courseDetails.faculty}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: semesterController,
-              decoration: const InputDecoration(
-                labelText: 'Semester',
-                hintText: 'e.g., Winter 2024',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (semesterController.text.isNotEmpty) {
-                _addCourseFromSearch(context, semesterController.text, courseDetails);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add Course'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _addCourseFromSearch(
-    BuildContext context,
-    String semester,
-    EnhancedCourseDetails courseDetails,
-  ) async {
-    final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
-
-    if (!studentProvider.hasStudent) return;
-
-    final course = StudentCourse(
-      courseId: courseDetails.courseNumber,
-      name: courseDetails.name,
-      finalGrade: '',
-      lectureTime: '',
-      tutorialTime: '',
-    );
-
-    final success = await courseProvider.addCourseToSemester(
-      studentProvider.student!.id,
-      semester,
-      course,
-    );
-
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Course added successfully')),
-      );
-    }
-  }
-}
-
-class _CourseSearchWidget extends StatefulWidget {
-  final Function(EnhancedCourseDetails) onCourseSelected;
-
-  const _CourseSearchWidget({
-    required this.onCourseSelected,
-  });
-
-  @override
-  State<_CourseSearchWidget> createState() => _CourseSearchWidgetState();
-}
-
-class _CourseSearchWidgetState extends State<_CourseSearchWidget> {
-  final TextEditingController _searchController = TextEditingController();
-  List<CourseSearchResult> _searchResults = [];
-  bool _isSearching = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<CourseDataProvider>(
-      builder: (context, courseDataProvider, _) {
-        return Column(
-          children: [
-            // Search field
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search courses by name or ID...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _isSearching
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchResults.clear();
-                            });
-                          },
-                        ),
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  if (value.length >= 2) {
-                    _performSearch(courseDataProvider, value);
-                  } else {
-                    setState(() {
-                      _searchResults.clear();
-                    });
-                  }
-                },
-              ),
-            ),
-
-            // Search results
-            Expanded(
-              child: _searchResults.isEmpty
-                  ? const Center(
-                      child: Text('Search for courses to see results'),
-                    )
-                  : ListView.builder(
-                      itemCount: _searchResults.length,
-                      itemBuilder: (context, index) {
-                        final result = _searchResults[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          child: ListTile(
-                            title: Text(result.course.name),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('ID: ${result.course.courseNumber}'),
-                                Text('Faculty: ${result.course.faculty}'),
-                                Text('Points: ${result.course.points}'),
-                              ],
-                            ),
-                            trailing: ElevatedButton(
-                              onPressed: () {
-                                widget.onCourseSelected(result.course);
-                              },
-                              child: const Text('Select'),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _performSearch(CourseDataProvider courseDataProvider, String query) async {
-    setState(() {
-      _isSearching = true;
-    });
-
-    try {
-      if (courseDataProvider.currentSemester == null) {
-        await courseDataProvider.fetchCurrentSemester();
-      }
-
-      if (courseDataProvider.currentSemester != null) {
-        final results = await CourseService.searchCourses(
-          year: courseDataProvider.currentSemester!.year,
-          semester: courseDataProvider.currentSemester!.semester,
-          courseName: query.contains(RegExp(r'[a-zA-Z]')) ? query : null,
-          courseId: query.contains(RegExp(r'[0-9]')) ? query : null,
-        );
-
-        setState(() {
-          _searchResults = results;
-        });
-      }
-    } catch (e) {
-      debugPrint('Search error: $e');
-      setState(() {
-        _searchResults = [];
-      });
-    } finally {
-      setState(() {
-        _isSearching = false;
-      });
-    }
   }
 }

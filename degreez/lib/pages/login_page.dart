@@ -59,6 +59,7 @@ class _LoginPageState extends State<LoginPage> {
               if (studentExists && studentProvider.hasStudent) {
                 // Existing user - load courses and go to home
                 await courseProvider.loadStudentCourses(user.uid);
+                
                 if (mounted) {
                   Navigator.pushNamedAndRemoveUntil(
                     context,

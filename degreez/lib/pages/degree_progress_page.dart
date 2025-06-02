@@ -876,16 +876,27 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
             ),
             TextButton(
               onPressed: () async {
-                // Note: You'll need to implement course removal in CourseProvider
-                // For now, we'll show a placeholder message
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Course removal not yet implemented'),
-                      backgroundColor: Colors.orange,
-                    ),
+                if (studentProvider.hasStudent) {
+                  // ✅ NOW ACTUALLY CALLING THE WORKING METHOD!
+                  final success = await courseProvider.removeCourseFromSemester(
+                    studentProvider.student!.id,
+                    semesterName,
+                    course.courseId,
                   );
+                  
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success 
+                            ? 'Removed ${course.name} from $semesterName'
+                            : 'Failed to remove course: ${courseProvider.error ?? 'Unknown error'}'
+                        ),
+                        backgroundColor: success ? Colors.green : Colors.red,
+                      ),
+                    );
+                  }
                 }
               },
               child: const Text('Remove', style: TextStyle(color: Colors.red)),
@@ -963,15 +974,28 @@ class _DegreeProgressPageState extends State<DegreeProgressPage> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
-                // Note: You'll need to implement semester deletion in CourseProvider
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Semester deletion not yet implemented'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-                Navigator.of(context).pop();
+              onPressed: () async {
+                if (studentProvider.hasStudent) {
+                  // ✅ ALSO USING THE EXISTING METHOD
+                  final success = await courseProvider.deleteSemester(
+                    studentProvider.student!.id,
+                    semesterName,
+                  );
+                  
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success 
+                            ? 'Deleted semester $semesterName'
+                            : 'Failed to delete semester: ${courseProvider.error ?? 'Unknown error'}'
+                        ),
+                        backgroundColor: success ? Colors.green : Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
