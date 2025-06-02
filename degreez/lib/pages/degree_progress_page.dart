@@ -1,13 +1,10 @@
-// lib/pages/degree_progress_page.dart - Updated for new providers
-import 'package:degreez/color/color_palette.dart';
-import 'package:degreez/providers/customized_diagram_notifier.dart';
+// lib/pages/degree_progress_page.dart - With Color Theme Toggle
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
-import '../services/course_service.dart';
-import '../widgets/course_card.dart';
+import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
 
 class DegreeProgressPage extends StatefulWidget {
@@ -20,440 +17,663 @@ class DegreeProgressPage extends StatefulWidget {
 class _DegreeProgressPageState extends State<DegreeProgressPage> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (ctx) => CustomizedDiagramNotifier(),
-      child: Scaffold(
-        backgroundColor: AppColorsDarkMode.mainColor,
-        body: Consumer3<StudentProvider, CourseProvider, CourseDataProvider>(
-          builder: (context, studentProvider, courseProvider, courseDataProvider, _) {
-            // Handle loading states
-            if (studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading degree progress...'),
-                  ],
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text('Degree Progress', style: TextStyle(color: Colors.white)),
+        actions: [
+          // Color Theme Toggle Button
+          Consumer<ColorThemeProvider>(
+            builder: (context, colorThemeProvider, _) {
+              return PopupMenuButton<String>(
+                icon: Icon(
+                  colorThemeProvider.currentThemeIcon,
+                  color: Colors.white,
                 ),
-              );
-            }
-
-            // Handle errors
-            if (studentProvider.error != null || courseProvider.error != null) {
-              final error = studentProvider.error ?? courseProvider.error!;
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error: $error',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
+                onSelected: (value) {
+                  if (value == 'toggle') {
+                    colorThemeProvider.toggleColorMode();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Switched to ${colorThemeProvider.currentThemeName}'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'toggle',
+                    child: Row(
+                      children: [
+                        Icon(
+                          colorThemeProvider.isColorful ? Icons.style : Icons.palette,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Switch to ${colorThemeProvider.isColorful ? 'Classic' : 'Colorful'} Theme',
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            }
-
-            final semesters = _getSortedCoursesBySemester(courseProvider.coursesBySemester);
-
-            if (semesters.isEmpty) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.timeline, size: 64, color: AppColorsDarkMode.secondaryColorDim),
-                    SizedBox(height: 16),
-                    Text(
-                      'No courses to display',
-                      style: TextStyle(fontSize: 18, color: AppColorsDarkMode.secondaryColorDim),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Add courses to see your degree progress',
-                      style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            // Detect device orientation
-            final orientation = MediaQuery.of(context).orientation;
-
-            return SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header with degree progress summary only in portrait mode
-                  if (orientation == Orientation.portrait)
-                    _buildProgressHeader(context, studentProvider, courseProvider, courseDataProvider),
-
-                  // Semester navigation and courses
-                  Expanded(
-                    child: _buildSemesterView(
-                      context, 
-                      semesters, 
-                      orientation, 
-                      courseDataProvider,
+                  ),
+                  PopupMenuItem(
+                    enabled: false,
+                    child: Text(
+                      'Current: ${colorThemeProvider.currentThemeName}',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
+              );
+            },
+          ),
+        ],
+      ),
+      body: Consumer4<StudentProvider, CourseProvider, CourseDataProvider, ColorThemeProvider>(
+        builder: (context, studentProvider, courseProvider, courseDataProvider, colorThemeProvider, _) {
+          // Handle loading states
+          if (studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading degree progress...', style: TextStyle(color: Colors.white)),
+                ],
               ),
             );
-          },
-        ),
+          }
+
+          // Handle no student data
+          if (!studentProvider.hasStudent) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.person_outline, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text('No student data available', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+            );
+          }
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  _buildHeader(studentProvider.student!),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Stats Cards
+                  _buildStatsCards(courseProvider),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Instruction Text
+                  const Center(
+                    child: Text(
+                      'Press and hold down on a course to add notes to it',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Semesters
+                  _buildSemesters(courseProvider, courseDataProvider, colorThemeProvider),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Map<String, List<StudentCourse>> _getSortedCoursesBySemester(
-    Map<String, List<StudentCourse>> coursesBySemester,
-  ) {
-    final List<String> semesterNames = coursesBySemester.keys.toList();
-
-    semesterNames.sort((a, b) {
-      final parsedA = _parseSemester(a);
-      final parsedB = _parseSemester(b);
-
-      final yearComparison = parsedA.year.compareTo(parsedB.year);
-      if (yearComparison != 0) return yearComparison;
-
-      return _seasonOrder(parsedA.season).compareTo(_seasonOrder(parsedB.season));
-    });
-
-    return {for (final name in semesterNames) name: coursesBySemester[name]!};
+  Widget _buildHeader(StudentModel student) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade800,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.school,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '${student.major} - ${_getShortFacultyName(student.faculty)}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
-  int _seasonOrder(String season) {
-    switch (season.toLowerCase()) {
-      case 'winter':
-        return 1;
-      case 'spring':
-        return 2;
-      case 'summer':
-        return 3;
-      default:
-        return 99;
-    }
+  String _getShortFacultyName(String faculty) {
+    // Convert full faculty names to short versions
+    if (faculty.toLowerCase().contains('computer')) return 'CS';
+    if (faculty.toLowerCase().contains('engineering')) return 'ENG';
+    if (faculty.toLowerCase().contains('science')) return 'SCI';
+    if (faculty.toLowerCase().contains('medicine')) return 'MED';
+    if (faculty.toLowerCase().contains('management')) return 'MNG';
+    return faculty.length > 3 ? faculty.substring(0, 3).toUpperCase() : faculty.toUpperCase();
   }
 
-  ({String season, int year}) _parseSemester(String semesterName) {
-    final parts = semesterName.split(' ');
-    final season = parts[0];
-    final year = (parts.length > 1) ? int.tryParse(parts[1]) ?? 0 : 0;
-    return (season: season, year: year);
-  }
-
-  Widget _buildProgressHeader(
-    BuildContext context,
-    StudentProvider studentProvider,
-    CourseProvider courseProvider,
-    CourseDataProvider courseDataProvider,
-  ) {
-    final student = studentProvider.student;
+  Widget _buildStatsCards(CourseProvider courseProvider) {
     final totalCourses = courseProvider.coursesBySemester.values
         .fold<int>(0, (sum, courses) => sum + courses.length);
+    
+    final totalCredits = _calculateTotalCredits(courseProvider);
+    final completedCourses = _calculateCompletedCourses(courseProvider);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColorsDarkMode.secondaryColor.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${student?.name ?? "Student"}\'s Degree Progress',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColorsDarkMode.secondaryColor,
-            ),
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatCard(
+            'Total Courses',
+            totalCourses.toString(),
+            Icons.school,
+            Colors.blue.shade800,
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${student?.major ?? "Unknown Major"} • ${student?.faculty ?? "Unknown Faculty"}',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColorsDarkMode.secondaryColorDim,
-            ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            'Total Credits',
+            totalCredits.toString(),
+            Icons.star,
+            Colors.green.shade800,
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Total Courses',
-                  totalCourses.toString(),
-                  Icons.school,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'Semesters',
-                  courseProvider.coursesBySemester.length.toString(),
-                  Icons.calendar_today,
-                ),
-              ),
-            ],
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildStatCard(
+            'Completed',
+            completedCourses.toString(),
+            Icons.check_circle,
+            Colors.orange.shade800,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon) {
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.mainColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColorsDarkMode.accentColor.withOpacity(0.3)),
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Column(
         children: [
-          Icon(icon, color: AppColorsDarkMode.accentColor, size: 24),
-          const SizedBox(height: 8),
+          Icon(
+            icon,
+            color: color,
+            size: 28,
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColorsDarkMode.secondaryColor,
-            ),
-          ),
-          Text(
-            title,
             style: TextStyle(
+              color: color,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.grey,
               fontSize: 12,
-              color: AppColorsDarkMode.secondaryColorDim,
+              fontWeight: FontWeight.w500,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSemesterView(
-    BuildContext context,
-    Map<String, List<StudentCourse>> semesters,
-    Orientation orientation,
-    CourseDataProvider courseDataProvider,
-  ) {
-    return DefaultTabController(
-      length: semesters.length,
-      child: Column(
-        children: [
-          // Semester tabs
-          Container(
-            color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
-            child: TabBar(
-              isScrollable: true,
-              indicatorColor: AppColorsDarkMode.accentColor,
-              labelColor: AppColorsDarkMode.secondaryColor,
-              unselectedLabelColor: AppColorsDarkMode.secondaryColorDim,
-              tabs: semesters.keys.map((semester) {
-                final courses = semesters[semester]!;
-                return Tab(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(semester),
-                      Text(
-                        '${courses.length} courses',
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          
-          // Semester content
-          Expanded(
-            child: TabBarView(
-              children: semesters.entries.map((entry) {
-                final semesterName = entry.key;
-                final courses = entry.value;
-                
-                return _buildCoursesGrid(
-                  context,
-                  semesterName,
-                  courses,
-                  orientation,
-                  courseDataProvider,
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
+  double _calculateTotalCredits(CourseProvider courseProvider) {
+    // This is a simplified calculation - you might want to fetch actual credit values
+    // from the course details API for more accuracy
+    return courseProvider.coursesBySemester.values
+        .fold<double>(0, (sum, courses) => sum + (courses.length * 3.5)); // Assuming average 3.5 credits per course
   }
 
-  Widget _buildCoursesGrid(
-    BuildContext context,
-    String semesterName,
-    List<StudentCourse> courses,
-    Orientation orientation,
-    CourseDataProvider courseDataProvider,
-  ) {
-    if (courses.isEmpty) {
+  int _calculateCompletedCourses(CourseProvider courseProvider) {
+    return courseProvider.coursesBySemester.values
+        .fold<int>(0, (sum, courses) => 
+            sum + courses.where((course) => course.finalGrade.isNotEmpty).length);
+  }
+
+  Widget _buildSemesters(CourseProvider courseProvider, CourseDataProvider courseDataProvider, ColorThemeProvider colorThemeProvider) {
+    final semesters = _getSortedSemesters(courseProvider.coursesBySemester);
+    
+    if (semesters.isEmpty) {
       return Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 40),
             Icon(
-              Icons.add_circle_outline,
+              Icons.timeline,
               size: 64,
-              color: AppColorsDarkMode.secondaryColorDim,
+              color: Colors.grey.shade600,
             ),
             const SizedBox(height: 16),
             Text(
-              'No courses in $semesterName',
+              'No courses added yet',
               style: TextStyle(
+                color: Colors.grey.shade400,
                 fontSize: 18,
-                color: AppColorsDarkMode.secondaryColorDim,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Add courses to this semester',
-              style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+            Text(
+              'Add courses to see your degree progress',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
       );
     }
 
-    final crossAxisCount = orientation == Orientation.landscape ? 4 : 2;
+    return Column(
+      children: semesters.entries.map((entry) {
+        final semesterName = entry.key;
+        final courses = entry.value;
+        final semesterCredits = _calculateSemesterCredits(courses);
+        
+        return _buildSemesterSection(
+          semesterName,
+          courses,
+          semesterCredits,
+          courseDataProvider,
+          colorThemeProvider,
+        );
+      }).toList(),
+    );
+  }
+
+  Map<String, List<StudentCourse>> _getSortedSemesters(Map<String, List<StudentCourse>> coursesBySemester) {
+    final sortedKeys = coursesBySemester.keys.toList()..sort((a, b) {
+      // Sort semesters chronologically
+      final aYear = _extractYear(a);
+      final bYear = _extractYear(b);
+      
+      if (aYear != bYear) {
+        return aYear.compareTo(bYear);
+      }
+      
+      return _getSemesterOrder(a).compareTo(_getSemesterOrder(b));
+    });
     
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.8,
-        ),
-        itemCount: courses.length,
-        itemBuilder: (context, index) {
-          final course = courses[index];
-          return _buildCourseCard(context, course, courseDataProvider);
-        },
+    return {for (String key in sortedKeys) key: coursesBySemester[key]!};
+  }
+
+  int _extractYear(String semesterName) {
+    final parts = semesterName.split(' ');
+    if (parts.length > 1) {
+      return int.tryParse(parts[1]) ?? 0;
+    }
+    return 0;
+  }
+
+  int _getSemesterOrder(String semesterName) {
+    final lowerName = semesterName.toLowerCase();
+    if (lowerName.contains('winter')) return 1;
+    if (lowerName.contains('spring')) return 2;
+    if (lowerName.contains('summer')) return 3;
+    return 4;
+  }
+
+  double _calculateSemesterCredits(List<StudentCourse> courses) {
+    // Simplified calculation - you might want to fetch actual credit values
+    return courses.length * 3.5; // Assuming average 3.5 credits per course
+  }
+
+  Widget _buildSemesterSection(
+    String semesterName,
+    List<StudentCourse> courses,
+    double credits,
+    CourseDataProvider courseDataProvider,
+    ColorThemeProvider colorThemeProvider,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Semester Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.brown.shade800.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.brown.shade600.withOpacity(0.5)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    semesterName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.brown.shade700,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '${credits.toStringAsFixed(1)} credits',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _addCourseToSemester(semesterName),
+                  icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    minimumSize: const Size(32, 32),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: () => _deleteSemester(semesterName),
+                  icon: const Icon(Icons.delete, color: Colors.white, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    minimumSize: const Size(32, 32),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Course Cards
+          if (courses.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade900.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade700),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.add_circle_outline,
+                    size: 32,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No courses in this semester',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: courses.map((course) => _buildCourseCard(course, colorThemeProvider)).toList(),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildCourseCard(
-    BuildContext context,
-    StudentCourse course,
-    CourseDataProvider courseDataProvider,
-  ) {
-    return Consumer<CustomizedDiagramNotifier>(
-      builder: (context, customizedNotifier, child) {
-        return FutureBuilder<EnhancedCourseDetails?>(
-          future: courseDataProvider.getCourseDetails(course.courseId),
-          builder: (context, snapshot) {
-            final courseDetails = snapshot.data;
+  Widget _buildCourseCard(StudentCourse course, ColorThemeProvider colorThemeProvider) {
+    final courseColor = colorThemeProvider.getCourseColor(course.courseId);
+    
+    return GestureDetector(
+      onLongPress: () => _showCourseNoteDialog(course),
+      child: Container(
+        width: 140,
+        height: 100,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: courseColor.withOpacity(colorThemeProvider.isClassic ? 1.0 : 0.8),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: courseColor.withOpacity(0.9)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Course ID
+            Text(
+              course.courseId,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             
-            return CourseCard(
-              courseId: course.courseId,
-              courseName: course.name,
-              creditPoints: courseDetails?.creditPoints ?? 0.0,
-              finalGrade: course.finalGrade,
-              colorPalette: customizedNotifier.cardColorPalette!,
-              onTap: () => _showCourseDetailsDialog(context, course, courseDetails, snapshot),
-            );
-          },
-        );
-      },
+            const SizedBox(height: 4),
+            
+            // Course Name
+            Expanded(
+              child: Text(
+                course.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            
+            // Grade indicator
+            if (course.finalGrade.isNotEmpty)
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _getGradeColor(course.finalGrade),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    course.finalGrade,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _showCourseDetailsDialog(
-    BuildContext context,
-    StudentCourse course,
-    EnhancedCourseDetails? courseDetails,
-    AsyncSnapshot<EnhancedCourseDetails?> snapshot,
-  ) {
+  Color _getGradeColor(String grade) {
+    if (grade.isEmpty) return Colors.grey;
+    
+    final numericGrade = int.tryParse(grade);
+    if (numericGrade != null) {
+      if (numericGrade >= 90) return Colors.green.shade600;
+      if (numericGrade >= 80) return Colors.blue.shade600;
+      if (numericGrade >= 70) return Colors.orange.shade600;
+      return Colors.red.shade600;
+    }
+    
+    // Handle letter grades
+    switch (grade.toUpperCase()) {
+      case 'A': case 'A+': return Colors.green.shade600;
+      case 'B': case 'B+': return Colors.blue.shade600;
+      case 'C': case 'C+': return Colors.orange.shade600;
+      default: return Colors.red.shade600;
+    }
+  }
+
+  void _addCourseToSemester(String semesterName) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Add course to $semesterName - Coming soon!'),
+        backgroundColor: Colors.blue.shade700,
+      ),
+    );
+  }
+
+  void _deleteSemester(String semesterName) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(course.name),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Course ID: ${course.courseId}'),
-              if (course.finalGrade.isNotEmpty)
-                Text('Grade: ${course.finalGrade}'),
-              if (course.note?.isNotEmpty == true)
-                Text('Note: ${course.note}'),
-              
-              if (courseDetails != null) ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Course Details:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text('Faculty: ${courseDetails.faculty}'),
-                Text('Credits: ${courseDetails.creditPoints}'),
-                Text('Academic Level: ${courseDetails.academicLevel}'),
-                if (courseDetails.prerequisites.isNotEmpty)
-                  Text('Prerequisites: ${courseDetails.prerequisites}'),
-                if (courseDetails.syllabus.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Syllabus:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(courseDetails.syllabus),
-                ],
-              ] else if (snapshot.connectionState == ConnectionState.waiting) ...[
-                const SizedBox(height: 16),
-                const Row(
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 8),
-                    Text('Loading course details...'),
-                  ],
-                ),
-              ] else ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Course details not available',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
-            ],
-          ),
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('Delete Semester', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'Are you sure you want to delete "$semesterName" and all its courses?',
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performDeleteSemester(semesterName);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: const Text('Delete'),
           ),
         ],
       ),
     );
+  }
+
+  void _performDeleteSemester(String semesterName) {
+    final studentProvider = context.read<StudentProvider>();
+    final courseProvider = context.read<CourseProvider>();
+    
+    if (studentProvider.hasStudent) {
+      courseProvider.deleteSemester(studentProvider.student!.id, semesterName);
+    }
+  }
+
+  void _showCourseNoteDialog(StudentCourse course) {
+    final noteController = TextEditingController(text: course.note ?? '');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Text(
+          'Add Note - ${course.name}',
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: noteController,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Enter your note...',
+            hintStyle: TextStyle(color: Colors.grey),
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _saveNote(course, noteController.text);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _saveNote(StudentCourse course, String note) {
+    final studentProvider = context.read<StudentProvider>();
+    final courseProvider = context.read<CourseProvider>();
+    
+    if (!studentProvider.hasStudent) return;
+
+    // Find which semester this course belongs to
+    String? targetSemester;
+    for (final entry in courseProvider.coursesBySemester.entries) {
+      if (entry.value.any((c) => c.courseId == course.courseId)) {
+        targetSemester = entry.key;
+        break;
+      }
+    }
+
+    if (targetSemester != null) {
+      courseProvider.updateCourseNote(
+        studentProvider.student!.id,
+        targetSemester,
+        course.courseId,
+        note,
+      );
+    }
   }
 }

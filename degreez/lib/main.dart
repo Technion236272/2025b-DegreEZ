@@ -1,4 +1,4 @@
-// lib/main.dart - Complete migration to new providers
+// lib/main.dart - Complete migration to new providers + Color Theme Provider
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +13,7 @@ import 'providers/student_provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/course_data_provider.dart';
 import 'providers/customized_diagram_notifier.dart';
+import 'providers/color_theme_provider.dart';
 
 import 'pages/student_courses_page.dart';
 import 'pages/home_page.dart';
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         
         // UI providers
         ChangeNotifierProvider(create: (_) => CustomizedDiagramNotifier()),
+        ChangeNotifierProvider(create: (_) => ColorThemeProvider()),
       ],
       child: CalendarControllerProvider(
         controller: EventController(),

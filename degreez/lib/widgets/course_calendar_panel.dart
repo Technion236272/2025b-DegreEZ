@@ -1,10 +1,11 @@
-// lib/widgets/course_calendar_panel.dart - Updated with schedule selection
+// lib/widgets/course_calendar_panel.dart - Updated with ColorThemeProvider
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:provider/provider.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
+import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
 import 'schedule_selection_dialog.dart';
 
@@ -25,8 +26,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<StudentProvider, CourseProvider, CourseDataProvider>(
-      builder: (context, studentProvider, courseProvider, courseDataProvider, _) {
+    return Consumer4<StudentProvider, CourseProvider, CourseDataProvider, ColorThemeProvider>(
+      builder: (context, studentProvider, courseProvider, courseDataProvider, colorThemeProvider, _) {
         final allCourses = courseProvider.coursesBySemester.values
             .expand((courses) => courses)
             .toList();
@@ -92,7 +93,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
                                   width: 16,
                                   height: 16,
                                   decoration: BoxDecoration(
-                                    color: _getCourseColor(course.courseId),
+                                    color: colorThemeProvider.getCourseColor(course.courseId),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -168,13 +169,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
                                         _showScheduleSelection(course, courseDetails);
                                         break;
                                       case 'add_to_calendar':
-                                        _addCourseToCalendar(course, courseDetails);
+                                        _addCourseToCalendar(course, courseDetails, colorThemeProvider);
                                         break;
                                       case 'remove_from_calendar':
                                         _removeCourseFromCalendar(course);
-                                        break;
-                                      case 'remove_course':
-                                        _showRemoveCourseDialog(course);
                                         break;
                                       case 'view_details':
                                         _showCourseDetails(context, course, courseDetails);
@@ -209,16 +207,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
                                           Icon(Icons.remove_circle),
                                           SizedBox(width: 8),
                                           Text('Remove from Calendar'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'remove_course',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_forever, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Remove Course Entirely', style: TextStyle(color: Colors.red)),
                                         ],
                                       ),
                                     ),
@@ -318,122 +306,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
     }
   }
 
-  Color _getCourseColor(String courseId) {
-    final hash = courseId.hashCode;
-    final colors = [
-      Colors.teal.shade900, // Dark greenish blue
-      Colors.indigo.shade900, // Deep bluish purple
-      Colors.cyan.shade900, // Rich green-blue — bright pop
-      Colors.deepPurple.shade900, // Bold, regal purple
-      Colors.blue.shade900, // Classic dark blue
-      Colors.orange.shade900, // Dark, warm orange — still different from brown
-      Colors.red.shade900, // Blood red — intense but clearly distinct
-      Colors.lime.shade900, // Sharp and vivid green-yellow
-    ];
-    return colors[hash.abs() % colors.length];
-  }
-
-  // Helper method to check for time conflicts with existing events
-  bool _hasTimeConflict(DateTime startTime, DateTime endTime) {
-    final existingEvents = widget.eventController.allEvents;
-    
-    for (final event in existingEvents) {
-      if (event.startTime != null && event.endTime != null) {
-        // Check if the new event overlaps with existing event
-        final eventStart = event.startTime!;
-        final eventEnd = event.endTime!;
-        
-        // Events conflict if: new_start < existing_end AND existing_start < new_end
-        if (startTime.isBefore(eventEnd) && eventStart.isBefore(endTime)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  // Helper method to find conflicting events for detailed feedback
-  List<CalendarEventData> _getConflictingEvents(DateTime startTime, DateTime endTime) {
-    final conflictingEvents = <CalendarEventData>[];
-    final existingEvents = widget.eventController.allEvents;
-    
-    for (final event in existingEvents) {
-      if (event.startTime != null && event.endTime != null) {
-        final eventStart = event.startTime!;
-        final eventEnd = event.endTime!;
-        
-        if (startTime.isBefore(eventEnd) && eventStart.isBefore(endTime)) {
-          conflictingEvents.add(event);
-        }
-      }
-    }
-    return conflictingEvents;
-  }
-
-  // Helper method to show conflict dialog and ask user what to do
-  Future<bool> _handleTimeConflict(String courseName, DateTime startTime, DateTime endTime) async {
-    final conflictingEvents = _getConflictingEvents(startTime, endTime);
-    
-    if (conflictingEvents.isEmpty) return true; // No conflict
-    
-    final conflictingTitles = conflictingEvents.map((e) => e.title).join(', ');
-    
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Time Conflict Detected'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('The course "$courseName" conflicts with:'),
-            const SizedBox(height: 8),
-            Text(
-              conflictingTitles,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Time: ${_formatTime(startTime)} - ${_formatTime(endTime)}',
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            const Text('What would you like to do?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // Remove conflicting events
-              for (final conflictingEvent in conflictingEvents) {
-                widget.eventController.remove(conflictingEvent);
-              }
-              Navigator.of(context).pop(true);
-            },
-            child: const Text(
-              'Replace Existing',
-              style: TextStyle(color: Colors.orange),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Add Anyway'),
-          ),
-        ],
-      ),
-    ) ?? false;
-  }
-
-  // Helper method to format time for display
-  String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _addCourseToCalendar(StudentCourse course, courseDetails) async {
+  void _addCourseToCalendar(StudentCourse course, courseDetails, ColorThemeProvider colorThemeProvider) {
     if (courseDetails == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -449,7 +322,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
       final now = DateTime.now();
       final monday = now.subtract(Duration(days: now.weekday - 1));
       
-      final courseColor = _getCourseColor(course.courseId);
+      final courseColor = colorThemeProvider.getCourseColor(course.courseId);
       int eventsAdded = 0;
       
       // Create events from detailed schedule data only for selected times
@@ -476,20 +349,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         final eventDate = monday.add(Duration(days: dayOfWeek - 1));
         final timeRange = _parseTimeRange(schedule.time, eventDate);
         if (timeRange == null) continue;
-        
-        // Check for time conflicts before creating the event
-        final hasConflict = _hasTimeConflict(timeRange['start']!, timeRange['end']!);
-        if (hasConflict) {
-          final shouldProceed = await _handleTimeConflict(
-            '${course.name} (${schedule.type})',
-            timeRange['start']!,
-            timeRange['end']!,
-          );
-          
-          if (!shouldProceed) {
-            continue; // Skip this event
-          }
-        }
         
         final event = CalendarEventData(
           title: '${course.name} (${schedule.type})',
@@ -582,119 +441,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
     );
   }
 
-  void _showRemoveCourseDialog(StudentCourse course) async {
-    final shouldRemove = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Course Entirely'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Are you sure you want to completely remove "${course.name}" from your courses?'),
-            const SizedBox(height: 12),
-            const Text(
-              'This will:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Text('• Remove the course from your semester'),
-            const Text('• Remove all calendar events for this course'),
-            const Text('• Delete all associated schedule selections'),
-            const SizedBox(height: 12),
-            const Text(
-              'This action cannot be undone.',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Remove Course'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldRemove == true) {
-      await _removeCourseEntirely(course);
-    }
-  }
-
-  Future<void> _removeCourseEntirely(StudentCourse course) async {
-    final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
-
-    if (!studentProvider.hasStudent) return;
-
-    // Find which semester this course belongs to
-    String? targetSemester;
-    for (final entry in courseProvider.coursesBySemester.entries) {
-      if (entry.value.any((c) => c.courseId == course.courseId)) {
-        targetSemester = entry.key;
-        break;
-      }
-    }
-
-    if (targetSemester == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not find semester for ${course.name}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      // First remove from calendar
-      _removeCourseFromCalendar(course);
-
-      // Then remove from the student's course list
-      final success = await courseProvider.removeCourseFromSemester(
-        studentProvider.student!.id,
-        targetSemester,
-        course.courseId,
-      );
-
-      if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${course.name} has been completely removed'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // Refresh the UI
-        setState(() {});
-      } else if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to remove ${course.name}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error removing course: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   // Helper methods for parsing Hebrew days and times
   int? _parseHebrewDay(String hebrewDay) {
     final dayMap = {
@@ -775,17 +521,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         courseColor,
       );
       if (lectureEvent != null) {
-        // Check for conflicts before adding
-        final hasConflict = _hasTimeConflict(lectureEvent.startTime!, lectureEvent.endTime!);
-        if (hasConflict) {
-          final conflictingEvents = _getConflictingEvents(lectureEvent.startTime!, lectureEvent.endTime!);
-          // For basic events, we'll just log the conflict and continue
-          debugPrint('Time conflict detected for ${course.name} lecture with existing events');
-          for (final conflictingEvent in conflictingEvents) {
-            debugPrint('Removing conflicting event: ${conflictingEvent.title}');
-            widget.eventController.remove(conflictingEvent);
-          }
-        }
         widget.eventController.add(lectureEvent);
         eventsAdded++;
       }
@@ -801,17 +536,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> {
         courseColor,
       );
       if (tutorialEvent != null) {
-        // Check for conflicts before adding
-        final hasConflict = _hasTimeConflict(tutorialEvent.startTime!, tutorialEvent.endTime!);
-        if (hasConflict) {
-          final conflictingEvents = _getConflictingEvents(tutorialEvent.startTime!, tutorialEvent.endTime!);
-          // For basic events, we'll just log the conflict and continue
-          debugPrint('Time conflict detected for ${course.name} tutorial with existing events');
-          for (final conflictingEvent in conflictingEvents) {
-            debugPrint('Removing conflicting event: ${conflictingEvent.title}');
-            widget.eventController.remove(conflictingEvent);
-          }
-        }
         widget.eventController.add(tutorialEvent);
         eventsAdded++;
       }

@@ -79,6 +79,17 @@ class CourseProvider with ChangeNotifier {
 
   // Load courses with proper loading state
   Future<bool> loadStudentCourses(String studentId) async {
+    // !! this one is called when we navigate to the courses page
+    // If already loaded, no need to load again
+    if (_loadingState.isLoadingCourses) {
+      // Already loading, no need to start again
+      return false;
+    }
+  // !! this causes error when navigating back to courses page
+    if (_coursesBySemester.isNotEmpty) {
+      // Already loaded, no need to load again
+      return true;
+    }
     _setLoadingState(_loadingState.copyWith(isLoadingCourses: true));
 
     try {

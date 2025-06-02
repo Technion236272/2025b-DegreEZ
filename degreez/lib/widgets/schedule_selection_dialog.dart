@@ -1,4 +1,4 @@
-// lib/widgets/schedule_selection_dialog.dart
+// lib/widgets/schedule_selection_dialog.dart - Fixed grouping of duplicate times
 
 import 'package:flutter/material.dart';
 import '../services/course_service.dart';
@@ -26,10 +26,10 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
   String? selectedLectureTime;
   String? selectedTutorialTime;
   
-  // Group schedule entries by type
-  List<ScheduleEntry> lectures = [];
-  List<ScheduleEntry> tutorials = [];
-  List<ScheduleEntry> labs = [];
+  // Group schedule entries by type and unique time slots
+  List<ScheduleGroup> lectures = [];
+  List<ScheduleGroup> tutorials = [];
+  List<ScheduleGroup> labs = [];
 
   @override
   void initState() {
@@ -37,21 +37,59 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     selectedLectureTime = widget.course.lectureTime.isNotEmpty ? widget.course.lectureTime : null;
     selectedTutorialTime = widget.course.tutorialTime.isNotEmpty ? widget.course.tutorialTime : null;
     
-    // Group schedule entries by type
+    // Group schedule entries by type and time slot
+    _groupScheduleEntries();
+  }
+
+  void _groupScheduleEntries() {
+    // Group by type first
+    final lectureEntries = <ScheduleEntry>[];
+    final tutorialEntries = <ScheduleEntry>[];
+    final labEntries = <ScheduleEntry>[];
+
     for (final schedule in widget.courseDetails.schedule) {
       final type = parseCourseEventType(schedule.type);
       switch (type) {
         case CourseEventType.lecture:
-          lectures.add(schedule);
+          lectureEntries.add(schedule);
           break;
         case CourseEventType.tutorial:
-          tutorials.add(schedule);
+          tutorialEntries.add(schedule);
           break;
         case CourseEventType.lab:
-          labs.add(schedule);
+          labEntries.add(schedule);
           break;
       }
     }
+
+    // Group by unique time slots
+    lectures = _groupByTimeSlot(lectureEntries);
+    tutorials = _groupByTimeSlot(tutorialEntries);
+    labs = _groupByTimeSlot(labEntries);
+  }
+
+  List<ScheduleGroup> _groupByTimeSlot(List<ScheduleEntry> entries) {
+    final Map<String, List<ScheduleEntry>> timeGroups = {};
+    
+    for (final entry in entries) {
+      final timeKey = '${entry.day} ${entry.time}';
+      timeGroups.putIfAbsent(timeKey, () => []).add(entry);
+    }
+    
+    return timeGroups.entries.map((entry) {
+      final timeKey = entry.key;
+      final scheduleEntries = entry.value;
+      
+      // Sort by group number
+      scheduleEntries.sort((a, b) => a.group.compareTo(b.group));
+      
+      return ScheduleGroup(
+        timeKey: timeKey,
+        day: scheduleEntries.first.day,
+        time: scheduleEntries.first.time,
+        entries: scheduleEntries,
+      );
+    }).toList();
   }
 
   @override
@@ -101,14 +139,14 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                     // Lectures Section
                     if (lectures.isNotEmpty) ...[
                       _buildSectionHeader('Lectures', Icons.school, lectures.length),
-                      ...lectures.map((lecture) => _buildScheduleOption(
-                        lecture,
+                      ...lectures.map((lectureGroup) => _buildScheduleGroupOption(
+                        lectureGroup,
                         CourseEventType.lecture,
-                        _isLectureSelected(lecture),
+                        _isLectureSelected(lectureGroup),
                         (selected) {
                           setState(() {
                             selectedLectureTime = selected 
-                                ? StudentCourse.formatScheduleString(lecture.day, lecture.time)
+                                ? StudentCourse.formatScheduleString(lectureGroup.day, lectureGroup.time)
                                 : null;
                           });
                         },
@@ -119,14 +157,14 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                     // Tutorials Section
                     if (tutorials.isNotEmpty) ...[
                       _buildSectionHeader('Tutorials', Icons.groups, tutorials.length),
-                      ...tutorials.map((tutorial) => _buildScheduleOption(
-                        tutorial,
+                      ...tutorials.map((tutorialGroup) => _buildScheduleGroupOption(
+                        tutorialGroup,
                         CourseEventType.tutorial,
-                        _isTutorialSelected(tutorial),
+                        _isTutorialSelected(tutorialGroup),
                         (selected) {
                           setState(() {
                             selectedTutorialTime = selected 
-                                ? StudentCourse.formatScheduleString(tutorial.day, tutorial.time)
+                                ? StudentCourse.formatScheduleString(tutorialGroup.day, tutorialGroup.time)
                                 : null;
                           });
                         },
@@ -137,8 +175,8 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                     // Labs Section (for future use)
                     if (labs.isNotEmpty) ...[
                       _buildSectionHeader('Labs', Icons.science, labs.length),
-                      ...labs.map((lab) => _buildScheduleOption(
-                        lab,
+                      ...labs.map((labGroup) => _buildScheduleGroupOption(
+                        labGroup,
                         CourseEventType.lab,
                         false, // Labs not implemented yet
                         (selected) {
@@ -217,15 +255,15 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     );
   }
 
-  bool _isLectureSelected(ScheduleEntry lecture) {
+  bool _isLectureSelected(ScheduleGroup lectureGroup) {
     if (selectedLectureTime == null) return false;
-    final scheduleString = StudentCourse.formatScheduleString(lecture.day, lecture.time);
+    final scheduleString = StudentCourse.formatScheduleString(lectureGroup.day, lectureGroup.time);
     return selectedLectureTime == scheduleString;
   }
 
-  bool _isTutorialSelected(ScheduleEntry tutorial) {
+  bool _isTutorialSelected(ScheduleGroup tutorialGroup) {
     if (selectedTutorialTime == null) return false;
-    final scheduleString = StudentCourse.formatScheduleString(tutorial.day, tutorial.time);
+    final scheduleString = StudentCourse.formatScheduleString(tutorialGroup.day, tutorialGroup.time);
     return selectedTutorialTime == scheduleString;
   }
 
@@ -237,7 +275,7 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
           Icon(icon, size: 20, color: Theme.of(context).primaryColor),
           const SizedBox(width: 8),
           Text(
-            '$title ($count available)',
+            '$title ($count time slots)',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -247,8 +285,8 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     );
   }
 
-  Widget _buildScheduleOption(
-    ScheduleEntry schedule,
+  Widget _buildScheduleGroupOption(
+    ScheduleGroup scheduleGroup,
     CourseEventType type,
     bool isSelected,
     Function(bool) onChanged,
@@ -265,7 +303,7 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
         value: isSelected,
         onChanged: (value) => onChanged(value ?? false),
         title: Text(
-          '${schedule.day} ${schedule.time}',
+          '${scheduleGroup.day} ${scheduleGroup.time}',
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -273,12 +311,19 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (schedule.hasStaff)
-              Text('Instructor: ${schedule.staff}'),
-            if (schedule.fullLocation.isNotEmpty)
-              Text('Location: ${schedule.fullLocation}'),
-            if (schedule.group > 0)
-              Text('Group: ${schedule.group}'),
+            // Show instructor from first entry (they're usually the same)
+            if (scheduleGroup.entries.first.hasStaff)
+              Text('Instructor: ${scheduleGroup.entries.first.staff}'),
+            
+            // Show location from first entry
+            if (scheduleGroup.entries.first.fullLocation.isNotEmpty)
+              Text('Location: ${scheduleGroup.entries.first.fullLocation}'),
+            
+            // Show available groups
+            if (scheduleGroup.entries.length > 1)
+              Text('Groups: ${scheduleGroup.entries.map((e) => e.group).join(', ')}')
+            else if (scheduleGroup.entries.first.group > 0)
+              Text('Group: ${scheduleGroup.entries.first.group}'),
           ],
         ),
         secondary: Container(
@@ -293,4 +338,19 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
       ),
     );
   }
+}
+
+// Helper class to group schedule entries by time slot
+class ScheduleGroup {
+  final String timeKey;
+  final String day;
+  final String time;
+  final List<ScheduleEntry> entries;
+
+  ScheduleGroup({
+    required this.timeKey,
+    required this.day,
+    required this.time,
+    required this.entries,
+  });
 }
