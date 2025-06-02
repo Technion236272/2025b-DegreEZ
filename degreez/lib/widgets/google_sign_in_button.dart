@@ -50,7 +50,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                     });
                   } catch (e) {
                     // Show error dialog on failure
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Error signing in: $e'),

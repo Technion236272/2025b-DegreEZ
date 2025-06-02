@@ -7,7 +7,7 @@ class StudentModel {
   final String major;
   final String faculty;
   final String preferences;
-  final int semester;
+  final String semester;
   final String catalog; // selecting the catalog for the student
   // final List<String> courses; // Assuming you want to add this later
   // final List<String> enrolledCourses; // Assuming you want to add this later
@@ -59,7 +59,7 @@ class StudentModel {
     String? preferences,
     String? catalog,
     String? faculty,
-    int? semester,
+    String? semester,
   }) {
     return StudentModel(
       id: id,

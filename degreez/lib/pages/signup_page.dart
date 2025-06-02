@@ -32,7 +32,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final RegExp _facultyValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
   final RegExp _preferencesValidator = RegExp(r'^.?$');
   final RegExp _semesterValidator = RegExp(
-    r'(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})',
+    r'^(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})$',
     caseSensitive: false,
   );
 
@@ -52,20 +52,11 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-
-  Future<bool> userHasData(context,id) async {
-    final loginNotifier = Provider.of<LogInNotifier>(context);
-    final studentNotifier = Provider.of<StudentNotifier>(context);
-    await context.read<StudentNotifier>().fetchStudentData(id);
-    return context.read<StudentNotifier>().error() == '';
-  }
-
   @override
   void initState(){
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
     context.read<StudentNotifier>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
-    debugPrint('yaay');
     });
   }
 
@@ -212,7 +203,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         major: _majorController.text.trim(),
                         faculty: _facultyController.text.trim(),
                         preferences: _preferencesController.text.trim(),
-                        semester: int.parse(_semesterController.text.trim()),
+                        semester: _semesterController.text.trim(),
                         catalog: _catalogController.text.trim(),
                       );
 

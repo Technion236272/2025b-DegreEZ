@@ -690,8 +690,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
             ),
             ElevatedButton(
               onPressed: () {
-                final parsedSemester =
-                    int.tryParse(semesterController.text) ?? student.semester;
+
 
                 notifier.updateStudentProfile(
                   name: nameController.text,
@@ -699,7 +698,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
                   preferences: preferencesController.text,
                   faculty: facultyController.text,
                   catalog: catalogController.text,
-                  semester: parsedSemester,
+                  semester: student.semester,
                 );
                 Navigator.of(context).pop();
               },
@@ -887,8 +886,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
 
-  const CourseCalendarPanel({Key? key, required this.eventController})
-    : super(key: key);
+  const CourseCalendarPanel({super.key, required this.eventController});
 
   @override
   State<CourseCalendarPanel> createState() => _CourseCalendarPanelState();

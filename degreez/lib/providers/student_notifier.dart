@@ -581,7 +581,7 @@ class StudentNotifier with ChangeNotifier {
     required String preferences,
     required String faculty,
     required String catalog,
-    required int semester,
+    required String semester,
   }) async {
     if (_student == null) return;
 
