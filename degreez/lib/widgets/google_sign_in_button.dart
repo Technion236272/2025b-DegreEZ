@@ -16,7 +16,7 @@ class GoogleSignInButton extends StatefulWidget {
 class _GoogleSignInButtonState extends State<GoogleSignInButton> {
   @override
   Widget build(BuildContext context) {
-    final loginNotifier = Provider.of<LogInNotifier>(context);
+    final loginNotifier = context.watch<LogInNotifier>();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -32,6 +32,10 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                 ),
                 onPressed: () async {
                   try {
+                    final rootNavigator = Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              );
                     // Attempt to sign in with Google
                     final user = await loginNotifier.signInWithGoogle();
 
@@ -41,9 +45,17 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                       // Call the onSignInComplete callback if provided
                       widget.onSignInComplete!();
                     }
+
+                    if(loginNotifier.isLoading==false){
+                      rootNavigator.pushNamedAndRemoveUntil(
+                        '/sign_up_page',
+                        (route) => false,
+                      );
+                    }
+                      
                   } catch (e) {
                     // Show error dialog on failure
-                    if (mounted) {
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Error signing in: $e'),
@@ -69,12 +81,10 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         ),
                         child: Center(
                           child: SizedBox(
-                        width: 300,
-                        height: 300,
-                        child:  Image.asset(
-                            'assets/google_g_icon.png',
+                            width: 300,
+                            height: 300,
+                            child: Image.asset('assets/google_g_icon.png'),
                           ),
-                      ),
                         ),
                       ),
                       const SizedBox(width: 12.0),

@@ -74,11 +74,12 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
           if (loginNotifier.newUser == false) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
             studentNotifier.fetchStudentData(loginNotifier.user!.uid);
+            studentNotifier.error == '' ? 
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/home_page',
                 (route) => false,
-              );
+              ): null;
             });
             return const Center(child: CircularProgressIndicator());
           }
@@ -146,7 +147,7 @@ class _UserInfoWidgetState extends State<UserInfoWidget> {
                         major: _majorController.text.trim(),
                         faculty: _facultyController.text.trim(),
                         preferences: _preferencesController.text.trim(),
-                        semester: int.parse(_semesterController.text.trim()),
+                        semester: _semesterController.text.trim(),
                         catalog: _catalogController.text.trim(),
                       );
 

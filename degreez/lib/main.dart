@@ -1,4 +1,5 @@
 // lib/main.dart - Updated to include CalendarControllerProvider
+import 'package:degreez/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -90,6 +91,7 @@ class MyApp extends StatelessWidget {
             '/calendar_home':
                 (context) => CalendarHomePage(), // New calendar home
             '/courses': (context) => const StudentCoursesPage(),
+            '/sign_up_page': (context) => const SignUpPage(),
           },
         ),
       ),

@@ -321,14 +321,14 @@ class SemesterInfo {
 
   String get semesterName {
     switch (semester) {
-      case 200: return 'Winter ${year}-${year + 1}';
-      case 201: return 'Spring ${year}';
-      case 202: return 'Summer ${year}';
+      case 200: return 'Winter $year-${year + 1}';
+      case 201: return 'Spring $year';
+      case 202: return 'Summer $year';
       default: return 'Semester $semester $year';
     }
   }
 
-  String get semesterKey => '${semesterName.replaceAll(' ', ' ')}';
+  String get semesterKey => semesterName.replaceAll(' ', ' ');
 }
 
 class CourseSearchResult {

@@ -8,9 +8,9 @@ class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
   
   const CourseCalendarPanel({
-    Key? key, 
+    super.key, 
     required this.eventController,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseCalendarPanel> createState() => _CourseCalendarPanelState();

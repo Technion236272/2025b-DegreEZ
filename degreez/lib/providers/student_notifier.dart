@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
 import 'package:calendar_view/calendar_view.dart';
-import '../widgets/course_calendar_panel.dart';
 
 class StudentNotifier with ChangeNotifier {
   // Student data
@@ -219,7 +218,7 @@ class StudentNotifier with ChangeNotifier {
         });
       }
 
-      // Now add the course to the semester's subcollection
+      // Now add the course to the semester's sub collection
       final courseRef = semesterRef.collection('Courses').doc(course.courseId);
 
       await courseRef.set(course.toFirestore());
@@ -582,7 +581,7 @@ class StudentNotifier with ChangeNotifier {
     required String preferences,
     required String faculty,
     required String catalog,
-    required int semester,
+    required String semester,
   }) async {
     if (_student == null) return;
 

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../providers/login_notifier.dart';
 import '../widgets/google_sign_in_button.dart';
-import '../widgets/user_info_widget.dart';
 import '../color/color_palette.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,7 +11,6 @@ class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
-
 class _LoginPageState extends State<LoginPage> {
   
   @override
@@ -40,16 +38,13 @@ class _LoginPageState extends State<LoginPage> {
               );
             });
           }
+          loginNotifier.isSignedIn ? 
+          WidgetsBinding.instance.addPostFrameCallback((_) {
 
-          return loginNotifier.isSignedIn
-                        // const UserInfoWidget()  will be replaced with a rerouting to the home page
-                        // when the user is signed in, we will use the Navigator to push the home page
-                        // Navigator.pushNamed(context, '/home_page');
-                        // which will add the data of the user to a student model
-                        // and then we will use the provider to set the data of the user
-                        ? const UserInfoWidget() 
-                        // User is not signed in, show sign-in button
-                        : SafeArea(
+          Navigator.pushNamedAndRemoveUntil(context, '/sign_up_page', (route) => false);
+          }) : null;
+
+          return SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 child: Padding(
