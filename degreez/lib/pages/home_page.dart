@@ -53,7 +53,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
 
     // Load student data if not already loaded or loading
     if (!studentProvider.hasStudent && !studentProvider.isLoading) {
-      studentProvider.fetchStudent(loginNotifier.user!.uid).then((success) {
+      studentProvider.fetchStudentData(loginNotifier.user!.uid).then((success) {
         if (success && mounted) {
           // Only load courses if not already loaded or loading
           if (!courseProvider.hasLoadedData && !courseProvider.loadingState.isLoadingCourses) {

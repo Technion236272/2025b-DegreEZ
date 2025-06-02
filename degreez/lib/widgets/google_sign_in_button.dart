@@ -1,3 +1,4 @@
+import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
@@ -21,7 +22,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child:
-          loginNotifier.isLoading
+          loginNotifier.isLoading || context.watch<StudentProvider>().isLoading
               ? const LinearProgressIndicator(
                 color: AppColorsDarkMode.secondaryColor,
                 backgroundColor: AppColorsDarkMode.accentColor,
@@ -32,10 +33,6 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                 ),
                 onPressed: () async {
                   try {
-                    final rootNavigator = Navigator.of(
-                                context,
-                                rootNavigator: true,
-                              );
                     // Attempt to sign in with Google
                     final user = await loginNotifier.signInWithGoogle();
 
@@ -44,13 +41,6 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         widget.onSignInComplete != null) {
                       // Call the onSignInComplete callback if provided
                       widget.onSignInComplete!();
-                    }
-
-                    if(loginNotifier.isLoading==false){
-                      rootNavigator.pushNamedAndRemoveUntil(
-                        '/sign_up_page',
-                        (route) => false,
-                      );
                     }
                       
                   } catch (e) {

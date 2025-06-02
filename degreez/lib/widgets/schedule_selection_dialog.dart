@@ -11,11 +11,11 @@ class ScheduleSelectionDialog extends StatefulWidget {
   final Function(String? lectureTime, String? tutorialTime) onSelectionChanged;
 
   const ScheduleSelectionDialog({
-    Key? key,
+    super.key,
     required this.course,
     required this.courseDetails,
     required this.onSelectionChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<ScheduleSelectionDialog> createState() => _ScheduleSelectionDialogState();

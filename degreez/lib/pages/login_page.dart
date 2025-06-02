@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
               final user = loginNotifier.user!;
               
               // Try to fetch existing student data
-              final studentExists = await studentProvider.fetchStudent(user.uid);
+              final studentExists = await studentProvider.fetchStudentData(user.uid);
               
               if (!mounted) return;
 

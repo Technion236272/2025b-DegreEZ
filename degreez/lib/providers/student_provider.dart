@@ -15,7 +15,7 @@ class StudentProvider with ChangeNotifier {
   bool get hasStudent => _student != null;
 
   // Fetch student data with proper error handling
-  Future<bool> fetchStudent(String userId) async {
+  Future<bool> fetchStudentData(String userId) async {
     if (_isLoading) return false; // Prevent concurrent calls
     
     _setLoadingState(true);

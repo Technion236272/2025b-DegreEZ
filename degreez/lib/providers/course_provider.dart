@@ -54,6 +54,7 @@ class CourseProvider with ChangeNotifier {
   Map<String, List<StudentCourse>> _coursesBySemester = {};
   CourseLoadingState _loadingState = const CourseLoadingState();
   String? _error;
+  Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
 
   // Getters
   List<StudentCourse> getCoursesForSemester(String semesterKey) {
@@ -494,4 +495,84 @@ class CourseProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+    Map<String, List<StudentCourse>> get sortedCoursesBySemester {
+    final List<String> semesterNames = _coursesBySemester.keys.toList();
+
+    semesterNames.sort((a, b) {
+      // Sort semesters by year and season
+      final parsedA = _parseSemester(
+        a,
+      ); //turns "Spring 2025" into {season: "Spring", year: 2025}
+      final parsedB = _parseSemester(b);
+
+      final yearComparison = parsedA.year.compareTo(parsedB.year);
+      if (yearComparison != 0)
+        return yearComparison; // If years are different , sort by year
+
+      return _seasonOrder(
+        parsedA.season,
+      ).compareTo(_seasonOrder(parsedB.season));
+    });
+
+    return {for (final name in semesterNames) name: _coursesBySemester[name]!};
+  }
+
+   // Get total credits for a semester
+  double getTotalCreditsForSemester(String semesterKey) {
+    final courses = _coursesBySemester[semesterKey] ?? [];
+    double total = 0.0;
+
+    for (final course in courses) {
+      final details = _courseDetailsCache[course.courseId];
+      if (details != null) {
+        total += details.creditPoints;
+      }
+    }
+
+    return total;
+  }
+
+
+    // Get course with details (updated return type)
+  StudentCourseWithDetails? getCourseWithDetails(
+    String semesterKey,
+    String courseId,
+  ) {
+    final studentCourse = _coursesBySemester[semesterKey]?.firstWhere(
+      (course) => course.courseId == courseId,
+      orElse: () => null as StudentCourse,
+    );
+
+    if (studentCourse == null) return null;
+
+    final courseDetails = _courseDetailsCache[courseId];
+
+    return StudentCourseWithDetails(
+      studentCourse: studentCourse,
+      courseDetails: courseDetails,
+    );
+  }
+
+  ({String season, int year}) _parseSemester(String semesterName) {
+    final parts = semesterName.split(' ');
+    final season = parts[0];
+    final year = (parts.length > 1) ? int.tryParse(parts[1]) ?? 0 : 0;
+    return (season: season, year: year);
+  }
+
+
+int _seasonOrder(String season) {
+    switch (season.toLowerCase()) {
+      case 'winter':
+        return 1;
+      case 'spring':
+        return 2;
+      case 'summer':
+        return 3;
+      default:
+        return 99;
+    }
+  }
+
 }
