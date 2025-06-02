@@ -86,6 +86,7 @@ class CourseProvider with ChangeNotifier {
       return false;
     }
   // !! this causes error when navigating back to courses page
+  // this if condition fixes it
     if (_coursesBySemester.isNotEmpty) {
       // Already loaded, no need to load again
       return true;
