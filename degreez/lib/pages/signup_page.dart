@@ -53,11 +53,11 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-    context.read<StudentNotifier>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    // context.read<StudentNotifier>().fetchStudentData(context.read<LogInNotifier>().user!.uid);
+    // });
   }
 
   @override
@@ -65,21 +65,37 @@ class _SignUpPageState extends State<SignUpPage> {
     debugPrint("entered SignUp Page");
     final loginNotifier = context.watch<LogInNotifier>();
     final studentNotifier = context.watch<StudentNotifier>();
-    
+
+    if (loginNotifier.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final user = loginNotifier.user;
-    
+
     // Fetch student data using StudentNotifier
     // This is a placeholder. In a real app, you would fetch the student data
     // final student = studentNotifier.fetchStudentData(user.uid);
+    if (context.watch<StudentNotifier>().isLoading == false &&
+        studentNotifier.student == null &&
+        context.read<StudentNotifier>().error == '') {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        context.read<StudentNotifier>().isLoading == false
+            ? await context.read<StudentNotifier>().fetchStudentData(
+              context.read<LogInNotifier>().user!.uid,
+            )
+            : null;
+      });
+    }
+
     final student = studentNotifier.student;
-    
+
     // If student data is loading, show loader
     if (studentNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     // If student data exists, navigate to home page
-    if (context.watch<StudentNotifier>().error == '' && student!=null) {
+    if (context.watch<StudentNotifier>().error == '' && student != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -91,161 +107,170 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     // If student data does not exist, show form to create it
-    return (student==null && context.watch<StudentNotifier>().error == '')
-    ?  const Center(child: CircularProgressIndicator())
-    : Scaffold(
-      body: Consumer<LogInNotifier>(
-        builder: (context, loginNotifier, _) {
-          // If student data exists, and student is veteran
-          // if (loginNotifier.newUser == false ) {
-          //   WidgetsBinding.instance.addPostFrameCallback((_) async {
-          //     await studentNotifier.fetchStudentData(loginNotifier.user!.uid);
-              
-          //     if (!mounted) return;
-          //    studentNotifier.error == '' ? 
-          //     Navigator.pushNamedAndRemoveUntil(
-          //       context,
-          //       '/home_page',
-          //       (route) => false,
-          //     ): null;
-          //   });
-          //   return const Center(child: CircularProgressIndicator());
-          // }
+    return (student == null && context.watch<StudentNotifier>().error == '')
+        ? const Center(child: CircularProgressIndicator())
+        : Scaffold(
+          body: Consumer<LogInNotifier>(
+            builder: (context, loginNotifier, _) {
+              // If student data exists, and student is veteran
+              // if (loginNotifier.newUser == false ) {
+              //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+              //     await studentNotifier.fetchStudentData(loginNotifier.user!.uid);
 
-          // if (loginNotifier.stayedSignedIn == true) {
-          //   WidgetsBinding.instance.addPostFrameCallback((_) {
-          //     studentNotifier.fetchStudentData(loginNotifier.user!.uid);
-          //     Navigator.pushNamedAndRemoveUntil(
-          //       context,
-          //       '/',
-          //       (route) => false,
-          //     );
-          //   });
-          //   return const Center(child: CircularProgressIndicator());
-          // }
+              //     if (!mounted) return;
+              //    studentNotifier.error == '' ?
+              //     Navigator.pushNamedAndRemoveUntil(
+              //       context,
+              //       '/home_page',
+              //       (route) => false,
+              //     ): null;
+              //   });
+              //   return const Center(child: CircularProgressIndicator());
+              // }
 
-          return loginNotifier.isLoading || user == null
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  Text(
-                    'Complete your profile',
-                    style: TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
-                      fontSize: 20,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  textFormFieldWithStyle(
-                    label: 'Name',
-                    controller: _nameController,
-                    example: 'e.g. Steve Harvey',
-                    validatorRegex: _nameValidator,
-                    errorMessage: "Really? an empty name ...",
-                  ),
-                  textFormFieldWithStyle(
-                    label: 'Major',
-                    controller: _majorController,
-                    example: 'e.g. Data Analysis',
-                    validatorRegex: _majorValidator,
-                    errorMessage:
-                        "Invalid Input! remember to write the major in English",
-                  ),
-                  textFormFieldWithStyle(
-                    label: 'Faculty',
-                    controller: _facultyController,
-                    example: 'e.g. Computer Science',
-                    validatorRegex: _facultyValidator,
-                    errorMessage:
-                        "Invalid Input! remember to write the faculty in English",
-                  ),
-                  textFormFieldWithStyle(
-                    label: 'Semester',
-                    controller: _semesterController,
-                    example: 'e.g. Winter 2024-25 or Summer 2021',
-                    validatorRegex: _semesterValidator,
-                    errorMessage: "should match this template 'Winter 2024-25'",
-                  ),
-                  textFormFieldWithStyle(
-                    label: 'Preferences',
-                    controller: _preferencesController,
-                    example:
-                        "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
-                    validatorRegex: _preferencesValidator,
-                    lineNum: 3,
-                  ),
+              // if (loginNotifier.stayedSignedIn == true) {
+              //   WidgetsBinding.instance.addPostFrameCallback((_) {
+              //     studentNotifier.fetchStudentData(loginNotifier.user!.uid);
+              //     Navigator.pushNamedAndRemoveUntil(
+              //       context,
+              //       '/',
+              //       (route) => false,
+              //     );
+              //   });
+              //   return const Center(child: CircularProgressIndicator());
+              // }
 
-                  // Should be changed to Catalog Picker
+              return loginNotifier.isLoading || user == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          Text(
+                            'Complete your profile',
+                            style: TextStyle(
+                              color: AppColorsDarkMode.secondaryColor,
+                              fontSize: 20,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          textFormFieldWithStyle(
+                            label: 'Name',
+                            controller: _nameController,
+                            example: 'e.g. Steve Harvey',
+                            validatorRegex: _nameValidator,
+                            errorMessage: "Really? an empty name ...",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Major',
+                            controller: _majorController,
+                            example: 'e.g. Data Analysis',
+                            validatorRegex: _majorValidator,
+                            errorMessage:
+                                "Invalid Input! remember to write the major in English",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Faculty',
+                            controller: _facultyController,
+                            example: 'e.g. Computer Science',
+                            validatorRegex: _facultyValidator,
+                            errorMessage:
+                                "Invalid Input! remember to write the faculty in English",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Semester',
+                            controller: _semesterController,
+                            example: 'e.g. Winter 2024-25 or Summer 2021',
+                            validatorRegex: _semesterValidator,
+                            errorMessage:
+                                "should match this template 'Winter 2024-25'",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Preferences',
+                            controller: _preferencesController,
+                            example:
+                                "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
+                            validatorRegex: _preferencesValidator,
+                            lineNum: 3,
+                          ),
 
-                  // TextFormField(
-                  //   controller: _catalogController,
-                  //   decoration: const InputDecoration(labelText: 'Catalog'),
-                  //   validator:
-                  //       (v) => v == null || v.isEmpty ? 'Required' : null,
-                  // ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColorsDarkMode.accentColor,
-                    ),
-                    onPressed: () async {
-                      if (_formKey.currentState?.validate() != true) return;
+                          // Should be changed to Catalog Picker
 
-                      final student = StudentModel(
-                        id: user.uid,
-                        name: _nameController.text.trim(),
-                        major: _majorController.text.trim(),
-                        faculty: _facultyController.text.trim(),
-                        preferences: _preferencesController.text.trim(),
-                        semester: _semesterController.text.trim(),
-                        catalog: _catalogController.text.trim(),
-                      );
+                          // TextFormField(
+                          //   controller: _catalogController,
+                          //   decoration: const InputDecoration(labelText: 'Catalog'),
+                          //   validator:
+                          //       (v) => v == null || v.isEmpty ? 'Required' : null,
+                          // ),
+                          const SizedBox(height: 24),
+                          TextButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColorsDarkMode.accentColor,
+                            ),
+                            onPressed: () async {
+                              if (_formKey.currentState?.validate() != true)
+                                return;
 
-                      // Create student using StudentNotifier
-                      final success = await studentNotifier.createStudent(
-                        student,
-                      );
+                              final student = StudentModel(
+                                id: user.uid,
+                                name: _nameController.text.trim(),
+                                major: _majorController.text.trim(),
+                                faculty: _facultyController.text.trim(),
+                                preferences: _preferencesController.text.trim(),
+                                semester: _semesterController.text.trim(),
+                                catalog: _catalogController.text.trim(),
+                              );
 
-                      if (success && context.mounted) {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/home_page',
-                          (route) => false,
-                        );
-                      }
-                    },
-                    child: const Text(
-                      'Save & Continue',
-                      style: TextStyle(color: AppColorsDarkMode.secondaryColor),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      final rootNavigator = Navigator.of(context, rootNavigator: true);
-                      studentNotifier.clear();
-                      await loginNotifier.signOut();
-                      rootNavigator.pushNamedAndRemoveUntil('/', (route) => false);
-                    },
-                    child: const Text(
-                      'Sign out and return',
-                      style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColorDim,
+                              // Create student using StudentNotifier
+                              final success = await studentNotifier
+                                  .createStudent(student);
+
+                              if (success && context.mounted) {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/home_page',
+                                  (route) => false,
+                                );
+                              }
+                            },
+                            child: const Text(
+                              'Save & Continue',
+                              style: TextStyle(
+                                color: AppColorsDarkMode.secondaryColor,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final rootNavigator = Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              );
+                              studentNotifier.clear();
+                              await loginNotifier.signOut();
+                              rootNavigator.pushNamedAndRemoveUntil(
+                                '/',
+                                (route) => false,
+                              );
+                            },
+                            child: const Text(
+                              'Sign out and return',
+                              style: TextStyle(
+                                color: AppColorsDarkMode.secondaryColorDim,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+                  );
+            },
+          ),
+        );
   }
 }
 

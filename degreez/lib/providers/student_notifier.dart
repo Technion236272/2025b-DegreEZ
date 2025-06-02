@@ -218,7 +218,7 @@ class StudentNotifier with ChangeNotifier {
         });
       }
 
-      // Now add the course to the semester's subcollection
+      // Now add the course to the semester's sub collection
       final courseRef = semesterRef.collection('Courses').doc(course.courseId);
 
       await courseRef.set(course.toFirestore());

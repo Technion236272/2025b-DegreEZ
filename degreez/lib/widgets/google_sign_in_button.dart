@@ -16,7 +16,7 @@ class GoogleSignInButton extends StatefulWidget {
 class _GoogleSignInButtonState extends State<GoogleSignInButton> {
   @override
   Widget build(BuildContext context) {
-    final loginNotifier = Provider.of<LogInNotifier>(context);
+    final loginNotifier = context.watch<LogInNotifier>();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -32,6 +32,10 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                 ),
                 onPressed: () async {
                   try {
+                    final rootNavigator = Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              );
                     // Attempt to sign in with Google
                     final user = await loginNotifier.signInWithGoogle();
 
@@ -41,13 +45,14 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                       // Call the onSignInComplete callback if provided
                       widget.onSignInComplete!();
                     }
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
+
+                    if(loginNotifier.isLoading==false){
+                      rootNavigator.pushNamedAndRemoveUntil(
                         '/sign_up_page',
                         (route) => false,
                       );
-                    });
+                    }
+                      
                   } catch (e) {
                     // Show error dialog on failure
                     if (context.mounted) {
