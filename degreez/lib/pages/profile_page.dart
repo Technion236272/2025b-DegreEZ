@@ -1,6 +1,6 @@
-
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/widgets/bug_report_popup.dart';
 import 'package:degreez/widgets/profile/profile_info_row.dart';
 import 'package:degreez/widgets/profile/stat_card.dart';
 import 'package:flutter/material.dart';
@@ -14,9 +14,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  
-    // Placeholder method for edit profile
-    void _showEditProfileDialog(BuildContext context, StudentProvider notifier) {
+  // Placeholder method for edit profile
+  void _showEditProfileDialog(BuildContext context, StudentProvider notifier) {
     final student = notifier.student!;
     final nameController = TextEditingController(text: student.name);
     final majorController = TextEditingController(text: student.major);
@@ -71,8 +70,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ElevatedButton(
               onPressed: () {
-
-
                 notifier.updateStudentProfile(
                   name: nameController.text,
                   major: majorController.text,
@@ -92,7 +89,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  
   @override
   Widget build(BuildContext context) {
     final studentNotifier = context.read<StudentProvider>();
@@ -158,6 +154,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Preferences',
                       value: student.preferences,
                     ),
+                  TextButton(
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.red,
+  ),
+  onPressed: () => bugReportPopup(context),
+  child: const Text("Bug Report"),
+),
                 ],
               ),
             ),
