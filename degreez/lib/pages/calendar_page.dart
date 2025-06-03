@@ -1,78 +1,32 @@
-// lib/pages/home_page.dart - Updated to use AddCoursePage
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/login_notifier.dart';
-import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
-import '../pages/student_courses_page.dart';
-import '../pages/degree_progress_page.dart';
-import '../pages/add_course_page.dart'; // Added new import
-import '../widgets/profile/profile_info_row.dart';
-import '../widgets/profile/stat_card.dart';
 import '../widgets/course_calendar_panel.dart';
 import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
 import '../services/course_service.dart';
 
-class CalendarHomePage extends StatefulWidget {
-  const CalendarHomePage({super.key});
+class CalendarPage extends StatefulWidget {
+  const CalendarPage({super.key});
 
   @override
-  State<CalendarHomePage> createState() => _CalendarHomePageState();
+  State<CalendarPage> createState() => _CalendarPageState();
 }
 
-class _CalendarHomePageState extends State<CalendarHomePage> 
+class _CalendarPageState extends State<CalendarPage> 
     with CalendarDarkThemeMixin, CourseEventMixin {
-  String _currentPage = 'Calendar';
   int _viewMode = 0; // 0: Week View, 1: Day View
   final TextEditingController _searchController = TextEditingController();
-  bool _hasInitializedData = false;
   final _searchQuery = '';
   
   // Track manually added events to preserve them during automatic updates
   final Set<String> _manuallyAddedCourses = <String>{};
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_hasInitializedData) {
-        _hasInitializedData = true;
-        _loadStudentDataIfNeeded();
-      }
-    });
-  }
 
-  void _loadStudentDataIfNeeded() {
-    final loginNotifier = context.read<LogInNotifier>();
-    final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
-
-    // Only proceed if user is logged in
-    if (loginNotifier.user == null) return;
-
-    // Load student data if not already loaded or loading
-    if (!studentProvider.hasStudent && !studentProvider.isLoading) {
-      studentProvider.fetchStudentData(loginNotifier.user!.uid).then((success) {
-        if (success && mounted) {
-          // Only load courses if not already loaded or loading
-          if (!courseProvider.hasLoadedData && !courseProvider.loadingState.isLoadingCourses) {
-            courseProvider.loadStudentCourses(studentProvider.student!.id);
-          }
-        }
-      });
-    }
-    // Handle case where student is loaded but courses aren't
-    else if (studentProvider.hasStudent && 
-             !courseProvider.hasLoadedData && 
-             !courseProvider.loadingState.isLoadingCourses) {
-      courseProvider.loadStudentCourses(studentProvider.student!.id);
-    }
-  }
 
   EventController get _eventController =>
       CalendarControllerProvider.of(context).controller;
@@ -95,250 +49,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer4<LogInNotifier, StudentProvider, CourseProvider, ColorThemeProvider>(
-      builder: (context, loginNotifier, studentProvider, courseProvider, colorThemeProvider, _) {
-        // Update calendar events when courses change
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
-            _updateCalendarEvents(courseProvider, colorThemeProvider);
-          }
-        });
-
-        Widget body;
-
-        switch (_currentPage) {
-          case 'Calendar':
-            body = _buildCalendarView(courseProvider);
-            break;
-          case 'Profile':
-            body = _buildProfileView(studentProvider, courseProvider);
-            break;
-          case 'My Courses':
-            body = const StudentCoursesPage();
-            break;
-          case 'Degree Progress':
-            body = const DegreeProgressPage();
-            break;
-          case 'GPA Calculator':
-            body = _buildGpaCalculatorView();
-            break;
-          default:
-            body = _buildCalendarView(courseProvider);
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(_currentPage),
-            centerTitle: true,
-            actions: [
-              Consumer<CourseDataProvider>(
-                builder: (context, courseDataProvider, child) {
-                  if (courseDataProvider.currentSemester != null) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Center(
-                        child: Text(
-                          // the current semester's name
-                          courseDataProvider.currentSemester!.semesterName,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.bolt_sharp),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('AI Assistant coming soon!')),
-                  );
-                },
-              ),
-            ],
-          ),
-          drawer: _buildSideDrawer(context, loginNotifier, studentProvider),
-          body: studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading your data...'),
-                    ],
-                  ),
-                )
-              : body,
-          // Updated FAB - now navigates to AddCoursePage
-          floatingActionButton: _currentPage == 'Calendar'
-              ? FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddCoursePage(),
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.add),
-                  tooltip: 'Add Course',
-                )
-              : null,
-        );
-      },
-    );
-  }
-
-  Widget _buildSideDrawer(
-    BuildContext context,
-    LogInNotifier loginNotifier,
-    StudentProvider studentProvider,
-  ) {
-    final user = loginNotifier.user;
-    final student = studentProvider.student;
-
-    return Drawer(
-      child: Container(
-        color: Theme.of(context).colorScheme.surface,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Enhanced User Header
-            UserAccountsDrawerHeader(
-              accountName: Text(student?.name ?? user?.displayName ?? 'User'),
-              accountEmail: Text(user?.email ?? ''),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: user?.photoURL != null
-                    ? NetworkImage(user!.photoURL!)
-                    : null,
-                child: user?.photoURL == null
-                    ? Text(user?.displayName?.substring(0, 1) ?? 'U')
-                    : null,
-              ),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-              ),
-              ),
-            
-            // Navigation Items
-            _buildDrawerItem(
-              icon: Icons.calendar_today,
-              title: 'Calendar',
-              isSelected: _currentPage == 'Calendar',
-              onTap: () => _changePage('Calendar'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.person,
-              title: 'Profile',
-              isSelected: _currentPage == 'Profile',
-              onTap: () => _changePage('Profile'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.school,
-              title: 'My Courses',
-              isSelected: _currentPage == 'My Courses',
-              onTap: () => _changePage('My Courses'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.trending_up,
-              title: 'Degree Progress',
-              isSelected: _currentPage == 'Degree Progress',
-              onTap: () => _changePage('Degree Progress'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.calculate,
-              title: 'GPA Calculator',
-              isSelected: _currentPage == 'GPA Calculator',
-              onTap: () => _changePage('GPA Calculator'),
-            ),
-            
-            const Divider(),
-            _buildDrawerItem(
-              isSelected: _currentPage == 'Log Out',
-              icon: Icons.logout,
-              title: 'Log Out',
-              onTap: () async {
-                studentProvider.clear();
-                context.read<CourseProvider>().clear();
-                await loginNotifier.signOut();
-                if (context.mounted) {
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil('/', (route) => false);
-                }
-              },
-            ),
-            
-            // // Add Course - New menu item for easier access
-            // ListTile(
-            //   leading: const Icon(Icons.add_circle_outline),
-            //   title: const Text('Add Course'),
-            //   onTap: () {
-            //     Navigator.pop(context); // Close drawer
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => const AddCoursePage(),
-            //       ),
-            //     );
-            //   },
-            // ),
-            
-            // const Divider(),
-            
-            // Sign out
-            // ListTile(
-            //   leading: const Icon(Icons.logout, color: Colors.red),
-            //   title: const Text('Sign Out'),
-            //   onTap: () {
-            //     // Clear providers before signing out
-            //     context.read<StudentProvider>().clear();
-            //     context.read<CourseProvider>().clear();
-            //     loginNotifier.signOut();
-            //     Navigator.pop(context);
-            //   },
-            // ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? Theme.of(context).primaryColor : null,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Theme.of(context).primaryColor : null,
-        ),
-      ),
-      selected: isSelected,
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-    );
-  }
-
-  void _changePage(String page) {
-    setState(() {
-      _currentPage = page;
-    });
-  }
-
-  Widget _buildCalendarView(CourseProvider courseProvider) {
+    CourseProvider courseProvider = context.read<CourseProvider>(); 
     return Column(
       children: [
         // Course List Panel - Pass callback methods
@@ -555,135 +266,10 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       // only show events for the current week
       // Adjust min and max days to show the current day
       minDay: DateTime.now(),
-      // maxday last day of the week (next Saturday)
+      // max day last day of the week (next Saturday)
       maxDay: DateTime.now().add(Duration(days: 6 - DateTime.now().weekday)),
       initialDay: DateTime.now(),
       heightPerMinute: 1,
-    );
-  }
-
-  Widget _buildProfileView(StudentProvider studentNotifier,CourseProvider courseNotifier) {
-    final student = studentNotifier.student;
-    if (student == null) {
-      return const Center(child: Text('No student profile found'));
-    }
-
-    final totalCredits = courseNotifier.coursesBySemester.keys
-        .map((semester) => courseNotifier.getTotalCreditsForSemester(semester))
-        .fold<double>(0.0, (sum, credits) => sum + credits);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            color: Colors.grey[900],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Student Profile',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.white70),
-                        onPressed:
-                            () => _showEditProfileDialog(
-                              context,
-                              studentNotifier,
-                            ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-                  ProfileInfoRow(label: 'Name', value: student.name),
-                  ProfileInfoRow(label: 'Major', value: student.major),
-                  ProfileInfoRow(label: 'Faculty', value: student.faculty),
-                  ProfileInfoRow(
-                    label: 'Current Semester',
-                    value: student.semester.toString(),
-                  ),
-                  ProfileInfoRow(label: 'Catalog', value: student.catalog),
-                  if (student.preferences.isNotEmpty)
-                    ProfileInfoRow(
-                      label: 'Preferences',
-                      value: student.preferences,
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Course Statistics',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              StatCard(
-                icon: Icons.calendar_today,
-                label: 'Semesters',
-                value: courseNotifier.coursesBySemester.length.toString(),
-              ),
-              StatCard(
-                icon: Icons.school,
-                label: 'Courses',
-                value:
-                    courseNotifier.coursesBySemester.values
-                        .expand((courses) => courses)
-                        .length
-                        .toString(),
-              ),
-              StatCard(
-                icon: Icons.star,
-                label: 'Credits',
-                value: totalCredits.toStringAsFixed(1),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGpaCalculatorView() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.calculate, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'GPA Calculator',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Coming soon!',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1051,80 +637,4 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     return parts.join('\n');
   }
 
-  // Placeholder method for edit profile
-    void _showEditProfileDialog(BuildContext context, StudentProvider notifier) {
-    final student = notifier.student!;
-    final nameController = TextEditingController(text: student.name);
-    final majorController = TextEditingController(text: student.major);
-    final preferencesController = TextEditingController(
-      text: student.preferences,
-    );
-    final catalogController = TextEditingController(text: student.catalog);
-    final facultyController = TextEditingController(text: student.faculty);
-    final semesterController = TextEditingController(
-      text: student.semester.toString(),
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Profile'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: majorController,
-                decoration: const InputDecoration(labelText: 'Major'),
-              ),
-              TextField(
-                controller: facultyController,
-                decoration: const InputDecoration(labelText: 'Faculty'),
-              ),
-              TextField(
-                controller: semesterController,
-                decoration: const InputDecoration(labelText: 'Semester'),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: catalogController,
-                decoration: const InputDecoration(labelText: 'Catalog'),
-              ),
-              TextField(
-                controller: preferencesController,
-                decoration: const InputDecoration(labelText: 'Preferences'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-
-
-                notifier.updateStudentProfile(
-                  name: nameController.text,
-                  major: majorController.text,
-                  preferences: preferencesController.text,
-                  faculty: facultyController.text,
-                  catalog: catalogController.text,
-                  semester: student.semester,
-                );
-                Navigator.of(context).pop();
-              },
-
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }

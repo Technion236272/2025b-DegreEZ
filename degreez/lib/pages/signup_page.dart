@@ -97,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/calendar_home',
+          '/home_page',
           (route) => false,
         );
       });

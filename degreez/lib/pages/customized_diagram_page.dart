@@ -9,14 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 
-class DegreeProgressPage extends StatefulWidget {
-  const DegreeProgressPage({super.key});
+class CustomizedDiagramPage extends StatefulWidget {
+  const CustomizedDiagramPage({super.key});
 
   @override
-  State<DegreeProgressPage> createState() => _DegreeProgressPageState();
+  State<CustomizedDiagramPage> createState() => _CustomizedDiagramPageState();
 }
 
-class _DegreeProgressPageState extends State<DegreeProgressPage> {
+class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   
   @override
   Widget build(BuildContext context) {
