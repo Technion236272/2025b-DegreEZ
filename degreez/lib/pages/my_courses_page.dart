@@ -7,14 +7,14 @@ import '../providers/course_data_provider.dart';
 import '../services/course_service.dart';
 import '../models/student_model.dart';
 
-class StudentCoursesPage extends StatefulWidget {
-  const StudentCoursesPage({super.key});
+class MyCoursesPage extends StatefulWidget {
+  const MyCoursesPage({super.key});
 
   @override
-  State<StudentCoursesPage> createState() => _StudentCoursesPageState();
+  State<MyCoursesPage> createState() => _MyCoursesPageState();
 }
 
-class _StudentCoursesPageState extends State<StudentCoursesPage> {
+class _MyCoursesPageState extends State<MyCoursesPage> {
   @override
   void initState() {
     super.initState();

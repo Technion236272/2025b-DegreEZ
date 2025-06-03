@@ -12,10 +12,14 @@ import 'schedule_selection_dialog.dart';
 
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
+  final Function(String courseId)? onCourseManuallyAdded;
+  final Function(String courseId)? onCourseManuallyRemoved;
   
   const CourseCalendarPanel({
     super.key, 
     required this.eventController,
+    this.onCourseManuallyAdded,
+    this.onCourseManuallyRemoved,
   });
 
   @override
@@ -363,7 +367,12 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         if (timeRange == null) continue;
         
         final event = CalendarEventData(
-          title: formatEventTitle(course.name, _parseEventType(schedule.type), schedule.group > 0 ? schedule.group : null),
+          title: formatEventTitle(
+            course.name, 
+            _parseEventType(schedule.type), 
+            schedule.group > 0 ? schedule.group : null,
+            instructorName: schedule.staff?.isNotEmpty == true ? schedule.staff : null,
+          ),
           description: _buildEventDescription(course, schedule),
           date: eventDate,
           startTime: timeRange['start']!,
@@ -379,6 +388,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       if (eventsAdded == 0) {
         eventsAdded += _addBasicTimeEvents(course, sunday, courseColor);
       }
+      
+      // Mark course as manually added
+      widget.onCourseManuallyAdded?.call(course.courseId);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -403,6 +415,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       if (shouldRemove) removedCount++;
       return shouldRemove;
     });
+
+    // Mark course as manually removed
+    widget.onCourseManuallyRemoved?.call(course.courseId);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
