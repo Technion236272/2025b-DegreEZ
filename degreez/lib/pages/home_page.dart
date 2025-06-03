@@ -6,6 +6,7 @@ import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
+import '../providers/color_theme_provider.dart';
 import '../pages/student_courses_page.dart';
 import '../pages/degree_progress_page.dart';
 import '../pages/add_course_page.dart'; // Added new import
@@ -31,6 +32,9 @@ class _CalendarHomePageState extends State<CalendarHomePage>
   final TextEditingController _searchController = TextEditingController();
   bool _hasInitializedData = false;
   final _searchQuery = '';
+  
+  // Track manually added events to preserve them during automatic updates
+  final Set<String> _manuallyAddedCourses = <String>{};
 
   @override
   void initState() {
@@ -79,14 +83,24 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     super.dispose();
   }
 
+  // Add method to mark course as manually added
+  void _markCourseAsManuallyAdded(String courseId) {
+    _manuallyAddedCourses.add(courseId);
+  }
+
+  // Add method to remove course from manual tracking
+  void _removeCourseFromManualTracking(String courseId) {
+    _manuallyAddedCourses.remove(courseId);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
-      builder: (context, loginNotifier, studentProvider, courseProvider, _) {
+    return Consumer4<LogInNotifier, StudentProvider, CourseProvider, ColorThemeProvider>(
+      builder: (context, loginNotifier, studentProvider, courseProvider, colorThemeProvider, _) {
         // Update calendar events when courses change
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
-            _updateCalendarEvents(courseProvider);
+            _updateCalendarEvents(courseProvider, colorThemeProvider);
           }
         });
 
@@ -327,9 +341,13 @@ class _CalendarHomePageState extends State<CalendarHomePage>
   Widget _buildCalendarView(CourseProvider courseProvider) {
     return Column(
       children: [
-        // Course List Panel
+        // Course List Panel - Pass callback methods
         if (courseProvider.hasAnyCourses)
-          CourseCalendarPanel(eventController: _eventController),
+          CourseCalendarPanel(
+            eventController: _eventController,
+            onCourseManuallyAdded: _markCourseAsManuallyAdded,
+            onCourseManuallyRemoved: _removeCourseFromManualTracking,
+          ),
 
         // View Mode Tabs
         Container(
@@ -457,26 +475,6 @@ class _CalendarHomePageState extends State<CalendarHomePage>
                           ),
                         ),
                       ),
-                      Expanded(
-                        child: Text(
-                          'F',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'S',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -497,6 +495,14 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       controller: _eventController,
       backgroundColor: getCalendarBackgroundColor(context),
       headerStyle: getHeaderStyle(context),
+          weekDays: [
+      WeekDays.sunday,
+      WeekDays.monday,
+      WeekDays.tuesday, 
+      WeekDays.wednesday,
+      WeekDays.thursday,
+      
+    ],
       weekDayBuilder: (date) => buildWeekDay(context, date),
       timeLineBuilder: (date) => buildTimeLine(context, date),
       liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
@@ -513,11 +519,13 @@ class _CalendarHomePageState extends State<CalendarHomePage>
         searchQuery: _searchQuery,
       ),
       startDay: WeekDays.sunday,
-      startHour: 7,
-      endHour: 24,
+      startHour: 8,
+      endHour: 22,
       showLiveTimeLineInAllDays: true,
-      minDay: DateTime(2020),
-      maxDay: DateTime(2030),
+      // only show events for the current week starting from sunday to thursday
+      // Adjust min and max days to show the current week
+      minDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
+      maxDay: DateTime.now().add(Duration(days: 7 - DateTime.now().weekday)),
       initialDay: DateTime.now(),
       heightPerMinute: 1,
       eventArranger: const SideEventArranger(),
@@ -541,11 +549,14 @@ class _CalendarHomePageState extends State<CalendarHomePage>
         startDuration,
         endDuration,
       ),
-      startHour: 7,
-      endHour: 24,
+      startHour: 8,
+      endHour: 22,
       showLiveTimeLineInAllDays: true,
-      minDay: DateTime(2020),
-      maxDay: DateTime(2030),
+      // only show events for the current week
+      // Adjust min and max days to show the current day
+      minDay: DateTime.now(),
+      // maxday last day of the week (next Saturday)
+      maxDay: DateTime.now().add(Duration(days: 6 - DateTime.now().weekday)),
       initialDay: DateTime.now(),
       heightPerMinute: 1,
     );
@@ -676,12 +687,45 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     );
   }
 
-  // Updated calendar event creation to only show selected schedules
-  void _updateCalendarEvents(CourseProvider courseProvider) {
+  // Updated calendar event creation to preserve manually added events
+  void _updateCalendarEvents(CourseProvider courseProvider, ColorThemeProvider colorThemeProvider) {
     debugPrint('=== Updating calendar events with schedule selection ===');
+    
+    // Store manually added events before clearing
+    final manualEvents = <CalendarEventData>[];
+    final existingEvents = _eventController.allEvents;
+    
+    for (final event in existingEvents) {
+      // Check if this event belongs to a manually added course
+      // We'll identify manual events by checking if they contain course names from manually added courses
+      for (final courseId in _manuallyAddedCourses) {
+        // Find the course name from the course provider
+        StudentCourse? course;
+        for (final semesterCourses in courseProvider.coursesBySemester.values) {
+          final foundCourse = semesterCourses.where((c) => c.courseId == courseId).firstOrNull;
+          if (foundCourse != null) {
+            course = foundCourse;
+            break;
+          }
+        }
+        
+        if (course != null && event.title.contains(course.name)) {
+          manualEvents.add(event);
+          debugPrint('Preserving manually added event: ${event.title}');
+          break;
+        }
+      }
+    }
+    
     // Clear existing events
     _eventController.removeWhere((event) => true);
-      // Get current week start (Sunday)
+    
+    // Re-add manually added events
+    for (final manualEvent in manualEvents) {
+      _eventController.add(manualEvent);
+    }
+    
+    // Get current week start (Sunday)
     final now = DateTime.now();
     final currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
     debugPrint('Current week start (Sunday): $currentWeekStart');
@@ -704,6 +748,12 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       debugPrint('Processing semester "$semester" with ${courses.length} courses');
       
       for (final course in courses) {
+        // Skip manually added courses to avoid duplicates
+        if (_manuallyAddedCourses.contains(course.courseId)) {
+          debugPrint('Skipping course ${course.name} as it was manually added');
+          continue;
+        }
+        
         debugPrint('Processing course: ${course.name} (${course.courseId})');
         debugPrint('Has selected lecture: ${course.hasSelectedLecture}, Has selected tutorial: ${course.hasSelectedTutorial}');
         
@@ -711,11 +761,11 @@ class _CalendarHomePageState extends State<CalendarHomePage>
         context.read<CourseDataProvider>().getCourseDetails(course.courseId).then((courseDetails) {
           if (courseDetails?.schedule.isNotEmpty == true) {
             debugPrint('Using API schedule for ${course.name} with selection filtering');
-            _createCalendarEventsFromSchedule(course, courseDetails!, semester, currentWeekStart);
+            _createCalendarEventsFromSchedule(course, courseDetails!, semester, currentWeekStart, colorThemeProvider);
           } else {
             debugPrint('Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}")');
             // Create basic events from stored lecture/tutorial times if no API schedule
-            _createBasicCalendarEvents(course, semester, currentWeekStart);
+            _createBasicCalendarEvents(course, semester, currentWeekStart, colorThemeProvider);
           }
         });
       }
@@ -764,6 +814,7 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     EnhancedCourseDetails courseDetails, 
     String semester,
     DateTime weekStart,
+    ColorThemeProvider colorThemeProvider,
   ) {
     debugPrint('Creating calendar events for ${course.name} with schedule selection');
     
@@ -832,11 +883,16 @@ class _CalendarHomePageState extends State<CalendarHomePage>
       }
         final event = CalendarEventData(
         date: eventDate,
-        title: formatEventTitle(course.name, eventType, schedule.group > 0 ? schedule.group : null),
+        title: formatEventTitle(
+          course.name, 
+          eventType, 
+          schedule.group > 0 ? schedule.group : null,
+          instructorName: schedule.staff.isNotEmpty ? schedule.staff : null,
+        ),
         description: _buildEventDescription(course, schedule, semester),
         startTime: timeRange['start']!,
         endTime: timeRange['end']!,
-        color: _getCourseColor(course.courseId),
+        color: colorThemeProvider.getCourseColor(course.courseId),
       );
       
       debugPrint('Created calendar event: ${event.title} on ${event.date} from ${event.startTime} to ${event.endTime}');
@@ -848,8 +904,9 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     StudentCourse course, 
     String semester,
     DateTime weekStart,
+    ColorThemeProvider colorThemeProvider,
   ) {
-    final courseColor = _getCourseColor(course.courseId);
+    final courseColor = colorThemeProvider.getCourseColor(course.courseId);
     
     // Create events from stored lecture time
     if (course.lectureTime.isNotEmpty) {
@@ -992,30 +1049,6 @@ class _CalendarHomePageState extends State<CalendarHomePage>
     }
     
     return parts.join('\n');
-  }
-
-  Color _getCourseColor(String courseId) {
-    final hash = courseId.hashCode;
-    final colors = [
-      Colors.teal.shade900, // Dark greenish blue
-      Colors.indigo.shade900, // Deep bluish purple
-      Colors.cyan.shade900, // Rich green-blue — bright pop
-      Colors.deepPurple.shade900, // Bold, regal purple
-      Colors.blue.shade900, // Classic dark blue
-      Colors.orange.shade900, // Dark, warm orange — still different from brown
-      Colors.red.shade900, // Blood red — intense but clearly distinct
-      Colors.lime.shade900, // Sharp and vivid green-yellow
-    ];
-    return colors[hash.abs() % colors.length];
-  }
-
-  // New helper method for formatting event titles with selection indication
-  String _formatSelectedEventTitle(String courseName, CourseEventType type, ScheduleEntry schedule, bool isSelected) {
-    final typeStr = type.name.toUpperCase();
-    final groupStr = schedule.group > 0 ? ' G${schedule.group}' : '';
-    final selectedIndicator = isSelected ? ' ✓' : '';
-    
-    return '$typeStr$groupStr$selectedIndicator\n$courseName';
   }
 
   // Placeholder method for edit profile
