@@ -1,4 +1,6 @@
 import 'package:calendar_view/calendar_view.dart';
+import 'package:degreez/providers/login_notifier.dart';
+import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -49,7 +51,15 @@ class _CalendarPageState extends State<CalendarPage>
 
   @override
   Widget build(BuildContext context) {
-    CourseProvider courseProvider = context.read<CourseProvider>(); 
+    return Consumer4<LogInNotifier, StudentProvider, CourseProvider, ColorThemeProvider>(
+      builder: (context, loginNotifier, studentProvider,courseProvider, colorThemeProvider, _) {
+        // Update calendar events when courses change
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
+            _updateCalendarEvents(courseProvider, colorThemeProvider);
+          }
+        });
+
     return Column(
       children: [
         // Course List Panel - Pass callback methods
@@ -199,6 +209,7 @@ class _CalendarPageState extends State<CalendarPage>
         ),
       ],
     );
+  });
   }
 
   Widget _buildWeekView() {
