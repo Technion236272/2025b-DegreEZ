@@ -97,19 +97,46 @@ mixin CourseEventMixin {
         return Icons.science;
     }
   }  // Format event title
-  String formatEventTitle(String courseName, CourseEventType type, int? groupNumber) {
-    // final typeStr = type.name.toUpperCase();
-    // final groupStr = groupNumber != null ? ' G$groupNumber' : '';
-    // return '$typeStr$groupStr\n$courseName';
-    // i want to return type first, then course name with line break for better fitting
+  String formatEventTitle(String courseName, CourseEventType type, int? groupNumber, {String? instructorName}) {
+    String typeStr;
     switch (type) {
       case CourseEventType.lecture:
-        return '(L)\n$courseName';
+        typeStr = 'Lecture';
+        break;
       case CourseEventType.tutorial:
-        return '(T)\n$courseName';
+        typeStr = 'Tutorial';
+        break;
       case CourseEventType.lab:
-        return '(Lab)\n$courseName';
+        typeStr = 'Lab';
+        break;
     }
+    
+    // Build the title components
+    final titleParts = <String>[typeStr];
+    
+    // Add group number if available
+    if (groupNumber != null && groupNumber > 0) {
+      titleParts[0] = '$typeStr G$groupNumber';
+    }
+    
+    // Add course name
+    // add the name of course after splitting it by space and putting every word in a new line
+    courseName = courseName.split(' ').join('\n');
+    titleParts.add(courseName);
+    
+    // Add instructor name if available
+    // remove the first name from the instructor name
+    if (instructorName != null && instructorName.isNotEmpty) {
+      final parts = instructorName.split(' ');
+      if (parts.length > 1) {
+        instructorName = parts.sublist(1).join(' '); // Remove first name
+      }
+    }
+    if (instructorName != null && instructorName.isNotEmpty) {
+      titleParts.add(instructorName);
+    }
+    
+    return titleParts.join('\n');
   }
 
   // Parse course event type from Hebrew text

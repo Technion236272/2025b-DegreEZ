@@ -104,11 +104,14 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
         eventId: eventId,
       );
 
-      _allEvents[eventId] = courseEventData;
-
-      final calendarEvent = CalendarEventData(
+      _allEvents[eventId] = courseEventData;      final calendarEvent = CalendarEventData(
         date: eventDate,
-        title: formatEventTitle(widget.courseDetails.name, eventType, groupNumber),
+        title: formatEventTitle(
+          widget.courseDetails.name, 
+          eventType, 
+          groupNumber,
+          instructorName: scheduleEntry.staff.isNotEmpty ? scheduleEntry.staff : null,
+        ),
         description: _buildEventDescription(scheduleEntry),
         startTime: timeRange['start']!,
         endTime: timeRange['end']!,
