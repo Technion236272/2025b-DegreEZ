@@ -10,7 +10,7 @@ import '../providers/course_data_provider.dart';
 import '../widgets/add_course_dialog.dart';
 import 'my_courses_page.dart';
 import 'customized_diagram_page.dart';
-import '../pages/add_course_page.dart'; // Added new import
+
 
 class NavigatorPage extends StatefulWidget {
   const NavigatorPage({super.key});
