@@ -21,6 +21,8 @@ mixin CalendarDarkThemeMixin {
       Theme.of(context).colorScheme.surface;
       
   /// Get the text style for the header text
+  /// remove the hardcoded color and use the theme
+  /// add a word "degreez" to the header text
   TextStyle getHeaderTextStyle(BuildContext context) => 
       TextStyle(
         color: Theme.of(context).colorScheme.onSurface,
@@ -30,7 +32,7 @@ mixin CalendarDarkThemeMixin {
   /// Get settings for the hour indicator lines
   HourIndicatorSettings getHourIndicatorSettings(BuildContext context) => 
       HourIndicatorSettings(
-        color: Theme.of(context).colorScheme.onSurface.withAlpha(60),
+        color: Theme.of(context).colorScheme.onSurface.withAlpha(20),
         height: 0.5,
         offset: 5,
       );
@@ -55,7 +57,8 @@ mixin CalendarDarkThemeMixin {
   Widget buildTimeLine(BuildContext context, DateTime date) {
     return Container(
       color: getHeaderBackgroundColor(context),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      // padding: const EdgeInsets.symmetric(horizontal: 8),
+      
       child: Text(
         '${date.hour}:00',
         style: TextStyle(
@@ -67,29 +70,57 @@ mixin CalendarDarkThemeMixin {
     );
   }
   
+  /// Get the day name from a DateTime
+  String getDayName(DateTime date) {
+    const dayNames = [ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' ];
+    if (date.weekday < 1 || date.weekday > 7) {
+      throw ArgumentError('Invalid weekday: ${date.weekday}');
+    }
+    return dayNames[date.weekday - 1];
+  }
+  
   /// Build a weekday header with dark theme styling
+  /// add also the day number
+  /// add also the day name , done manually 
+  /// put next to the day number
   Widget buildWeekDay(BuildContext context, DateTime date) {
     return Container(
       padding: const EdgeInsets.all(8),
       color: getHeaderBackgroundColor(context),
-      child: Text(
-        date.day.toString(),
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            getDayName(date),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(179),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(width: 1), // Space between day name and number
+          Text(
+            date.day.toString(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          
+        ],
       ),
     );
   }
-  
   /// Build a day header with dark theme styling
+  /// add the day name and the date
   Widget buildDayHeader(BuildContext context, DateTime date) {
     return Container(
       padding: const EdgeInsets.all(8),
       color: getHeaderBackgroundColor(context),
       child: Text(
-        'Day: ${date.day}/${date.month}/${date.year}',
+        'Day:  ${date.day}/${date.month}/${date.year} (${getDayName(date)})',
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: Theme.of(context).colorScheme.onSurface,

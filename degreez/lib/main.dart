@@ -7,6 +7,7 @@ import 'package:calendar_view/calendar_view.dart';
 
 import 'services/firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'color/color_palette.dart';
 
 // Updated providers - using only the new ones
 import 'providers/login_notifier.dart';
@@ -65,13 +66,47 @@ class MyApp extends StatelessWidget {
       child: CalendarControllerProvider(
         controller: EventController(),
         child: MaterialApp(
-          title: 'DegreEZ',
-          theme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: Colors.black,
-            canvasColor: Colors.black,
-            cardColor: Colors.black,
+          title: 'DegreEZ',          theme: ThemeData.dark().copyWith(
+            scaffoldBackgroundColor: AppColorsDarkMode.mainColor,
+            canvasColor: AppColorsDarkMode.mainColor,
+            cardColor: AppColorsDarkMode.mainColor,
             colorScheme: const ColorScheme.dark(
-              surface: Colors.black,
+              surface: AppColorsDarkMode.mainColor,
+              primary: AppColorsDarkMode.secondaryColor,
+              secondary: AppColorsDarkMode.secondaryColor,
+              onPrimary: AppColorsDarkMode.accentColor,
+              onSecondary: AppColorsDarkMode.accentColor,
+              onSurface: AppColorsDarkMode.secondaryColorDim,
+            ),
+            // FAB theme
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: AppColorsDarkMode.secondaryColor,
+              foregroundColor: AppColorsDarkMode.accentColor,
+            ),
+            // Icon theme
+            iconTheme: const IconThemeData(
+              color: AppColorsDarkMode.secondaryColor,
+            ),
+            primaryIconTheme: const IconThemeData(
+              color: AppColorsDarkMode.secondaryColor,
+            ),
+            // Text theme with light colors from palette
+            textTheme: ThemeData.dark().textTheme.copyWith(
+              bodyLarge: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              bodyMedium: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              bodySmall: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              headlineLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              headlineMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              headlineSmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              titleLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              titleMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              titleSmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
+            // App bar theme
+            appBarTheme: const AppBarTheme(
+              backgroundColor: AppColorsDarkMode.mainColor,
+              foregroundColor: AppColorsDarkMode.secondaryColor,
+              iconTheme: IconThemeData(color: AppColorsDarkMode.secondaryColor),
             ),
           ),
           initialRoute: '/',

@@ -43,221 +43,106 @@ class _CalendarPageState extends State<CalendarPage>
   void _markCourseAsManuallyAdded(String courseId) {
     _manuallyAddedCourses.add(courseId);
   }
-
   // Add method to remove course from manual tracking
   void _removeCourseFromManualTracking(String courseId) {
     _manuallyAddedCourses.remove(courseId);
   }
 
-  @override
+  // Build the course panel with integrated toggle button
+  Widget _buildCoursePanelWithIntegratedToggle(CourseProvider courseProvider) {
+    if (!courseProvider.hasAnyCourses) {
+      return const SizedBox.shrink();
+    }
+
+    return CourseCalendarPanel(
+      eventController: _eventController,
+      onCourseManuallyAdded: _markCourseAsManuallyAdded,
+      onCourseManuallyRemoved: _removeCourseFromManualTracking,
+      viewMode: _viewMode,
+      onToggleView: () => setState(() => _viewMode = _viewMode == 0 ? 1 : 0),
+    );
+  }
+
+@override
   Widget build(BuildContext context) {
     return Consumer4<LogInNotifier, StudentProvider, CourseProvider, ColorThemeProvider>(
-      builder: (context, loginNotifier, studentProvider,courseProvider, colorThemeProvider, _) {
+      builder: (context, loginNotifier, studentProvider, courseProvider, colorThemeProvider, _) {
         // Update calendar events when courses change
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
             _updateCalendarEvents(courseProvider, colorThemeProvider);
           }
-        });
+        });        return Column(
+          children: [
+            // Course Panel with integrated Toggle Button
+            _buildCoursePanelWithIntegratedToggle(courseProvider),
 
-    return Column(
-      children: [
-        // Course List Panel - Pass callback methods
-        if (courseProvider.hasAnyCourses)
-          CourseCalendarPanel(
-            eventController: _eventController,
-            onCourseManuallyAdded: _markCourseAsManuallyAdded,
-            onCourseManuallyRemoved: _removeCourseFromManualTracking,
-          ),
-
-        // View Mode Tabs
-        Container(
-          color: Theme.of(context).colorScheme.surface.withAlpha(25),
-          child: Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () => setState(() => _viewMode = 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _viewMode == 0
-                              ? Theme.of(context).colorScheme.secondary
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Week View',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: _viewMode == 0
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: InkWell(
-                  onTap: () => setState(() => _viewMode = 1),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _viewMode == 1
-                              ? Theme.of(context).colorScheme.secondary
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Day View',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: _viewMode == 1
-                            ? Theme.of(context).colorScheme.secondary
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Day of week header for Week View
-        if (_viewMode == 0)
-          Container(
-            color: Theme.of(context).colorScheme.surface.withAlpha(15),
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              children: [
-                const SizedBox(width: 50), // Timeline column space
-                Expanded(
-                  child: Row(
-                    children: const [
-                      Expanded(
-                        child: Text(
-                          'S',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'M',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'T',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'W',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'T',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            // Calendar Views - Full Width
+            Expanded(
+              child: _viewMode == 0 ? _buildWeekView() : _buildDayView(),
             ),
-          ),
-
-        // Calendar Views
-        Expanded(
-          child: _viewMode == 0 ? _buildWeekView() : _buildDayView(),
-        ),
-      ],
+          ],
+        );
+      },
     );
-  });
   }
 
   Widget _buildWeekView() {
-    return WeekView(
-      controller: _eventController,
-      backgroundColor: getCalendarBackgroundColor(context),
-      headerStyle: getHeaderStyle(context),
-          weekDays: [
-      WeekDays.sunday,
-      WeekDays.monday,
-      WeekDays.tuesday, 
-      WeekDays.wednesday,
-      WeekDays.thursday,
-      
-    ],
-      weekDayBuilder: (date) => buildWeekDay(context, date),
-      timeLineBuilder: (date) => buildTimeLine(context, date),
-      liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
-      hourIndicatorSettings: getHourIndicatorSettings(context),
-      eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
-          buildEventTile(
-        context,
-        date,
-        events,
-        boundary,
-        startDuration,
-        endDuration,
-        filtered: true,
-        searchQuery: _searchQuery,
+    return ClipRect(
+      child: WeekView(
+        controller: _eventController,
+        backgroundColor: getCalendarBackgroundColor(context),
+        headerStyle: getHeaderStyle(context),
+        // showWeekTileBorder: false,
+        // Completely transparent and minimal header
+        // headerStyle: HeaderStyle(
+        //   decoration: const BoxDecoration(color: Colors.transparent),
+        //   headerTextStyle: const TextStyle(fontSize: 0, height: 0),
+        //   headerMargin: EdgeInsets.zero,
+        //   headerPadding: EdgeInsets.zero,
+        // ),
+        weekDays: [
+          WeekDays.sunday,
+          WeekDays.monday,
+          WeekDays.tuesday, 
+          WeekDays.wednesday,
+          WeekDays.thursday,
+        ],
+        weekDayBuilder: (date) => buildWeekDay(context, date),
+        timeLineBuilder: (date) => buildTimeLine(context, date),
+        liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
+        hourIndicatorSettings: getHourIndicatorSettings(context),
+        eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
+            buildEventTile(
+          context,
+          date,
+          events,
+          boundary,
+          startDuration,
+          endDuration,
+          filtered: true,
+          searchQuery: _searchQuery,
+        ),
+        startDay: WeekDays.sunday,
+        startHour: 8,
+        endHour: 22,
+        showLiveTimeLineInAllDays: true,
+        // only show events for the current week starting from sunday to thursday
+        // Adjust min and max days to show the current week
+        minDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
+        maxDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
+        // maxDay: DateTime.now().add(Duration(days: 7 - DateTime.now().weekday)),
+        initialDay: DateTime.now(),
+        heightPerMinute: 1,
+        eventArranger: const SideEventArranger(),
       ),
-      startDay: WeekDays.sunday,
-      startHour: 8,
-      endHour: 22,
-      showLiveTimeLineInAllDays: true,
-      // only show events for the current week starting from sunday to thursday
-      // Adjust min and max days to show the current week
-      minDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
-      maxDay: DateTime.now().add(Duration(days: 7 - DateTime.now().weekday)),
-      initialDay: DateTime.now(),
-      heightPerMinute: 1,
-      eventArranger: const SideEventArranger(),
     );
   }
 
   Widget _buildDayView() {
     return DayView(
       controller: _eventController,
-      backgroundColor: getCalendarBackgroundColor(context),
+      backgroundColor: getCalendarBackgroundColor(context), 
       dayTitleBuilder: (date) => buildDayHeader(context, date),
       timeLineBuilder: (date) => buildTimeLine(context, date),
       liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
@@ -278,16 +163,18 @@ class _CalendarPageState extends State<CalendarPage>
       // Adjust min and max days to show the current day
       minDay: DateTime.now(),
       // max day last day of the week (next Saturday)
-      maxDay: DateTime.now().add(Duration(days: 6 - DateTime.now().weekday)),
+      maxDay: DateTime.now(),
       initialDay: DateTime.now(),
       heightPerMinute: 1,
+      eventArranger: const SideEventArranger(),
     );
   }
-
+  
+  
   // Updated calendar event creation to preserve manually added events
   void _updateCalendarEvents(CourseProvider courseProvider, ColorThemeProvider colorThemeProvider) {
     debugPrint('=== Updating calendar events with schedule selection ===');
-    
+
     // Store manually added events before clearing
     final manualEvents = <CalendarEventData>[];
     final existingEvents = _eventController.allEvents;

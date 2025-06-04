@@ -14,12 +14,16 @@ class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
   final Function(String courseId)? onCourseManuallyAdded;
   final Function(String courseId)? onCourseManuallyRemoved;
+  final int? viewMode;
+  final VoidCallback? onToggleView;
   
   const CourseCalendarPanel({
     super.key, 
     required this.eventController,
     this.onCourseManuallyAdded,
     this.onCourseManuallyRemoved,
+    this.viewMode,
+    this.onToggleView,
   });
 
   @override
@@ -51,10 +55,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
               InkWell(
                 onTap: () => setState(() => _isExpanded = !_isExpanded),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  padding: const EdgeInsets.all(16.0),                  child: Row(
                     children: [
+                      // Title on the left
                       Text(
                         'My Courses (${allCourses.length})',
                         style: const TextStyle(
@@ -62,7 +65,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const Spacer(),
+                      // Arrow in the middle-right
                       Icon(_isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down),
+                      // Toggle button on the far right
+                      if (widget.viewMode != null && widget.onToggleView != null) ...[
+                        const SizedBox(width: 8),
+                        _buildViewToggleButton(),
+                      ],
                     ],
                   ),
                 ),
@@ -627,7 +637,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
     };
     return dayMap[englishDay.toLowerCase()];
   }
-
   CourseEventType _parseEventType(String eventType) {
     switch (eventType.toLowerCase()) {
       case 'lecture':
@@ -639,5 +648,28 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       default:
         return CourseEventType.lecture; // Default fallback
     }
+  }
+
+  Widget _buildViewToggleButton() {
+    return GestureDetector(
+      onTap: widget.onToggleView,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondary.withAlpha(20),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.secondary.withAlpha(50),
+            width: 1,
+          ),
+        ),
+        child: Icon(
+          widget.viewMode == 0 ? Icons.view_week : Icons.view_day,
+          size: 16,
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+      ),
+    );
   }
 }
