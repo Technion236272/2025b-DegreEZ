@@ -2,6 +2,7 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
 import 'package:degreez/widgets/note_popup.dart';
+import 'package:degreez/widgets/course_actions_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/course_service.dart';
@@ -14,6 +15,7 @@ class CourseCard extends StatefulWidget {
   final StudentCourse course;
   final EnhancedCourseDetails? courseDetails;
   final String semester;
+  final VoidCallback? onCourseUpdated; // Add callback for updates
 
   const CourseCard({
     super.key,
@@ -21,6 +23,7 @@ class CourseCard extends StatefulWidget {
     required this.course,
     required this.semester,
     this.courseDetails,
+    this.onCourseUpdated,
   });
 
   @override
@@ -29,6 +32,12 @@ class CourseCard extends StatefulWidget {
 
 class _CourseCardState extends State<CourseCard> {
   bool _hasNote = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasNote = widget.course.note != null && widget.course.note!.isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +64,16 @@ class _CourseCardState extends State<CourseCard> {
       );
 
     return GestureDetector(
+      // Enhanced: Add regular tap for quick actions
+      onTap: () {
+        showCourseActionsPopup(
+          context,
+          widget.course,
+          widget.semester,
+          onCourseUpdated: widget.onCourseUpdated,
+        );
+      },
+      // Keep existing long press for notes
       onLongPress: () async {
         final result = await notePopup(context,
         course,
@@ -213,7 +232,7 @@ class _CourseCardState extends State<CourseCard> {
     ),);
   }
 
-  // Horizontal course card for landscape mode
+  // Horizontal course card for landscape mode - enhanced with tap gesture
   Widget _buildHorizontal(
     BuildContext context,
     StudentCourse course,
@@ -222,83 +241,105 @@ class _CourseCardState extends State<CourseCard> {
     final hasGrade = course.finalGrade.isNotEmpty;
     final courseColor = _getCourseColor(course.courseId);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: courseColor,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    course.courseId,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w500,
+    return GestureDetector(
+      // Enhanced: Add tap for quick actions in horizontal mode too
+      onTap: () {
+        showCourseActionsPopup(
+          context,
+          widget.course,
+          widget.semester,
+          onCourseUpdated: widget.onCourseUpdated,
+        );
+      },
+      onLongPress: () async {
+        final result = await notePopup(context,
+        course,
+        widget.semester,
+        course.note);
+        if (result) {
+      setState(() {
+        _hasNote = true;
+      });
+      }
+      },
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: courseColor,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      course.courseId,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  if (courseDetails != null && courseDetails.points.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        courseDetails.points,
+                        style: const TextStyle(
+                          fontSize: 8,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    course.name,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (courseDetails != null && courseDetails.points.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      courseDetails.points,
-                      style: const TextStyle(
-                        fontSize: 8,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            Expanded(
-              child: Center(
-                child: Text(
-                  course.name,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ),
-            ),
-            if (hasGrade)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _getGradeColor(course.finalGrade),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  course.finalGrade,
-                  style: const TextStyle(
-                    fontSize: 9,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+              if (hasGrade)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _getGradeColor(course.finalGrade),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    course.finalGrade,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -342,7 +383,3 @@ class _CourseCardState extends State<CourseCard> {
     }
   }
 }
-
-
-  // Vertical course card for portrait mode
- 

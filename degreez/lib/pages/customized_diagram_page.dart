@@ -5,6 +5,7 @@ import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/services/course_service.dart';
+import 'package:degreez/widgets/semester_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
@@ -17,6 +18,83 @@ class CustomizedDiagramPage extends StatefulWidget {
 }
 
 class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
+  late ScrollController _scrollController;
+  final List<GlobalKey> _semesterKeys = [];
+  int _currentSemesterIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Helper method to get responsive grid count
+  int _getCrossAxisCount(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth > 1200) return 6;
+    if (screenWidth > 800) return 5;
+    if (screenWidth > 600) return 4;
+    return 3;
+  }
+
+  // Helper method to scroll to specific semester
+  void _scrollToSemester(int index) {
+    if (index < _semesterKeys.length && _semesterKeys[index].currentContext != null) {
+      final context = _semesterKeys[index].currentContext!;
+      final renderBox = context.findRenderObject() as RenderBox;
+      final position = renderBox.localToGlobal(Offset.zero);
+      
+      _scrollController.animateTo(
+        _scrollController.offset + position.dy - 150, // Account for timeline height
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+      
+      setState(() {
+        _currentSemesterIndex = index;
+      });
+    }
+  }
+
+  // Helper method to build timeline data
+  List<SemesterTimelineData> _buildTimelineData(Map<String, List<StudentCourse>> semesters) {
+    return semesters.entries.map((entry) {
+      final courses = entry.value;
+      final completedCourses = courses.where((c) => c.finalGrade.isNotEmpty).length;
+      
+      SemesterStatus status;
+      if (courses.isEmpty) {
+        status = SemesterStatus.empty;
+      } else if (completedCourses == courses.length) {
+        status = SemesterStatus.completed;
+      } else if (completedCourses > 0) {
+        status = SemesterStatus.current;
+      } else {
+        status = SemesterStatus.planned;
+      }
+
+      return SemesterTimelineData(
+        name: entry.key,
+        status: status,
+        completedCourses: completedCourses,
+        totalCourses: courses.length,
+        totalCredits: 0.0, // TODO: Calculate based on course details
+      );
+    }).toList();
+  }
+
+  // Enhanced: Callback to refresh UI when course is updated
+  void _onCourseUpdated() {
+    setState(() {
+      // This will trigger a rebuild and refresh the course data
+    });
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -26,8 +104,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
  child: 
 Scaffold(
       backgroundColor: AppColorsDarkMode.mainColor,
-      body: Consumer<StudentProvider>(
-        builder: (context, studentNotifier, _) {
+      body: Consumer2<StudentProvider, CourseProvider>(
+  builder: (context, studentNotifier, courseNotifier, _){
           final courseNotifier = context.read<CourseProvider>();
           if (studentNotifier.isLoading && studentNotifier.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -73,22 +151,38 @@ Scaffold(
             );
           }
 
+          // Ensure we have enough keys for the semesters
+          while (_semesterKeys.length < semesters.length) {
+            _semesterKeys.add(GlobalKey());
+          }
+
           // Detect device orientation
           final orientation = MediaQuery.of(context).orientation;
 
           return SafeArea(
             child: Column(
-              
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with degree progress summary only in portrait mode.
-                // if (orientation == Orientation.portrait)
-                //   _buildProgressHeader(context, studentNotifier),
+                // Add the semester timeline
+                SemesterTimeline(
+                  semesters: _buildTimelineData(semesters),
+                  currentSemesterIndex: _currentSemesterIndex,
+                  onSemesterTap: _scrollToSemester,
+                ),
 
-                Padding(padding: EdgeInsets.only(left: 25),child: Text("Press and hold down on a course to add notes to it",style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),),
+                // Enhanced: Updated instruction text
+                Padding(
+                  padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
+                  child: Text(
+                    "Tap a course for quick actions • Long press to add notes",
+                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                  ),
+                ),
+
                 // Semester list
                 Expanded(
                   child: ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     itemCount: semesters.length,
                     itemBuilder: (context, index) {
@@ -99,17 +193,20 @@ Scaffold(
                         'courses': semesters[semesterKey]!,
                       };
 
-                      return orientation == Orientation.portrait
-                          ? _buildVerticalSemesterSection(
-                            context,
-                            semester,
-                            studentNotifier,
-                          )
-                          : _buildVerticalSemesterSection(
-                            context,
-                            semester,
-                            studentNotifier,
-                          );
+                      return Container(
+                        key: _semesterKeys[index],
+                        child: orientation == Orientation.portrait
+                            ? _buildVerticalSemesterSection(
+                              context,
+                              semester,
+                              studentNotifier,
+                            )
+                            : _buildVerticalSemesterSection(
+                              context,
+                              semester,
+                              studentNotifier,
+                            ),
+                      );
                     },
                   ),
                 ),
@@ -216,95 +313,7 @@ Scaffold(
       },
     );
   }
-/*
-  Widget _buildProgressHeader(
-    BuildContext context,
-    StudentProvider studentNotifier,
-  ) {
-    final totalCourses =
-        studentNotifier.coursesBySemester.values
-            .expand((courses) => courses)
-            .length;
 
-    final totalCredits = studentNotifier.coursesBySemester.keys
-        .map((semester) => studentNotifier.getTotalCreditsForSemester(semester))
-        .fold<double>(0.0, (sum, credits) => sum + credits);
-
-    final completedCourses =
-        studentNotifier.coursesBySemester.values
-            .expand((courses) => courses)
-            .where((course) => course.finalGrade.isNotEmpty)
-            .length;
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Degree Progress',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          IconButton(onPressed: context.read<CustomizedDiagramNotifier>().switchPalette, icon: Icon(Icons.palette,color: AppColorsDarkMode.secondaryColor,)),
-
-          if (studentNotifier.student != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              '${studentNotifier.student!.major} - ${studentNotifier.student!.faculty}',
-              style: TextStyle(
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 16),
-
-          // Progress summary cards
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  context,
-                  'Total Courses',
-                  totalCourses.toString(),
-                  Icons.school,
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  context,
-                  'Total Credits',
-                  totalCredits.toStringAsFixed(1),
-                  Icons.star,
-                  Colors.green,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  context,
-                  'Completed',
-                  completedCourses.toString(),
-                  Icons.check_circle,
-                  Colors.orange,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-*/
   Widget _buildSummaryCard(
     BuildContext context,
     String title,
@@ -344,7 +353,7 @@ Scaffold(
     );
   }
 
-  // Vertical layout for portrait mode
+  // Vertical layout for portrait mode - enhanced with responsive grid and update callback
   Widget _buildVerticalSemesterSection(
     BuildContext context,
     Map<String, dynamic> semester,
@@ -446,8 +455,8 @@ Scaffold(
             : GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: _getCrossAxisCount(context), // Enhanced: responsive grid
                 childAspectRatio: 1,
                 crossAxisSpacing: 2,
                 mainAxisSpacing: 2,
@@ -464,140 +473,13 @@ Scaffold(
                   course: course,
                   courseDetails: courseWithDetails?.courseDetails,
                   semester: semesterName,
+                  onCourseUpdated: _onCourseUpdated, // Enhanced: Add update callback
                 );
               },
             ),
       ],
     );
   }
-/*
-  // Horizontal layout for landscape mode
-  Widget _buildHorizontalSemesterSection(
-    BuildContext context,
-    Map<String, dynamic> semester,
-    StudentProvider studentNotifier,
-  ) {
-    final courses = semester['courses'] as List<StudentCourse>;
-    final semesterName = semester['name'] as String;
-    final totalCredits = studentNotifier.getTotalCreditsForSemester(
-      semesterName,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 20, bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      semesterName,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onPrimaryContainer.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${totalCredits.toStringAsFixed(1)} credits',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add, color: Colors.blue),
-                    tooltip: 'Add Course',
-                    onPressed: () {
-                      _showAddCourseDialog(context, semesterName);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    tooltip: 'Delete Semester',
-                    onPressed: () {
-                      _confirmDeleteSemester(context, semesterName,studentNotifier.student!.id);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Horizontal row of courses
-        courses.isEmpty
-            ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Center(
-                child: Text(
-                  'No courses in this semester',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            )
-            : SizedBox(
-              height: 120,
-              child: Row(
-                children: List.generate(courses.length, (index) {
-                  final course = courses[index];
-                  final courseWithDetails = studentNotifier
-                      .getCourseWithDetails(semesterName, course.courseId);
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child:  CourseCard(
-                  direction: DirectionValues.horizontal,
-                  course: course,
-                  courseDetails: courseWithDetails?.courseDetails,
-                  semester: semesterName,
-                )
-                    ),
-                  );
-                }),
-              ),
-            ),
-        const SizedBox(height: 10),
-        const Divider(),
-      ],
-    );
-  }
-*/
-
 
   void _showAddCourseDialog(BuildContext context, String semesterName) {
     final searchController = TextEditingController();
@@ -627,9 +509,6 @@ Scaffold(
               if (!context.mounted) return; // <--- CRITICAL LINE
 
               if (fetched.isEmpty) {
-                // ScaffoldMessenger.of(context).showSnackBar(
-                //     SnackBar(content: Text('No course found matching "$query"')),
-                //     );
                 setState(() {
                   results = [];
                   isLoading = false;
@@ -719,6 +598,8 @@ Scaffold(
                                         backgroundColor: Colors.green,
                                       ),
                                     );
+                                    // Enhanced: Trigger UI refresh
+                                    _onCourseUpdated();
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
@@ -749,8 +630,6 @@ Scaffold(
     );
   }
 
-// void _showAddCourseDialog(BuildContext context, String semesterName){}
-
   void _confirmDeleteSemester(BuildContext context, String semesterName,String studentId) {
     showDialog(
       context: context,
@@ -779,6 +658,8 @@ Scaffold(
                   ).deleteSemester(studentId,semesterName);
                   if (!mounted) return;
                   Navigator.of(ctx).pop();
+                  // Enhanced: Trigger UI refresh
+                  _onCourseUpdated();
                 },
                 child: const Text(
                   'Delete',
@@ -789,6 +670,4 @@ Scaffold(
           ),
     );
   }
-
- 
 }

@@ -523,20 +523,21 @@ class CourseProvider with ChangeNotifier {
   }
 
    // Get total credits for a semester
-  double getTotalCreditsForSemester(String semesterKey) {
-    final courses = _coursesBySemester[semesterKey] ?? [];
-    double total = 0.0;
+double getTotalCreditsForSemester(String semesterKey) {
+  final courses = _coursesBySemester[semesterKey] ?? [];
+  double total = 0.0;
 
-    for (final course in courses) {
-      final details = _courseDetailsCache[course.courseId];
-      if (details != null) {
-        total += details.creditPoints;
-      }
+  for (final course in courses) {
+    // Use CourseDataProvider instead of the empty cache
+    // Note: This will be async, so you need to handle it properly
+    final courseWithDetails = getCourseWithDetails(semesterKey, course.courseId);
+    if (courseWithDetails?.courseDetails != null) {
+      total += courseWithDetails!.courseDetails.creditPoints;
     }
-
-    return total;
   }
 
+  return total;
+}
 
     // Get course with details (updated return type)
   StudentCourseWithDetails? getCourseWithDetails(
