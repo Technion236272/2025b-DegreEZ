@@ -7,7 +7,7 @@ import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
-
+import '../widgets/add_course_dialog.dart';
 import 'my_courses_page.dart';
 import 'customized_diagram_page.dart';
 import '../pages/add_course_page.dart'; // Added new import
@@ -135,19 +135,27 @@ class _NavigatorPageState extends State<NavigatorPage> {
               : body,
           // Updated FAB - now navigates to AddCoursePage
           floatingActionButton: _currentPage == 'Calendar'
-              ? FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddCoursePage(),
-                      ),
-                    );
+    ? Consumer<CourseDataProvider>(
+        builder: (context, courseDataProvider, _) {
+          return FloatingActionButton(
+            onPressed: () {
+              final currentSemester = courseDataProvider.currentSemester;
+              if (currentSemester != null) {
+                AddCourseDialog.show(
+                  context, 
+                  currentSemester.semesterName,
+                  onCourseAdded: (courseId) {
+                    // Optional: Notify calendar to refresh or mark as manually added
                   },
-                  tooltip: 'Add Course',
-                  child: const Icon(Icons.add),
-                )
-              : null,
+                );
+              }
+            },
+            tooltip: 'Add Course',
+            child: const Icon(Icons.add),
+          );
+        },
+      )
+    : null,
         );
       },
     );
