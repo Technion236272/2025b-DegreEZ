@@ -47,6 +47,7 @@ class AppColorsDarkMode {
   static const Color successColor = Color(0xFF81C784); // Soft green success
   static const Color warningColor = Color(0xFFFFB74D); // Warm warning yellow
   
+  static const Color bug = Color.fromARGB(255, 45, 206, 255); // Warm warning yellow
   // Convenience methods for creating subtle effects like in the design image
   
   /// Creates a subtle border decoration for cards and containers

@@ -102,7 +102,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                         ),
                         child: ListView.builder(
                           shrinkWrap: true,
-                          physics: allCourses.length > 3 
+                          physics: allCourses.length > 2 
                               ? const AlwaysScrollableScrollPhysics()
                               : const NeverScrollableScrollPhysics(),
                           itemCount: allCourses.length,
