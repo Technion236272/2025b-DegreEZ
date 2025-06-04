@@ -127,8 +127,7 @@ mixin CalendarDarkThemeMixin {
         ),
       ),
     );
-  }
-    /// Build an event tile with dark theme styling
+  }    /// Build an event tile with dark theme styling
   Widget buildEventTile(
     BuildContext context,
     DateTime date, 
@@ -136,7 +135,7 @@ mixin CalendarDarkThemeMixin {
     Rect boundary, 
     DateTime startDuration, 
     DateTime endDuration,
-    {bool filtered = false, String searchQuery = ''}
+    {bool filtered = false, String searchQuery = '', Function(CalendarEventData)? onLongPress}
   ) {
     if (events.isEmpty) return const SizedBox();
     
@@ -147,20 +146,25 @@ mixin CalendarDarkThemeMixin {
     
     if (filteredEvents.isEmpty) return const SizedBox();
     
-    return Container(
-      margin: const EdgeInsets.all(2),
-      padding: const EdgeInsets.all(2),      decoration: BoxDecoration(
-        color: filteredEvents.first.color,
-        borderRadius: BorderRadius.circular(8),
-      ),      child: Text(
-        filteredEvents.first.title,
-        // if the color is light, use black text, otherwise use white
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.surface,
-          fontSize: 8,
-          fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onLongPress: onLongPress != null ? () => onLongPress(filteredEvents.first) : null,
+      child: Container(
+        margin: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: filteredEvents.first.color,
+          borderRadius: BorderRadius.circular(8),
         ),
-        overflow: TextOverflow.ellipsis,
+        child: Text(
+          filteredEvents.first.title,
+          // if the color is light, use black text, otherwise use white
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.surface,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }

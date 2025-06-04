@@ -216,8 +216,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                       ),
                                   ],
                                 ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (value) {
+                                trailing: PopupMenuButton<String>(                                  onSelected: (value) {
                                     switch (value) {
                                       case 'select_schedule':
                                         _showScheduleSelection(course, courseDetails);
@@ -227,13 +226,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                         break;
                                       case 'remove_from_calendar':
                                         _removeCourseFromCalendar(course);
+                                        break;                                      case 'remove_course':
+                                        _showRemoveCourseDialog(course);
                                         break;
                                       case 'view_details':
                                         _showCourseDetails(context, course, courseDetails);
                                         break;
                                     }
-                                  },
-                                  itemBuilder: (BuildContext context) => [
+                                  },                                  itemBuilder: (BuildContext context) => [
                                     const PopupMenuItem(
                                       value: 'select_schedule',
                                       child: Row(
@@ -261,6 +261,16 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                           Icon(Icons.remove_circle),
                                           SizedBox(width: 8),
                                           Text('Remove from Calendar'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'remove_course',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete_forever, color: Colors.red),
+                                          SizedBox(width: 8),
+                                          Text('Remove Course', style: TextStyle(color: Colors.red)),
                                         ],
                                       ),
                                     ),
@@ -363,7 +373,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       );
     }
   }
-
   void _addCourseToCalendar(StudentCourse course, courseDetails, ColorThemeProvider colorThemeProvider) {
     if (courseDetails == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -375,7 +384,25 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       return;
     }
 
-    try {
+    try {      // Check if course events already exist in calendar to prevent duplicates
+      final existingEvents = widget.eventController.allEvents;
+      final courseEventsExist = existingEvents.any((event) => 
+        event.title.startsWith(course.name) || 
+        event.title.startsWith('${course.name} ') ||
+        event.title.contains('${course.name} -') ||
+        event.title.contains('${course.name}:')
+      );
+      
+      if (courseEventsExist) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${course.name} is already in the calendar'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       // Get the current week's Sunday
       final now = DateTime.now();
       final sunday = now.subtract(Duration(days: now.weekday % 7));
@@ -399,26 +426,35 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       }
       if (selectedEntries['workshop'] != null) {
         scheduleEntriesToShow.add(selectedEntries['workshop']);
-      }
-
-      // If no selections made, show all (backward compatibility)
+      }      // If no selections made, show all (backward compatibility)
       if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
         scheduleEntriesToShow.addAll(courseDetails.schedule);
       }
       
+      // Deduplicate schedule entries by time and type to avoid multiple events for the same lecture
+      final uniqueScheduleEntries = <dynamic>[];
+      final seenTimeSlots = <String>{};
+      
       for (final schedule in scheduleEntriesToShow) {
+        final timeSlotKey = '${schedule.day}_${schedule.time}_${schedule.type}';
+        if (!seenTimeSlots.contains(timeSlotKey)) {
+          uniqueScheduleEntries.add(schedule);
+          seenTimeSlots.add(timeSlotKey);
+        }
+      }
+      
+      for (final schedule in uniqueScheduleEntries) {
         final dayOfWeek = _parseHebrewDay(schedule.day);
         if (dayOfWeek == null) continue;
         
         final eventDate = sunday.add(Duration(days: (dayOfWeek == DateTime.sunday) ? 0 : dayOfWeek));
         final timeRange = _parseTimeRange(schedule.time, eventDate);
         if (timeRange == null) continue;
-        
-        final event = CalendarEventData(
+          final event = CalendarEventData(
           title: formatEventTitle(
             course.name, 
             _parseEventType(schedule.type), 
-            schedule.group > 0 ? schedule.group : null,
+            null, // Don't show group number since we're deduplicating
             instructorName: schedule.staff?.isNotEmpty == true ? schedule.staff : null,
           ),
           description: _buildEventDescription(course, schedule),
@@ -455,11 +491,13 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       );
     }
   }
-
   void _removeCourseFromCalendar(StudentCourse course) {
     int removedCount = 0;
     widget.eventController.removeWhere((event) {
-      final shouldRemove = event.title.contains(course.name);
+      final shouldRemove = event.title.startsWith(course.name) || 
+        event.title.startsWith('${course.name} ') ||
+        event.title.contains('${course.name} -') ||
+        event.title.contains('${course.name}:');
       if (shouldRemove) removedCount++;
       return shouldRemove;
     });
@@ -514,6 +552,164 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         ],
       ),
     );
+  }
+
+  // Method to show course removal confirmation dialog
+  void _showRemoveCourseDialog(StudentCourse course) {
+    final courseDataProvider = context.read<CourseDataProvider>();
+    final currentSemester = courseDataProvider.currentSemester?.semesterName ?? 'Unknown';
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Course'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Are you sure you want to permanently remove this course from your semester?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Course: ${course.name}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('Course ID: ${course.courseId}'),
+                  Text('Semester: $currentSemester'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'This will permanently remove the course from your schedule and all its associated calendar events.',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _removeCourseFromSemester(course.courseId, currentSemester);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove Course'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Method to permanently remove course from semester using CourseProvider
+  void _removeCourseFromSemester(String courseId, String semester) async {
+    final studentProvider = context.read<StudentProvider>();
+    final courseProvider = context.read<CourseProvider>();
+
+    if (!studentProvider.hasStudent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No student logged in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 16),
+              Text('Removing course...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );      // Call the existing removeCourseFromSemester method
+      final success = await courseProvider.removeCourseFromSemester(
+        studentProvider.student!.id,
+        semester,
+        courseId,
+      );
+      
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Course $courseId removed successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Also remove from calendar events
+        int removedCount = 0;
+        widget.eventController.removeWhere((event) {
+          final shouldRemove = event.title.contains(courseId) || 
+                              (event.description?.contains(courseId) == true);
+          if (shouldRemove) removedCount++;
+          return shouldRemove;
+        });
+
+        // Mark course as manually removed
+        widget.onCourseManuallyRemoved?.call(courseId);
+        
+        // Show additional feedback about calendar events removed
+        if (removedCount > 0) {
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$removedCount calendar events also removed'),
+                  backgroundColor: Colors.blue,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          });
+        }
+        
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to remove course'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error removing course: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // Helper methods for parsing Hebrew days and times

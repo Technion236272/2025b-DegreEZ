@@ -121,8 +121,7 @@ class _CalendarPageState extends State<CalendarPage>
         weekDayBuilder: (date) => buildWeekDay(context, date),
         timeLineBuilder: (date) => buildTimeLine(context, date),
         liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
-        hourIndicatorSettings: getHourIndicatorSettings(context),
-        eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
+        hourIndicatorSettings: getHourIndicatorSettings(context),        eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
             buildEventTile(
           context,
           date,
@@ -132,6 +131,7 @@ class _CalendarPageState extends State<CalendarPage>
           endDuration,
           filtered: true,
           searchQuery: _searchQuery,
+          onLongPress: _showHelloWorldDialog,
         ),
         startDay: WeekDays.sunday,
         startHour: 8,
@@ -156,8 +156,7 @@ class _CalendarPageState extends State<CalendarPage>
       dayTitleBuilder: (date) => buildDayHeader(context, date),
       timeLineBuilder: (date) => buildTimeLine(context, date),
       liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
-      hourIndicatorSettings: getHourIndicatorSettings(context),
-      eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
+      hourIndicatorSettings: getHourIndicatorSettings(context),      eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
           buildEventTile(
         context,
         date,
@@ -165,6 +164,7 @@ class _CalendarPageState extends State<CalendarPage>
         boundary,
         startDuration,
         endDuration,
+        onLongPress: _showHelloWorldDialog,
       ),
       startHour: 8,
       endHour: 22,
@@ -342,16 +342,29 @@ class _CalendarPageState extends State<CalendarPage>
     if (selectedWorkshop != null) {
       scheduleEntriesToShow.add(selectedWorkshop);
       debugPrint('Adding selected workshop: ${selectedWorkshop.day} ${selectedWorkshop.time}');
-    }
-
-    // If no selections made, show all (backward compatibility)
+    }    // If no selections made, show all (backward compatibility)
     if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
       scheduleEntriesToShow.addAll(courseDetails.schedule);
       debugPrint('No selections made, showing all ${courseDetails.schedule.length} schedule entries');
     }
     
-    // Create calendar events
+    // Deduplicate schedule entries by time and type to avoid multiple events for the same lecture
+    final uniqueScheduleEntries = <ScheduleEntry>[];
+    final seenTimeSlots = <String>{};
+    
     for (final schedule in scheduleEntriesToShow) {
+      final timeSlotKey = '${schedule.day}_${schedule.time}_${schedule.type}';
+      if (!seenTimeSlots.contains(timeSlotKey)) {
+        uniqueScheduleEntries.add(schedule);
+        seenTimeSlots.add(timeSlotKey);
+        debugPrint('Added unique schedule: ${schedule.type} on ${schedule.day} at ${schedule.time}');
+      } else {
+        debugPrint('Skipped duplicate schedule: ${schedule.type} on ${schedule.day} at ${schedule.time} (Group ${schedule.group})');
+      }
+    }
+    
+    // Create calendar events from unique schedule entries
+    for (final schedule in uniqueScheduleEntries) {
       debugPrint('Processing schedule: day="${schedule.day}", time="${schedule.time}", type="${schedule.type}"');
       
       // Parse Hebrew day to weekday number
@@ -372,27 +385,22 @@ class _CalendarPageState extends State<CalendarPage>
       }
         // Get event type and create appropriate event
       final eventType = parseCourseEventType(schedule.type);
-      
-      // Check for time conflicts before adding the event
+        // Check for time conflicts before adding the event
       final hasConflict = _hasTimeConflict(timeRange['start']!, timeRange['end']!);
       if (hasConflict) {
         final conflictingEvents = _getConflictingEvents(timeRange['start']!, timeRange['end']!);
         final conflictingTitles = conflictingEvents.map((e) => e.title).join(', ');
         debugPrint('Time conflict detected for ${course.name} (${schedule.type}) with: $conflictingTitles');
         
-        // For automatic updates, skip conflicting events or replace them
-        // You can customize this behavior based on requirements
-        for (final conflictingEvent in conflictingEvents) {
-          debugPrint('Removing conflicting event: ${conflictingEvent.title}');
-          _eventController.remove(conflictingEvent);
-        }
-      }
-        final event = CalendarEventData(
+        // Allow SideEventArranger to handle conflicts by showing events side by side
+        // Don't remove conflicting events - let the calendar view arrange them properly
+        debugPrint('Allowing SideEventArranger to handle conflict display');
+      }        final event = CalendarEventData(
         date: eventDate,
         title: formatEventTitle(
           course.name, 
           eventType, 
-          schedule.group > 0 ? schedule.group : null,
+          null, // Don't show group number since we're deduplicating
           instructorName: schedule.staff.isNotEmpty ? schedule.staff : null,
         ),
         description: _buildEventDescription(course, schedule, semester),
@@ -423,16 +431,11 @@ class _CalendarPageState extends State<CalendarPage>
         semester,
         weekStart,
         courseColor,
-      );
-      if (lectureEvent != null) {
+      );      if (lectureEvent != null) {
         // Check for conflicts before adding
         final hasConflict = _hasTimeConflict(lectureEvent.startTime!, lectureEvent.endTime!);
         if (hasConflict) {
-          final conflictingEvents = _getConflictingEvents(lectureEvent.startTime!, lectureEvent.endTime!);
-          for (final conflictingEvent in conflictingEvents) {
-            debugPrint('Removing conflicting event: ${conflictingEvent.title}');
-            _eventController.remove(conflictingEvent);
-          }
+          debugPrint('Time conflict detected for ${course.name} lecture - allowing SideEventArranger to handle display');
         }
         _eventController.add(lectureEvent);
       }
@@ -447,16 +450,11 @@ class _CalendarPageState extends State<CalendarPage>
         semester,
         weekStart,
         courseColor,
-      );
-      if (tutorialEvent != null) {
+      );      if (tutorialEvent != null) {
         // Check for conflicts before adding
         final hasConflict = _hasTimeConflict(tutorialEvent.startTime!, tutorialEvent.endTime!);
         if (hasConflict) {
-          final conflictingEvents = _getConflictingEvents(tutorialEvent.startTime!, tutorialEvent.endTime!);
-          for (final conflictingEvent in conflictingEvents) {
-            debugPrint('Removing conflicting event: ${conflictingEvent.title}');
-            _eventController.remove(conflictingEvent);
-          }
+          debugPrint('Time conflict detected for ${course.name} tutorial - allowing SideEventArranger to handle display');
         }
         _eventController.add(tutorialEvent);
       }
@@ -539,17 +537,20 @@ class _CalendarPageState extends State<CalendarPage>
     }
   }
 
-  String _buildEventDescription(StudentCourse course, ScheduleEntry schedule, String semester) {
+  // Helper method to build event description for course events
+  String _buildEventDescription(StudentCourse course, dynamic schedule, String semester) {
     final parts = <String>[];
+    
+    // Add course ID and semester for course identification during removal
     parts.add('${course.courseId} - $semester');
     
-    if (schedule.staff.isNotEmpty) {
+    if (schedule.staff?.isNotEmpty == true) {
       parts.add('Instructor: ${schedule.staff}');
     }
-    if (schedule.fullLocation.isNotEmpty) {
+    if (schedule.fullLocation?.isNotEmpty == true) {
       parts.add('Location: ${schedule.fullLocation}');
     }
-    if (schedule.type.isNotEmpty) {
+    if (schedule.type?.isNotEmpty == true) {
       parts.add('Type: ${schedule.type}');
     }
     if (course.note?.isNotEmpty == true) {
@@ -558,5 +559,51 @@ class _CalendarPageState extends State<CalendarPage>
     
     return parts.join('\n');
   }
-
+  // Method to show hello world popup on long press
+  void _showHelloWorldDialog(CalendarEventData event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hello World!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('You long pressed on a calendar event!'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Event: ${event.title}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  if (event.description != null)
+                    Text('Description: ${event.description}'),
+                  if (event.startTime != null && event.endTime != null)
+                    Text('Time: ${event.startTime} - ${event.endTime}'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 }
