@@ -257,10 +257,11 @@ class _CalendarPageState extends State<CalendarPage>
             debugPrint('Using API schedule for ${course.name} with selection filtering');
             _createCalendarEventsFromSchedule(course, courseDetails!, semester, currentWeekStart, colorThemeProvider);
           } else {
-            debugPrint('Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}")');
-            // Create basic events from stored lecture/tutorial times if no API schedule
+            debugPrint('Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}", lab: "${course.labTime}", workshop: "${course.workshopTime}")');
+            // Create basic events from stored lecture/tutorial/lab/workshop times if no API schedule
             _createBasicCalendarEvents(course, semester, currentWeekStart, colorThemeProvider);
           }
+          
         });
       }
     }
@@ -318,7 +319,8 @@ class _CalendarPageState extends State<CalendarPage>
     
     final selectedLecture = selectedEntries['lecture'];
     final selectedTutorial = selectedEntries['tutorial'];
-    
+    final selectedLab = selectedEntries['lab'];
+    final selectedWorkshop = selectedEntries['workshop'];
     // Create events only for selected schedule entries
     final scheduleEntriesToShow = <ScheduleEntry>[];
     
@@ -331,7 +333,17 @@ class _CalendarPageState extends State<CalendarPage>
       scheduleEntriesToShow.add(selectedTutorial);
       debugPrint('Adding selected tutorial: ${selectedTutorial.day} ${selectedTutorial.time}');
     }
-    
+
+    if (selectedLab != null) {
+      scheduleEntriesToShow.add(selectedLab);
+      debugPrint('Adding selected lab: ${selectedLab.day} ${selectedLab.time}');
+    }
+
+    if (selectedWorkshop != null) {
+      scheduleEntriesToShow.add(selectedWorkshop);
+      debugPrint('Adding selected workshop: ${selectedWorkshop.day} ${selectedWorkshop.time}');
+    }
+
     // If no selections made, show all (backward compatibility)
     if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
       scheduleEntriesToShow.addAll(courseDetails.schedule);
@@ -520,6 +532,8 @@ class _CalendarPageState extends State<CalendarPage>
         return CourseEventType.tutorial;
       case 'lab':
         return CourseEventType.lab;
+      case 'workshop':
+        return CourseEventType.workshop;
       default:
         return CourseEventType.lecture; // Default fallback
     }

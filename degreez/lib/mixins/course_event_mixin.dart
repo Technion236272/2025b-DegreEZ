@@ -1,7 +1,7 @@
 // lib/mixins/course_event_mixin.dart
 import 'package:flutter/material.dart';
 
-enum CourseEventType { lecture, tutorial, lab }
+enum CourseEventType { lecture, tutorial, lab, workshop }
 
 enum CourseEventState { 
   available,    // Can be selected
@@ -16,6 +16,7 @@ mixin CourseEventMixin {
     CourseEventType.lecture: Colors.blue,
     CourseEventType.tutorial: Colors.green,
     CourseEventType.lab: Colors.orange,
+    CourseEventType.workshop: Colors.purple,
   };
 
   // Get color based on event type and state
@@ -95,8 +96,12 @@ mixin CourseEventMixin {
         return Icons.groups;
       case CourseEventType.lab:
         return Icons.science;
+      case CourseEventType.workshop:
+        return Icons.build;
     }
-  }  // Format event title
+  }
+
+  // Format event title
   String formatEventTitle(String courseName, CourseEventType type, int? groupNumber, {String? instructorName}) {
     String typeStr;
     switch (type) {
@@ -108,6 +113,9 @@ mixin CourseEventMixin {
         break;
       case CourseEventType.lab:
         typeStr = 'Lab';
+        break;
+      case CourseEventType.workshop:
+        typeStr = 'Workshop';
         break;
     }
     
@@ -148,6 +156,9 @@ mixin CourseEventMixin {
       return CourseEventType.tutorial;
     } else if (type.contains('מעבדה') || type.contains('lab')) {
       return CourseEventType.lab;
+    }
+    else if (type.contains('סדנה') || type.contains('workshop')) {
+      return CourseEventType.workshop;
     }
     return CourseEventType.lecture; // Default
   }  // Convert Hebrew day to DateTime weekday

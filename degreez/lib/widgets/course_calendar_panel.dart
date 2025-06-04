@@ -155,6 +155,34 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                           style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold),
                                         ),
                                       ),
+                                    if (course.hasSelectedLab)
+                                      Container(
+                                        margin: const EdgeInsets.only(left: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.withAlpha(50),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.orange, width: 1),
+                                        ),
+                                        child: const Text(
+                                          'L',
+                                          style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    if (course.hasSelectedWorkshop)
+                                      Container(
+                                        margin: const EdgeInsets.only(left: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.purple.withAlpha(50),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.purple, width: 1),
+                                        ),
+                                        child: const Text(
+                                          'W',
+                                          style: TextStyle(fontSize: 10, color: Colors.purple, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
                                   ],
                                 ),
                                 subtitle: Column(
@@ -279,8 +307,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       builder: (context) => ScheduleSelectionDialog(
         course: course,
         courseDetails: courseDetails,
-        onSelectionChanged: (lectureTime, tutorialTime) {
-          _updateCourseScheduleSelection(course, lectureTime, tutorialTime);
+        onSelectionChanged: (lectureTime, tutorialTime, labTime, workshopTime) {
+          _updateCourseScheduleSelection(course, lectureTime, tutorialTime, labTime, workshopTime);
         },
       ),
     );
@@ -290,6 +318,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
     StudentCourse course,
     String? lectureTime,
     String? tutorialTime,
+    String? labTime,
+    String? workshopTime,
   ) async {
     final studentProvider = context.read<StudentProvider>();
     final courseProvider = context.read<CourseProvider>();
@@ -313,6 +343,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       course.courseId,
       lectureTime,
       tutorialTime,
+      labTime,
+      workshopTime,
     );
 
     if (success && context.mounted) {
@@ -362,7 +394,13 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       if (selectedEntries['tutorial'] != null) {
         scheduleEntriesToShow.add(selectedEntries['tutorial']);
       }
-      
+      if (selectedEntries['lab'] != null) {
+        scheduleEntriesToShow.add(selectedEntries['lab']);
+      }
+      if (selectedEntries['workshop'] != null) {
+        scheduleEntriesToShow.add(selectedEntries['workshop']);
+      }
+
       // If no selections made, show all (backward compatibility)
       if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
         scheduleEntriesToShow.addAll(courseDetails.schedule);
@@ -561,8 +599,13 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         widget.eventController.add(lectureEvent);
         eventsAdded++;
       }
+      if (course.hasSelectedLecture) {
+        widget.onCourseManuallyAdded?.call(course.courseId);
+      } else {
+        widget.onCourseManuallyRemoved?.call(course.courseId);
+      }
     }
-    
+
     // Create events from stored tutorial time
     if (course.tutorialTime.isNotEmpty) {
       final tutorialEvent = _createEventFromTimeString(
@@ -574,6 +617,34 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       );
       if (tutorialEvent != null) {
         widget.eventController.add(tutorialEvent);
+        eventsAdded++;
+      }
+    }
+    // Create events from stored lab time
+    if (course.labTime.isNotEmpty) {
+      final labEvent = _createEventFromTimeString(
+        course, 
+        course.labTime, 
+        'Lab', 
+        sunday,
+        courseColor,
+      );
+      if (labEvent != null) {
+        widget.eventController.add(labEvent);
+        eventsAdded++;
+      }
+    }
+    // Create events from stored workshop time
+    if (course.workshopTime.isNotEmpty) {
+      final workshopEvent = _createEventFromTimeString(
+        course, 
+        course.workshopTime, 
+        'Workshop', 
+        sunday,
+        courseColor,
+      );
+      if (workshopEvent != null) {
+        widget.eventController.add(workshopEvent);
         eventsAdded++;
       }
     }
@@ -645,6 +716,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         return CourseEventType.tutorial;
       case 'lab':
         return CourseEventType.lab;
+      case 'workshop':  
+        return CourseEventType.workshop;
       default:
         return CourseEventType.lecture; // Default fallback
     }

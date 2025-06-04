@@ -379,6 +379,8 @@ class _AddCoursePageState extends State<AddCoursePage> {
       finalGrade: '',
       lectureTime: '',
       tutorialTime: '',
+      labTime: '',
+      workshopTime: '',
       note: note.isNotEmpty ? note : null,
     );
 

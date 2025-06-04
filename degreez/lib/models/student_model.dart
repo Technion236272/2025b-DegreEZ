@@ -9,6 +9,7 @@ class StudentModel {
   final String preferences;
   final String semester;
   final String catalog; // selecting the catalog for the student
+  
 
   StudentModel({
     required this.id,
@@ -76,6 +77,9 @@ class StudentCourse {
   final String finalGrade;
   final String lectureTime;  // Stores selected lecture schedule: "day time" format
   final String tutorialTime; // Stores selected tutorial schedule: "day time" format
+  final String labTime;      // Stores selected lab schedule: "day time" format
+  final String workshopTime; // Stores selected workshop schedule: "day time" format
+
   final String? note;
 
   StudentCourse({
@@ -84,6 +88,8 @@ class StudentCourse {
     required this.finalGrade,
     required this.lectureTime,
     required this.tutorialTime,
+    required this.labTime,
+    required this.workshopTime,
     this.note,
   });
 
@@ -94,6 +100,8 @@ class StudentCourse {
       finalGrade: data['Final_grade'] ?? '',
       lectureTime: data['Lecture_time'] ?? '',
       tutorialTime: data['Tutorial_time'] ?? '',
+      labTime: data['Lab_time'] ?? '',
+      workshopTime: data['Workshop_time'] ?? '',
       note: data['Note'] ?? '',
     );
   }
@@ -105,6 +113,8 @@ class StudentCourse {
       'Final_grade': finalGrade,
       'Lecture_time': lectureTime,
       'Tutorial_time': tutorialTime,
+      'Lab_time': labTime,
+      'Workshop_time': workshopTime,
       'Note': note ?? '',
     };
   }
@@ -114,6 +124,8 @@ class StudentCourse {
     String? note,
     String? lectureTime,
     String? tutorialTime,
+    String? labTime,
+    String? workshopTime,
   }) {
     return StudentCourse(
       courseId: courseId,
@@ -121,6 +133,8 @@ class StudentCourse {
       finalGrade: finalGrade ?? this.finalGrade,
       lectureTime: lectureTime ?? this.lectureTime,
       tutorialTime: tutorialTime ?? this.tutorialTime,
+      labTime: labTime ?? this.labTime,
+      workshopTime: workshopTime ?? this.workshopTime,
       note: note ?? this.note,
     );
   }
@@ -128,8 +142,10 @@ class StudentCourse {
   // Helper methods for schedule selection
   bool get hasSelectedLecture => lectureTime.isNotEmpty;
   bool get hasSelectedTutorial => tutorialTime.isNotEmpty;
-  bool get hasCompleteScheduleSelection => hasSelectedLecture || hasSelectedTutorial;
-  
+  bool get hasSelectedLab => labTime.isNotEmpty;
+  bool get hasSelectedWorkshop => workshopTime.isNotEmpty;
+  bool get hasCompleteScheduleSelection => hasSelectedLecture || hasSelectedTutorial || hasSelectedLab || hasSelectedWorkshop;
+
   // Helper to get selection summary
   String get selectionSummary {
     if (!hasCompleteScheduleSelection) {
@@ -139,7 +155,11 @@ class StudentCourse {
     final parts = <String>[];
     if (hasSelectedLecture) parts.add('Lecture');
     if (hasSelectedTutorial) parts.add('Tutorial');
-    
+    if (hasSelectedLab) parts.add('Lab');
+    if (hasSelectedWorkshop) parts.add('Workshop');
+    if (parts.isEmpty) {
+      return 'No selections made';
+    }
     return '${parts.join(' + ')} selected';
   }
   
@@ -148,6 +168,8 @@ class StudentCourse {
     int count = 0;
     if (hasSelectedLecture) count++;
     if (hasSelectedTutorial) count++;
+    if (hasSelectedLab) count++;
+    if (hasSelectedWorkshop) count++;
     return count;
   }
 

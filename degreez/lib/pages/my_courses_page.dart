@@ -723,6 +723,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       finalGrade: '',
       lectureTime: '',
       tutorialTime: '',
+      labTime: '',
+      workshopTime: '',
     );
 
     final success = await courseProvider.addCourseToSemester(
@@ -754,6 +756,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       finalGrade: '',
       lectureTime: '',
       tutorialTime: '',
+      labTime: '',
+      workshopTime: '',
     );
 
     final success = await courseProvider.addCourseToSemester(

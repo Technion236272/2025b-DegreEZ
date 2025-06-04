@@ -8,7 +8,7 @@ import '../mixins/course_event_mixin.dart';
 class ScheduleSelectionDialog extends StatefulWidget {
   final StudentCourse course;
   final EnhancedCourseDetails courseDetails;
-  final Function(String? lectureTime, String? tutorialTime) onSelectionChanged;
+  final Function(String? lectureTime, String? tutorialTime, String? labTime, String? workshopTime) onSelectionChanged;
 
   const ScheduleSelectionDialog({
     super.key,
@@ -25,18 +25,22 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     with CourseEventMixin {
   String? selectedLectureTime;
   String? selectedTutorialTime;
+  String? selectedLabTime; // Placeholder for future lab selection
+  String? selectedWorkshopTime; // Placeholder for future workshop selection
   
   // Group schedule entries by type and unique time slots
   List<ScheduleGroup> lectures = [];
   List<ScheduleGroup> tutorials = [];
   List<ScheduleGroup> labs = [];
+  List<ScheduleGroup> workshops = []; // Placeholder for future use
 
   @override
   void initState() {
     super.initState();
     selectedLectureTime = widget.course.lectureTime.isNotEmpty ? widget.course.lectureTime : null;
     selectedTutorialTime = widget.course.tutorialTime.isNotEmpty ? widget.course.tutorialTime : null;
-    
+    selectedLabTime = widget.course.labTime.isNotEmpty ? widget.course.labTime : null;
+    selectedWorkshopTime = widget.course.workshopTime.isNotEmpty ? widget.course.workshopTime : null;
     // Group schedule entries by type and time slot
     _groupScheduleEntries();
   }
@@ -46,7 +50,7 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     final lectureEntries = <ScheduleEntry>[];
     final tutorialEntries = <ScheduleEntry>[];
     final labEntries = <ScheduleEntry>[];
-
+    final workshopEntries = <ScheduleEntry>[]; // Placeholder for future use
     for (final schedule in widget.courseDetails.schedule) {
       final type = parseCourseEventType(schedule.type);
       switch (type) {
@@ -59,6 +63,9 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
         case CourseEventType.lab:
           labEntries.add(schedule);
           break;
+        case CourseEventType.workshop:
+          workshopEntries.add(schedule);
+          break;
       }
     }
 
@@ -66,6 +73,8 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     lectures = _groupByTimeSlot(lectureEntries);
     tutorials = _groupByTimeSlot(tutorialEntries);
     labs = _groupByTimeSlot(labEntries);
+    workshops = _groupByTimeSlot(workshopEntries); // Placeholder for future use
+
   }
 
   List<ScheduleGroup> _groupByTimeSlot(List<ScheduleEntry> entries) {
@@ -169,22 +178,43 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                       )),
                       const SizedBox(height: 16),
                     ],
-                    
-                    // Labs Section (for future use)
+                    // Labs Section
                     if (labs.isNotEmpty) ...[
                       _buildSectionHeader('Labs', Icons.science, labs.length),
                       ...labs.map((labGroup) => _buildScheduleGroupOption(
                         labGroup,
                         CourseEventType.lab,
-                        false, // Labs not implemented yet
+                        _isLabSelected(labGroup),
                         (selected) {
-                          // TODO: Implement lab selection
+                          setState(() {
+                            selectedLabTime = selected 
+                                ? StudentCourse.formatScheduleString(labGroup.day, labGroup.time)
+                                : null;
+                          });
                         },
                       )),
+                      const SizedBox(height: 16),
                     ],
-                    
+                    // Workshops Section
+                    if (workshops.isNotEmpty) ...[
+                      _buildSectionHeader('Workshops', Icons.garage, workshops.length),
+                      ...workshops.map((workshopGroup) => _buildScheduleGroupOption(
+                        workshopGroup,
+                        CourseEventType.workshop,
+                        _isWorkshopSelected(workshopGroup),
+                        (selected) {
+                          setState(() {
+                            selectedWorkshopTime = selected 
+                                ? StudentCourse.formatScheduleString(workshopGroup.day, workshopGroup.time)
+                                : null;
+                          });
+                        },
+                      )),
+                      const SizedBox(height: 16),
+                    ],
+
                     // No schedule message
-                    if (lectures.isEmpty && tutorials.isEmpty && labs.isEmpty)
+                    if (lectures.isEmpty && tutorials.isEmpty && labs.isEmpty && workshops.isEmpty)
                       Container(
                         padding: const EdgeInsets.all(24),
                         child: Column(
@@ -227,6 +257,8 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                     setState(() {
                       selectedLectureTime = null;
                       selectedTutorialTime = null;
+                      selectedLabTime = null; // Reset lab selection
+                      selectedWorkshopTime = null; // Reset workshop selection
                     });
                   },
                   child: const Text('Clear All'),
@@ -234,7 +266,7 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                 const Spacer(),
                 ElevatedButton(
                   onPressed: () {
-                    widget.onSelectionChanged(selectedLectureTime, selectedTutorialTime);
+                    widget.onSelectionChanged(selectedLectureTime, selectedTutorialTime, selectedLabTime, selectedWorkshopTime);
                     Navigator.pop(context);
                   },
                   child: const Text('Save Selection'),
@@ -259,6 +291,16 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     return selectedTutorialTime == scheduleString;
   }
 
+  bool _isLabSelected(ScheduleGroup labGroup) {
+    if (selectedLabTime == null) return false;
+    final scheduleString = StudentCourse.formatScheduleString(labGroup.day, labGroup.time);
+    return selectedLabTime == scheduleString;
+  }
+  bool _isWorkshopSelected(ScheduleGroup workshopGroup) {
+    if (selectedWorkshopTime == null) return false;
+    final scheduleString = StudentCourse.formatScheduleString(workshopGroup.day, workshopGroup.time);
+    return selectedWorkshopTime == scheduleString;
+  }
   Widget _buildSectionHeader(String title, IconData icon, int count) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),

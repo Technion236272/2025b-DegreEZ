@@ -575,6 +575,8 @@ Scaffold(
                                     finalGrade: '',
                                     lectureTime: '',
                                     tutorialTime: '',
+                                    labTime: '',
+                                    workshopTime: '',
                                   );
                                   final success =
                                       await Provider.of<CourseProvider>(

@@ -83,8 +83,8 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
                               courseDetails: courseDetails,
                               eventController: widget.eventController,
                               weekStartDate: widget.currentWeek,
-                              onSelectionChanged: (courseId, lecture, tutorial) {
-                                _updateCourseSelection(courseId, lecture, tutorial);
+                              onSelectionChanged: (courseId, lecture, tutorial, lab, workshop) {
+                                _updateCourseSelection(courseId, lecture, tutorial, lab, workshop);
                               },
                             ),
                           ],
@@ -127,7 +127,8 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
             final selections = entry.value;
             final lecture = selections['lecture'];
             final tutorial = selections['tutorial'];
-
+            final lab = selections['lab'];
+            final workshop = selections['workshop'];
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Column(
@@ -143,6 +144,11 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
                     Text('  Tutorial: ${tutorial.scheduleEntry.day} ${tutorial.scheduleEntry.time}'),
                   if (lecture == null && tutorial == null)
                     const Text('  No times selected', style: TextStyle(color: Colors.grey)),
+                
+                  if (lab != null )
+                    Text('  Lab: ${lab.scheduleEntry.day} ${lab.scheduleEntry.time}'),
+                  if (workshop != null)
+                    Text('  Workshop: ${workshop.scheduleEntry.day} ${workshop.scheduleEntry.time}'),
                 ],
               ),
             );
@@ -190,11 +196,15 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
     String courseId, 
     CourseEventData? lecture, 
     CourseEventData? tutorial,
+    CourseEventData? lab,
+    CourseEventData? workshop,
   ) {
     setState(() {
       _allSelections[courseId] = {
         'lecture': lecture,
         'tutorial': tutorial,
+        'lab': lab,
+        'workshop': workshop,
       };
     });
   }

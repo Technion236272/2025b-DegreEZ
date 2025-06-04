@@ -284,6 +284,8 @@ class CourseProvider with ChangeNotifier {
     String courseId,
     String? selectedLectureTime,
     String? selectedTutorialTime,
+    String? selectedLabTime,
+    String? selectedWorkshopTime,
   ) async {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
@@ -297,6 +299,8 @@ class CourseProvider with ChangeNotifier {
     semesterCourses[courseIndex] = oldCourse.copyWith(
       lectureTime: selectedLectureTime ?? '',
       tutorialTime: selectedTutorialTime ?? '',
+      labTime: selectedLabTime ?? '',
+      workshopTime: selectedWorkshopTime ?? '',
     );
     notifyListeners();
 
@@ -311,6 +315,8 @@ class CourseProvider with ChangeNotifier {
           .update({
             'Lecture_time': selectedLectureTime ?? '',
             'Tutorial_time': selectedTutorialTime ?? '',
+            'Lab_time': selectedLabTime ?? '',
+            'Workshop_time': selectedWorkshopTime ?? '',
           });
 
       _error = null;
@@ -330,17 +336,19 @@ class CourseProvider with ChangeNotifier {
     EnhancedCourseDetails? courseDetails,
   ) {
     if (courseDetails == null) {
-      return {'lecture': null, 'tutorial': null};
+      return {'lecture': null, 'tutorial': null, 'lab': null, 'workshop': null};
     }
 
     // Find the course in our data using the helper method
     final course = _findCourseById(courseId);
     if (course == null) {
-      return {'lecture': null, 'tutorial': null};
+      return {'lecture': null, 'tutorial': null, 'lab': null, 'workshop': null};
     }
 
     ScheduleEntry? selectedLecture;
     ScheduleEntry? selectedTutorial;
+    ScheduleEntry? selectedLab;
+    ScheduleEntry? selectedWorkshop;
 
     // Match stored lecture time with schedule entries
     if (course.lectureTime.isNotEmpty) {
@@ -364,9 +372,31 @@ class CourseProvider with ChangeNotifier {
       }
     }
 
+    // Match stored lab time with schedule entries
+    if (course.labTime.isNotEmpty) {
+      for (final schedule in courseDetails.schedule) {
+        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+        if (course.labTime == scheduleString) {
+          selectedLab = schedule;
+          break;
+        }
+      }
+    }
+    // Match stored workshop time with schedule entries
+    if (course.workshopTime.isNotEmpty) {
+      for (final schedule in courseDetails.schedule) {
+        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+        if (course.workshopTime == scheduleString) {
+          selectedWorkshop = schedule;
+          break;
+        }
+      }
+    }
     return {
       'lecture': selectedLecture,
       'tutorial': selectedTutorial,
+      'lab': selectedLab,
+      'workshop': selectedWorkshop,
     };
   }
 

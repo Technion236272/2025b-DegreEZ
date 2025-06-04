@@ -27,7 +27,7 @@ class CourseEventData {
 class CourseEventsWidget extends StatefulWidget {
   final EnhancedCourseDetails courseDetails;
   final EventController eventController;
-  final Function(String courseId, CourseEventData? selectedLecture, CourseEventData? selectedTutorial)? onSelectionChanged;
+  final Function(String courseId, CourseEventData? selectedLecture, CourseEventData? selectedTutorial, CourseEventData? selectedLab, CourseEventData? selectedWorkshop)? onSelectionChanged;
   final DateTime? weekStartDate; // For generating events for specific week
 
   const CourseEventsWidget({
@@ -46,7 +46,8 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
   final Map<String, CourseEventData> _allEvents = {};
   CourseEventData? _selectedLecture;
   CourseEventData? _selectedTutorial;
-  
+  CourseEventData? _selectedLab;
+  CourseEventData? _selectedWorkshop;
   @override
   void initState() {
     super.initState();
@@ -76,6 +77,8 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
     _allEvents.clear();
     _selectedLecture = null;
     _selectedTutorial = null;
+    _selectedLab = null;
+    _selectedWorkshop = null;
   }
 
   void _generateCourseEvents() {
@@ -184,11 +187,39 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
       eventData.state = CourseEventState.selected;
     }
   }
+  void _handleLabSelection(CourseEventData eventData) {
+    if (_selectedLab?.eventId == eventData.eventId) {
+      // Deselect if same lab is tapped again
+      _selectedLab = null;
+    } else {
+      // Clear previous lab selection
+      if (_selectedLab != null) {
+        _selectedLab!.state = CourseEventState.available;
+      }
+      // Select new lab
+      _selectedLab = eventData;
+      eventData.state = CourseEventState.selected;
+    }
+  }
+  void _handleWorkshopSelection(CourseEventData eventData) {
+    if (_selectedWorkshop?.eventId == eventData.eventId) {
+      // Deselect if same workshop is tapped again
+      _selectedWorkshop = null;
+    } else {
+      // Clear previous workshop selection
+      if (_selectedWorkshop != null) {
+        _selectedWorkshop!.state = CourseEventState.available;
+      }
+      // Select new workshop
+      _selectedWorkshop = eventData;
+      eventData.state = CourseEventState.selected;
+    }
+  }
 
   void _updateEventStates() {
     for (final eventData in _allEvents.values) {
       // Reset to available if not selected
-      if (eventData != _selectedLecture && eventData != _selectedTutorial) {
+      if (eventData != _selectedLecture && eventData != _selectedTutorial && eventData != _selectedLab && eventData != _selectedWorkshop) {
         eventData.state = CourseEventState.available;
       }
 
@@ -198,9 +229,11 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
   }
 
   void _checkForConflicts(CourseEventData eventData) {
+    // !!!!
     // This is where you'd implement conflict detection with other courses
     // For now, just check if times overlap with selected events
-    final selectedEvents = [_selectedLecture, _selectedTutorial]
+    final selectedEvents = [_selectedLecture, _selectedTutorial, _selectedLab, _selectedWorkshop]
+        .whereType<CourseEventData>()
         .where((e) => e != null && e != eventData)
         .cast<CourseEventData>();
 
@@ -256,13 +289,16 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
   
   CourseEventData? get selectedLecture => _selectedLecture;
   CourseEventData? get selectedTutorial => _selectedTutorial;
-  
+  CourseEventData? get selectedLab => _selectedLab;
+  CourseEventData? get selectedWorkshop => _selectedWorkshop;
   Map<String, CourseEventData> get allEvents => Map.unmodifiable(_allEvents);
 
   void clearSelections() {
     setState(() {
       _selectedLecture = null;
       _selectedTutorial = null;
+      _selectedLab = null;
+      _selectedWorkshop = null;
       _updateEventStates();
       _updateCalendarEvents();
     });
@@ -366,6 +402,42 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
               ),
             ),
           ],
+          
+          
+        ),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            Icon(
+              Icons.science,
+              color: _selectedLab != null ? Colors.green : Colors.grey,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Lab: ${_selectedLab != null ? "Selected" : "Not selected"}',
+              style: TextStyle(
+                color: _selectedLab != null ? Colors.green : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            Icon(
+              Icons.work,
+              color: _selectedWorkshop != null ? Colors.green : Colors.grey,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Workshop: ${_selectedWorkshop != null ? "Selected" : "Not selected"}',
+              style: TextStyle(
+                color: _selectedWorkshop != null ? Colors.green : Colors.grey,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -385,6 +457,10 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
             _buildLegendItem(Colors.blue.withValues(alpha: 0.7), 'Available Lecture'),
             const SizedBox(width: 16),
             _buildLegendItem(Colors.green.withValues(alpha: 0.7), 'Available Tutorial'),
+            const SizedBox(width: 16),
+            _buildLegendItem(Colors.orange.withValues(alpha: 0.7), 'Available Lab'),
+            const SizedBox(width: 16),
+            _buildLegendItem(Colors.purple.withValues(alpha: 0.7), 'Available Workshop'),
           ],
         ),
         const SizedBox(height: 4),
@@ -434,6 +510,10 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
               const SizedBox(height: 8),
               Text('Lecture: ${_selectedLecture!.scheduleEntry.day} ${_selectedLecture!.scheduleEntry.time}'),
               Text('Tutorial: ${_selectedTutorial!.scheduleEntry.day} ${_selectedTutorial!.scheduleEntry.time}'),
+              if (_selectedLab != null)
+                Text('Lab: ${_selectedLab!.scheduleEntry.day} ${_selectedLab!.scheduleEntry.time}'),
+              if (_selectedWorkshop != null)
+                Text('Workshop: ${_selectedWorkshop!.scheduleEntry.day} ${_selectedWorkshop!.scheduleEntry.time}'),
             ],
           ),
           actions: [
