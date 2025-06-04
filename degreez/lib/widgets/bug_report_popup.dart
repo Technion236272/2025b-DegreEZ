@@ -1,50 +1,55 @@
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/providers/bug_report_notifier.dart';
 import 'package:degreez/widgets/text_form_field_WithStyle.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
-void bugReportPopup(BuildContext context) {
+class BugReportButton extends StatefulWidget {
+  const BugReportButton({super.key});
+
+  @override
+  State<BugReportButton> createState() => _BugReportButtonState();
+}
+
+class _BugReportButtonState extends State<BugReportButton> {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<BugReportNotifier>(
+      builder: (context, bugReportNotifier, _) {
+        return SizedBox(
+          width: double.infinity,
+          child:
+              bugReportNotifier.isLoading
+                  ? LinearProgressIndicator()
+                  : ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColorsDarkMode.accentColor,
+                      foregroundColor: AppColorsDarkMode.bug,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () async {
+                      await bugReportPopup(context, bugReportNotifier);
+                    },
+                    icon: Icon(Icons.bug_report,color: AppColorsDarkMode.bug,),
+                    label: Text('Report a Bug'),
+                  ),
+        );
+      },
+    );
+  }
+}
+
+Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-
-  showDialog(
+  return showDialog(
     context: context,
     builder: (BuildContext context) {
+      notifier.isLoading ? debugPrint('BUG SUCCESS') : debugPrint('BUG FAILED');
       return AlertDialog(
-        title: const Text('Report a Bug'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Help us improve by reporting bugs you encounter.',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Bug Title',
-                  hintText: 'Brief description of the issue',
-                  border: OutlineInputBorder(),
-                ),
-                maxLength: 100,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Detailed description of the bug...',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 5,
-                maxLength: 500,
-              ),
-            ],
-          ),
-        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -63,7 +68,7 @@ void bugReportPopup(BuildContext context) {
                 );
                 return;
               }
-              
+
               if (descriptionController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -76,33 +81,46 @@ void bugReportPopup(BuildContext context) {
 
               String title = titleController.text.trim();
               String description = descriptionController.text.trim();
-              
-              Navigator.of(context).pop();
-              
-              try {
-                await FirebaseFirestore.instance.collection('bug_reports').doc('bug $title').set({
-                  'description': description,
-                  'timestamp': DateTime.now(),
-                });
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Bug report submitted successfully!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to submit bug report: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+
+              await notifier.reportBug(
+                context: context,
+                title: title,
+                description: description,
+              );
+
+              // Close dialog after successful submission
+              if (notifier.status == true) {
+                Navigator.of(context).pop();
               }
             },
             child: const Text('Submit'),
           ),
         ],
+        title: const Text('Report a Bug'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Help us improve by reporting bugs you encounter.',
+                style: TextStyle(fontSize: 14, color: AppColorsDarkMode.secondaryColor),
+              ),
+              textFormFieldWithStyle(
+                label: 'Bug Title',
+                controller: titleController,
+                example: 'Brief description of the issue',
+              ),
+
+              textFormFieldWithStyle(
+                label: 'Description',
+                controller: descriptionController,
+                example: 'Detailed description of the bug...',
+                lineNum: 5,
+              ),
+            ],
+          ),
+        ),
       );
     },
   );

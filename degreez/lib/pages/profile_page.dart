@@ -1,3 +1,4 @@
+import 'package:degreez/providers/bug_report_notifier.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
@@ -75,7 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final nameController = TextEditingController(text: student.name);
     final majorController = TextEditingController(text: student.major);
     final preferencesController = TextEditingController(text: student.preferences);
-    final catalogController = TextEditingController(text: student.catalog);
+    // final catalogController = TextEditingController(text: student.catalog);
     final facultyController = TextEditingController(text: student.faculty);
     final semesterController = TextEditingController(text: student.semester.toString());
 
@@ -108,8 +109,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 SizedBox(height: 12),
                 _buildEditField(semesterController, 'Semester', Icons.calendar_today, 
                   keyboardType: TextInputType.number),
-                SizedBox(height: 12),
-                _buildEditField(catalogController, 'Catalog', Icons.book),
+                // SizedBox(height: 12),
+                // _buildEditField(catalogController, 'Catalog', Icons.book),
                 SizedBox(height: 12),
                 _buildEditField(preferencesController, 'Preferences', Icons.settings,
                   maxLines: 3),
@@ -136,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   major: majorController.text,
                   preferences: preferencesController.text,
                   faculty: facultyController.text,
-                  catalog: catalogController.text,
+                  catalog: '',
                   semester: student.semester,
                 );
                 Navigator.of(context).pop();
@@ -192,6 +193,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+ create: (ctx) => BugReportNotifier(),
+ builder: (context, child) { 
     return Consumer2<StudentProvider, CourseProvider>(
       builder: (context, studentNotifier, courseNotifier, _) {
         final student = studentNotifier.student;
@@ -220,10 +224,10 @@ class _ProfilePageState extends State<ProfilePage> {
               // Enhanced Profile Header
               _buildProfileHeader(context, student, studentNotifier),
               
-              const SizedBox(height: 20),
+              //const SizedBox(height: 20),
               
               // Academic Progress Section
-              _buildAcademicProgress(context, gpa, completionPercentage, stats),
+              //_buildAcademicProgress(context, gpa, completionPercentage, stats),
               
               const SizedBox(height: 20),
               
@@ -242,8 +246,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         );
-      },
-    );
+      });
+  });
   }
 
   Widget _buildProfileHeader(BuildContext context, student, StudentProvider notifier) {
@@ -310,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  student.major,
+                  'Major: ${student.major}',
                   style: TextStyle(
                     fontSize: 16,
                     color: AppColorsDarkMode.secondaryColorDim,
@@ -318,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  student.faculty,
+                  'Faculty: ${student.faculty}',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColorsDarkMode.secondaryColorDim,
@@ -578,7 +582,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 16),
           // _buildDetailRow('Student ID', student.id),
           _buildDetailRow('Current Semester', student.semester.toString()),
-          _buildDetailRow('Catalog Year', student.catalog),
+          // _buildDetailRow('Catalog Year', student.catalog),
           if (student.preferences.isNotEmpty)
             _buildDetailRow('Academic Preferences', student.preferences),
         ],
@@ -635,22 +639,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColorsDarkMode.errorColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () => bugReportPopup(context),
-              icon: Icon(Icons.bug_report),
-              label: Text('Report a Bug'),
-            ),
-          ),
+          BugReportButton(),
         ],
       ),
     );
