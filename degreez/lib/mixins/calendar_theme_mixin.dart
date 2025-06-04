@@ -152,10 +152,14 @@ mixin CalendarDarkThemeMixin {
       padding: const EdgeInsets.all(2),      decoration: BoxDecoration(
         color: filteredEvents.first.color,
         borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
+      ),      child: Text(
         filteredEvents.first.title,
-        style: const TextStyle(color: Colors.white, fontSize: 8),
+        // if the color is light, use black text, otherwise use white
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.surface,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
         overflow: TextOverflow.ellipsis,
       ),
     );
