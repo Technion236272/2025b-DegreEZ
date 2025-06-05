@@ -312,37 +312,53 @@ class _CalendarPageState extends State<CalendarPage>
     ColorThemeProvider colorThemeProvider,
   ) {
     debugPrint('Creating calendar events for ${course.name} with schedule selection');
-    
-    // Get selected schedule entries only
+      // Get selected schedule entries only
     final selectedEntries = context.read<CourseProvider>()
         .getSelectedScheduleEntries(course.courseId, courseDetails);
     
-    final selectedLecture = selectedEntries['lecture'];
-    final selectedTutorial = selectedEntries['tutorial'];
-    final selectedLab = selectedEntries['lab'];
-    final selectedWorkshop = selectedEntries['workshop'];
+    final selectedLectures = selectedEntries['lecture'] ?? <ScheduleEntry>[];
+    final selectedTutorials = selectedEntries['tutorial'] ?? <ScheduleEntry>[];
+    final selectedLabs = selectedEntries['lab'] ?? <ScheduleEntry>[];
+    final selectedWorkshops = selectedEntries['workshop'] ?? <ScheduleEntry>[];
+    
     // Create events only for selected schedule entries
     final scheduleEntriesToShow = <ScheduleEntry>[];
     
-    if (selectedLecture != null) {
-      scheduleEntriesToShow.add(selectedLecture);
-      debugPrint('Adding selected lecture: ${selectedLecture.day} ${selectedLecture.time}');
+    // Add all selected lectures
+    scheduleEntriesToShow.addAll(selectedLectures);
+    if (selectedLectures.isNotEmpty) {
+      debugPrint('Adding ${selectedLectures.length} selected lectures');
+      for (final lecture in selectedLectures) {
+        debugPrint('  - Lecture: ${lecture.day} ${lecture.time}');
+      }
     }
     
-    if (selectedTutorial != null) {
-      scheduleEntriesToShow.add(selectedTutorial);
-      debugPrint('Adding selected tutorial: ${selectedTutorial.day} ${selectedTutorial.time}');
+    // Add all selected tutorials
+    scheduleEntriesToShow.addAll(selectedTutorials);
+    if (selectedTutorials.isNotEmpty) {
+      debugPrint('Adding ${selectedTutorials.length} selected tutorials');
+      for (final tutorial in selectedTutorials) {
+        debugPrint('  - Tutorial: ${tutorial.day} ${tutorial.time}');
+      }
     }
 
-    if (selectedLab != null) {
-      scheduleEntriesToShow.add(selectedLab);
-      debugPrint('Adding selected lab: ${selectedLab.day} ${selectedLab.time}');
+    // Add all selected labs
+    scheduleEntriesToShow.addAll(selectedLabs);
+    if (selectedLabs.isNotEmpty) {
+      debugPrint('Adding ${selectedLabs.length} selected labs');
+      for (final lab in selectedLabs) {
+        debugPrint('  - Lab: ${lab.day} ${lab.time}');
+      }
     }
 
-    if (selectedWorkshop != null) {
-      scheduleEntriesToShow.add(selectedWorkshop);
-      debugPrint('Adding selected workshop: ${selectedWorkshop.day} ${selectedWorkshop.time}');
-    }    // If no selections made, show all (backward compatibility)
+    // Add all selected workshops
+    scheduleEntriesToShow.addAll(selectedWorkshops);
+    if (selectedWorkshops.isNotEmpty) {
+      debugPrint('Adding ${selectedWorkshops.length} selected workshops');
+      for (final workshop in selectedWorkshops) {
+        debugPrint('  - Workshop: ${workshop.day} ${workshop.time}');
+      }
+    }// If no selections made, show all (backward compatibility)
     if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
       scheduleEntriesToShow.addAll(courseDetails.schedule);
       debugPrint('No selections made, showing all ${courseDetails.schedule.length} schedule entries');

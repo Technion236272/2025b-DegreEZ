@@ -329,74 +329,143 @@ class CourseProvider with ChangeNotifier {
       return false;
     }
   }
-
   // Helper method to get selected schedule entries for a course
-  Map<String, ScheduleEntry?> getSelectedScheduleEntries(
+  Map<String, List<ScheduleEntry>> getSelectedScheduleEntries(
     String courseId, 
     EnhancedCourseDetails? courseDetails,
   ) {
     if (courseDetails == null) {
-      return {'lecture': null, 'tutorial': null, 'lab': null, 'workshop': null};
+      return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
     }
 
     // Find the course in our data using the helper method
     final course = _findCourseById(courseId);
     if (course == null) {
-      return {'lecture': null, 'tutorial': null, 'lab': null, 'workshop': null};
+      return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
     }
 
-    ScheduleEntry? selectedLecture;
-    ScheduleEntry? selectedTutorial;
-    ScheduleEntry? selectedLab;
-    ScheduleEntry? selectedWorkshop;
+    final selectedLectures = <ScheduleEntry>[];
+    final selectedTutorials = <ScheduleEntry>[];
+    final selectedLabs = <ScheduleEntry>[];
+    final selectedWorkshops = <ScheduleEntry>[];
 
     // Match stored lecture time with schedule entries
     if (course.lectureTime.isNotEmpty) {
-      for (final schedule in courseDetails.schedule) {
-        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
-        if (course.lectureTime == scheduleString) {
-          selectedLecture = schedule;
-          break;
+      if (course.lectureTime.startsWith('GROUP_')) {
+        // New group format: find all entries with the same type and group
+        final parts = course.lectureTime.split('_');
+        if (parts.length >= 3) {
+          final type = parts[1];
+          final group = int.tryParse(parts[2]);
+          if (group != null) {
+            selectedLectures.addAll(
+              courseDetails.schedule.where((schedule) =>
+                schedule.type == type && schedule.group == group
+              ).toList()
+            );
+          }
+        }
+      } else {
+        // Backward compatibility: old time format
+        for (final schedule in courseDetails.schedule) {
+          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          if (course.lectureTime == scheduleString) {
+            selectedLectures.add(schedule);
+            break;
+          }
         }
       }
     }
 
     // Match stored tutorial time with schedule entries
     if (course.tutorialTime.isNotEmpty) {
-      for (final schedule in courseDetails.schedule) {
-        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
-        if (course.tutorialTime == scheduleString) {
-          selectedTutorial = schedule;
-          break;
+      if (course.tutorialTime.startsWith('GROUP_')) {
+        // New group format: find all entries with the same type and group
+        final parts = course.tutorialTime.split('_');
+        if (parts.length >= 3) {
+          final type = parts[1];
+          final group = int.tryParse(parts[2]);
+          if (group != null) {
+            selectedTutorials.addAll(
+              courseDetails.schedule.where((schedule) =>
+                schedule.type == type && schedule.group == group
+              ).toList()
+            );
+          }
+        }
+      } else {
+        // Backward compatibility: old time format
+        for (final schedule in courseDetails.schedule) {
+          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          if (course.tutorialTime == scheduleString) {
+            selectedTutorials.add(schedule);
+            break;
+          }
         }
       }
     }
 
     // Match stored lab time with schedule entries
     if (course.labTime.isNotEmpty) {
-      for (final schedule in courseDetails.schedule) {
-        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
-        if (course.labTime == scheduleString) {
-          selectedLab = schedule;
-          break;
+      if (course.labTime.startsWith('GROUP_')) {
+        // New group format: find all entries with the same type and group
+        final parts = course.labTime.split('_');
+        if (parts.length >= 3) {
+          final type = parts[1];
+          final group = int.tryParse(parts[2]);
+          if (group != null) {
+            selectedLabs.addAll(
+              courseDetails.schedule.where((schedule) =>
+                schedule.type == type && schedule.group == group
+              ).toList()
+            );
+          }
+        }
+      } else {
+        // Backward compatibility: old time format
+        for (final schedule in courseDetails.schedule) {
+          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          if (course.labTime == scheduleString) {
+            selectedLabs.add(schedule);
+            break;
+          }
         }
       }
     }
+
     // Match stored workshop time with schedule entries
     if (course.workshopTime.isNotEmpty) {
-      for (final schedule in courseDetails.schedule) {
-        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
-        if (course.workshopTime == scheduleString) {
-          selectedWorkshop = schedule;
-          break;
+      if (course.workshopTime.startsWith('GROUP_')) {
+        // New group format: find all entries with the same type and group
+        final parts = course.workshopTime.split('_');
+        if (parts.length >= 3) {
+          final type = parts[1];
+          final group = int.tryParse(parts[2]);
+          if (group != null) {
+            selectedWorkshops.addAll(
+              courseDetails.schedule.where((schedule) =>
+                schedule.type == type && schedule.group == group
+              ).toList()
+            );
+          }
+        }
+      } else {
+        // Backward compatibility: old time format
+        for (final schedule in courseDetails.schedule) {
+          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          if (course.workshopTime == scheduleString) {
+            selectedWorkshops.add(schedule);
+            break;
+          }
         }
       }
     }
+
     return {
-      'lecture': selectedLecture,
-      'tutorial': selectedTutorial,
-      'lab': selectedLab,
-      'workshop': selectedWorkshop,
+      'lecture': selectedLectures,
+      'tutorial': selectedTutorials,
+      'lab': selectedLabs,
+      'workshop': selectedWorkshops,
     };
   }
 

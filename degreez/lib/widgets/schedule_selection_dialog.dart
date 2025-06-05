@@ -75,30 +75,64 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     labs = _groupByTimeSlot(labEntries);
     workshops = _groupByTimeSlot(workshopEntries); // Placeholder for future use
 
-  }
-
-  List<ScheduleGroup> _groupByTimeSlot(List<ScheduleEntry> entries) {
-    final Map<String, List<ScheduleEntry>> timeGroups = {};
+  }  List<ScheduleGroup> _groupByTimeSlot(List<ScheduleEntry> entries) {
+    // First, deduplicate entries that have the same day, time, and instructor
+    final Map<String, ScheduleEntry> uniqueEntries = {};
     
     for (final entry in entries) {
-      final timeKey = '${entry.day} ${entry.time}';
-      timeGroups.putIfAbsent(timeKey, () => []).add(entry);
+      // Create a unique key based on day, time, and instructor
+      final uniqueKey = '${entry.day}_${entry.time}_${entry.staff}';
+      
+      // Only add if we haven't seen this combination before
+      if (!uniqueEntries.containsKey(uniqueKey)) {
+        uniqueEntries[uniqueKey] = entry;
+      }
     }
     
-    return timeGroups.entries.map((entry) {
-      final timeKey = entry.key;
+    // Now group the deduplicated entries by type and group number
+    final Map<String, List<ScheduleEntry>> groupsByTypeAndGroup = {};
+    
+    for (final entry in uniqueEntries.values) {
+      // Group by type and group number instead of just time
+      final groupKey = '${entry.type}_${entry.group}';
+      groupsByTypeAndGroup.putIfAbsent(groupKey, () => []).add(entry);
+    }
+    
+    return groupsByTypeAndGroup.entries.map((entry) {
+      final groupKey = entry.key;
       final scheduleEntries = entry.value;
       
-      // Sort by group number
-      scheduleEntries.sort((a, b) => a.group.compareTo(b.group));
+      // Sort by day and time to show chronologically
+      scheduleEntries.sort((a, b) {
+        // First sort by day (convert Hebrew days to weekday numbers)
+        final dayA = _getWeekdayNumber(a.day);
+        final dayB = _getWeekdayNumber(b.day);
+        if (dayA != dayB) return dayA.compareTo(dayB);
+        
+        // Then sort by time
+        return a.time.compareTo(b.time);
+      });
       
       return ScheduleGroup(
-        timeKey: timeKey,
-        day: scheduleEntries.first.day,
-        time: scheduleEntries.first.time,
+        timeKey: groupKey,
+        day: scheduleEntries.first.day, // First chronologically
+        time: scheduleEntries.first.time, // First chronologically
         entries: scheduleEntries,
       );
     }).toList();
+  }
+  
+  int _getWeekdayNumber(String hebrewDay) {
+    switch (hebrewDay) {
+      case 'ראשון': return 1; // Sunday
+      case 'שני': return 2; // Monday
+      case 'שלישי': return 3; // Tuesday
+      case 'רביעי': return 4; // Wednesday
+      case 'חמישי': return 5; // Thursday
+      case 'שישי': return 6; // Friday
+      case 'שבת': return 7; // Saturday
+      default: return 0;
+    }
   }
   @override
   Widget build(BuildContext context) {    return Dialog(
@@ -149,11 +183,10 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                       ...lectures.map((lectureGroup) => _buildScheduleGroupOption(
                         lectureGroup,
                         CourseEventType.lecture,
-                        _isLectureSelected(lectureGroup),
-                        (selected) {
+                        _isLectureSelected(lectureGroup),                        (selected) {
                           setState(() {
                             selectedLectureTime = selected 
-                                ? StudentCourse.formatScheduleString(lectureGroup.day, lectureGroup.time)
+                                ? _createGroupIdentifier(lectureGroup)
                                 : null;
                           });
                         },
@@ -167,11 +200,10 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                       ...tutorials.map((tutorialGroup) => _buildScheduleGroupOption(
                         tutorialGroup,
                         CourseEventType.tutorial,
-                        _isTutorialSelected(tutorialGroup),
-                        (selected) {
+                        _isTutorialSelected(tutorialGroup),                        (selected) {
                           setState(() {
                             selectedTutorialTime = selected 
-                                ? StudentCourse.formatScheduleString(tutorialGroup.day, tutorialGroup.time)
+                                ? _createGroupIdentifier(tutorialGroup)
                                 : null;
                           });
                         },
@@ -184,11 +216,10 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                       ...labs.map((labGroup) => _buildScheduleGroupOption(
                         labGroup,
                         CourseEventType.lab,
-                        _isLabSelected(labGroup),
-                        (selected) {
+                        _isLabSelected(labGroup),                        (selected) {
                           setState(() {
                             selectedLabTime = selected 
-                                ? StudentCourse.formatScheduleString(labGroup.day, labGroup.time)
+                                ? _createGroupIdentifier(labGroup)
                                 : null;
                           });
                         },
@@ -201,11 +232,10 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                       ...workshops.map((workshopGroup) => _buildScheduleGroupOption(
                         workshopGroup,
                         CourseEventType.workshop,
-                        _isWorkshopSelected(workshopGroup),
-                        (selected) {
+                        _isWorkshopSelected(workshopGroup),                        (selected) {
                           setState(() {
                             selectedWorkshopTime = selected 
-                                ? StudentCourse.formatScheduleString(workshopGroup.day, workshopGroup.time)
+                                ? _createGroupIdentifier(workshopGroup)
                                 : null;
                           });
                         },
@@ -271,35 +301,66 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                   },
                   child: const Text('Save Selection'),
                 ),
-              ],
-            ),
+              ],            ),
           ],
         ),
       ),
     );
   }
-
+  
+  // Helper method to create a group identifier that can be used to find all sessions in a group
+  String _createGroupIdentifier(ScheduleGroup scheduleGroup) {
+    // Use the first entry's type and group to create an identifier
+    final firstEntry = scheduleGroup.entries.first;
+    return 'GROUP_${firstEntry.type}_${firstEntry.group}';
+  }
+  
   bool _isLectureSelected(ScheduleGroup lectureGroup) {
     if (selectedLectureTime == null) return false;
-    final scheduleString = StudentCourse.formatScheduleString(lectureGroup.day, lectureGroup.time);
-    return selectedLectureTime == scheduleString;
+    // Check if it's a group identifier or old format
+    if (selectedLectureTime!.startsWith('GROUP_')) {
+      return selectedLectureTime == _createGroupIdentifier(lectureGroup);
+    } else {
+      // Backward compatibility: check against old format
+      final scheduleString = StudentCourse.formatScheduleString(lectureGroup.day, lectureGroup.time);
+      return selectedLectureTime == scheduleString;
+    }
   }
 
   bool _isTutorialSelected(ScheduleGroup tutorialGroup) {
     if (selectedTutorialTime == null) return false;
-    final scheduleString = StudentCourse.formatScheduleString(tutorialGroup.day, tutorialGroup.time);
-    return selectedTutorialTime == scheduleString;
+    // Check if it's a group identifier or old format
+    if (selectedTutorialTime!.startsWith('GROUP_')) {
+      return selectedTutorialTime == _createGroupIdentifier(tutorialGroup);
+    } else {
+      // Backward compatibility: check against old format
+      final scheduleString = StudentCourse.formatScheduleString(tutorialGroup.day, tutorialGroup.time);
+      return selectedTutorialTime == scheduleString;
+    }
   }
 
   bool _isLabSelected(ScheduleGroup labGroup) {
     if (selectedLabTime == null) return false;
-    final scheduleString = StudentCourse.formatScheduleString(labGroup.day, labGroup.time);
-    return selectedLabTime == scheduleString;
+    // Check if it's a group identifier or old format
+    if (selectedLabTime!.startsWith('GROUP_')) {
+      return selectedLabTime == _createGroupIdentifier(labGroup);
+    } else {
+      // Backward compatibility: check against old format
+      final scheduleString = StudentCourse.formatScheduleString(labGroup.day, labGroup.time);
+      return selectedLabTime == scheduleString;
+    }
   }
+  
   bool _isWorkshopSelected(ScheduleGroup workshopGroup) {
     if (selectedWorkshopTime == null) return false;
-    final scheduleString = StudentCourse.formatScheduleString(workshopGroup.day, workshopGroup.time);
-    return selectedWorkshopTime == scheduleString;
+    // Check if it's a group identifier or old format
+    if (selectedWorkshopTime!.startsWith('GROUP_')) {
+      return selectedWorkshopTime == _createGroupIdentifier(workshopGroup);
+    } else {
+      // Backward compatibility: check against old format
+      final scheduleString = StudentCourse.formatScheduleString(workshopGroup.day, workshopGroup.time);
+      return selectedWorkshopTime == scheduleString;
+    }
   }
   Widget _buildSectionHeader(String title, IconData icon, int count) {
     return Container(
@@ -318,7 +379,6 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
       ),
     );
   }
-
   Widget _buildScheduleGroupOption(
     ScheduleGroup scheduleGroup,
     CourseEventType type,
@@ -328,7 +388,19 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     final color = getEventColor(
       type, 
       isSelected ? CourseEventState.selected : CourseEventState.available,
-    );
+    );    // Build title showing all time slots without group numbers for cleaner display
+    String title;
+    if (scheduleGroup.entries.length > 1) {
+      // Show all time slots without group number
+      final timeSlots = scheduleGroup.entries
+          .map((e) => '${e.day} ${e.time}')
+          .join(' + ');
+      title = timeSlots;
+    } else {
+      // Single time slot without group number
+      final entry = scheduleGroup.entries.first;
+      title = '${entry.day} ${entry.time}';
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -337,27 +409,35 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
         value: isSelected,
         onChanged: (value) => onChanged(value ?? false),
         title: Text(
-          '${scheduleGroup.day} ${scheduleGroup.time}',
+          title,
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
-        ),
-        subtitle: Column(
+        ),        subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Show instructor from first entry (they're usually the same)
             if (scheduleGroup.entries.first.hasStaff)
               Text('Instructor: ${scheduleGroup.entries.first.staff}'),
             
-            // Show location from first entry
-            if (scheduleGroup.entries.first.fullLocation.isNotEmpty)
-              Text('Location: ${scheduleGroup.entries.first.fullLocation}'),
+            // Show location from first entry (or multiple if different)
+            if (scheduleGroup.entries.first.fullLocation.isNotEmpty) ...[
+              Builder(
+                builder: (context) {
+                  final locations = scheduleGroup.entries
+                      .map((e) => e.fullLocation)
+                      .where((loc) => loc.isNotEmpty)
+                      .toSet()
+                      .join(', ');
+                  return Text('Location: $locations');
+                },
+              ),
+            ],
             
-            // Show available groups
+            // Show additional info for paired events
             if (scheduleGroup.entries.length > 1)
-              Text('Groups: ${scheduleGroup.entries.map((e) => e.group).join(', ')}')
-            else if (scheduleGroup.entries.first.group > 0)
-              Text('Group: ${scheduleGroup.entries.first.group}'),
+              Text('${scheduleGroup.entries.length} paired sessions', 
+                   style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
           ],
         ),
         secondary: Container(

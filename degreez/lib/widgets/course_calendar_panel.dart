@@ -8,6 +8,7 @@ import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
 import '../mixins/course_event_mixin.dart';
+import '../services/course_service.dart';
 import 'schedule_selection_dialog.dart';
 
 class CourseCalendarPanel extends StatefulWidget {
@@ -409,24 +410,27 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       
       final courseColor = colorThemeProvider.getCourseColor(course.courseId);
       int eventsAdded = 0;
-      
-      // Create events from detailed schedule data only for selected times
+        // Create events from detailed schedule data only for selected times
       final courseProvider = context.read<CourseProvider>();
       final selectedEntries = courseProvider.getSelectedScheduleEntries(course.courseId, courseDetails);
       
       final scheduleEntriesToShow = <dynamic>[];
-      if (selectedEntries['lecture'] != null) {
-        scheduleEntriesToShow.add(selectedEntries['lecture']);
-      }
-      if (selectedEntries['tutorial'] != null) {
-        scheduleEntriesToShow.add(selectedEntries['tutorial']);
-      }
-      if (selectedEntries['lab'] != null) {
-        scheduleEntriesToShow.add(selectedEntries['lab']);
-      }
-      if (selectedEntries['workshop'] != null) {
-        scheduleEntriesToShow.add(selectedEntries['workshop']);
-      }      // If no selections made, show all (backward compatibility)
+      
+      // Add all selected lectures
+      final selectedLectures = selectedEntries['lecture'] ?? <ScheduleEntry>[];
+      scheduleEntriesToShow.addAll(selectedLectures);
+      
+      // Add all selected tutorials
+      final selectedTutorials = selectedEntries['tutorial'] ?? <ScheduleEntry>[];
+      scheduleEntriesToShow.addAll(selectedTutorials);
+      
+      // Add all selected labs
+      final selectedLabs = selectedEntries['lab'] ?? <ScheduleEntry>[];
+      scheduleEntriesToShow.addAll(selectedLabs);
+      
+      // Add all selected workshops
+      final selectedWorkshops = selectedEntries['workshop'] ?? <ScheduleEntry>[];
+      scheduleEntriesToShow.addAll(selectedWorkshops);// If no selections made, show all (backward compatibility)
       if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
         scheduleEntriesToShow.addAll(courseDetails.schedule);
       }
