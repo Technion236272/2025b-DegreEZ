@@ -9,7 +9,8 @@ import '../services/course_service.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
-
+import 'package:degreez/providers/course_data_provider.dart';
+import 'package:degreez/providers/customized_diagram_notifier.dart';
 
 enum DirectionValues { horizontal, vertical }
 
@@ -63,46 +64,77 @@ class _CourseCardState extends State<CourseCard> {
     final hasGrade = course.finalGrade.isNotEmpty;
     debugPrint('Note: fetchedStartNote:${course.note}');
 
-    return GestureDetector(
-      // Enhanced: Add regular tap for quick actions
-      onTap: () async {
-        showCourseActionsPopup(
-          context,
-          widget.course,
-          widget.semester,
-          onCourseUpdated: () async {
-            final studentProvider = Provider.of<StudentProvider>(
-              context,
-              listen: false,
-            );
-            final courseProvider = Provider.of<CourseProvider>(
-              context,
-              listen: false,
-            );
+    return Consumer<CustomizedDiagramNotifier>(
+      builder: (context, notifier, child) {
+        final isFocused =
+            notifier.focusedCourseId == null ||
+            notifier.highlightedCourseIds.contains(widget.course.courseId);
 
-            await studentProvider.fetchStudentData(
-              studentProvider.student!.id,
-            ); // Optional
-            await courseProvider.loadStudentCourses(
-              studentProvider.student!.id,
-            ); // ✅ Required
+        return Opacity(
+          opacity: isFocused ? 1.0 : 0.2,
+          child: AbsorbPointer(
+            absorbing: !isFocused, // ✅ disable all interactions if not focused
+            child: GestureDetector(
+              // Enhanced: Add regular tap for quick actions
+              onTap: () async {
+                showCourseActionsPopup(
+                  context,
+                  widget.course,
+                  widget.semester,
+                  onCourseUpdated: () async {
+                    final studentProvider = Provider.of<StudentProvider>(
+                      context,
+                      listen: false,
+                    );
+                    final courseProvider = Provider.of<CourseProvider>(
+                      context,
+                      listen: false,
+                    );
 
-            final refreshed = courseProvider.getCourseById(
-              widget.semester,
-              widget.course.courseId,
-            );
+                    await studentProvider.fetchStudentData(
+                      studentProvider.student!.id,
+                    ); // Optional
+                    await courseProvider.loadStudentCourses(
+                      studentProvider.student!.id,
+                    ); // ✅ Required
 
-            setState(() {
-              _hasNote =
-                  refreshed?.note != null && refreshed!.note!.trim().isNotEmpty;
-            });
-          },
+                    final refreshed = courseProvider.getCourseById(
+                      widget.semester,
+                      widget.course.courseId,
+                    );
+
+                    setState(() {
+                      _hasNote =
+                          refreshed?.note != null &&
+                          refreshed!.note!.trim().isNotEmpty;
+                    });
+                  },
+                );
+              },
+
+              onLongPress: () {
+                final notifier = Provider.of<CustomizedDiagramNotifier>(
+                  context,
+                  listen: false,
+                );
+                final courseDetailsMap =
+                    Provider.of<CourseDataProvider>(
+                      context,
+                      listen: false,
+                    ).courseDetailsMap;
+                      final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+                    final allCourses = courseProvider.coursesBySemester;
+                    debugPrint('👀 course.prerequisites = ${widget.course.prerequisites}');
+                notifier.focusOnCourseWithStoredPrereqs(
+                  widget.course,
+                  Provider.of<CourseProvider>(context, listen: false).coursesBySemester,
+                );
+              },
+              child: child!,
+            ),
+          ),
         );
       },
-
-      // Keep existing long press for notes
-      onLongPress: () async {},
-
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

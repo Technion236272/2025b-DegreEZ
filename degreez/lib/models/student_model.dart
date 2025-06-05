@@ -31,7 +31,9 @@ class StudentModel {
       major: data['Major'] ?? '',
       faculty: data['Faculty'] ?? '',
       preferences: data['Preferences'] ?? '',
-      semester: data['Semester']?.toString() ?? '1', // Convert to String and provide default
+      semester:
+          data['Semester']?.toString() ??
+          '1', // Convert to String and provide default
       catalog: data['Catalog'] ?? '',
     );
   }
@@ -74,9 +76,12 @@ class StudentCourse {
   final String courseId;
   final String name;
   final String finalGrade;
-  final String lectureTime;  // Stores selected lecture schedule: "day time" format
-  final String tutorialTime; // Stores selected tutorial schedule: "day time" format
+  final String
+  lectureTime; // Stores selected lecture schedule: "day time" format
+  final String
+  tutorialTime; // Stores selected tutorial schedule: "day time" format
   final String? note;
+  final List<String>? prerequisites;
 
   StudentCourse({
     required this.courseId,
@@ -85,6 +90,7 @@ class StudentCourse {
     required this.lectureTime,
     required this.tutorialTime,
     this.note,
+    this.prerequisites,
   });
 
   factory StudentCourse.fromFirestore(Map<String, dynamic> data) {
@@ -95,11 +101,12 @@ class StudentCourse {
       lectureTime: data['Lecture_time'] ?? '',
       tutorialTime: data['Tutorial_time'] ?? '',
       note: data['Note'] ?? '',
+      prerequisites: (data['prerequisites'] as List?)?.cast<String>(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
-    return {
+    final data = {
       'Course_Id': courseId,
       'Name': name,
       'Final_grade': finalGrade,
@@ -107,6 +114,16 @@ class StudentCourse {
       'Tutorial_time': tutorialTime,
       'Note': note ?? '',
     };
+
+if (prerequisites != null && prerequisites is List<String>) {
+    data['prerequisites'] = prerequisites!.join(', '); // Safely call join
+  } else if (prerequisites == null) {
+    data['prerequisites'] = ''; // Handle null case
+  } else {
+    throw Exception('Invalid prerequisites format');
+  }
+
+    return data;
   }
 
   StudentCourse copyWith({
@@ -114,6 +131,7 @@ class StudentCourse {
     String? note,
     String? lectureTime,
     String? tutorialTime,
+    List<String>? prerequisites,
   }) {
     return StudentCourse(
       courseId: courseId,
@@ -122,27 +140,29 @@ class StudentCourse {
       lectureTime: lectureTime ?? this.lectureTime,
       tutorialTime: tutorialTime ?? this.tutorialTime,
       note: note ?? this.note,
+      prerequisites: prerequisites ?? this.prerequisites, // ✅ FIXED
     );
   }
 
   // Helper methods for schedule selection
   bool get hasSelectedLecture => lectureTime.isNotEmpty;
   bool get hasSelectedTutorial => tutorialTime.isNotEmpty;
-  bool get hasCompleteScheduleSelection => hasSelectedLecture || hasSelectedTutorial;
-  
+  bool get hasCompleteScheduleSelection =>
+      hasSelectedLecture || hasSelectedTutorial;
+
   // Helper to get selection summary
   String get selectionSummary {
     if (!hasCompleteScheduleSelection) {
       return 'All times shown';
     }
-    
+
     final parts = <String>[];
     if (hasSelectedLecture) parts.add('Lecture');
     if (hasSelectedTutorial) parts.add('Tutorial');
-    
+
     return '${parts.join(' + ')} selected';
   }
-  
+
   // Helper to count selections
   int get selectionCount {
     int count = 0;
@@ -159,10 +179,10 @@ class StudentCourse {
   // Helper to parse schedule string back to day and time
   Map<String, String>? parseScheduleString(String scheduleString) {
     if (scheduleString.isEmpty) return null;
-    
+
     final parts = scheduleString.split(' ');
     if (parts.length < 2) return null;
-    
+
     return {
       'day': parts[0],
       'time': parts.sublist(1).join(' '), // In case time has spaces
@@ -175,8 +195,5 @@ class StudentCourseWithDetails {
   final StudentCourse studentCourse;
   final dynamic courseDetails; // Will be EnhancedCourseDetails from service
 
-  StudentCourseWithDetails({
-    required this.studentCourse, 
-    this.courseDetails,
-  });
+  StudentCourseWithDetails({required this.studentCourse, this.courseDetails});
 }

@@ -168,10 +168,33 @@ class CourseProvider with ChangeNotifier {
       }
 
       // Add course
-      await semesterRef
-          .collection('Courses')
-          .doc(course.courseId)
-          .set(course.toFirestore());
+      // Fetch prerequisites
+      final rawPrereqs =
+          (await CourseService.getCourseDetails(
+            _currentSemester!.year,
+            _currentSemester!.semester,
+            course.courseId,
+          ))?.prerequisites;
+
+      final List<String> prereqs =
+          (rawPrereqs is String)
+              ? rawPrereqs
+                  .split(' ')
+                  .map((id) => id.trim().replaceAll(RegExp(r'[^0-9]'), ''))
+                  .where((id) => id.isNotEmpty)
+                  .toList()
+              : (rawPrereqs is List)
+              ? List<String>.from(
+                (rawPrereqs ?? []).map(
+                  (id) => id.toString().replaceAll(RegExp(r'[^0-9]'), ''),
+                ),
+              )
+              : [];
+
+      await semesterRef.collection('Courses').doc(course.courseId).set({
+        ...course.toFirestore(),
+        'prerequisites': prereqs, // ✅ Save prereqs to Firestore
+      });
 
       _error = null;
       return true;
