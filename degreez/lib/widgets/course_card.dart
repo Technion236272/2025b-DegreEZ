@@ -112,24 +112,41 @@ class _CourseCardState extends State<CourseCard> {
                 );
               },
 
-              onLongPress: () {
-                final notifier = Provider.of<CustomizedDiagramNotifier>(
+              onLongPress: () async {
+                final courseProvider = Provider.of<CourseProvider>(
                   context,
                   listen: false,
                 );
-                final courseDetailsMap =
-                    Provider.of<CourseDataProvider>(
+                final studentId =
+                    Provider.of<StudentProvider>(
                       context,
                       listen: false,
-                    ).courseDetailsMap;
-                      final courseProvider = Provider.of<CourseProvider>(context, listen: false);
-                    final allCourses = courseProvider.coursesBySemester;
-                    debugPrint('👀 course.prerequisites = ${widget.course.prerequisites}');
-                notifier.focusOnCourseWithStoredPrereqs(
-                  widget.course,
-                  Provider.of<CourseProvider>(context, listen: false).coursesBySemester,
+                    ).student!.id;
+
+                // 🛠️ Force reload before accessing
+                await courseProvider.loadStudentCourses(studentId);
+
+                final refreshed = courseProvider.getCourseById(
+                  widget.semester,
+                  widget.course.courseId,
                 );
+
+                debugPrint(
+                  '👀 course.prerequisites = ${refreshed?.prerequisites}',
+                );
+
+                if (refreshed != null) {
+                  final notifier = Provider.of<CustomizedDiagramNotifier>(
+                    context,
+                    listen: false,
+                  );
+                  notifier.focusOnCourseWithStoredPrereqs(
+                    refreshed,
+                    courseProvider.coursesBySemester,
+                  );
+                }
               },
+
               child: child!,
             ),
           ),

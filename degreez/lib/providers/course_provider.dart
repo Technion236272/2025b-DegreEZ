@@ -145,15 +145,10 @@ class CourseProvider with ChangeNotifier {
   ) async {
     _setLoadingState(_loadingState.copyWith(isAddingCourse: true));
 
-    // Optimistic update
-    _coursesBySemester.putIfAbsent(semesterKey, () => []).add(course);
-    notifyListeners();
-
     try {
       final studentRef = FirebaseFirestore.instance
           .collection('Students')
           .doc(studentId);
-
       final semesterRef = studentRef
           .collection('Courses-per-Semesters')
           .doc(semesterKey);
@@ -167,8 +162,7 @@ class CourseProvider with ChangeNotifier {
         });
       }
 
-      // Add course
-      // Fetch prerequisites
+      // 🔍 Fetch prerequisites
       final rawPrereqs =
           (await CourseService.getCourseDetails(
             _currentSemester!.year,
@@ -191,15 +185,25 @@ class CourseProvider with ChangeNotifier {
               )
               : [];
 
+      // ✅ Create enriched course before using
+      final enrichedCourse = course.copyWith(prerequisites: prereqs);
+
+      // ✅ Optimistic update with enriched course
+      _coursesBySemester.putIfAbsent(semesterKey, () => []).add(enrichedCourse);
+      notifyListeners();
+
+      // ✅ Save to Firestore
       await semesterRef.collection('Courses').doc(course.courseId).set({
-        ...course.toFirestore(),
-        'prerequisites': prereqs, // ✅ Save prereqs to Firestore
+        ...enrichedCourse.toFirestore(),
+        'prerequisites': prereqs,
       });
+
+      // ✅ Ensure the UI shows updated info
+      await loadStudentCourses(studentId);
 
       _error = null;
       return true;
     } catch (e) {
-      // Rollback optimistic update
       _coursesBySemester[semesterKey]?.removeWhere(
         (c) => c.courseId == course.courseId,
       );
