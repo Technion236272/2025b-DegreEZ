@@ -43,11 +43,11 @@ class CourseLoadingState {
 
   @override
   int get hashCode => Object.hash(
-        isLoadingCourses,
-        isAddingCourse,
-        loadingCourseDetails.length,
-        updatingGrades.length,
-      );
+    isLoadingCourses,
+    isAddingCourse,
+    loadingCourseDetails.length,
+    updatingGrades.length,
+  );
 }
 
 class CourseProvider with ChangeNotifier {
@@ -59,18 +59,20 @@ class CourseProvider with ChangeNotifier {
 
   SemesterInfo? get currentSemester => _currentSemester;
 
-
   // Getters
   List<StudentCourse> getCoursesForSemester(String semesterKey) {
     return _coursesBySemester[semesterKey] ?? [];
   }
-  Map<String, List<StudentCourse>> get coursesBySemester => Map.unmodifiable(_coursesBySemester);
+
+  Map<String, List<StudentCourse>> get coursesBySemester =>
+      Map.unmodifiable(_coursesBySemester);
   CourseLoadingState get loadingState => _loadingState;
   String? get error => _error;
 
   // Add this getter to distinguish between unloaded and empty data
   bool get hasLoadedData => !_loadingState.isLoadingCourses && _error == null;
-  bool get hasAnyCourses => _coursesBySemester.values.any((courses) => courses.isNotEmpty);
+  bool get hasAnyCourses =>
+      _coursesBySemester.values.any((courses) => courses.isNotEmpty);
   bool get isEmpty => hasLoadedData && _coursesBySemester.isEmpty;
 
   // Helper method to find a course by ID
@@ -93,8 +95,8 @@ class CourseProvider with ChangeNotifier {
       // Already loading, no need to start again
       return false;
     }
-  // !! this causes error when navigating back to courses page
-  // this if condition fixes it
+    // !! this causes error when navigating back to courses page
+    // this if condition fixes it
     if (_coursesBySemester.isNotEmpty) {
       // Already loaded, no need to load again
       return true;
@@ -106,21 +108,20 @@ class CourseProvider with ChangeNotifier {
           .collection('Students')
           .doc(studentId);
 
-      final semestersSnapshot = await studentRef
-          .collection('Courses-per-Semesters')
-          .get();
+      final semestersSnapshot =
+          await studentRef.collection('Courses-per-Semesters').get();
 
       final newCoursesBySemester = <String, List<StudentCourse>>{};
 
       for (final semesterDoc in semestersSnapshot.docs) {
         final semesterKey = semesterDoc.id;
-        final coursesSnapshot = await semesterDoc.reference
-            .collection('Courses')
-            .get();
+        final coursesSnapshot =
+            await semesterDoc.reference.collection('Courses').get();
 
-        final courses = coursesSnapshot.docs
-            .map((doc) => StudentCourse.fromFirestore(doc.data()))
-            .toList();
+        final courses =
+            coursesSnapshot.docs
+                .map((doc) => StudentCourse.fromFirestore(doc.data()))
+                .toList();
 
         newCoursesBySemester[semesterKey] = courses;
       }
@@ -195,7 +196,9 @@ class CourseProvider with ChangeNotifier {
     String grade,
   ) async {
     // Set loading for this specific course
-    final newUpdatingGrades = Map<String, bool>.from(_loadingState.updatingGrades);
+    final newUpdatingGrades = Map<String, bool>.from(
+      _loadingState.updatingGrades,
+    );
     newUpdatingGrades[courseId] = true;
     _setLoadingState(_loadingState.copyWith(updatingGrades: newUpdatingGrades));
 
@@ -203,11 +206,13 @@ class CourseProvider with ChangeNotifier {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) return false;
 
     final oldCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses[courseIndex] = oldCourse.copyWith(finalGrade: grade);
     notifyListeners();
@@ -233,7 +238,9 @@ class CourseProvider with ChangeNotifier {
     } finally {
       // Remove loading state for this course
       newUpdatingGrades.remove(courseId);
-      _setLoadingState(_loadingState.copyWith(updatingGrades: newUpdatingGrades));
+      _setLoadingState(
+        _loadingState.copyWith(updatingGrades: newUpdatingGrades),
+      );
     }
   }
 
@@ -247,11 +254,13 @@ class CourseProvider with ChangeNotifier {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) return false;
 
     final oldCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses[courseIndex] = oldCourse.copyWith(note: note);
     notifyListeners();
@@ -288,11 +297,13 @@ class CourseProvider with ChangeNotifier {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) return false;
 
     final oldCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses[courseIndex] = oldCourse.copyWith(
       lectureTime: selectedLectureTime ?? '',
@@ -326,7 +337,7 @@ class CourseProvider with ChangeNotifier {
 
   // Helper method to get selected schedule entries for a course
   Map<String, ScheduleEntry?> getSelectedScheduleEntries(
-    String courseId, 
+    String courseId,
     EnhancedCourseDetails? courseDetails,
   ) {
     if (courseDetails == null) {
@@ -345,7 +356,10 @@ class CourseProvider with ChangeNotifier {
     // Match stored lecture time with schedule entries
     if (course.lectureTime.isNotEmpty) {
       for (final schedule in courseDetails.schedule) {
-        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+        final scheduleString = StudentCourse.formatScheduleString(
+          schedule.day,
+          schedule.time,
+        );
         if (course.lectureTime == scheduleString) {
           selectedLecture = schedule;
           break;
@@ -356,7 +370,10 @@ class CourseProvider with ChangeNotifier {
     // Match stored tutorial time with schedule entries
     if (course.tutorialTime.isNotEmpty) {
       for (final schedule in courseDetails.schedule) {
-        final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+        final scheduleString = StudentCourse.formatScheduleString(
+          schedule.day,
+          schedule.time,
+        );
         if (course.tutorialTime == scheduleString) {
           selectedTutorial = schedule;
           break;
@@ -364,10 +381,7 @@ class CourseProvider with ChangeNotifier {
       }
     }
 
-    return {
-      'lecture': selectedLecture,
-      'tutorial': selectedTutorial,
-    };
+    return {'lecture': selectedLecture, 'tutorial': selectedTutorial};
   }
 
   // Add semester with validation
@@ -414,7 +428,7 @@ class CourseProvider with ChangeNotifier {
 
     // Store for rollback
     final oldCourses = _coursesBySemester[semesterName]!;
-    
+
     // Optimistic update
     _coursesBySemester.remove(semesterName);
     notifyListeners();
@@ -451,7 +465,9 @@ class CourseProvider with ChangeNotifier {
       return false;
     }
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) {
       _error = 'Course not found in semester';
       notifyListeners();
@@ -460,7 +476,7 @@ class CourseProvider with ChangeNotifier {
 
     // Store for rollback
     final removedCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses.removeAt(courseIndex);
     notifyListeners();
@@ -500,7 +516,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-    Map<String, List<StudentCourse>> get sortedCoursesBySemester {
+  Map<String, List<StudentCourse>> get sortedCoursesBySemester {
     final List<String> semesterNames = _coursesBySemester.keys.toList();
 
     semesterNames.sort((a, b) {
@@ -522,24 +538,27 @@ class CourseProvider with ChangeNotifier {
     return {for (final name in semesterNames) name: _coursesBySemester[name]!};
   }
 
-   // Get total credits for a semester
-double getTotalCreditsForSemester(String semesterKey) {
-  final courses = _coursesBySemester[semesterKey] ?? [];
-  double total = 0.0;
+  // Get total credits for a semester
+  double getTotalCreditsForSemester(String semesterKey) {
+    final courses = _coursesBySemester[semesterKey] ?? [];
+    double total = 0.0;
 
-  for (final course in courses) {
-    // Use CourseDataProvider instead of the empty cache
-    // Note: This will be async, so you need to handle it properly
-    final courseWithDetails = getCourseWithDetails(semesterKey, course.courseId);
-    if (courseWithDetails?.courseDetails != null) {
-      total += courseWithDetails!.courseDetails.creditPoints;
+    for (final course in courses) {
+      // Use CourseDataProvider instead of the empty cache
+      // Note: This will be async, so you need to handle it properly
+      final courseWithDetails = getCourseWithDetails(
+        semesterKey,
+        course.courseId,
+      );
+      if (courseWithDetails?.courseDetails != null) {
+        total += courseWithDetails!.courseDetails.creditPoints;
+      }
     }
+
+    return total;
   }
 
-  return total;
-}
-
-    // Get course with details (updated return type)
+  // Get course with details (updated return type)
   StudentCourseWithDetails? getCourseWithDetails(
     String semesterKey,
     String courseId,
@@ -566,8 +585,7 @@ double getTotalCreditsForSemester(String semesterKey) {
     return (season: season, year: year);
   }
 
-
-int _seasonOrder(String season) {
+  int _seasonOrder(String season) {
     switch (season.toLowerCase()) {
       case 'winter':
         return 1;
@@ -580,7 +598,7 @@ int _seasonOrder(String season) {
     }
   }
 
- // Search for courses in the current semester
+  // Search for courses in the current semester
   Future<List<CourseSearchResult>> searchCourses({
     String? courseId,
     String? courseName,
@@ -671,7 +689,6 @@ int _seasonOrder(String season) {
     }
   }
 
-
   // Fetch the latest available semester from the repository
   Future<void> _fetchLatestSemester() async {
     try {
@@ -690,6 +707,17 @@ int _seasonOrder(String season) {
         startDate: '',
         endDate: '',
       );
+    }
+  }
+
+  StudentCourse? getCourseById(String semester, String courseId) {
+    final semCourses = _coursesBySemester[semester];
+    if (semCourses == null) return null;
+
+    try {
+      return semCourses.firstWhere((c) => c.courseId == courseId);
+    } catch (_) {
+      return null; // course not found
     }
   }
 }

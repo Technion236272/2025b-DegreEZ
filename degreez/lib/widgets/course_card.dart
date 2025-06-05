@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/course_service.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:degreez/providers/course_provider.dart';
+import 'package:degreez/providers/student_provider.dart';
+
 
 enum DirectionValues { horizontal, vertical }
 
@@ -49,187 +52,276 @@ class _CourseCardState extends State<CourseCard> {
   Widget _buildVertical(
     BuildContext context,
     StudentCourse course,
-    EnhancedCourseDetails? courseDetails
+    EnhancedCourseDetails? courseDetails,
   ) {
-    if (widget.course.note != '')
-    {
+    if (widget.course.note != '') {
       setState(() {
         _hasNote = true;
       });
     }
-    
+
     final hasGrade = course.finalGrade.isNotEmpty;
-    debugPrint(
-      'Note: fetchedStartNote:${course.note}',
-      );
+    debugPrint('Note: fetchedStartNote:${course.note}');
 
     return GestureDetector(
       // Enhanced: Add regular tap for quick actions
-      onTap: () {
+      onTap: () async {
         showCourseActionsPopup(
           context,
           widget.course,
           widget.semester,
-          onCourseUpdated: widget.onCourseUpdated,
+          onCourseUpdated: () async {
+            final studentProvider = Provider.of<StudentProvider>(
+              context,
+              listen: false,
+            );
+            final courseProvider = Provider.of<CourseProvider>(
+              context,
+              listen: false,
+            );
+
+            await studentProvider.fetchStudentData(
+              studentProvider.student!.id,
+            ); // Optional
+            await courseProvider.loadStudentCourses(
+              studentProvider.student!.id,
+            ); // ✅ Required
+
+            final refreshed = courseProvider.getCourseById(
+              widget.semester,
+              widget.course.courseId,
+            );
+
+            setState(() {
+              _hasNote =
+                  refreshed?.note != null && refreshed!.note!.trim().isNotEmpty;
+            });
+          },
         );
       },
+
       // Keep existing long press for notes
-      onLongPress: () async {
-        final result = await notePopup(context,
-        course,
-        widget.semester,
-        course.note);
-        if (result) {
-      setState(() {
-        _hasNote = true;
-      });
-      }
-      },
-      
+      onLongPress: () async {},
+
       child: Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      // color: provider.cardColorPalette!.cardBG(course.courseId),
-      color:  context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),
-      child: Column(
-        children: [
-          //Card Top Bar (Course number and points)
-          Expanded(
-            flex: 2,
-            child: Container(
-              width: double.infinity, // ✅ full width
-              decoration: BoxDecoration(
-                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarBG,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        // color: provider.cardColorPalette!.cardBG(course.courseId),
+        color: context
+            .watch<CustomizedDiagramNotifier>()
+            .cardColorPalette!
+            .cardBG(course.courseId),
+        child: Column(
+          children: [
+            //Card Top Bar (Course number and points)
+            Expanded(
+              flex: 2,
+              child: Container(
+                width: double.infinity, // ✅ full width
+                decoration: BoxDecoration(
+                  color:
+                      context
+                          .watch<CustomizedDiagramNotifier>()
+                          .cardColorPalette!
+                          .topBarBG,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    flex: 7, // 30%
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 3),
-                      child: Text(
-                        course.courseId,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarText,
-                          fontWeight: FontWeight.w500,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      flex: 7, // 30%
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 3),
+                        child: Text(
+                          course.courseId,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color:
+                                context
+                                    .watch<CustomizedDiagramNotifier>()
+                                    .cardColorPalette!
+                                    .topBarText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
 
-                  if (courseDetails != null && courseDetails.points.isNotEmpty)
-                    Expanded(
-                      flex: 3, // 30%
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarMarkBG,
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(8),
+                    if (courseDetails != null &&
+                        courseDetails.points.isNotEmpty)
+                      Expanded(
+                        flex: 3, // 30%
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color:
+                                context
+                                    .watch<CustomizedDiagramNotifier>()
+                                    .cardColorPalette!
+                                    .topBarMarkBG,
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(8),
+                            ),
                           ),
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                flex: 2, // 30%
-                                child: Icon(
-                                  Icons.school,
-                                  size: 8,
-                                  color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarMarkText,
-                                ),
-                              ),
-                              Expanded(
-                                flex: 9,
-                                child: Text(
-                                  courseDetails.points.contains(".")?courseDetails.points:"${courseDetails.points}.0",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.topBarMarkText,
-                                    fontWeight: FontWeight.bold,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  flex: 2, // 30%
+                                  child: Icon(
+                                    Icons.school,
+                                    size: 8,
+                                    color:
+                                        context
+                                            .watch<CustomizedDiagramNotifier>()
+                                            .cardColorPalette!
+                                            .topBarMarkText,
                                   ),
                                 ),
-                              ),
-                            ],
+                                Expanded(
+                                  flex: 9,
+                                  child: Text(
+                                    courseDetails.points.contains(".")
+                                        ? courseDetails.points
+                                        : "${courseDetails.points}.0",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color:
+                                          context
+                                              .watch<
+                                                CustomizedDiagramNotifier
+                                              >()
+                                              .cardColorPalette!
+                                              .topBarMarkText,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ), // Replace with your widget
-                    ),
-                ],
-              ),
-            ),
-          ),
-          //Card Middle (Course name)
-          Expanded(
-            flex: 6,
-            child: Container(
-              padding: EdgeInsets.only(right: 3,left: 1,top: 3,bottom: 2),
-              width: double.infinity,
-              child: AutoSizeText(
-              maxLines: 3,
-              minFontSize: 7,
-              textDirection:TextDirection.rtl,
-              course.name,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,
-                
-              ),
-            ),
-            ),
-          ),
-          //Card Bottom (Icons Tray)
-          Expanded(
-            flex: 2,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
+                        ), // Replace with your widget
+                      ),
+                  ],
                 ),
               ),
-              width: double.infinity,
-              child: Padding(padding: EdgeInsets.only(right: 1,left: 1),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-
-                hasGrade ? GradeSticker(grade: course.finalGrade) 
-                : Icon(Icons.work_off_outlined, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),size: 18,),
-                
-                _hasNote ?
-                Icon(Icons.edit_note_rounded,
-                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,
-                size: 18,)
-                : Icon(Icons.edit_note_rounded,
-                color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFGdim,
-                size: 18,),
-
-                  if(hasGrade)...[
-               (double.tryParse(course.finalGrade)! > 55)
-                 ? Icon(Icons.check_rounded, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18)
-                 : Icon(Icons.clear, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,size: 18,),
-                 ]
-                 else Icon(Icons.work_off_outlined, color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardBG(course.courseId),size: 18,),
-                 
-                // NotePopupButton(),
-                
-                ]
-              ),)
             ),
-          ),
-          SizedBox(height: 2,)
-        ],
+            //Card Middle (Course name)
+            Expanded(
+              flex: 6,
+              child: Container(
+                padding: EdgeInsets.only(right: 3, left: 1, top: 3, bottom: 2),
+                width: double.infinity,
+                child: AutoSizeText(
+                  maxLines: 3,
+                  minFontSize: 7,
+                  textDirection: TextDirection.rtl,
+                  course.name,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color:
+                        context
+                            .watch<CustomizedDiagramNotifier>()
+                            .cardColorPalette!
+                            .cardFG,
+                  ),
+                ),
+              ),
+            ),
+            //Card Bottom (Icons Tray)
+            Expanded(
+              flex: 2,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(8),
+                    bottomRight: Radius.circular(8),
+                  ),
+                ),
+                width: double.infinity,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 1, left: 1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      hasGrade
+                          ? GradeSticker(grade: course.finalGrade)
+                          : Icon(
+                            Icons.work_off_outlined,
+                            color: context
+                                .watch<CustomizedDiagramNotifier>()
+                                .cardColorPalette!
+                                .cardBG(course.courseId),
+                            size: 18,
+                          ),
+
+                      _hasNote
+                          ? Icon(
+                            Icons.edit_note_rounded,
+                            color:
+                                context
+                                    .watch<CustomizedDiagramNotifier>()
+                                    .cardColorPalette!
+                                    .cardFG,
+                            size: 18,
+                          )
+                          : Icon(
+                            Icons.edit_note_rounded,
+                            color:
+                                context
+                                    .watch<CustomizedDiagramNotifier>()
+                                    .cardColorPalette!
+                                    .cardFGdim,
+                            size: 18,
+                          ),
+
+                      if (hasGrade) ...[
+                        (double.tryParse(course.finalGrade)! > 55)
+                            ? Icon(
+                              Icons.check_rounded,
+                              color:
+                                  context
+                                      .watch<CustomizedDiagramNotifier>()
+                                      .cardColorPalette!
+                                      .cardFG,
+                              size: 18,
+                            )
+                            : Icon(
+                              Icons.clear,
+                              color:
+                                  context
+                                      .watch<CustomizedDiagramNotifier>()
+                                      .cardColorPalette!
+                                      .cardFG,
+                              size: 18,
+                            ),
+                      ] else
+                        Icon(
+                          Icons.work_off_outlined,
+                          color: context
+                              .watch<CustomizedDiagramNotifier>()
+                              .cardColorPalette!
+                              .cardBG(course.courseId),
+                          size: 18,
+                        ),
+
+                      // NotePopupButton(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 2),
+          ],
+        ),
       ),
-    ),);
+    );
   }
 
   // Horizontal course card for landscape mode - enhanced with tap gesture
@@ -243,25 +335,21 @@ class _CourseCardState extends State<CourseCard> {
 
     return GestureDetector(
       // Enhanced: Add tap for quick actions in horizontal mode too
-      onTap: () {
+      onTap: () async {
         showCourseActionsPopup(
           context,
           widget.course,
           widget.semester,
-          onCourseUpdated: widget.onCourseUpdated,
+          onCourseUpdated: () {
+            setState(() {
+              _hasNote =
+                  widget.course.note != null &&
+                  widget.course.note!.trim().isNotEmpty;
+            });
+          },
         );
       },
-      onLongPress: () async {
-        final result = await notePopup(context,
-        course,
-        widget.semester,
-        course.note);
-        if (result) {
-      setState(() {
-        _hasNote = true;
-      });
-      }
-      },
+      onLongPress: () async {},
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -324,7 +412,10 @@ class _CourseCardState extends State<CourseCard> {
               ),
               if (hasGrade)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: _getGradeColor(course.finalGrade),
                     borderRadius: BorderRadius.circular(6),
