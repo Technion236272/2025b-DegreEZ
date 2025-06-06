@@ -747,4 +747,21 @@ class CourseProvider with ChangeNotifier {
       return null; // course not found
     }
   }
+
+  
+  List<String> getMissingPrerequisites(String semesterKey, List<String> prereqs) {
+  final sortedKeys = sortedCoursesBySemester.keys.toList();
+  final currentIndex = sortedKeys.indexOf(semesterKey);
+  if (currentIndex == -1) return prereqs;
+
+  final previousKeys = sortedKeys.sublist(0, currentIndex);
+
+  final takenCourseIds = <String>{
+    for (final sem in previousKeys)
+      ..._coursesBySemester[sem]!.map((c) => c.courseId),
+  };
+
+  return prereqs.where((id) => !takenCourseIds.contains(id)).toList();
+}
+
 }
