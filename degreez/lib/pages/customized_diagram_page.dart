@@ -10,70 +10,7 @@ import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/add_course_dialog.dart';
 
-Widget buildFormattedPrereqWarning(
-  List<List<String>> prereqGroups,
-  List<String> missingIds,
-  Map<String, String> courseNames,
-) {
-  final missingSet = missingIds.toSet();
 
-  return Directionality(
-    textDirection: TextDirection.rtl,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < prereqGroups.length; i++) ...[
-          if (i > 0)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 6),
-              child: Text(
-                'או',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-            ),
-          Wrap(
-            children: [
-             // const Text('('),
-              for (int j = 0; j < prereqGroups[i].length; j++) ...[
-                if (j > 0)
-                  const Text(
-                    ' ו־ ',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: prereqGroups[i][j],
-                        style: TextStyle(
-                          color: missingSet.contains(prereqGroups[i][j])
-                              ? Colors.redAccent
-                              : Colors.greenAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextSpan(
-                        text:
-                            ' (${courseNames[prereqGroups[i][j]] ?? 'לא ידוע'})',
-                        style: TextStyle(
-                          color: missingSet.contains(prereqGroups[i][j])
-                              ? Colors.redAccent
-                              : Colors.greenAccent,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            //  const Text(')'),
-            ],
-          ),
-        ],
-      ],
-    ),
-  );
-}
 
 
 
@@ -199,7 +136,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               );
             }
 
-            final semesters = courseNotifier.coursesBySemester;
+            final semesters = courseNotifier.sortedCoursesBySemester;
 
             if (semesters.isEmpty) {
               return const Center(

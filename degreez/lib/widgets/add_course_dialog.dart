@@ -6,6 +6,73 @@ import '../providers/student_provider.dart';
 import '../services/course_service.dart';
 import '../models/student_model.dart';
 
+Widget buildFormattedPrereqWarning(
+  List<List<String>> prereqGroups,
+  List<String> missingIds,
+  Map<String, String> courseNames,
+) {
+  final missingSet = missingIds.toSet();
+
+  return Directionality(
+    textDirection: TextDirection.rtl,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < prereqGroups.length; i++) ...[
+          if (i > 0)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                'או',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ),
+          Wrap(
+            children: [
+             // const Text('('),
+              for (int j = 0; j < prereqGroups[i].length; j++) ...[
+                if (j > 0)
+                  const Text(
+                    ' ו־ ',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: prereqGroups[i][j],
+                        style: TextStyle(
+                          color: missingSet.contains(prereqGroups[i][j])
+                              ? Colors.redAccent
+                              : Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text:
+                            ' (${courseNames[prereqGroups[i][j]] ?? 'לא ידוע'})',
+                        style: TextStyle(
+                          color: missingSet.contains(prereqGroups[i][j])
+                              ? Colors.redAccent
+                              : Colors.greenAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            //  const Text(')'),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+
+
 class AddCourseDialog extends StatefulWidget {
   final String semesterName;
   final Function(String courseId)? onCourseAdded; // Callback for calendar
@@ -120,43 +187,121 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     }
   }
 
-  Future<void> _addCourse(EnhancedCourseDetails courseDetails) async {
-    final course = StudentCourse(
-      courseId: courseDetails.courseNumber,
-      name: courseDetails.name,
-      finalGrade: '',
-      lectureTime: '',
-      tutorialTime: '',
-      labTime: '',
-      workshopTime: '',
-    );
+Future<void> _addCourse(EnhancedCourseDetails courseDetails) async {
+  final rawPrereqs = courseDetails.prerequisites;
+  List<List<String>> parsedPrereqs = [];
 
-    final success = await context.read<CourseProvider>().addCourseToSemester(
-      context.read<StudentProvider>().student!.id,
-      widget.semesterName,
-      course,
-    );
+  if (rawPrereqs is String) {
+    final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
 
-    if (!mounted) return;
+    for (final group in orGroups) {
+      final andGroup = group
+          .replaceAll(RegExp(r'[^\d\s]'), '')
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+          .toList();
 
-    Navigator.pop(context);
-
-    if (success) {
-      widget.onCourseAdded?.call(courseDetails.courseNumber);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${courseDetails.name} added to ${widget.semesterName}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to add course'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
     }
   }
+
+  final missing = context.read<CourseProvider>().getMissingPrerequisites(
+        widget.semesterName,
+        parsedPrereqs,
+      );
+
+  if (missing.isNotEmpty) {
+    final allTakenCourses = context
+        .read<CourseProvider>()
+        .sortedCoursesBySemester
+        .values
+        .expand((list) => list);
+
+    final courseIdToName = {
+      for (final course in allTakenCourses) course.courseId: course.name,
+    };
+
+    for (final group in parsedPrereqs) {
+      for (final courseId in group) {
+        if (!courseIdToName.containsKey(courseId)) {
+          final name = await CourseService.getCourseName(courseId);
+          courseIdToName[courseId] = name ?? 'Unknown';
+        }
+      }
+    }
+
+    final proceedAnyway = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Missing Prerequisites'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'To register for this course, you must have completed one of the following prerequisite groups. '
+              'Courses in red were not found in your previous semesters.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, height: 1.4),
+            ),
+            const SizedBox(height: 10),
+            buildFormattedPrereqWarning(parsedPrereqs, missing, courseIdToName),
+            const SizedBox(height: 10),
+            const Text('Do you want to add this course anyway?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Add Anyway'),
+          ),
+        ],
+      ),
+    );
+
+    if (proceedAnyway != true) return;
+  }
+
+  final course = StudentCourse(
+    courseId: courseDetails.courseNumber,
+    name: courseDetails.name,
+    finalGrade: '',
+    lectureTime: '',
+    tutorialTime: '',
+    labTime: '',
+    workshopTime: '',
+  );
+
+  final success = await context.read<CourseProvider>().addCourseToSemester(
+        context.read<StudentProvider>().student!.id,
+        widget.semesterName,
+        course,
+      );
+
+  if (!mounted) return;
+
+  Navigator.pop(context);
+
+  if (success) {
+    widget.onCourseAdded?.call(courseDetails.courseNumber);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${courseDetails.name} added to ${widget.semesterName}'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Failed to add course'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
 }
