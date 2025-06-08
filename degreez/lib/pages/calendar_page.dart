@@ -9,7 +9,6 @@ import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../widgets/course_calendar_panel.dart';
-import '../widgets/exam_calendar_panel.dart';
 import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
@@ -97,14 +96,10 @@ class _CalendarPageState extends State<CalendarPage>
                 }
               });
             }
-          }
-        });return Column(
+          }        });return Column(
           children: [
             // Course Panel with integrated Toggle Button
             _buildCoursePanelWithIntegratedToggle(courseProvider),
-
-            // NEW: Simple Exam Dates Panel
-            const ExamDatesPanel(),
 
             // Calendar Views - Full Width
             Expanded(

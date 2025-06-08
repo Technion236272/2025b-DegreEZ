@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
@@ -10,6 +11,39 @@ import '../models/student_model.dart';
 import '../mixins/course_event_mixin.dart';
 import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
+
+// Add exam-related classes and functionality
+enum ExamPeriod { periodA, periodB }
+
+class ExamInfo {
+  final String courseId;
+  final String courseName;
+  final ExamPeriod period;
+  final String examType;
+  final String rawDateString;
+  final DateTime? examDate;
+  
+  // Prepared display data
+  final String formattedDate;
+  final String displayDate;
+  final Color periodColor;
+  final String periodText;
+  final int sortOrder; // For custom sorting
+
+  ExamInfo({
+    required this.courseId,
+    required this.courseName,
+    required this.period,
+    required this.examType,
+    required this.rawDateString,
+    this.examDate,
+    required this.formattedDate,
+    required this.displayDate,
+    required this.periodColor,
+    required this.periodText,
+    required this.sortOrder,
+  });
+}
 
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
@@ -35,6 +69,190 @@ class CourseCalendarPanel extends StatefulWidget {
 class _CourseCalendarPanelState extends State<CourseCalendarPanel> 
     with CourseEventMixin, ScheduleSelectionMixin {
   bool _isExpanded = false;
+
+  // Exam-related methods
+  Future<List<ExamInfo>> _getExamInfo(List<StudentCourse> courses, CourseDataProvider courseDataProvider) async {
+    final examList = <ExamInfo>[];
+    
+    for (final course in courses) {
+      final courseDetails = await courseDataProvider.getCourseDetails(course.courseId);
+      if (courseDetails?.hasExams == true) {
+        final exams = courseDetails!.exams;
+        
+        // Helper function to create exam info with prepared data
+        ExamInfo createExamInfo(String examKey, ExamPeriod period, String examType) {
+          final rawDate = exams[examKey]!;
+          final parsedDate = _parseExamDate(rawDate);
+          return ExamInfo(
+            courseId: course.courseId,
+            courseName: course.name,
+            period: period,
+            examType: examType,
+            rawDateString: rawDate,
+            examDate: parsedDate,
+            formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : 'Date TBD',
+            displayDate: parsedDate != null ? DateFormat('EEEE, dd-MM').format(parsedDate) : 'Date TBD',
+            periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
+            periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
+            sortOrder: parsedDate != null ? (parsedDate.month * 100 + parsedDate.day) : 999999,
+          );
+        }
+        
+        // Process all exam types
+        if (exams.containsKey('מועד א') && exams['מועד א']!.isNotEmpty) {
+          examList.add(createExamInfo('מועד א', ExamPeriod.periodA, 'Final Exam'));
+        }
+        
+        if (exams.containsKey('מועד ב') && exams['מועד ב']!.isNotEmpty) {
+          examList.add(createExamInfo('מועד ב', ExamPeriod.periodB, 'Final Exam'));
+        }
+        
+        if (exams.containsKey('בוחן מועד א') && exams['בוחן מועד א']!.isNotEmpty) {
+          examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm'));
+        }
+        
+        if (exams.containsKey('בוחן מועד ב') && exams['בוחן מועד ב']!.isNotEmpty) {
+          examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm'));
+        }
+      }
+    }
+    
+    examList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return examList;
+  }
+
+  DateTime? _parseExamDate(String dateString) {
+    try {
+      final formats = [
+        'dd/MM/yyyy HH:mm',
+        'dd/MM/yyyy',
+        'dd-MM-yyyy HH:mm',
+        'dd-MM-yyyy',
+        'yyyy-MM-dd HH:mm',
+        'yyyy-MM-dd',
+        'MM/dd/yyyy HH:mm',
+        'MM/dd/yyyy',
+        'dd.MM.yyyy HH:mm',
+        'dd.MM.yyyy',
+      ];
+      
+      final cleanedDateString = dateString.trim();
+      
+      for (final format in formats) {
+        try {
+          return DateFormat(format).parse(cleanedDateString);
+        } catch (e) {
+          // Try next format
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  void _showExamDatesDialog(List<ExamInfo> examData, ColorThemeProvider colorThemeProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.schedule, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Exam Dates (${examData.length})',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: examData.length,
+                  itemBuilder: (context, index) => _buildExamListTile(
+                    examData[index], 
+                    colorThemeProvider,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvider) {
+    return ListTile(
+      leading: Container(
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          color: colorThemeProvider.getCourseColor(examInfo.courseId),
+          shape: BoxShape.circle,
+        ),
+      ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              examInfo.courseName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: examInfo.periodColor.withAlpha(50),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: examInfo.periodColor, width: 1),
+            ),
+            child: Text(
+              examInfo.periodText,
+              style: TextStyle(
+                fontSize: 10,
+                color: examInfo.periodColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📅 ${examInfo.formattedDate}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          Text(
+            'Course ID: ${examInfo.courseId}',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Text(
+            '📝 ${examInfo.examType}',
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +285,76 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      // Exam dates icon next to title
+                      FutureBuilder<List<ExamInfo>>(
+                        future: _getExamInfo(allCourses, courseDataProvider),
+                        builder: (context, snapshot) {
+                          final examData = snapshot.data ?? [];
+                          if (examData.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          
+                          final periodAExams = examData.where((e) => e.period == ExamPeriod.periodA).length;
+                          final periodBExams = examData.where((e) => e.period == ExamPeriod.periodB).length;
+                          
+                          return Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            child: InkWell(
+                              onTap: () => _showExamDatesDialog(examData, colorThemeProvider),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.schedule,
+                                      color: Colors.orange,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${examData.length}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                    if (periodAExams > 0 || periodBExams > 0) ...[
+                                      const SizedBox(width: 4),
+                                      if (periodAExams > 0)
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      if (periodBExams > 0)
+                                        Container(
+                                          margin: EdgeInsets.only(left: periodAExams > 0 ? 2 : 0),
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.blue,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       const Spacer(),
                       // Arrow in the middle-right
