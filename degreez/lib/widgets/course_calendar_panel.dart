@@ -274,17 +274,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                           ],
                                         ),
                                       ),
+
                                       if (!isRemovedFromCalendar) ...[
-                                        const PopupMenuItem(
-                                          value: 'add_to_calendar',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.add_to_photos),
-                                              SizedBox(width: 8),
-                                              Text('Add to Calendar'),
-                                            ],
-                                          ),
-                                        ),
+                                        
                                         const PopupMenuItem(
                                           value: 'remove_from_calendar',
                                           child: Row(
