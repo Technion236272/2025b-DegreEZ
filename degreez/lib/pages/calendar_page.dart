@@ -9,6 +9,7 @@ import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../widgets/course_calendar_panel.dart';
 import '../widgets/exam_calendar_panel.dart';
+import '../widgets/schedule_selection_dialog.dart';
 import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
@@ -152,6 +153,7 @@ class _CalendarPageState extends State<CalendarPage>
           endDuration,
           filtered: true,
           searchQuery: _searchQuery,
+          onTap: _showScheduleSelectionFromEvent,
           onLongPress: _showCourseDetailsDialog,
         ),
         startDay: WeekDays.sunday,
@@ -185,13 +187,15 @@ class _CalendarPageState extends State<CalendarPage>
         boundary,
         startDuration,
         endDuration,
+        onTap: _showScheduleSelectionFromEvent,
         onLongPress: _showCourseDetailsDialog,
       ),
       startHour: 8,
       endHour: 22,
       showLiveTimeLineInAllDays: true,
       // only show events for the current week
-      // Adjust min and max days to show the current day
+      // Adjust min and max days to show the current week
+
       minDay: DateTime.now(),
       // max day last day of the week (next Saturday)
       maxDay: DateTime.now(),
@@ -658,5 +662,153 @@ class _CalendarPageState extends State<CalendarPage>
         ],
       ),
     );
+  }
+
+  // Extract course ID and semester from event description
+  Map<String, String>? _extractCourseInfoFromEvent(CalendarEventData event) {
+    if (event.description == null) return null;
+    
+    // The description contains course ID and semester in format: "courseId - semester"
+    final lines = event.description!.split('\n');
+    for (final line in lines) {
+      if (line.contains(' - ')) {
+        final parts = line.split(' - ');
+        if (parts.length >= 2) {
+          return {
+            'courseId': parts[0].trim(),
+            'semester': parts[1].trim(),
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  // Method to handle tap on calendar event - opens schedule selection
+  void _showScheduleSelectionFromEvent(CalendarEventData event) async {
+    final courseInfo = _extractCourseInfoFromEvent(event);
+    if (courseInfo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not find course information for this event'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final courseId = courseInfo['courseId']!;
+    final semester = courseInfo['semester']!;
+
+    // Get course provider and student provider
+    final courseProvider = context.read<CourseProvider>();
+    final studentProvider = context.read<StudentProvider>();
+
+    if (!studentProvider.hasStudent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No student logged in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Find the course in the semester
+    final semesterCourses = courseProvider.coursesBySemester[semester];
+    if (semesterCourses == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Semester "$semester" not found'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final course = semesterCourses.firstWhere(
+      (c) => c.courseId == courseId,
+      orElse: () => StudentCourse(
+        courseId: courseId,
+        name: 'Unknown Course',
+        finalGrade: '',
+        lectureTime: '',
+        tutorialTime: '',
+        labTime: '',
+        workshopTime: '',
+      ),
+    );
+
+    // Get course details for schedule selection
+    final courseDataProvider = context.read<CourseDataProvider>();
+    final courseDetails = await courseDataProvider.getCourseDetails(courseId);
+
+    if (courseDetails == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Course details not available for $courseId'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show schedule selection dialog
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => ScheduleSelectionDialog(
+          course: course,
+          courseDetails: courseDetails,
+          onSelectionChanged: (lectureTime, tutorialTime, labTime, workshopTime) {
+            _updateCourseScheduleSelection(course, semester, lectureTime, tutorialTime, labTime, workshopTime);
+          },
+        ),
+      );
+    }
+  }
+
+  // Method to update course schedule selection from tap event
+  void _updateCourseScheduleSelection(
+    StudentCourse course,
+    String semester,
+    String? lectureTime,
+    String? tutorialTime,
+    String? labTime,
+    String? workshopTime,
+  ) async {
+    final studentProvider = context.read<StudentProvider>();
+    final courseProvider = context.read<CourseProvider>();
+
+    if (!studentProvider.hasStudent) return;
+
+    final success = await courseProvider.updateCourseScheduleSelection(
+      studentProvider.student!.id,
+      semester,
+      course.courseId,
+      lectureTime,
+      tutorialTime,
+      labTime,
+      workshopTime,
+    );
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Schedule selection updated')),
+      );
+      
+      // Refresh calendar events to show updated selection
+      final colorThemeProvider = context.read<ColorThemeProvider>();
+      _updateCalendarEvents(courseProvider, colorThemeProvider);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update schedule selection'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
