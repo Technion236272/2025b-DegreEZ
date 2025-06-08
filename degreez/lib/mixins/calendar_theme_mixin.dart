@@ -1,6 +1,8 @@
 // lib/mixins/calendar_theme_mixin.dart
 // Copy the entire CalendarDarkThemeMixin from calendar_try1
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:calendar_view/calendar_view.dart';
+import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 
 mixin CalendarDarkThemeMixin {
@@ -149,20 +151,30 @@ mixin CalendarDarkThemeMixin {
       onLongPress: onLongPress != null ? () => onLongPress(filteredEvents.first) : null,
       child: Container(
         margin: const EdgeInsets.all(2),
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.only(left: 2,top: 2,bottom: 2,right: 5),
         decoration: BoxDecoration(
+           boxShadow: [
+      BoxShadow(
+        color: AppColorsDarkMode.shadowColorStrong, // shadow color
+        blurRadius: 4, // how blurry the shadow is
+        offset: Offset(-2, 2), // horizontal and vertical displacement
+        spreadRadius: 2, // how much the shadow expands
+      ),
+    ],
           color: filteredEvents.first.color,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(
+        child: AutoSizeText(
           filteredEvents.first.title,
           // if the color is light, use black text, otherwise use white
+          textAlign:TextAlign.right,          
           style: TextStyle(
             color: Theme.of(context).colorScheme.surface,
             fontSize: 8,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
           ),
-          overflow: TextOverflow.ellipsis,
+          maxLines: 5,
+          minFontSize: 5,
         ),
       ),
     );

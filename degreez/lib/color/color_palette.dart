@@ -31,7 +31,7 @@ class AppColorsDarkMode {
   static const Color borderSecondary = Color(0xFF2F2F2F); // Even more subtle border
   static const Color borderAccent = Color(0x33FF6B35); // Orange border with transparency
   static const Color shadowColor = Color(0x1A000000); // Soft shadow
-  static const Color shadowColorStrong = Color(0x33000000); // Stronger shadow for elevated elements
+  static const Color shadowColorStrong = Color(0x77000000); // Stronger shadow for elevated elements
   
   // Overlay colors for subtle effects
   static const Color overlayLight = Color(0x0AFFFFFF); // Light overlay (4% white)
@@ -222,14 +222,22 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
   Color _getCourseColor(String courseId) {
     final hash = courseId.hashCode;
     final colors = [
-      Colors.teal.shade900, // Dark greenish blue
-      Colors.indigo.shade900, // Deep bluish purple
-      Colors.cyan.shade900, // Rich green-blue — bright pop
-      Colors.deepPurple.shade900, // Bold, regal purple
-      Colors.blue.shade900, // Classic dark blue
-      Colors.orange.shade900, // Dark, warm orange — still different from brown
-      Colors.red.shade900, // Blood red — intense but clearly distinct
-      Colors.lime.shade900, // Sharp and vivid green-yellow
+      const Color(0xFFFF6B35), // Primary orange
+      const Color(0xFFFF8A65), // Light orange
+      const Color(0xFFFFAB40), // Amber orange
+      const Color(0xFFFF7043), // Deep orange
+      const Color(0xFFBF360C), // Dark orange
+      const Color(0xFF8D6E63), // Brown
+      const Color(0xFF6D4C41), // Dark brown
+      const Color(0xFF5D4037), // Deep brown
+      const Color(0xFF4E342E), // Very dark brown
+      const Color(0xFF795548), // Medium brown
+      const Color(0xFFA1887F), // Light brown
+      const Color(0xFFD7CCC8), // Very light brown
+      const Color(0xFFFFE0B2), // Light amber
+      const Color(0xFFFFCC02), // Warm yellow
+      const Color(0xFFFFA726), // Orange amber
+      const Color(0xFFFF9800), // Standard orange
     ];
     return colors[hash.abs() % colors.length];
   }

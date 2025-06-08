@@ -161,7 +161,8 @@ class _CalendarPageState extends State<CalendarPage>
         weekDayBuilder: (date) => buildWeekDay(context, date),
         timeLineBuilder: (date) => buildTimeLine(context, date),
         liveTimeIndicatorSettings: getLiveTimeIndicatorSettings(context),
-        hourIndicatorSettings: getHourIndicatorSettings(context),        eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
+        hourIndicatorSettings: getHourIndicatorSettings(context),        
+        eventTileBuilder: (date, events, boundary, startDuration, endDuration) =>
             buildEventTile(
           context,
           date,

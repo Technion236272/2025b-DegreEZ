@@ -45,7 +45,7 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
             final periodBExams = examData.where((e) => e.period == ExamPeriod.periodB).toList();
 
             return Card(
-              elevation: 2,
+              elevation: 5,
               margin: const EdgeInsets.all(8.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

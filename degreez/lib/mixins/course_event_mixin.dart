@@ -106,16 +106,16 @@ mixin CourseEventMixin {
     String typeStr;
     switch (type) {
       case CourseEventType.lecture:
-        typeStr = 'Lecture';
+        typeStr = 'הרצאה';
         break;
       case CourseEventType.tutorial:
-        typeStr = 'Tutorial';
+        typeStr = 'תרגול';
         break;
       case CourseEventType.lab:
-        typeStr = 'Lab';
+        typeStr = 'מעבדה';
         break;
       case CourseEventType.workshop:
-        typeStr = 'Workshop';
+        typeStr = 'סדנה';
         break;
     }
     
@@ -129,7 +129,7 @@ mixin CourseEventMixin {
     
     // Add course name
     // add the name of course after splitting it by space and putting every word in a new line
-    courseName = courseName.split(' ').join('\n');
+    courseName = courseName;
     titleParts.add(courseName);
     
     // Add instructor name if available
