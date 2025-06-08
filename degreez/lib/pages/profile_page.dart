@@ -7,6 +7,7 @@ import 'package:degreez/widgets/profile/profile_info_row.dart';
 import 'package:degreez/widgets/profile/stat_card.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
+import 'package:degreez/widgets/text_form_field_WithStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -74,65 +75,112 @@ class _ProfilePageState extends State<ProfilePage> {
   // Enhanced edit profile dialog
   void _showEditProfileDialog(BuildContext context, StudentProvider notifier) {
     final student = notifier.student!;
-    final nameController = TextEditingController(text: student.name);
-    final majorController = TextEditingController(text: student.major);
-    final preferencesController = TextEditingController(text: student.preferences);
-    // final catalogController = TextEditingController(text: student.catalog);
-    final facultyController = TextEditingController(text: student.faculty);
-    final semesterController = TextEditingController(text: student.semester.toString());
+  // Controllers for the form fields
+  // These controllers will be used to get the text input from the user
+  final formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController(text: student.name);
+  final majorController = TextEditingController(text: student.major);
+  final preferencesController = TextEditingController(text: student.preferences);
+  final facultyController = TextEditingController(text: student.faculty);
+  final semesterController = TextEditingController(text: student.semester.toString());
+
+  // Catalog Selection Not Implemented Yet
+  final _catalogController = TextEditingController();
+
+  final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
+  final RegExp majorValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
+  final RegExp facultyValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
+  final RegExp preferencesValidator = RegExp(r'^.?$');
+  final RegExp semesterValidator = RegExp(
+    r'^(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})$',
+    caseSensitive: false,
+  );
+
+  // Catalog Selection Not Implemented Yet
+  // final RegExp _catalogValidator = RegExp(r'');
+
+  // Dispose the controllers when the widget is removed from the widget tree
+  // This is important to free up resources and avoid memory leaks
+  @override
+  void dispose() {
+    nameController.dispose();
+    majorController.dispose();
+    facultyController.dispose();
+    preferencesController.dispose();
+    semesterController.dispose();
+  }
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: AppColorsDarkMode.secondaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: AppColorsDarkMode.accentColor, width: 2),
-          ),
           title: Text(
             'Edit Profile',
             style: TextStyle(
-              color: AppColorsDarkMode.accentColor,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: SingleChildScrollView(
+          content: Form(
+                      key: formKey,
+                      child:SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildEditField(nameController, 'Name', Icons.person),
-                SizedBox(height: 12),
-                _buildEditField(majorController, 'Major', Icons.school),
-                SizedBox(height: 12),
-                _buildEditField(facultyController, 'Faculty', Icons.business),
-                SizedBox(height: 12),
-                _buildEditField(semesterController, 'Semester', Icons.calendar_today, 
-                  keyboardType: TextInputType.number),
-                // SizedBox(height: 12),
-                // _buildEditField(catalogController, 'Catalog', Icons.book),
-                SizedBox(height: 12),
-                _buildEditField(preferencesController, 'Preferences', Icons.settings,
-                  maxLines: 3),
+                textFormFieldWithStyle(
+                            label: 'Name',
+                            controller: nameController,
+                            example: 'e.g. Steve Harvey',
+                            validatorRegex: nameValidator,
+                            errorMessage: "Really? an empty name ...",
+                          ),
+                textFormFieldWithStyle(
+                            label: 'Major',
+                            controller: majorController,
+                            example: 'e.g. Data Analysis',
+                            validatorRegex: majorValidator,
+                            errorMessage:
+                                "Invalid Input! remember to write the major in English",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Faculty',
+                            controller: facultyController,
+                            example: 'e.g. Computer Science',
+                            validatorRegex: facultyValidator,
+                            errorMessage:
+                                "Invalid Input! remember to write the faculty in English",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Semester',
+                            controller: semesterController,
+                            example: 'e.g. Winter 2024-25 or Summer 2021',
+                            validatorRegex: semesterValidator,
+                            errorMessage:
+                                "should match this template 'Winter 2024-25'",
+                          ),
+                          textFormFieldWithStyle(
+                            label: 'Preferences',
+                            controller: preferencesController,
+                            example:
+                                "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
+                            validatorRegex: preferencesValidator,
+                            lineNum: 3,
+                          ),
               ],
-            ),
+            ),),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColorsDarkMode.accentColorDim),
+                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
               ),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColorsDarkMode.accentColor,
-                foregroundColor: AppColorsDarkMode.secondaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
+            TextButton(
               onPressed: () {
+                if (formKey.currentState?.validate() != true)
+                                {return;}
                 notifier.updateStudentProfile(
                   name: nameController.text,
                   major: majorController.text,
@@ -150,7 +198,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 );
               },
-              child: Text('Save Changes'),
+              child: Text('Save Changes',style: TextStyle(
+                    color: AppColorsDarkMode.secondaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),),
             ),
           ],
         );

@@ -67,6 +67,13 @@ class MyApp extends StatelessWidget {
         controller: EventController(),
         child: MaterialApp(
           title: 'DegreEZ',          theme: ThemeData.dark().copyWith(
+            dialogTheme:DialogTheme(backgroundColor: AppColorsDarkMode.accentColor,shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: AppColorsDarkMode.secondaryColor,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),),
             dividerTheme: DividerThemeData(color: AppColorsDarkMode.dividerColor),
             scaffoldBackgroundColor: AppColorsDarkMode.mainColor,
             canvasColor: AppColorsDarkMode.mainColor,

@@ -1,3 +1,4 @@
+import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -41,6 +42,8 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: AppColorsDarkMode.accentColor,
+      contentTextStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
       title: Text('Add Course to ${widget.semesterName}'),
       content: SizedBox(
         height: MediaQuery.of(context).size.height * 0.5,
@@ -50,6 +53,8 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
             TextField(
               controller: searchController,
               decoration: const InputDecoration(
+                enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),),
                 labelText: 'Course ID or Name',
                 hintText: 'e.g. 02340114 or פיסיקה 2',
                 prefixIcon: Icon(Icons.search),
