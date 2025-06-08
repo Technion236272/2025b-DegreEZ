@@ -4,6 +4,7 @@ import '../color/color_palette.dart';
 import '../models/student_model.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
+import '../services/course_service.dart';
 
 class GpaCalculatorPage extends StatefulWidget {
   const GpaCalculatorPage({super.key});
@@ -16,61 +17,125 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
   List<WhatIfCourse> _whatIfCourses = [];
   final _courseNameController = TextEditingController();
   final _creditsController = TextEditingController();
-  String _selectedGrade = 'A';
+  final _gradeController = TextEditingController();
+  bool _isLoadingCourseDetails = false;
 
-  // Grade to GPA mapping (typical 4.0 scale)
-  static const Map<String, double> _gradeToGpa = {
-    'A': 4.0,
-    'A-': 3.7,
-    'B+': 3.3,
-    'B': 3.0,
-    'B-': 2.7,
-    'C+': 2.3,
-    'C': 2.0,
-    'C-': 1.7,
-    'D+': 1.3,
-    'D': 1.0,
-    'F': 0.0,
-  };
-
-  static const List<String> _availableGrades = [
-    'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F'
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCourseDetailsIfNeeded();
+    });
+    // Set default values
+    _creditsController.text = '3.0';
+    _gradeController.text = '85';
+  }
 
   @override
   void dispose() {
     _courseNameController.dispose();
     _creditsController.dispose();
+    _gradeController.dispose();
     super.dispose();
   }
 
-  double _calculateGpa(List<GpaCalculationItem> courses) {
+  void _loadCourseDetailsIfNeeded() async {
+    final courseProvider = context.read<CourseProvider>();
+    final coursesBySemester = courseProvider.coursesBySemester;
+    
+    if (coursesBySemester.isEmpty) return;
+
+    setState(() {
+      _isLoadingCourseDetails = true;
+    });
+
+    try {
+      // Load course details for courses that don't have them cached
+      for (final semesterCourses in coursesBySemester.values) {
+        for (final course in semesterCourses) {
+          final courseDetails = courseProvider.getCourseWithDetails(
+            coursesBySemester.keys.first, // We need semester key, using first one
+            course.courseId,
+          );
+          
+          if (courseDetails?.courseDetails == null) {
+            // Try to load course details from API
+            final currentSemester = courseProvider.currentSemester;
+            if (currentSemester != null) {
+              try {
+                final details = await CourseService.getCourseDetails(
+                  currentSemester.year,
+                  currentSemester.semester,
+                  course.courseId,
+                );
+                // Cache the details (this would need to be implemented in CourseProvider)
+              } catch (e) {
+                // Course details not available for current semester, which is expected
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Handle errors silently for now
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingCourseDetails = false;
+        });
+      }
+    }
+  }
+
+  double _calculateAverage(List<GpaCalculationItem> courses) {
     if (courses.isEmpty) return 0.0;
     
-    double totalPoints = 0.0;
+    double totalWeightedGrades = 0.0;
     double totalCredits = 0.0;
     
     for (final course in courses) {
-      final gpaValue = _gradeToGpa[course.grade] ?? 0.0;
-      totalPoints += gpaValue * course.credits;
+      totalWeightedGrades += course.grade * course.credits;
       totalCredits += course.credits;
     }
     
-    return totalCredits > 0 ? totalPoints / totalCredits : 0.0;
+    return totalCredits > 0 ? totalWeightedGrades / totalCredits : 0.0;
   }
 
-  List<GpaCalculationItem> _getCompletedCourses(Map<String, List<StudentCourse>> coursesBySemester) {
+  List<GpaCalculationItem> _getCompletedCourses(
+    Map<String, List<StudentCourse>> coursesBySemester,
+    CourseProvider courseProvider,
+  ) {
     final List<GpaCalculationItem> completedCourses = [];
     
-    for (final semesterCourses in coursesBySemester.values) {
+    for (final entry in coursesBySemester.entries) {
+      final semesterKey = entry.key;
+      final semesterCourses = entry.value;
+      
       for (final course in semesterCourses) {
-        if (course.finalGrade.isNotEmpty && _gradeToGpa.containsKey(course.finalGrade)) {
-          completedCourses.add(GpaCalculationItem(
-            name: course.name,
-            grade: course.finalGrade,
-            credits: 3.0, // Default credit hours - could be enhanced to store actual credits
-            isWhatIf: false,
-          ));
+        // Check if the course has a numerical grade
+        if (course.finalGrade.isNotEmpty) {
+          final grade = double.tryParse(course.finalGrade);
+          if (grade != null && grade >= 0 && grade <= 100) {
+            // Try to get actual credit points from course details
+            double credits = 3.0; // Default fallback
+            
+            final courseWithDetails = courseProvider.getCourseWithDetails(semesterKey, course.courseId);
+            if (courseWithDetails?.courseDetails != null) {
+              final courseDetails = courseWithDetails!.courseDetails as EnhancedCourseDetails;
+              if (courseDetails.creditPoints > 0) {
+                credits = courseDetails.creditPoints;
+              }
+            }
+            
+            completedCourses.add(GpaCalculationItem(
+              name: course.name,
+              courseId: course.courseId,
+              grade: grade,
+              credits: credits,
+              isWhatIf: false,
+              semesterKey: semesterKey,
+            ));
+          }
         }
       }
     }
@@ -79,7 +144,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
   }
 
   void _addWhatIfCourse() {
-    if (_courseNameController.text.trim().isEmpty || _creditsController.text.trim().isEmpty) {
+    if (_courseNameController.text.trim().isEmpty || 
+        _creditsController.text.trim().isEmpty ||
+        _gradeController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
@@ -87,6 +154,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     }
 
     final credits = double.tryParse(_creditsController.text.trim());
+    final grade = double.tryParse(_gradeController.text.trim());
+    
     if (credits == null || credits <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter valid credit hours')),
@@ -94,15 +163,22 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       return;
     }
 
+    if (grade == null || grade < 0 || grade > 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a grade between 0 and 100')),
+      );
+      return;
+    }
+
     setState(() {
       _whatIfCourses.add(WhatIfCourse(
         name: _courseNameController.text.trim(),
-        grade: _selectedGrade,
+        grade: grade,
         credits: credits,
       ));
       _courseNameController.clear();
-      _creditsController.clear();
-      _selectedGrade = 'A';
+      _creditsController.text = '3.0';
+      _gradeController.text = '85';
     });
   }
 
@@ -110,6 +186,22 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     setState(() {
       _whatIfCourses.removeAt(index);
     });
+  }
+
+  Color _getGradeColor(double grade) {
+    if (grade >= 90) return AppColorsDarkMode.successColor;
+    if (grade >= 80) return AppColorsDarkMode.primaryColor;
+    if (grade >= 70) return AppColorsDarkMode.secondaryColor;
+    if (grade >= 60) return AppColorsDarkMode.warningColor;
+    return AppColorsDarkMode.errorColor;
+  }
+
+  String _getGradeLabel(double grade) {
+    if (grade >= 90) return 'Excellent';
+    if (grade >= 80) return 'Very Good';
+    if (grade >= 70) return 'Good';
+    if (grade >= 60) return 'Pass';
+    return 'Fail';
   }
 
   @override
@@ -139,21 +231,31 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             );
           }
 
-          final coursesBySemester = courseProvider.coursesBySemester;
-          final completedCourses = _getCompletedCourses(coursesBySemester);
-          final currentGpa = _calculateGpa(completedCourses);
+          final coursesBySemester = courseProvider.sortedCoursesBySemester;
+          final completedCourses = _getCompletedCourses(coursesBySemester, courseProvider);
+          final currentAverage = _calculateAverage(completedCourses);
           
-          // Calculate projected GPA including what-if courses
+          // Calculate projected average including what-if courses
           final allCourses = [
             ...completedCourses,
             ..._whatIfCourses.map((course) => GpaCalculationItem(
               name: course.name,
+              courseId: '',
               grade: course.grade,
               credits: course.credits,
               isWhatIf: true,
+              semesterKey: 'what-if',
             )),
           ];
-          final projectedGpa = _calculateGpa(allCourses);
+          final projectedAverage = _calculateAverage(allCourses);
+
+          // Calculate total credits
+          final totalCompletedCredits = completedCourses.fold<double>(
+            0.0, (sum, course) => sum + course.credits,
+          );
+          final totalProjectedCredits = allCourses.fold<double>(
+            0.0, (sum, course) => sum + course.credits,
+          );
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -161,8 +263,19 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // GPA Summary Cards
-                  _buildGpaSummaryCards(currentGpa, projectedGpa, completedCourses.length),
+                  // Average Summary Cards
+                  _buildAverageSummaryCards(
+                    currentAverage, 
+                    projectedAverage, 
+                    completedCourses.length,
+                    totalCompletedCredits,
+                    totalProjectedCredits,
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Statistics Row
+                  _buildStatisticsRow(completedCourses, _whatIfCourses),
                   
                   const SizedBox(height: 24),
                   
@@ -178,6 +291,31 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   
                   // Add What-If Course Form
                   _buildAddCourseForm(),
+                  
+                  if (_isLoadingCourseDetails) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: AppColorsDarkMode.cardDecoration(),
+                      child: const Row(
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Loading course details...',
+                            style: TextStyle(
+                              color: AppColorsDarkMode.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -187,7 +325,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     );
   }
 
-  Widget _buildGpaSummaryCards(double currentGpa, double projectedGpa, int completedCoursesCount) {
+  Widget _buildAverageSummaryCards(
+    double currentAverage, 
+    double projectedAverage, 
+    int completedCoursesCount,
+    double totalCompletedCredits,
+    double totalProjectedCredits,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -197,7 +341,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             child: Column(
               children: [
                 const Text(
-                  'Current GPA',
+                  'Current Average',
                   style: TextStyle(
                     color: AppColorsDarkMode.textSecondary,
                     fontSize: 14,
@@ -206,11 +350,20 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  currentGpa.toStringAsFixed(2),
-                  style: const TextStyle(
-                    color: AppColorsDarkMode.primaryColor,
+                  currentAverage.toStringAsFixed(1),
+                  style: TextStyle(
+                    color: _getGradeColor(currentAverage),
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _getGradeLabel(currentAverage),
+                  style: TextStyle(
+                    color: _getGradeColor(currentAverage),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -219,6 +372,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   style: const TextStyle(
                     color: AppColorsDarkMode.textTertiary,
                     fontSize: 12,
+                  ),
+                ),
+                Text(
+                  '${totalCompletedCredits.toStringAsFixed(1)} credits',
+                  style: const TextStyle(
+                    color: AppColorsDarkMode.textTertiary,
+                    fontSize: 10,
                   ),
                 ),
               ],
@@ -238,7 +398,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             child: Column(
               children: [
                 const Text(
-                  'Projected GPA',
+                  'Projected Average',
                   style: TextStyle(
                     color: AppColorsDarkMode.textSecondary,
                     fontSize: 14,
@@ -247,13 +407,24 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  projectedGpa.toStringAsFixed(2),
+                  projectedAverage.toStringAsFixed(1),
                   style: TextStyle(
                     color: _whatIfCourses.isNotEmpty 
-                      ? AppColorsDarkMode.secondaryColor 
-                      : AppColorsDarkMode.primaryColor,
+                      ? _getGradeColor(projectedAverage)
+                      : _getGradeColor(currentAverage),
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _getGradeLabel(projectedAverage),
+                  style: TextStyle(
+                    color: _whatIfCourses.isNotEmpty 
+                      ? _getGradeColor(projectedAverage)
+                      : _getGradeColor(currentAverage),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -264,6 +435,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     fontSize: 12,
                   ),
                 ),
+                Text(
+                  '${totalProjectedCredits.toStringAsFixed(1)} credits',
+                  style: const TextStyle(
+                    color: AppColorsDarkMode.textTertiary,
+                    fontSize: 10,
+                  ),
+                ),
               ],
             ),
           ),
@@ -272,17 +450,108 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     );
   }
 
+  Widget _buildStatisticsRow(List<GpaCalculationItem> completedCourses, List<WhatIfCourse> whatIfCourses) {
+    // Calculate grade distribution by ranges
+    final gradeRanges = <String, int>{
+      '90-100': 0,
+      '80-89': 0,
+      '70-79': 0,
+      '60-69': 0,
+      '0-59': 0,
+    };
+
+    for (final course in completedCourses) {
+      if (course.grade >= 90) {
+        gradeRanges['90-100'] = gradeRanges['90-100']! + 1;
+      } else if (course.grade >= 80) {
+        gradeRanges['80-89'] = gradeRanges['80-89']! + 1;
+      } else if (course.grade >= 70) {
+        gradeRanges['70-79'] = gradeRanges['70-79']! + 1;
+      } else if (course.grade >= 60) {
+        gradeRanges['60-69'] = gradeRanges['60-69']! + 1;
+      } else {
+        gradeRanges['0-59'] = gradeRanges['0-59']! + 1;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: AppColorsDarkMode.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Grade Distribution',
+            style: TextStyle(
+              color: AppColorsDarkMode.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (completedCourses.isEmpty)
+            const Text(
+              'No completed courses with grades',
+              style: TextStyle(
+                color: AppColorsDarkMode.textSecondary,
+                fontSize: 14,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: gradeRanges.entries.where((entry) => entry.value > 0).map((entry) {
+                Color rangeColor;
+                if (entry.key == '90-100') rangeColor = AppColorsDarkMode.successColor;
+                else if (entry.key == '80-89') rangeColor = AppColorsDarkMode.primaryColor;
+                else if (entry.key == '70-79') rangeColor = AppColorsDarkMode.secondaryColor;
+                else if (entry.key == '60-69') rangeColor = AppColorsDarkMode.warningColor;
+                else rangeColor = AppColorsDarkMode.errorColor;
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: rangeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: rangeColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '${entry.key}: ${entry.value}',
+                    style: TextStyle(
+                      color: rangeColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCurrentCoursesSection(List<GpaCalculationItem> completedCourses) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Completed Courses',
-          style: TextStyle(
-            color: AppColorsDarkMode.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            const Text(
+              'Completed Courses',
+              style: TextStyle(
+                color: AppColorsDarkMode.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            
+          ],
         ),
         const SizedBox(height: 12),
         if (completedCourses.isEmpty)
@@ -307,18 +576,93 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Add courses with grades to see your GPA',
+                  'Add courses with numerical grades (0-100) to see your average',
                   style: TextStyle(
                     color: AppColorsDarkMode.textTertiary,
                     fontSize: 14,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
           )
         else
-          ...completedCourses.map((course) => _buildCourseCard(course)),
+          // Group courses by semester
+          ...completedCourses.fold<Map<String, List<GpaCalculationItem>>>(
+            {},
+            (acc, course) {
+              acc.putIfAbsent(course.semesterKey, () => []).add(course);
+              return acc;
+            },
+          ).entries.map((semesterEntry) => _buildSemesterSection(semesterEntry.key, semesterEntry.value)),
       ],
+    );
+  }
+
+  Widget _buildSemesterSection(String semesterKey, List<GpaCalculationItem> courses) {
+    final semesterAverage = _calculateAverage(courses);
+    final totalCredits = courses.fold<double>(0.0, (sum, course) => sum + course.credits);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: AppColorsDarkMode.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColorsDarkMode.surfaceColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    semesterKey,
+                    style: const TextStyle(
+                      color: AppColorsDarkMode.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getGradeColor(semesterAverage).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _getGradeColor(semesterAverage).withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '${semesterAverage.toStringAsFixed(1)} avg',
+                    style: TextStyle(
+                      color: _getGradeColor(semesterAverage),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${totalCredits.toStringAsFixed(1)} credits',
+                  style: const TextStyle(
+                    color: AppColorsDarkMode.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...courses.map((course) => _buildCourseCard(course)),
+        ],
+      ),
     );
   }
 
@@ -360,7 +704,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Add potential courses to see how they would affect your GPA',
+          'Add potential courses to see how they would affect your average',
           style: TextStyle(
             color: AppColorsDarkMode.textSecondary,
             fontSize: 14,
@@ -410,27 +754,33 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
 
   Widget _buildCourseCard(GpaCalculationItem course) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
-      decoration: AppColorsDarkMode.cardDecoration(),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: AppColorsDarkMode.borderPrimary,
+            width: 0.5,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           Container(
-            width: 40,
+            width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColorsDarkMode.primaryColor.withOpacity(0.1),
+              color: _getGradeColor(course.grade).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColorsDarkMode.primaryColor.withOpacity(0.3),
+                color: _getGradeColor(course.grade).withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: Center(
               child: Text(
-                course.grade,
-                style: const TextStyle(
-                  color: AppColorsDarkMode.primaryColor,
+                course.grade.toStringAsFixed(0),
+                style: TextStyle(
+                  color: _getGradeColor(course.grade),
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -451,12 +801,33 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  '${course.credits} credits • ${_gradeToGpa[course.grade]?.toStringAsFixed(1)} GPA',
-                  style: const TextStyle(
-                    color: AppColorsDarkMode.textSecondary,
-                    fontSize: 12,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${course.credits.toStringAsFixed(1)} credits',
+                      style: const TextStyle(
+                        color: AppColorsDarkMode.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (course.courseId.isNotEmpty) ...[
+                      const Text(
+                        ' • ',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        course.courseId,
+                        style: const TextStyle(
+                          color: AppColorsDarkMode.textTertiary,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -476,21 +847,21 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       child: Row(
         children: [
           Container(
-            width: 40,
+            width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+              color: _getGradeColor(course.grade).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColorsDarkMode.secondaryColor.withOpacity(0.3),
+                color: _getGradeColor(course.grade).withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: Center(
               child: Text(
-                course.grade,
-                style: const TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
+                course.grade.toStringAsFixed(0),
+                style: TextStyle(
+                  color: _getGradeColor(course.grade),
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -533,7 +904,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${course.credits} credits • ${_gradeToGpa[course.grade]?.toStringAsFixed(1)} GPA',
+                  '${course.credits.toStringAsFixed(1)} credits',
                   style: const TextStyle(
                     color: AppColorsDarkMode.textSecondary,
                     fontSize: 12,
@@ -629,13 +1000,16 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               ),
               const SizedBox(width: 16),
               Expanded(
-                flex: 1,
-                child: DropdownButtonFormField<String>(
-                  value: _selectedGrade,
+                flex: 2,
+                child: TextField(
+                  controller: _gradeController,
+                  keyboardType: TextInputType.number,
                   style: const TextStyle(color: AppColorsDarkMode.textPrimary),
                   decoration: InputDecoration(
-                    labelText: 'Grade',
+                    labelText: 'Grade (0-100)',
                     labelStyle: const TextStyle(color: AppColorsDarkMode.textSecondary),
+                    hintText: '85',
+                    hintStyle: const TextStyle(color: AppColorsDarkMode.textTertiary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
@@ -651,23 +1025,6 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     filled: true,
                     fillColor: AppColorsDarkMode.surfaceColor,
                   ),
-                  dropdownColor: AppColorsDarkMode.surfaceColor,
-                  items: _availableGrades.map((grade) {
-                    return DropdownMenuItem(
-                      value: grade,
-                      child: Text(
-                        '$grade (${_gradeToGpa[grade]?.toStringAsFixed(1)})',
-                        style: const TextStyle(color: AppColorsDarkMode.textPrimary),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedGrade = value;
-                      });
-                    }
-                  },
                 ),
               ),
             ],
@@ -703,21 +1060,25 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
 // Helper classes for GPA calculation
 class GpaCalculationItem {
   final String name;
-  final String grade;
+  final String courseId;
+  final double grade;
   final double credits;
   final bool isWhatIf;
+  final String semesterKey;
 
   GpaCalculationItem({
     required this.name,
+    required this.courseId,
     required this.grade,
     required this.credits,
     this.isWhatIf = false,
+    required this.semesterKey,
   });
 }
 
 class WhatIfCourse {
   final String name;
-  final String grade;
+  final double grade;
   final double credits;
 
   WhatIfCourse({

@@ -9,7 +9,7 @@ import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../widgets/add_course_dialog.dart';
-import 'my_courses_page.dart';
+
 import 'customized_diagram_page.dart';
 
 
@@ -75,9 +75,6 @@ class _NavigatorPageState extends State<NavigatorPage> {
             break;
           case 'Profile':
             body = const ProfilePage();
-            break;
-          case 'My Courses':
-            body = const MyCoursesPage();
             break;
           case 'Customized Diagram':
             body = const CustomizedDiagramPage();
@@ -206,12 +203,6 @@ class _NavigatorPageState extends State<NavigatorPage> {
               title: 'Profile',
               isSelected: _currentPage == 'Profile',
               onTap: () => _changePage('Profile'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.school,
-              title: 'My Courses',
-              isSelected: _currentPage == 'My Courses',
-              onTap: () => _changePage('My Courses'),
             ),
             _buildDrawerItem(
               icon: Icons.trending_up,
