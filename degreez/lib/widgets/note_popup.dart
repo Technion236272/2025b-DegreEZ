@@ -5,23 +5,22 @@ import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
 Future<bool> notePopup(
   BuildContext context,
   StudentCourse course,
   String semesterName,
   String? startNote,
+  VoidCallback? onCourseUpdated,
 ) async {
-  final TextEditingController controller = TextEditingController();
+  final controller = TextEditingController(text: startNote ?? '');
   final notifierStudent = context.read<StudentProvider>();
   final notifierCourse = context.read<CourseProvider>();
-  debugPrint(
-    'Note: startNote:$startNote',
-  );
+  debugPrint('Note: startNote:$startNote');
+
   await showDialog(
     context: context,
     builder: (_) {
-      controller.text = startNote ?? '';
+      //controller.text = startNote ?? '';
       return SimpleDialog(
         backgroundColor: AppColorsDarkMode.secondaryColor,
         children: [
@@ -55,12 +54,63 @@ Future<bool> notePopup(
               ),
             ),
           ),
+          Padding(
+            padding: EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: AppColorsDarkMode.accentColor),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColorsDarkMode.accentColor,
+                  ),
+                  onPressed: () async {
+                    final studentProvider = Provider.of<StudentProvider>(
+                      context,
+                      listen: false,
+                    );
+                    final studentId = studentProvider.student!.id;
+
+                    await Provider.of<CourseProvider>(
+                      context,
+                      listen: false,
+                    ).updateCourseNote(
+                      studentId,
+                      semesterName,
+                      course.courseId,
+                      controller.text,
+                    );
+                    if (onCourseUpdated != null) {
+                      onCourseUpdated(); // ✅ refresh immediately before closing
+                    }
+                    Navigator.pop(context, true);
+                  },
+                  child: Text(
+                    "Save",
+                    style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       );
     },
   );
 
-  notifierCourse.updateCourseNote(notifierStudent.student!.id,semesterName, course.courseId, controller.text);
+  notifierCourse.updateCourseNote(
+    notifierStudent.student!.id,
+    semesterName,
+    course.courseId,
+    controller.text,
+  );
 
   debugPrint(
     'Note: semesterKey:$semesterName, courseId:${course.courseId}, note:${controller.text});',

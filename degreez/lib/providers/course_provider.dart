@@ -43,11 +43,11 @@ class CourseLoadingState {
 
   @override
   int get hashCode => Object.hash(
-        isLoadingCourses,
-        isAddingCourse,
-        loadingCourseDetails.length,
-        updatingGrades.length,
-      );
+    isLoadingCourses,
+    isAddingCourse,
+    loadingCourseDetails.length,
+    updatingGrades.length,
+  );
 }
 
 class CourseProvider with ChangeNotifier {
@@ -59,18 +59,20 @@ class CourseProvider with ChangeNotifier {
 
   SemesterInfo? get currentSemester => _currentSemester;
 
-
   // Getters
   List<StudentCourse> getCoursesForSemester(String semesterKey) {
     return _coursesBySemester[semesterKey] ?? [];
   }
-  Map<String, List<StudentCourse>> get coursesBySemester => Map.unmodifiable(_coursesBySemester);
+
+  Map<String, List<StudentCourse>> get coursesBySemester =>
+      Map.unmodifiable(_coursesBySemester);
   CourseLoadingState get loadingState => _loadingState;
   String? get error => _error;
 
   // Add this getter to distinguish between unloaded and empty data
   bool get hasLoadedData => !_loadingState.isLoadingCourses && _error == null;
-  bool get hasAnyCourses => _coursesBySemester.values.any((courses) => courses.isNotEmpty);
+  bool get hasAnyCourses =>
+      _coursesBySemester.values.any((courses) => courses.isNotEmpty);
   bool get isEmpty => hasLoadedData && _coursesBySemester.isEmpty;
 
   // Helper method to find a course by ID
@@ -93,8 +95,8 @@ class CourseProvider with ChangeNotifier {
       // Already loading, no need to start again
       return false;
     }
-  // !! this causes error when navigating back to courses page
-  // this if condition fixes it
+    // !! this causes error when navigating back to courses page
+    // this if condition fixes it
     if (_coursesBySemester.isNotEmpty) {
       // Already loaded, no need to load again
       return true;
@@ -106,21 +108,20 @@ class CourseProvider with ChangeNotifier {
           .collection('Students')
           .doc(studentId);
 
-      final semestersSnapshot = await studentRef
-          .collection('Courses-per-Semesters')
-          .get();
+      final semestersSnapshot =
+          await studentRef.collection('Courses-per-Semesters').get();
 
       final newCoursesBySemester = <String, List<StudentCourse>>{};
 
       for (final semesterDoc in semestersSnapshot.docs) {
         final semesterKey = semesterDoc.id;
-        final coursesSnapshot = await semesterDoc.reference
-            .collection('Courses')
-            .get();
+        final coursesSnapshot =
+            await semesterDoc.reference.collection('Courses').get();
 
-        final courses = coursesSnapshot.docs
-            .map((doc) => StudentCourse.fromFirestore(doc.data()))
-            .toList();
+        final courses =
+            coursesSnapshot.docs
+                .map((doc) => StudentCourse.fromFirestore(doc.data()))
+                .toList();
 
         newCoursesBySemester[semesterKey] = courses;
       }
@@ -144,15 +145,10 @@ class CourseProvider with ChangeNotifier {
   ) async {
     _setLoadingState(_loadingState.copyWith(isAddingCourse: true));
 
-    // Optimistic update
-    _coursesBySemester.putIfAbsent(semesterKey, () => []).add(course);
-    notifyListeners();
-
     try {
       final studentRef = FirebaseFirestore.instance
           .collection('Students')
           .doc(studentId);
-
       final semesterRef = studentRef
           .collection('Courses-per-Semesters')
           .doc(semesterKey);
@@ -166,16 +162,70 @@ class CourseProvider with ChangeNotifier {
         });
       }
 
-      // Add course
+      // 🔍 Fetch prerequisites (as string or list from API)
+      final rawPrereqs =
+          (await CourseService.getCourseDetails(
+            _currentSemester!.year,
+            _currentSemester!.semester,
+            course.courseId,
+          ))?.prerequisites;
+      debugPrint('📦 Raw prerequisites from API: $rawPrereqs');
+
+      List<List<String>> parsedPrereqs = [];
+
+      if (rawPrereqs is String) {
+        final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
+        debugPrint('📦 orGroups : $orGroups');
+
+        for (final group in orGroups) {
+          final andGroup =
+              group
+                  .replaceAll(
+                    RegExp(r'[^\d\s]'),
+                    '',
+                  ) // keep only digits + space
+                  .trim()
+                  .split(RegExp(r'\s+'))
+                  .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+                  .toList();
+
+          if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
+        }
+      } else {
+        debugPrint(
+          '⚠️ Unexpected prerequisite format: ${rawPrereqs.runtimeType}',
+        );
+      }
+
+      // 🔁 Convert parsedPrereqs to the expected format for Firestore
+      final List<Map<String, List<String>>> mappedPrereqs =
+          parsedPrereqs.map((andGroup) => {'and': andGroup}).toList();
+
+      // ✅ Create enriched course
+      final enrichedCourse = course.copyWith(prerequisites: mappedPrereqs);
+
+      // ✅ Optimistic update
+      _coursesBySemester.putIfAbsent(semesterKey, () => []).add(enrichedCourse);
+      notifyListeners();
+
+      // ✅ Save to Firestore
+      debugPrint('📤 Writing course: ${enrichedCourse.courseId}');
+      debugPrint(
+        '✅ Writing data to Firestore: ${enrichedCourse.toFirestore()}',
+      );
+
       await semesterRef
           .collection('Courses')
           .doc(course.courseId)
-          .set(course.toFirestore());
+          .set(enrichedCourse.toFirestore());
 
+      // ✅ Refresh UI
+      await loadStudentCourses(studentId);
       _error = null;
       return true;
-    } catch (e) {
-      // Rollback optimistic update
+    } catch (e, stack) {
+      debugPrint('❌ Error writing course to Firestore: $e');
+      debugPrint('📍 Stack trace: $stack');
       _coursesBySemester[semesterKey]?.removeWhere(
         (c) => c.courseId == course.courseId,
       );
@@ -195,7 +245,9 @@ class CourseProvider with ChangeNotifier {
     String grade,
   ) async {
     // Set loading for this specific course
-    final newUpdatingGrades = Map<String, bool>.from(_loadingState.updatingGrades);
+    final newUpdatingGrades = Map<String, bool>.from(
+      _loadingState.updatingGrades,
+    );
     newUpdatingGrades[courseId] = true;
     _setLoadingState(_loadingState.copyWith(updatingGrades: newUpdatingGrades));
 
@@ -203,11 +255,13 @@ class CourseProvider with ChangeNotifier {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) return false;
 
     final oldCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses[courseIndex] = oldCourse.copyWith(finalGrade: grade);
     notifyListeners();
@@ -233,7 +287,9 @@ class CourseProvider with ChangeNotifier {
     } finally {
       // Remove loading state for this course
       newUpdatingGrades.remove(courseId);
-      _setLoadingState(_loadingState.copyWith(updatingGrades: newUpdatingGrades));
+      _setLoadingState(
+        _loadingState.copyWith(updatingGrades: newUpdatingGrades),
+      );
     }
   }
 
@@ -247,11 +303,13 @@ class CourseProvider with ChangeNotifier {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) return false;
 
     final oldCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses[courseIndex] = oldCourse.copyWith(note: note);
     notifyListeners();
@@ -290,11 +348,13 @@ class CourseProvider with ChangeNotifier {
     final semesterCourses = _coursesBySemester[semesterKey];
     if (semesterCourses == null) return false;
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) return false;
 
     final oldCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses[courseIndex] = oldCourse.copyWith(
       lectureTime: selectedLectureTime ?? '',
@@ -504,38 +564,46 @@ class CourseProvider with ChangeNotifier {
   }
 
   // Delete semester with optimistic update
-  Future<bool> deleteSemester(String studentId, String semesterName) async {
-    if (!_coursesBySemester.containsKey(semesterName)) {
-      _error = 'Semester "$semesterName" does not exist';
-      notifyListeners();
-      return false;
-    }
-
-    // Store for rollback
-    final oldCourses = _coursesBySemester[semesterName]!;
-    
-    // Optimistic update
-    _coursesBySemester.remove(semesterName);
+Future<bool> deleteSemester(String studentId, String semesterName) async {
+  if (!_coursesBySemester.containsKey(semesterName)) {
+    _error = 'Semester "$semesterName" does not exist';
     notifyListeners();
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('Students')
-          .doc(studentId)
-          .collection('Courses-per-Semesters')
-          .doc(semesterName)
-          .delete();
-
-      _error = null;
-      return true;
-    } catch (e) {
-      // Rollback
-      _coursesBySemester[semesterName] = oldCourses;
-      _error = 'Failed to delete semester: $e';
-      notifyListeners();
-      return false;
-    }
+    return false;
   }
+
+  final oldCourses = _coursesBySemester[semesterName]!;
+
+  // Optimistic update
+  _coursesBySemester.remove(semesterName);
+  notifyListeners();
+
+  try {
+    final semesterRef = FirebaseFirestore.instance
+        .collection('Students')
+        .doc(studentId)
+        .collection('Courses-per-Semesters')
+        .doc(semesterName);
+
+    // Step 1: Delete all documents in the 'Courses' subcollection
+    final courseDocs = await semesterRef.collection('Courses').get();
+    for (final doc in courseDocs.docs) {
+      await doc.reference.delete();
+    }
+
+    // Step 2: Delete the semester document
+    await semesterRef.delete();
+
+    _error = null;
+    return true;
+  } catch (e) {
+    // Rollback
+    _coursesBySemester[semesterName] = oldCourses;
+    _error = 'Failed to delete semester: $e';
+    notifyListeners();
+    return false;
+  }
+}
+
 
   // Remove course from semester with optimistic update
   Future<bool> removeCourseFromSemester(
@@ -550,7 +618,9 @@ class CourseProvider with ChangeNotifier {
       return false;
     }
 
-    final courseIndex = semesterCourses.indexWhere((c) => c.courseId == courseId);
+    final courseIndex = semesterCourses.indexWhere(
+      (c) => c.courseId == courseId,
+    );
     if (courseIndex == -1) {
       _error = 'Course not found in semester';
       notifyListeners();
@@ -559,7 +629,7 @@ class CourseProvider with ChangeNotifier {
 
     // Store for rollback
     final removedCourse = semesterCourses[courseIndex];
-    
+
     // Optimistic update
     semesterCourses.removeAt(courseIndex);
     notifyListeners();
@@ -599,7 +669,7 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-    Map<String, List<StudentCourse>> get sortedCoursesBySemester {
+  Map<String, List<StudentCourse>> get sortedCoursesBySemester {
     final List<String> semesterNames = _coursesBySemester.keys.toList();
 
     semesterNames.sort((a, b) {
@@ -621,24 +691,27 @@ class CourseProvider with ChangeNotifier {
     return {for (final name in semesterNames) name: _coursesBySemester[name]!};
   }
 
-   // Get total credits for a semester
-double getTotalCreditsForSemester(String semesterKey) {
-  final courses = _coursesBySemester[semesterKey] ?? [];
-  double total = 0.0;
+  // Get total credits for a semester
+  double getTotalCreditsForSemester(String semesterKey) {
+    final courses = _coursesBySemester[semesterKey] ?? [];
+    double total = 0.0;
 
-  for (final course in courses) {
-    // Use CourseDataProvider instead of the empty cache
-    // Note: This will be async, so you need to handle it properly
-    final courseWithDetails = getCourseWithDetails(semesterKey, course.courseId);
-    if (courseWithDetails?.courseDetails != null) {
-      total += courseWithDetails!.courseDetails.creditPoints;
+    for (final course in courses) {
+      // Use CourseDataProvider instead of the empty cache
+      // Note: This will be async, so you need to handle it properly
+      final courseWithDetails = getCourseWithDetails(
+        semesterKey,
+        course.courseId,
+      );
+      if (courseWithDetails?.courseDetails != null) {
+        total += courseWithDetails!.courseDetails.creditPoints;
+      }
     }
+
+    return total;
   }
 
-  return total;
-}
-
-    // Get course with details (updated return type)
+  // Get course with details (updated return type)
   StudentCourseWithDetails? getCourseWithDetails(
     String semesterKey,
     String courseId,
@@ -665,8 +738,7 @@ double getTotalCreditsForSemester(String semesterKey) {
     return (season: season, year: year);
   }
 
-
-int _seasonOrder(String season) {
+  int _seasonOrder(String season) {
     switch (season.toLowerCase()) {
       case 'winter':
         return 1;
@@ -679,7 +751,7 @@ int _seasonOrder(String season) {
     }
   }
 
- // Search for courses in the current semester
+  // Search for courses in the current semester
   Future<List<CourseSearchResult>> searchCourses({
     String? courseId,
     String? courseName,
@@ -770,7 +842,6 @@ int _seasonOrder(String season) {
     }
   }
 
-
   // Fetch the latest available semester from the repository
   Future<void> _fetchLatestSemester() async {
     try {
@@ -790,5 +861,50 @@ int _seasonOrder(String season) {
         endDate: '',
       );
     }
+  }
+
+  StudentCourse? getCourseById(String semester, String courseId) {
+    final semCourses = _coursesBySemester[semester];
+    if (semCourses == null) return null;
+
+    try {
+      return semCourses.firstWhere((c) => c.courseId == courseId);
+    } catch (_) {
+      return null; // course not found
+    }
+  }
+
+  List<String> getMissingPrerequisites(
+    String semesterKey,
+    List<List<String>> prereqGroups,
+  ) {
+    final sortedKeys = sortedCoursesBySemester.keys.toList();
+    final currentIndex = sortedKeys.indexOf(semesterKey);
+    if (currentIndex == -1) {
+      // If semester is unknown, assume nothing taken
+      return prereqGroups.expand((g) => g).toSet().toList();
+    }
+
+    final previousKeys = sortedKeys.sublist(0, currentIndex);
+
+    final takenCourseIds = <String>{
+      for (final sem in previousKeys)
+        ..._coursesBySemester[sem]!.map((c) => c.courseId),
+    };
+
+    // If ANY group is fully satisfied, return empty list (no missing)
+    for (final group in prereqGroups) {
+      if (group.every((id) => takenCourseIds.contains(id))) {
+        return []; // At least one group satisfied
+      }
+    }
+
+    // Otherwise, return all missing IDs from all groups
+    final missing = <String>{
+      for (final group in prereqGroups)
+        ...group.where((id) => !takenCourseIds.contains(id)),
+    };
+
+    return missing.toList();
   }
 }

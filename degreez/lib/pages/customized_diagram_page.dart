@@ -10,6 +10,73 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 
+Widget buildFormattedPrereqWarning(
+  List<List<String>> prereqGroups,
+  List<String> missingIds,
+  Map<String, String> courseNames,
+) {
+  final missingSet = missingIds.toSet();
+
+  return Directionality(
+    textDirection: TextDirection.rtl,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < prereqGroups.length; i++) ...[
+          if (i > 0)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                'או',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ),
+          Wrap(
+            children: [
+             // const Text('('),
+              for (int j = 0; j < prereqGroups[i].length; j++) ...[
+                if (j > 0)
+                  const Text(
+                    ' ו־ ',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: prereqGroups[i][j],
+                        style: TextStyle(
+                          color: missingSet.contains(prereqGroups[i][j])
+                              ? Colors.redAccent
+                              : Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text:
+                            ' (${courseNames[prereqGroups[i][j]] ?? 'לא ידוע'})',
+                        style: TextStyle(
+                          color: missingSet.contains(prereqGroups[i][j])
+                              ? Colors.redAccent
+                              : Colors.greenAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            //  const Text(')'),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+
+
 class CustomizedDiagramPage extends StatefulWidget {
   const CustomizedDiagramPage({super.key});
 
@@ -45,17 +112,20 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
 
   // Helper method to scroll to specific semester
   void _scrollToSemester(int index) {
-    if (index < _semesterKeys.length && _semesterKeys[index].currentContext != null) {
+    if (index < _semesterKeys.length &&
+        _semesterKeys[index].currentContext != null) {
       final context = _semesterKeys[index].currentContext!;
       final renderBox = context.findRenderObject() as RenderBox;
       final position = renderBox.localToGlobal(Offset.zero);
-      
+
       _scrollController.animateTo(
-        _scrollController.offset + position.dy - 150, // Account for timeline height
+        _scrollController.offset +
+            position.dy -
+            150, // Account for timeline height
         duration: Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
-      
+
       setState(() {
         _currentSemesterIndex = index;
       });
@@ -63,11 +133,14 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   }
 
   // Helper method to build timeline data
-  List<SemesterTimelineData> _buildTimelineData(Map<String, List<StudentCourse>> semesters) {
+  List<SemesterTimelineData> _buildTimelineData(
+    Map<String, List<StudentCourse>> semesters,
+  ) {
     return semesters.entries.map((entry) {
       final courses = entry.value;
-      final completedCourses = courses.where((c) => c.finalGrade.isNotEmpty).length;
-      
+      final completedCourses =
+          courses.where((c) => c.finalGrade.isNotEmpty).length;
+
       SemesterStatus status;
       if (courses.isEmpty) {
         status = SemesterStatus.empty;
@@ -95,133 +168,144 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       // This will trigger a rebuild and refresh the course data
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
-
     return ChangeNotifierProvider(
- create: (ctx) => CustomizedDiagramNotifier(),
- child: 
-Scaffold(
-      backgroundColor: AppColorsDarkMode.mainColor,
-      body: Consumer2<StudentProvider, CourseProvider>(
-  builder: (context, studentNotifier, courseNotifier, _){
-          final courseNotifier = context.read<CourseProvider>();
-          if (studentNotifier.isLoading && studentNotifier.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      create: (ctx) => CustomizedDiagramNotifier(),
+      child: Scaffold(
+        backgroundColor: AppColorsDarkMode.mainColor,
+        body: Consumer2<StudentProvider, CourseProvider>(
+          builder: (context, studentNotifier, courseNotifier, _) {
+            final courseNotifier = context.read<CourseProvider>();
+            if (studentNotifier.isLoading && studentNotifier.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (studentNotifier.error != '' && studentNotifier.error != null) {
-            return Center(
+            if (studentNotifier.error != '' && studentNotifier.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error: ${studentNotifier.error}',
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final semesters = courseNotifier.sortedCoursesBySemester;
+
+            if (semesters.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.timeline,
+                      size: 64,
+                      color: AppColorsDarkMode.secondaryColorDim,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No courses to display',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: AppColorsDarkMode.secondaryColorDim,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Add courses to see your degree progress',
+                      style: TextStyle(
+                        color: AppColorsDarkMode.secondaryColorDim,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Ensure we have enough keys for the semesters
+            while (_semesterKeys.length < semesters.length) {
+              _semesterKeys.add(GlobalKey());
+            }
+
+            // Detect device orientation
+            final orientation = MediaQuery.of(context).orientation;
+
+            return SafeArea(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.error, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${studentNotifier.error}',
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+                  // Add the semester timeline
+                  SemesterTimeline(
+                    semesters: _buildTimelineData(semesters),
+                    currentSemesterIndex: _currentSemesterIndex,
+                    onSemesterTap: _scrollToSemester,
+                  ),
+
+                  // Enhanced: Updated instruction text
+                  Padding(
+                    padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
+                    child: Text(
+                      "Tap a course for quick actions • Long press to add notes",
+                      style: TextStyle(
+                        color: AppColorsDarkMode.secondaryColorDim,
+                      ),
+                    ),
+                  ),
+
+                  // Semester list
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      itemCount: semesters.length,
+                      itemBuilder: (context, index) {
+                        final semesterKey = semesters.keys.elementAt(index);
+                        final semester = {
+                          'semester': index + 1,
+                          'name': semesterKey,
+                          'courses': semesters[semesterKey]!,
+                        };
+
+                        return Container(
+                          key: _semesterKeys[index],
+                          child:
+                              orientation == Orientation.portrait
+                                  ? _buildVerticalSemesterSection(
+                                    context,
+                                    semester,
+                                    studentNotifier,
+                                  )
+                                  : _buildVerticalSemesterSection(
+                                    context,
+                                    semester,
+                                    studentNotifier,
+                                  ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
             );
-          }
-
-          final semesters = courseNotifier.sortedCoursesBySemester;
-
-          if (semesters.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.timeline, size: 64, color: AppColorsDarkMode.secondaryColorDim),
-                  SizedBox(height: 16),
-                  Text(
-                    'No courses to display',
-                    style: TextStyle(fontSize: 18, color: AppColorsDarkMode.secondaryColorDim),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Add courses to see your degree progress',
-                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Ensure we have enough keys for the semesters
-          while (_semesterKeys.length < semesters.length) {
-            _semesterKeys.add(GlobalKey());
-          }
-
-          // Detect device orientation
-          final orientation = MediaQuery.of(context).orientation;
-
-          return SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Add the semester timeline
-                SemesterTimeline(
-                  semesters: _buildTimelineData(semesters),
-                  currentSemesterIndex: _currentSemesterIndex,
-                  onSemesterTap: _scrollToSemester,
-                ),
-
-                // Enhanced: Updated instruction text
-                Padding(
-                  padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
-                  child: Text(
-                    "Tap a course for quick actions • Long press to add notes",
-                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-                  ),
-                ),
-
-                // Semester list
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    itemCount: semesters.length,
-                    itemBuilder: (context, index) {
-                      final semesterKey = semesters.keys.elementAt(index);
-                      final semester = {
-                        'semester': index + 1,
-                        'name': semesterKey,
-                        'courses': semesters[semesterKey]!,
-                      };
-
-                      return Container(
-                        key: _semesterKeys[index],
-                        child: orientation == Orientation.portrait
-                            ? _buildVerticalSemesterSection(
-                              context,
-                              semester,
-                              studentNotifier,
-                            )
-                            : _buildVerticalSemesterSection(
-                              context,
-                              semester,
-                              studentNotifier,
-                            ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _showAddSemesterDialog(context);
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddSemesterDialog(context);
-        },
-        child: const Icon(Icons.add),
-      ),
-    ),);
+    );
   }
 
   void _showAddSemesterDialog(BuildContext context) {
@@ -299,7 +383,10 @@ Scaffold(
                 TextButton(
                   onPressed: () {
                     final semesterName = '$selectedSeason $selectedYear';
-                    context.read<CourseProvider>().addSemester(context.read<StudentProvider>().student!.id, semesterName);
+                    context.read<CourseProvider>().addSemester(
+                      context.read<StudentProvider>().student!.id,
+                      semesterName,
+                    );
                     Navigator.of(context).pop();
                   },
                   child: const Text('Add'),
@@ -359,9 +446,9 @@ Scaffold(
   ) {
     final courses = semester['courses'] as List<StudentCourse>;
     final semesterName = semester['name'] as String;
-    final totalCredits = context.read<CourseProvider>().getTotalCreditsForSemester(
-      semesterName,
-    );
+    final totalCredits = context
+        .read<CourseProvider>()
+        .getTotalCreditsForSemester(semesterName);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,7 +504,7 @@ Scaffold(
                     ),
                     tooltip: 'Add Course',
                     onPressed: () {
-                      _showAddCourseDialog(context, semesterName);
+                      _showAddCourseDialog(context, semesterName, context);
                     },
                   ),
                   IconButton(
@@ -427,7 +514,11 @@ Scaffold(
                     ),
                     tooltip: 'Delete Semester',
                     onPressed: () {
-                      _confirmDeleteSemester(context, semesterName,studentNotifier.student!.id);
+                      _confirmDeleteSemester(
+                        context,
+                        semesterName,
+                        studentNotifier.student!.id,
+                      );
                     },
                   ),
                 ],
@@ -454,7 +545,9 @@ Scaffold(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: _getCrossAxisCount(context), // Enhanced: responsive grid
+                crossAxisCount: _getCrossAxisCount(
+                  context,
+                ), // Enhanced: responsive grid
                 childAspectRatio: 1,
                 crossAxisSpacing: 2,
                 mainAxisSpacing: 2,
@@ -462,16 +555,16 @@ Scaffold(
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index];
-                final courseWithDetails = context.read<CourseProvider>().getCourseWithDetails(
-                  semesterName,
-                  course.courseId,
-                );
+                final courseWithDetails = context
+                    .read<CourseProvider>()
+                    .getCourseWithDetails(semesterName, course.courseId);
                 return CourseCard(
                   direction: DirectionValues.vertical,
                   course: course,
                   courseDetails: courseWithDetails?.courseDetails,
                   semester: semesterName,
-                  onCourseUpdated: _onCourseUpdated, // Enhanced: Add update callback
+                  onCourseUpdated:
+                      _onCourseUpdated, // Enhanced: Add update callback
                 );
               },
             ),
@@ -479,14 +572,18 @@ Scaffold(
     );
   }
 
-  void _showAddCourseDialog(BuildContext context, String semesterName) {
+  void _showAddCourseDialog(
+    BuildContext context,
+    String semesterName,
+    BuildContext rootContext,
+  ) {
     final searchController = TextEditingController();
     List<CourseSearchResult> results = [];
     bool isLoading = false;
 
     showDialog(
       context: context,
-      builder: (ctx) {
+      builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
             Future<void> search(String query) async {
@@ -498,11 +595,13 @@ Scaffold(
               final courseName = isId ? null : query;
               print('SEARCH: id=$courseId, name=$courseName');
 
-              final fetched = await context.read<CourseProvider>().searchCourses(
-                courseId: courseId,
-                courseName: courseName,
-                pastSemestersToInclude: 4,
-              );
+              final fetched = await context
+                  .read<CourseProvider>()
+                  .searchCourses(
+                    courseId: courseId,
+                    courseName: courseName,
+                    pastSemestersToInclude: 4,
+                  );
 
               if (!context.mounted) return; // <--- CRITICAL LINE
 
@@ -567,6 +666,151 @@ Scaffold(
                               trailing: IconButton(
                                 icon: const Icon(Icons.add),
                                 onPressed: () async {
+                                  final courseDetails =
+                                      await CourseService.getCourseDetails(
+                                        context
+                                            .read<CourseProvider>()
+                                            .currentSemester!
+                                            .year,
+                                        context
+                                            .read<CourseProvider>()
+                                            .currentSemester!
+                                            .semester,
+                                        c.courseNumber!,
+                                      );
+                                  final Object? rawPrereqs =
+                                      courseDetails?.prerequisites;
+                                  List<List<String>> parsedPrereqs = [];
+                                  debugPrint('📦📦📦 rawPrereqs : $rawPrereqs');
+
+                                  if (rawPrereqs is String) {
+                                    // Example: "02360703 או (02340312 ו-02340311)"
+                                    final orGroups = rawPrereqs.split(
+                                      RegExp(r'\s*או\s*'),
+                                    );
+                                    debugPrint('📦📦📦 orGroups : $orGroups');
+
+                                    for (final group in orGroups) {
+                                      // Remove parentheses and split by 'ו'
+                                      final andGroup =
+                                          group
+                                              .replaceAll(
+                                                RegExp(r'[^\d\s]'),
+                                                '',
+                                              ) // keep only digits + space
+                                              .trim()
+                                              .split(
+                                                RegExp(r'\s+'),
+                                              ) // split by any whitespace
+                                              .where(
+                                                (id) => RegExp(
+                                                  r'^\d{8}$',
+                                                ).hasMatch(id),
+                                              ) // keep only 8-digit IDs
+                                              .toList();
+
+                                      if (andGroup.isNotEmpty)
+                                        parsedPrereqs.add(andGroup);
+                                      debugPrint(
+                                        '📦📦📦 parsedPrereqs : $parsedPrereqs',
+                                      );
+                                    }
+                                  } else {
+                                    print(
+                                      '⚠️⚠️⚠️ Unexpected prerequisite format: ${rawPrereqs.runtimeType}',
+                                    );
+                                  }
+                                  final missing = context
+                                      .read<CourseProvider>()
+                                      .getMissingPrerequisites(
+                                        semesterName,
+                                        parsedPrereqs,
+                                      );
+
+                                  if (missing.isNotEmpty) {
+                                    final allTakenCourses = context
+                                      .read<CourseProvider>()
+                                        .sortedCoursesBySemester
+                                        .values
+                                        .expand((list) => list);
+                                    final courseIdToName = {
+                                      for (final course in allTakenCourses)
+                                        course.courseId: course.name,
+                                    };
+
+                                    // Add missing prereqs to the map
+                                    for (final group in parsedPrereqs) {
+                                      for (final courseId in group) {
+                                        if (!courseIdToName.containsKey(
+                                          courseId,
+                                        )) {
+                                          final name =
+                                              await CourseService.getCourseName(
+                                                courseId,
+                                              );
+                                          courseIdToName[courseId] =
+                                              name ?? 'Unknown';
+                                        }
+                                      }
+                                    }
+
+                                    final proceedAnyway = await showDialog<
+                                      bool
+                                    >(
+                                      context: dialogContext,
+                                      builder:
+                                          (ctx) => AlertDialog(
+                                            title: const Text(
+                                              'Missing Prerequisites',
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Text(
+                                                  'To register for this course, you must have completed one of the following prerequisite groups. '
+                                                  'Courses in red were not found in your previous semesters.',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.white70,
+                                                    height: 1.4,
+                                                  ),
+                                                ),
+
+                                                const SizedBox(height: 10),
+                                                buildFormattedPrereqWarning(
+                                                  parsedPrereqs,
+                                                  missing,
+                                                  courseIdToName,
+                                                ),
+                                                const SizedBox(height: 10),
+                                                const Text(
+                                                  'Do you want to add this course anyway?',
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.of(
+                                                      ctx,
+                                                    ).pop(false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.of(
+                                                      ctx,
+                                                    ).pop(true),
+                                                child: const Text('Add Anyway'),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+
+                                    if (proceedAnyway != true) return;
+                                  }
+
                                   final course = StudentCourse(
                                     courseId: c.courseNumber,
                                     name: c.name,
@@ -576,20 +820,18 @@ Scaffold(
                                     labTime: '',
                                     workshopTime: '',
                                   );
-                                  final success =
-                                      await Provider.of<CourseProvider>(
-                                        context,
-                                        listen: false,
-                                      ).addCourseToSemester(
-                                        context.read<StudentProvider>().student!.id,
-                                        semesterName,
-                                        course,
-                                      );
+                                  final success = await Provider.of<
+                                    CourseProvider
+                                  >(context, listen: false).addCourseToSemester(
+                                    context.read<StudentProvider>().student!.id,
+                                    semesterName,
+                                    course,
+                                  );
 
                                   if (!context.mounted) return;
 
                                   if (success) {
-                                    Navigator.of(ctx).pop();
+                                    Navigator.of(dialogContext).pop();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
@@ -619,7 +861,7 @@ Scaffold(
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text('Cancel'),
                 ),
               ],
@@ -630,32 +872,45 @@ Scaffold(
     );
   }
 
-  void _confirmDeleteSemester(BuildContext context, String semesterName,String studentId) {
+  void _confirmDeleteSemester(
+    BuildContext context,
+    String semesterName,
+    String studentId,
+  ) {
     showDialog(
       context: context,
       builder:
           (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(
-      side: BorderSide(color:  AppColorsDarkMode.secondaryColor, width: 2),
-      borderRadius: BorderRadius.circular(12),
-    ),
+              side: BorderSide(
+                color: AppColorsDarkMode.secondaryColor,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
             backgroundColor: AppColorsDarkMode.accentColor,
-            title: const Text('Delete Semester',style: TextStyle(color: AppColorsDarkMode.secondaryColor),),
+            title: const Text(
+              'Delete Semester',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
             content: Text(
-              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel',
-                  style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                ),
               ),
               TextButton(
                 onPressed: () async {
                   await Provider.of<CourseProvider>(
                     context,
                     listen: false,
-                  ).deleteSemester(studentId,semesterName);
+                  ).deleteSemester(studentId, semesterName);
                   if (!mounted) return;
                   Navigator.of(ctx).pop();
                   // Enhanced: Trigger UI refresh
@@ -663,7 +918,10 @@ Scaffold(
                 },
                 child: const Text(
                   'Delete',
-                  style: TextStyle(color: AppColorsDarkMode.secondaryColor,fontWeight:FontWeight.w700),
+                  style: TextStyle(
+                    color: AppColorsDarkMode.secondaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],

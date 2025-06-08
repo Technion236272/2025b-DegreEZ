@@ -128,7 +128,7 @@ mixin CalendarDarkThemeMixin {
         ),
       ),
     );
-  }    /// Build an event tile with dark theme styling
+  }  /// Build an event tile with dark theme styling
   Widget buildEventTile(
     BuildContext context,
     DateTime date, 
@@ -136,7 +136,7 @@ mixin CalendarDarkThemeMixin {
     Rect boundary, 
     DateTime startDuration, 
     DateTime endDuration,
-    {bool filtered = false, String searchQuery = '', Function(CalendarEventData)? onLongPress}
+    {bool filtered = false, String searchQuery = '', Function(CalendarEventData)? onLongPress, Function(CalendarEventData)? onTap}
   ) {
     if (events.isEmpty) return const SizedBox();
     
@@ -148,6 +148,7 @@ mixin CalendarDarkThemeMixin {
     if (filteredEvents.isEmpty) return const SizedBox();
     
     return GestureDetector(
+      onTap: onTap != null ? () => onTap(filteredEvents.first) : null,
       onLongPress: onLongPress != null ? () => onLongPress(filteredEvents.first) : null,
       child: Container(
         margin: const EdgeInsets.all(2),

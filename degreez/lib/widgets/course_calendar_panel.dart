@@ -2,27 +2,62 @@
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
 import '../mixins/course_event_mixin.dart';
+import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
-import 'schedule_selection_dialog.dart';
+
+// Add exam-related classes and functionality
+enum ExamPeriod { periodA, periodB }
+
+class ExamInfo {
+  final String courseId;
+  final String courseName;
+  final ExamPeriod period;
+  final String examType;
+  final String rawDateString;
+  final DateTime? examDate;
+  
+  // Prepared display data
+  final String formattedDate;
+  final String displayDate;
+  final Color periodColor;
+  final String periodText;
+  final int sortOrder; // For custom sorting
+
+  ExamInfo({
+    required this.courseId,
+    required this.courseName,
+    required this.period,
+    required this.examType,
+    required this.rawDateString,
+    this.examDate,
+    required this.formattedDate,
+    required this.displayDate,
+    required this.periodColor,
+    required this.periodText,
+    required this.sortOrder,
+  });
+}
 
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
-  final Function(String courseId)? onCourseManuallyAdded;
-  final Function(String courseId)? onCourseManuallyRemoved;
+  final Function(String courseId)? onCourseRemovedFromCalendar;
+  final Function(String courseId)? onCourseRestoredToCalendar;
+  final bool Function(String courseId)? isCourseRemovedFromCalendar;
   final int? viewMode;
   final VoidCallback? onToggleView;
-  
-  const CourseCalendarPanel({
+    const CourseCalendarPanel({
     super.key, 
     required this.eventController,
-    this.onCourseManuallyAdded,
-    this.onCourseManuallyRemoved,
+    this.onCourseRemovedFromCalendar,
+    this.onCourseRestoredToCalendar,
+    this.isCourseRemovedFromCalendar,
     this.viewMode,
     this.onToggleView,
   });
@@ -31,8 +66,193 @@ class CourseCalendarPanel extends StatefulWidget {
   State<CourseCalendarPanel> createState() => _CourseCalendarPanelState();
 }
 
-class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEventMixin {
+class _CourseCalendarPanelState extends State<CourseCalendarPanel> 
+    with CourseEventMixin, ScheduleSelectionMixin {
   bool _isExpanded = false;
+
+  // Exam-related methods
+  Future<List<ExamInfo>> _getExamInfo(List<StudentCourse> courses, CourseDataProvider courseDataProvider) async {
+    final examList = <ExamInfo>[];
+    
+    for (final course in courses) {
+      final courseDetails = await courseDataProvider.getCourseDetails(course.courseId);
+      if (courseDetails?.hasExams == true) {
+        final exams = courseDetails!.exams;
+        
+        // Helper function to create exam info with prepared data
+        ExamInfo createExamInfo(String examKey, ExamPeriod period, String examType) {
+          final rawDate = exams[examKey]!;
+          final parsedDate = _parseExamDate(rawDate);
+          return ExamInfo(
+            courseId: course.courseId,
+            courseName: course.name,
+            period: period,
+            examType: examType,
+            rawDateString: rawDate,
+            examDate: parsedDate,
+            formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : 'Date TBD',
+            displayDate: parsedDate != null ? DateFormat('EEEE, dd-MM').format(parsedDate) : 'Date TBD',
+            periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
+            periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
+            sortOrder: parsedDate != null ? (parsedDate.month * 100 + parsedDate.day) : 999999,
+          );
+        }
+        
+        // Process all exam types
+        if (exams.containsKey('מועד א') && exams['מועד א']!.isNotEmpty) {
+          examList.add(createExamInfo('מועד א', ExamPeriod.periodA, 'Final Exam'));
+        }
+        
+        if (exams.containsKey('מועד ב') && exams['מועד ב']!.isNotEmpty) {
+          examList.add(createExamInfo('מועד ב', ExamPeriod.periodB, 'Final Exam'));
+        }
+        
+        if (exams.containsKey('בוחן מועד א') && exams['בוחן מועד א']!.isNotEmpty) {
+          examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm'));
+        }
+        
+        if (exams.containsKey('בוחן מועד ב') && exams['בוחן מועד ב']!.isNotEmpty) {
+          examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm'));
+        }
+      }
+    }
+    
+    examList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return examList;
+  }
+
+  DateTime? _parseExamDate(String dateString) {
+    try {
+      final formats = [
+        'dd/MM/yyyy HH:mm',
+        'dd/MM/yyyy',
+        'dd-MM-yyyy HH:mm',
+        'dd-MM-yyyy',
+        'yyyy-MM-dd HH:mm',
+        'yyyy-MM-dd',
+        'MM/dd/yyyy HH:mm',
+        'MM/dd/yyyy',
+        'dd.MM.yyyy HH:mm',
+        'dd.MM.yyyy',
+      ];
+      
+      final cleanedDateString = dateString.trim();
+      
+      for (final format in formats) {
+        try {
+          return DateFormat(format).parse(cleanedDateString);
+        } catch (e) {
+          // Try next format
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  void _showExamDatesDialog(List<ExamInfo> examData, ColorThemeProvider colorThemeProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.schedule, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Exam Dates (${examData.length})',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: examData.length,
+                  itemBuilder: (context, index) => _buildExamListTile(
+                    examData[index], 
+                    colorThemeProvider,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvider) {
+    return ListTile(
+      leading: Container(
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          color: colorThemeProvider.getCourseColor(examInfo.courseId),
+          shape: BoxShape.circle,
+        ),
+      ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              examInfo.courseName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: examInfo.periodColor.withAlpha(50),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: examInfo.periodColor, width: 1),
+            ),
+            child: Text(
+              examInfo.periodText,
+              style: TextStyle(
+                fontSize: 10,
+                color: examInfo.periodColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📅 ${examInfo.formattedDate}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          Text(
+            'Course ID: ${examInfo.courseId}',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          Text(
+            '📝 ${examInfo.examType}',
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +285,76 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      // Exam dates icon next to title
+                      FutureBuilder<List<ExamInfo>>(
+                        future: _getExamInfo(allCourses, courseDataProvider),
+                        builder: (context, snapshot) {
+                          final examData = snapshot.data ?? [];
+                          if (examData.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          
+                          final periodAExams = examData.where((e) => e.period == ExamPeriod.periodA).length;
+                          final periodBExams = examData.where((e) => e.period == ExamPeriod.periodB).length;
+                          
+                          return Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            child: InkWell(
+                              onTap: () => _showExamDatesDialog(examData, colorThemeProvider),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.schedule,
+                                      color: Colors.orange,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${examData.length}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                    if (periodAExams > 0 || periodBExams > 0) ...[
+                                      const SizedBox(width: 4),
+                                      if (periodAExams > 0)
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      if (periodBExams > 0)
+                                        Container(
+                                          margin: EdgeInsets.only(left: periodAExams > 0 ? 2 : 0),
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.blue,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       const Spacer(),
                       // Arrow in the middle-right
@@ -196,8 +486,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                       const Text('Loading...', style: TextStyle(fontSize: 12))
                                     else
                                       const Text('Details unavailable', style: TextStyle(fontSize: 12)),
-                                    
-                                    // Show selection status
+                                      // Show selection status
                                     if (course.hasCompleteScheduleSelection)
                                       Text(
                                         'Schedule: ${course.selectionSummary}',
@@ -215,18 +504,43 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                           color: Colors.grey,
                                         ),
                                       ),
+                                    
+                                    // Show calendar status
+                                    if (widget.isCourseRemovedFromCalendar?.call(course.courseId) ?? false)
+                                      const Text(
+                                        'Status: Hidden from calendar',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      )
+                                    else
+                                      const Text(
+                                        'Status: Shown in calendar',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.green,
+                                        ),
+                                      ),
                                   ],
-                                ),
-                                trailing: PopupMenuButton<String>(                                  onSelected: (value) {
-                                    switch (value) {
-                                      case 'select_schedule':
-                                        _showScheduleSelection(course, courseDetails);
+                                ),                                trailing: PopupMenuButton<String>(                                  onSelected: (value) {
+                                    switch (value) {                                      case 'select_schedule':
+                                        showScheduleSelectionDialog(
+                                          context,
+                                          course,
+                                          courseDetails,
+                                          onSelectionUpdated: () => setState(() {}),
+                                        );
                                         break;
                                       case 'add_to_calendar':
                                         _addCourseToCalendar(course, courseDetails, colorThemeProvider);
                                         break;
                                       case 'remove_from_calendar':
                                         _removeCourseFromCalendar(course);
+                                        break;
+                                      case 'restore_to_calendar':
+                                        _restoreCourseToCalendar(course);
                                         break;                                      case 'remove_course':
                                         _showRemoveCourseDialog(course);
                                         break;
@@ -234,64 +548,73 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                                         _showCourseDetails(context, course, courseDetails);
                                         break;
                                     }
-                                  },                                  itemBuilder: (BuildContext context) => [
-                                    const PopupMenuItem(
-                                      value: 'select_schedule',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.schedule),
-                                          SizedBox(width: 8),
-                                          Text('Select Schedule'),
-                                        ],
+                                  },                                  itemBuilder: (BuildContext context) {
+                                    final isRemovedFromCalendar = widget.isCourseRemovedFromCalendar?.call(course.courseId) ?? false;
+                                    
+                                    return [
+                                      const PopupMenuItem(
+                                        value: 'select_schedule',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.schedule),
+                                            SizedBox(width: 8),
+                                            Text('Select Schedule'),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'add_to_calendar',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.add_to_photos),
-                                          SizedBox(width: 8),
-                                          Text('Add to Calendar'),
-                                        ],
+
+                                      if (!isRemovedFromCalendar) ...[
+                                        
+                                        const PopupMenuItem(
+                                          value: 'remove_from_calendar',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.remove_circle),
+                                              SizedBox(width: 8),
+                                              Text('Hide/remove from Calendar'),
+                                            ],
+                                          ),
+                                        ),
+                                      ] else ...[
+                                        const PopupMenuItem(
+                                          value: 'restore_to_calendar',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.restore, color: Colors.green),
+                                              SizedBox(width: 8),
+                                              Text('Restore/show on Calendar', style: TextStyle(color: Colors.green)),
+                                            ],
+                                          ),
+                                        ),                                      ],
+                                      const PopupMenuItem(
+                                        value: 'remove_course',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete_forever, color: Colors.red),
+                                            SizedBox(width: 8),
+                                            Text('Remove Course', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'remove_from_calendar',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.remove_circle),
-                                          SizedBox(width: 8),
-                                          Text('Remove from Calendar'),
-                                        ],
+                                      const PopupMenuItem(
+                                        value: 'view_details',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.info),
+                                            SizedBox(width: 8),
+                                            Text('View Details'),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'remove_course',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_forever, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Remove Course', style: TextStyle(color: Colors.red)),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'view_details',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.info),
-                                          SizedBox(width: 8),
-                                          Text('View Details'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                    ];
+                                  },
                                 ),
                               );
                             },
                           );
                         },
-                      ))
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -300,79 +623,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         );
       },
     );
-  }
-
-  void _showScheduleSelection(StudentCourse course, courseDetails) {
-    if (courseDetails == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course details not available'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => ScheduleSelectionDialog(
-        course: course,
-        courseDetails: courseDetails,
-        onSelectionChanged: (lectureTime, tutorialTime, labTime, workshopTime) {
-          _updateCourseScheduleSelection(course, lectureTime, tutorialTime, labTime, workshopTime);
-        },
-      ),
-    );
-  }
-
-  void _updateCourseScheduleSelection(
-    StudentCourse course,
-    String? lectureTime,
-    String? tutorialTime,
-    String? labTime,
-    String? workshopTime,
-  ) async {
-    final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
-
-    if (!studentProvider.hasStudent) return;
-
-    // Find which semester this course belongs to
-    String? targetSemester;
-    for (final entry in courseProvider.coursesBySemester.entries) {
-      if (entry.value.any((c) => c.courseId == course.courseId)) {
-        targetSemester = entry.key;
-        break;
-      }
-    }
-
-    if (targetSemester == null) return;
-
-    final success = await courseProvider.updateCourseScheduleSelection(
-      studentProvider.student!.id,
-      targetSemester,
-      course.courseId,
-      lectureTime,
-      tutorialTime,
-      labTime,
-      workshopTime,
-    );
-
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Schedule selection updated')),
-      );
-      
-      // Refresh calendar events
-      setState(() {});
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update schedule selection'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
   void _addCourseToCalendar(StudentCourse course, courseDetails, ColorThemeProvider colorThemeProvider) {
     if (courseDetails == null) {
@@ -471,14 +721,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         widget.eventController.add(event);
         eventsAdded++;
       }
-      
-      // If no detailed schedule, try to create events from stored times
+        // If no detailed schedule, try to create events from stored times
       if (eventsAdded == 0) {
         eventsAdded += _addBasicTimeEvents(course, sunday, courseColor);
       }
-      
-      // Mark course as manually added
-      widget.onCourseManuallyAdded?.call(course.courseId);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -494,25 +740,26 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         ),
       );
     }
-  }
-  void _removeCourseFromCalendar(StudentCourse course) {
-    int removedCount = 0;
-    widget.eventController.removeWhere((event) {
-      final shouldRemove = event.title.startsWith(course.name) || 
-        event.title.startsWith('${course.name} ') ||
-        event.title.contains('${course.name} -') ||
-        event.title.contains('${course.name}:');
-      if (shouldRemove) removedCount++;
-      return shouldRemove;
-    });
-
-    // Mark course as manually removed
-    widget.onCourseManuallyRemoved?.call(course.courseId);
+  }  void _removeCourseFromCalendar(StudentCourse course) {
+    // NEW APPROACH: Mark course as removed instead of physically removing events
+    widget.onCourseRemovedFromCalendar?.call(course.courseId);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${course.name} removed from calendar ($removedCount events)'),
+        content: Text('${course.name} hidden from calendar'),
         backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _restoreCourseToCalendar(StudentCourse course) {
+    // NEW: Call the restore callback
+    widget.onCourseRestoredToCalendar?.call(course.courseId);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${course.name} restored to calendar'),
+        backgroundColor: Colors.green,
       ),
     );
   }
@@ -668,8 +915,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
             backgroundColor: Colors.green,
           ),
         );
-        
-        // Also remove from calendar events
+          // Also remove from calendar events
         int removedCount = 0;
         widget.eventController.removeWhere((event) {
           final shouldRemove = event.title.contains(courseId) || 
@@ -677,9 +923,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
           if (shouldRemove) removedCount++;
           return shouldRemove;
         });
-
-        // Mark course as manually removed
-        widget.onCourseManuallyRemoved?.call(courseId);
         
         // Show additional feedback about calendar events removed
         if (removedCount > 0) {
@@ -785,8 +1028,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
 
   int _addBasicTimeEvents(StudentCourse course, DateTime sunday, Color courseColor) {
     int eventsAdded = 0;
-    
-    // Create events from stored lecture time
+      // Create events from stored lecture time
     if (course.lectureTime.isNotEmpty) {
       final lectureEvent = _createEventFromTimeString(
         course, 
@@ -798,11 +1040,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
       if (lectureEvent != null) {
         widget.eventController.add(lectureEvent);
         eventsAdded++;
-      }
-      if (course.hasSelectedLecture) {
-        widget.onCourseManuallyAdded?.call(course.courseId);
-      } else {
-        widget.onCourseManuallyRemoved?.call(course.courseId);
       }
     }
 

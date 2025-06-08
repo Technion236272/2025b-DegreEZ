@@ -7,14 +7,15 @@ import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../widgets/course_calendar_panel.dart';
-import '../widgets/exam_calendar_panel.dart';
 import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
+import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -25,47 +26,52 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> 
-    with CalendarDarkThemeMixin, CourseEventMixin {
+    with CalendarDarkThemeMixin, CourseEventMixin, ScheduleSelectionMixin {
   int _viewMode = 0; // 0: Week View, 1: Day View
   final TextEditingController _searchController = TextEditingController();
   final _searchQuery = '';
   
-  // Track manually added events to preserve them during automatic updates
-  final Set<String> _manuallyAddedCourses = <String>{};
-  
-  // Flag to track if we need to trigger the initial view switch to load events
+  // NEW: Track courses that should be hidden from calendar
+  final Set<String> _removedCourses = <String>{};
+    // Flag to track if we need to trigger the initial view switch to load events
   bool _hasTriggeredInitialLoad = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemovedCourses();
+  }
 
 
 
   EventController get _eventController =>
       CalendarControllerProvider.of(context).controller;
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }  // NEW: Methods to manage removed courses from calendar display
+  void _markCourseAsRemovedFromCalendar(String courseId) {
+    _removedCourses.add(courseId);
+    _saveRemovedCourses(); // Persist the change
+    debugPrint('Course $courseId marked as removed from calendar');
+    // Trigger calendar refresh
+    setState(() {});
   }
-
-  // Add method to mark course as manually added
-  void _markCourseAsManuallyAdded(String courseId) {
-    _manuallyAddedCourses.add(courseId);
+  
+  bool _isCourseRemovedFromCalendar(String courseId) {
+    return _removedCourses.contains(courseId);
   }
-  // Add method to remove course from manual tracking
-  void _removeCourseFromManualTracking(String courseId) {
-    _manuallyAddedCourses.remove(courseId);
-  }
-
   // Build the course panel with integrated toggle button
   Widget _buildCoursePanelWithIntegratedToggle(CourseProvider courseProvider) {
     if (!courseProvider.hasAnyCourses) {
       return const SizedBox.shrink();
     }
-
-    return CourseCalendarPanel(
+      return CourseCalendarPanel(
       eventController: _eventController,
-      onCourseManuallyAdded: _markCourseAsManuallyAdded,
-      onCourseManuallyRemoved: _removeCourseFromManualTracking,
+      onCourseRemovedFromCalendar: _markCourseAsRemovedFromCalendar,
+      onCourseRestoredToCalendar: _restoreCourseToCalendar,
+      isCourseRemovedFromCalendar: _isCourseRemovedFromCalendar,
       viewMode: _viewMode,
       onToggleView: () => setState(() => _viewMode = _viewMode == 0 ? 1 : 0),
     );
@@ -93,14 +99,10 @@ class _CalendarPageState extends State<CalendarPage>
                 }
               });
             }
-          }
-        });return Column(
+          }        });return Column(
           children: [
             // Course Panel with integrated Toggle Button
             _buildCoursePanelWithIntegratedToggle(courseProvider),
-
-            // NEW: Simple Exam Dates Panel
-            const ExamDatesPanel(),
 
             // Calendar Views - Full Width
             Expanded(
@@ -172,6 +174,7 @@ class _CalendarPageState extends State<CalendarPage>
           endDuration,
           filtered: true,
           searchQuery: _searchQuery,
+          onTap: _onEventTap,
           onLongPress: _showCourseDetailsDialog,
         ),
         startDay: WeekDays.sunday,
@@ -204,14 +207,15 @@ class _CalendarPageState extends State<CalendarPage>
         events,
         boundary,
         startDuration,
-        endDuration,
+        endDuration,          onTap: _onEventTap,
         onLongPress: _showCourseDetailsDialog,
       ),
       startHour: 8,
       endHour: 22,
       showLiveTimeLineInAllDays: true,
       // only show events for the current week
-      // Adjust min and max days to show the current day
+      // Adjust min and max days to show the current week
+
       minDay: DateTime.now(),
       // max day last day of the week (next Saturday)
       maxDay: DateTime.now(),
@@ -220,44 +224,12 @@ class _CalendarPageState extends State<CalendarPage>
       eventArranger: const SideEventArranger(),
     );
   }
-  
     // Updated calendar event creation to preserve manually added events
   void _updateCalendarEvents(CourseProvider courseProvider, ColorThemeProvider colorThemeProvider) {
     debugPrint('=== Updating calendar events with schedule selection ===');
 
-    // Store manually added events before clearing
-    final manualEvents = <CalendarEventData>[];
-    final existingEvents = _eventController.allEvents;
-    
-    for (final event in existingEvents) {
-      // Check if this event belongs to a manually added course
-      // We'll identify manual events by checking if they contain course names from manually added courses
-      for (final courseId in _manuallyAddedCourses) {
-        // Find the course name from the course provider
-        StudentCourse? course;
-        for (final semesterCourses in courseProvider.coursesBySemester.values) {
-          final foundCourse = semesterCourses.where((c) => c.courseId == courseId).firstOrNull;
-          if (foundCourse != null) {
-            course = foundCourse;
-            break;
-          }
-        }
-        
-        if (course != null && event.title.contains(course.name)) {
-          manualEvents.add(event);
-          debugPrint('Preserving manually added event: ${event.title}');
-          break;
-        }
-      }
-    }
-    
     // Clear existing events
     _eventController.removeWhere((event) => true);
-    
-    // Re-add manually added events
-    for (final manualEvent in manualEvents) {
-      _eventController.add(manualEvent);
-    }
     
     // Get current week start (Sunday)
     final now = DateTime.now();
@@ -280,12 +252,10 @@ class _CalendarPageState extends State<CalendarPage>
 
       final semester = semesterEntry.key;
       final courses = semesterEntry.value;
-      debugPrint('Processing semester "$semester" with ${courses.length} courses');
-      
-      for (final course in courses) {
-        // Skip manually added courses to avoid duplicates
-        if (_manuallyAddedCourses.contains(course.courseId)) {
-          debugPrint('Skipping course ${course.name} as it was manually added');
+      debugPrint('Processing semester "$semester" with ${courses.length} courses');      for (final course in courses) {
+        // NEW: Skip courses that are marked as removed from calendar
+        if (_isCourseRemovedFromCalendar(course.courseId)) {
+          debugPrint('Skipping course ${course.name} as it was removed from calendar');
           continue;
         }
         
@@ -360,6 +330,12 @@ class _CalendarPageState extends State<CalendarPage>
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
+    // NEW: Skip courses that are marked as removed from calendar
+    if (_isCourseRemovedFromCalendar(course.courseId)) {
+      debugPrint('Skipping events for course ${course.name} as it was removed from calendar');
+      return 0;
+    }
+    
     debugPrint('Creating calendar events for ${course.name} with schedule selection');
     int eventsAdded = 0;
       // Get selected schedule entries only
@@ -480,13 +456,18 @@ class _CalendarPageState extends State<CalendarPage>
     }
     
     return eventsAdded;
-  }
-  int _createBasicCalendarEvents(
+  }  int _createBasicCalendarEvents(
     StudentCourse course, 
     String semester,
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
+    // NEW: Skip courses that are marked as removed from calendar
+    if (_isCourseRemovedFromCalendar(course.courseId)) {
+      debugPrint('Skipping basic events for course ${course.name} as it was removed from calendar');
+      return 0;
+    }
+    
     final courseColor = colorThemeProvider.getCourseColor(course.courseId);
     int eventsAdded = 0;
     
@@ -678,5 +659,135 @@ class _CalendarPageState extends State<CalendarPage>
         ],
       ),
     );
+  }
+
+  // Extract course ID and semester from event description
+  Map<String, String>? _extractCourseInfoFromEvent(CalendarEventData event) {
+    if (event.description == null) return null;
+    
+    // The description contains course ID and semester in format: "courseId - semester"
+    final lines = event.description!.split('\n');
+    for (final line in lines) {
+      if (line.contains(' - ')) {
+        final parts = line.split(' - ');
+        if (parts.length >= 2) {
+          return {
+            'courseId': parts[0].trim(),
+            'semester': parts[1].trim(),
+          };
+        }
+      }
+    }
+    return null;  }
+
+  // Method to handle tap on calendar event - opens schedule selection using shared mixin
+  void _onEventTap(CalendarEventData event) async {
+    final courseInfo = _extractCourseInfoFromEvent(event);
+    if (courseInfo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not find course information for this event'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final courseId = courseInfo['courseId']!;
+    final semester = courseInfo['semester']!;
+
+    // Get course provider and student provider
+    final courseProvider = context.read<CourseProvider>();
+    final studentProvider = context.read<StudentProvider>();
+
+    if (!studentProvider.hasStudent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No student logged in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Find the course in the semester
+    final semesterCourses = courseProvider.coursesBySemester[semester];
+    if (semesterCourses == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Semester "$semester" not found'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final course = semesterCourses.firstWhere(
+      (c) => c.courseId == courseId,
+      orElse: () => StudentCourse(
+        courseId: courseId,
+        name: 'Unknown Course',
+        finalGrade: '',
+        lectureTime: '',
+        tutorialTime: '',
+        labTime: '',
+        workshopTime: '',
+      ),
+    );
+
+    // Get course details for schedule selection
+    final courseDataProvider = context.read<CourseDataProvider>();
+    final courseDetails = await courseDataProvider.getCourseDetails(courseId);
+
+    // Use shared mixin to show schedule selection dialog
+    if (mounted) {
+      showScheduleSelectionDialog(
+        context,
+        course,
+        courseDetails,
+        semester: semester,
+        onSelectionUpdated: () {
+          // Refresh calendar events to show updated selection
+          final colorThemeProvider = context.read<ColorThemeProvider>();
+          _updateCalendarEvents(courseProvider, colorThemeProvider);
+        },      );
+    }
+  }
+
+  // NEW: Persistent storage methods for removed courses
+  Future<void> _loadRemovedCourses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final removedCoursesString = prefs.getString('removed_courses') ?? '';
+      
+      if (removedCoursesString.isNotEmpty) {
+        final removedCoursesList = removedCoursesString.split(',');
+        _removedCourses.clear();
+        _removedCourses.addAll(removedCoursesList);
+        debugPrint('Loaded ${_removedCourses.length} removed courses from storage');
+      }
+    } catch (e) {
+      debugPrint('Error loading removed courses: $e');
+    }
+  }
+
+  Future<void> _saveRemovedCourses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final removedCoursesString = _removedCourses.join(',');
+      await prefs.setString('removed_courses', removedCoursesString);
+      debugPrint('Saved ${_removedCourses.length} removed courses to storage');
+    } catch (e) {
+      debugPrint('Error saving removed courses: $e');
+    }
+  }
+
+  // NEW: Method to restore course to calendar
+  void _restoreCourseToCalendar(String courseId) {
+    _removedCourses.remove(courseId);
+    _saveRemovedCourses(); // Persist the change
+    debugPrint('Course $courseId restored to calendar');
+    // Trigger calendar refresh
+    setState(() {});
   }
 }

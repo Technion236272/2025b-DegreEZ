@@ -130,4 +130,9 @@ class CourseDataProvider with ChangeNotifier {
     _isLoadingCurrentSemester = false;
     notifyListeners();
   }
+
+  Map<String, EnhancedCourseDetails> get courseDetailsMap {
+  return _courseDetailsCache.map((key, entry) => MapEntry(key, entry.data));
+}
+
 }

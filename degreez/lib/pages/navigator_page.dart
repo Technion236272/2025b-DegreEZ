@@ -1,5 +1,6 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
+import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/not_implemented_page.dart';
 import 'package:degreez/pages/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../widgets/add_course_dialog.dart';
-import 'my_courses_page.dart';
+
 import 'customized_diagram_page.dart';
 
 
@@ -76,14 +77,11 @@ class _NavigatorPageState extends State<NavigatorPage> {
           case 'Profile':
             body = const ProfilePage();
             break;
-          case 'My Courses':
-            body = const MyCoursesPage();
-            break;
           case 'Customized Diagram':
             body = const CustomizedDiagramPage();
             break;
           case 'GPA Calculator':
-            body = const NotImplementedPage();
+            body = const GpaCalculatorPage();
             break;
           default:
             body = Text(_currentPage);
@@ -216,12 +214,6 @@ class _NavigatorPageState extends State<NavigatorPage> {
               onTap: () => _changePage('Profile'),
             ),
             _buildDrawerItem(
-              icon: Icons.school,
-              title: 'My Courses',
-              isSelected: _currentPage == 'My Courses',
-              onTap: () => _changePage('My Courses'),
-            ),
-            _buildDrawerItem(
               icon: Icons.trending_up,
               title: 'Customized Diagram',
               isSelected: _currentPage == 'Customized Diagram',
@@ -305,8 +297,9 @@ class _NavigatorPageState extends State<NavigatorPage> {
         ),
       ),
       selected: isSelected,
+      selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
       onTap: () {
-        Navigator.pop(context);
+        Navigator.pop(context); // Close drawer
         onTap();
       },
     );
@@ -317,5 +310,4 @@ class _NavigatorPageState extends State<NavigatorPage> {
       _currentPage = page;
     });
   }
-
 }
