@@ -29,22 +29,20 @@ Widget buildFormattedPrereqWarning(
             ),
           Wrap(
             children: [
-             // const Text('('),
+              // const Text('('),
               for (int j = 0; j < prereqGroups[i].length; j++) ...[
                 if (j > 0)
-                  const Text(
-                    ' ו־ ',
-                    style: TextStyle(color: Colors.white70),
-                  ),
+                  const Text(' ו־ ', style: TextStyle(color: Colors.white70)),
                 Text.rich(
                   TextSpan(
                     children: [
                       TextSpan(
                         text: prereqGroups[i][j],
                         style: TextStyle(
-                          color: missingSet.contains(prereqGroups[i][j])
-                              ? Colors.redAccent
-                              : Colors.greenAccent,
+                          color:
+                              missingSet.contains(prereqGroups[i][j])
+                                  ? Colors.redAccent
+                                  : Colors.greenAccent,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -52,9 +50,10 @@ Widget buildFormattedPrereqWarning(
                         text:
                             ' (${courseNames[prereqGroups[i][j]] ?? 'לא ידוע'})',
                         style: TextStyle(
-                          color: missingSet.contains(prereqGroups[i][j])
-                              ? Colors.redAccent
-                              : Colors.greenAccent,
+                          color:
+                              missingSet.contains(prereqGroups[i][j])
+                                  ? Colors.redAccent
+                                  : Colors.greenAccent,
                           fontSize: 12,
                         ),
                       ),
@@ -62,7 +61,7 @@ Widget buildFormattedPrereqWarning(
                   ),
                 ),
               ],
-            //  const Text(')'),
+              //  const Text(')'),
             ],
           ),
         ],
@@ -70,8 +69,6 @@ Widget buildFormattedPrereqWarning(
     ),
   );
 }
-
-
 
 class AddCourseDialog extends StatefulWidget {
   final String semesterName;
@@ -84,16 +81,17 @@ class AddCourseDialog extends StatefulWidget {
   });
 
   static Future<void> show(
-    BuildContext context, 
+    BuildContext context,
     String semesterName, {
     Function(String courseId)? onCourseAdded,
   }) {
     return showDialog(
       context: context,
-      builder: (context) => AddCourseDialog(
-        semesterName: semesterName,
-        onCourseAdded: onCourseAdded,
-      ),
+      builder:
+          (context) => AddCourseDialog(
+            semesterName: semesterName,
+            onCourseAdded: onCourseAdded,
+          ),
     );
   }
 
@@ -121,7 +119,10 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
               controller: searchController,
               decoration: const InputDecoration(
                 enabledBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),),
+                  borderSide: BorderSide(
+                    color: AppColorsDarkMode.secondaryColor,
+                  ),
+                ),
                 labelText: 'Course ID or Name',
                 hintText: 'e.g. 02340114 or פיסיקה 2',
                 prefixIcon: Icon(Icons.search),
@@ -145,7 +146,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
 
                     return ListTile(
                       title: Text('${course.courseNumber} - ${course.name}'),
-                      subtitle: Text('${course.points} points • ${course.faculty}'),
+                      subtitle: Text(
+                        '${course.points} points • ${course.faculty}',
+                      ),
                       trailing: IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () => _addCourse(course),
@@ -186,7 +189,34 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       });
     }
   }
+
   Future<void> _addCourse(EnhancedCourseDetails courseDetails) async {
+    final existingCourses =
+        context
+            .read<CourseProvider>()
+            .getCoursesForSemester(widget.semesterName)
+            .map((c) => c.courseId)
+            .toSet();
+
+    if (existingCourses.contains(courseDetails.courseNumber)) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.orange,
+          content: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              "${courseDetails.name} כבר קיים בסמסטר ${widget.semesterName}",
+              style: const TextStyle(color: Colors.black),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+
+      return;
+    }
+
     final rawPrereqs = courseDetails.prerequisites;
     List<List<String>> parsedPrereqs = [];
 
@@ -194,21 +224,22 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
 
       for (final group in orGroups) {
-        final andGroup = group
-            .replaceAll(RegExp(r'[^\d\s]'), '')
-            .trim()
-            .split(RegExp(r'\s+'))
-            .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
-            .toList();
+        final andGroup =
+            group
+                .replaceAll(RegExp(r'[^\d\s]'), '')
+                .trim()
+                .split(RegExp(r'\s+'))
+                .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+                .toList();
 
         if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
       }
     }
 
     final missing = context.read<CourseProvider>().getMissingPrerequisites(
-          widget.semesterName,
-          parsedPrereqs,
-        );
+      widget.semesterName,
+      parsedPrereqs,
+    );
 
     if (missing.isNotEmpty) {
       final allTakenCourses = context
@@ -232,34 +263,39 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
 
       final proceedAnyway = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Missing Prerequisites'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'To register for this course, you must have completed one of the following prerequisite groups. '
-                'Courses in red were not found in your previous semesters.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.4),
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('Missing Prerequisites'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'To register for this course, you must have completed one of the following prerequisite groups. '
+                    'Courses in red were not found in your previous semesters.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, height: 1.4),
+                  ),
+                  const SizedBox(height: 10),
+                  buildFormattedPrereqWarning(
+                    parsedPrereqs,
+                    missing,
+                    courseIdToName,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text('Do you want to add this course anyway?'),
+                ],
               ),
-              const SizedBox(height: 10),
-              buildFormattedPrereqWarning(parsedPrereqs, missing, courseIdToName),
-              const SizedBox(height: 10),
-              const Text('Do you want to add this course anyway?'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text('Add Anyway'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Add Anyway'),
-            ),
-          ],
-        ),
       );
 
       if (proceedAnyway != true) return;
@@ -277,10 +313,10 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     );
 
     final success = await context.read<CourseProvider>().addCourseToSemester(
-          context.read<StudentProvider>().student!.id,
-          widget.semesterName,
-          course,
-        );
+      context.read<StudentProvider>().student!.id,
+      widget.semesterName,
+      course,
+    );
 
     if (!mounted) return;
 
@@ -290,7 +326,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       widget.onCourseAdded?.call(courseDetails.courseNumber);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${courseDetails.name} added to ${widget.semesterName}'),
+          content: Text(
+            '${courseDetails.name} added to ${widget.semesterName}',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -303,5 +341,4 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       );
     }
   }
-
 }
