@@ -62,7 +62,6 @@ mixin CalendarDarkThemeMixin {
       child: Text(
         '${date.hour}:00',
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withAlpha(179),
           fontSize: 12,
         ),
         textAlign: TextAlign.center,
