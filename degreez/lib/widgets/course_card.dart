@@ -1,7 +1,6 @@
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
-import 'package:degreez/widgets/note_popup.dart';
 import 'package:degreez/widgets/course_actions_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +8,6 @@ import '../services/course_service.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
-import 'package:degreez/providers/course_data_provider.dart';
-import 'package:degreez/providers/customized_diagram_notifier.dart';
 
 enum DirectionValues { horizontal, vertical }
 
@@ -103,11 +100,11 @@ class _CourseCardState extends State<CourseCard> {
                       widget.course.courseId,
                     );
 
-                    setState(() {
-                      _hasNote =
-                          refreshed?.note != null &&
-                          refreshed!.note!.trim().isNotEmpty;
-                    });
+                    // setState(() {
+                    //   _hasNote =
+                    //       refreshed?.note != null &&
+                    //       refreshed!.note!.trim().isNotEmpty;
+                    // });
                   },
                 );
               },
@@ -199,10 +196,8 @@ class _CourseCardState extends State<CourseCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-
-                    if (courseDetails != null &&
-                        courseDetails.points.isNotEmpty)
+                    ),                    // Always show credit points if available from stored data
+                    if (course.creditPoints > 0)
                       Expanded(
                         flex: 3, // 30%
                         child: Container(
@@ -235,9 +230,9 @@ class _CourseCardState extends State<CourseCard> {
                                 Expanded(
                                   flex: 9,
                                   child: Text(
-                                    courseDetails.points.contains(".")
-                                        ? courseDetails.points
-                                        : "${courseDetails.points}.0",
+                                    course.creditPoints % 1 == 0 
+                                        ? "${course.creditPoints.toInt()}.0"
+                                        : course.creditPoints.toString(),
                                     style: TextStyle(
                                       fontSize: 10,
                                       color:
@@ -421,9 +416,8 @@ class _CourseCardState extends State<CourseCard> {
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (courseDetails != null && courseDetails.points.isNotEmpty)
+                    ),                  ),
+                  if (course.creditPoints > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 4,
@@ -434,7 +428,9 @@ class _CourseCardState extends State<CourseCard> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        courseDetails.points,
+                        course.creditPoints % 1 == 0 
+                            ? course.creditPoints.toInt().toString()
+                            : course.creditPoints.toString(),
                         style: const TextStyle(
                           fontSize: 8,
                           color: Colors.white,

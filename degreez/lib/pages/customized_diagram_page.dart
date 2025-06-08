@@ -68,7 +68,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       });
     }
   }
-
   // Helper method to build timeline data
   List<SemesterTimelineData> _buildTimelineData(
     Map<String, List<StudentCourse>> semesters,
@@ -77,6 +76,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       final courses = entry.value;
       final completedCourses =
           courses.where((c) => c.finalGrade.isNotEmpty).length;
+      
+      // Calculate total credits by summing up credit points from all courses
+      final totalCredits = courses.fold<double>(
+        0.0,
+        (sum, course) => sum + course.creditPoints,
+      );
 
       SemesterStatus status;
       if (courses.isEmpty) {
@@ -94,7 +99,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
         status: status,
         completedCourses: completedCourses,
         totalCourses: courses.length,
-        totalCredits: 0.0, // TODO: Calculate based on course details
+        totalCredits: totalCredits,
       );
     }).toList();
   }
@@ -103,6 +108,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   void _onCourseUpdated() {
     setState(() {
       // This will trigger a rebuild and refresh the course data
+      
     });
   }
 
@@ -343,45 +349,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildSummaryCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 

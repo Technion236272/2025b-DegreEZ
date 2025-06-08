@@ -54,7 +54,6 @@ class CourseProvider with ChangeNotifier {
   Map<String, List<StudentCourse>> _coursesBySemester = {};
   CourseLoadingState _loadingState = const CourseLoadingState();
   String? _error;
-  Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
   SemesterInfo? _currentSemester;
 
   SemesterInfo? get currentSemester => _currentSemester;
@@ -124,10 +123,19 @@ class CourseProvider with ChangeNotifier {
                 .toList();
 
         newCoursesBySemester[semesterKey] = courses;
-      }
-
-      _coursesBySemester = newCoursesBySemester;
+      }      _coursesBySemester = newCoursesBySemester;
       _error = null;
+      
+      // Check if we need to migrate any courses that don't have credit points
+      final needsMigration = _coursesBySemester.values
+          .any((courses) => courses.any((course) => course.creditPoints <= 0));
+      
+      if (needsMigration) {
+        debugPrint('🔄 Detected courses without credit points, starting migration...');
+        // Run migration in background without blocking the UI
+        migrateCreditPointsForExistingCourses(studentId);
+      }
+      
       return true;
     } catch (e) {
       _error = 'Failed to load courses: $e';
@@ -182,8 +190,8 @@ class CourseProvider with ChangeNotifier {
               group
                   .replaceAll(
                     RegExp(r'[^\d\s]'),
-                    '',
-                  ) // keep only digits + space
+                    '', // keep only digits + space
+                  )
                   .trim()
                   .split(RegExp(r'\s+'))
                   .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
@@ -690,40 +698,48 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
 
     return {for (final name in semesterNames) name: _coursesBySemester[name]!};
   }
-
   // Get total credits for a semester
   double getTotalCreditsForSemester(String semesterKey) {
     final courses = _coursesBySemester[semesterKey] ?? [];
     double total = 0.0;
 
     for (final course in courses) {
-      // Use CourseDataProvider instead of the empty cache
-      // Note: This will be async, so you need to handle it properly
-      final courseWithDetails = getCourseWithDetails(
-        semesterKey,
-        course.courseId,
-      );
-      if (courseWithDetails?.courseDetails != null) {
-        total += courseWithDetails!.courseDetails.creditPoints;
-      }
+      // Use stored credit points directly from the course model
+      total += course.creditPoints;
     }
 
     return total;
-  }
-
-  // Get course with details (updated return type)
+  }// Get course with details (updated return type)
   StudentCourseWithDetails? getCourseWithDetails(
     String semesterKey,
     String courseId,
   ) {
-    final studentCourse = _coursesBySemester[semesterKey]?.firstWhere(
-      (course) => course.courseId == courseId,
-      orElse: () => null as StudentCourse,
+    final courses = _coursesBySemester[semesterKey];
+    if (courses == null) return null;
+    
+    StudentCourse? studentCourse;
+    try {
+      studentCourse = courses.firstWhere(
+        (course) => course.courseId == courseId,
+      );
+    } catch (e) {
+      return null;
+    }    // Create a basic course details object using stored credit points
+    final courseDetails = EnhancedCourseDetails(
+      courseNumber: studentCourse.courseId,
+      name: studentCourse.name,
+      syllabus: '',
+      faculty: '',
+      academicLevel: '',
+      prerequisites: '',
+      adjacentCourses: '',
+      noAdditionalCredit: '',
+      points: studentCourse.creditPoints.toString(), // Convert credit points to string format
+      responsible: '',
+      notes: '',
+      exams: {},
+      schedule: [],
     );
-
-    if (studentCourse == null) return null;
-
-    final courseDetails = _courseDetailsCache[courseId];
 
     return StudentCourseWithDetails(
       studentCourse: studentCourse,
@@ -906,5 +922,83 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     };
 
     return missing.toList();
+  }
+
+  // Migration method to add credit points to existing courses
+  Future<bool> migrateCreditPointsForExistingCourses(String studentId) async {
+    debugPrint('🔄 Starting credit points migration for existing courses...');
+    
+    try {
+      bool hasUpdates = false;
+      
+      for (final entry in _coursesBySemester.entries) {
+        final semesterKey = entry.key;
+        final courses = entry.value;
+        
+        for (int i = 0; i < courses.length; i++) {
+          final course = courses[i];
+          
+          // Check if course already has credit points stored
+          if (course.creditPoints > 0) {
+            debugPrint('✅ Course ${course.courseId} already has credit points: ${course.creditPoints}');
+            continue;
+          }
+          
+          debugPrint('🔍 Migrating credit points for course: ${course.courseId}');
+          
+          // Fetch credit points from course details
+          double creditPoints = 3.0; // Default fallback
+          try {
+            final courseDetails = await CourseService.getCourseDetails(
+              _currentSemester?.year ?? 2024,
+              _currentSemester?.semester ?? 200,
+              course.courseId,
+            );
+            
+            if (courseDetails != null && courseDetails.creditPoints > 0) {
+              creditPoints = courseDetails.creditPoints;
+              debugPrint('📚 Found credit points for ${course.courseId}: $creditPoints');
+            } else {
+              debugPrint('⚠️ No credit points found for ${course.courseId}, using default: $creditPoints');
+            }
+          } catch (e) {
+            debugPrint('❌ Error fetching credit points for ${course.courseId}: $e');
+          }
+          
+          // Update course with credit points
+          final updatedCourse = course.copyWith(creditPoints: creditPoints);
+          courses[i] = updatedCourse;
+          
+          // Update in Firestore
+          try {
+            await FirebaseFirestore.instance
+                .collection('Students')
+                .doc(studentId)
+                .collection('Courses-per-Semesters')
+                .doc(semesterKey)
+                .collection('Courses')
+                .doc(course.courseId)
+                .update({'Credit_points': creditPoints});
+            
+            debugPrint('✅ Updated credit points for ${course.courseId} in Firestore');
+            hasUpdates = true;
+          } catch (e) {
+            debugPrint('❌ Failed to update ${course.courseId} in Firestore: $e');
+          }
+        }
+      }
+      
+      if (hasUpdates) {
+        notifyListeners();
+        debugPrint('🎉 Credit points migration completed successfully!');
+      } else {
+        debugPrint('ℹ️ No courses needed migration');
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('❌ Credit points migration failed: $e');
+      return false;
+    }
   }
 }

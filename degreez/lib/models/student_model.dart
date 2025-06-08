@@ -81,10 +81,10 @@ class StudentCourse {
   final String tutorialTime; // Stores selected tutorial schedule: "day time" format
   final String labTime;      // Stores selected lab schedule: "day time" format
   final String workshopTime; // Stores selected workshop schedule: "day time" format
+  final double creditPoints; // Stores credit points for the course
 
   final String? note;
   final List<Map<String, List<String>>>? prerequisites;
-
   StudentCourse({
     required this.courseId,
     required this.name,
@@ -93,6 +93,7 @@ class StudentCourse {
     required this.tutorialTime,
     required this.labTime,
     required this.workshopTime,
+    required this.creditPoints,
     this.note,
     this.prerequisites,
   });
@@ -112,9 +113,7 @@ class StudentCourse {
             }
             return {'and': []};
           }).toList();
-    }
-
-    return StudentCourse(
+    }    return StudentCourse(
       courseId: data['Course_Id'] ?? '',
       name: data['Name'] ?? '',
       finalGrade: data['Final_grade'] ?? '',
@@ -122,11 +121,11 @@ class StudentCourse {
       tutorialTime: data['Tutorial_time'] ?? '',
       labTime: data['Lab_time'] ?? '',
       workshopTime: data['Workshop_time'] ?? '',
+      creditPoints: (data['Credit_points'] as num?)?.toDouble() ?? 3.0, // Default to 3.0 if not specified
       note: data['Note'] ?? '',
       prerequisites: parsedPrereqs,
     );
   }
-
   Map<String, dynamic> toFirestore() {
     final data = <String, dynamic>{
       'Course_Id': courseId,
@@ -136,6 +135,7 @@ class StudentCourse {
       'Tutorial_time': tutorialTime,
       'Lab_time': labTime,
       'Workshop_time': workshopTime,
+      'Credit_points': creditPoints,
       'Note': note ?? '',
     };
 
@@ -145,7 +145,6 @@ class StudentCourse {
 
     return data;
   }
-
   StudentCourse copyWith({
     String? finalGrade,
     String? note,
@@ -153,6 +152,7 @@ class StudentCourse {
     String? tutorialTime,
     String? labTime,
     String? workshopTime,
+    double? creditPoints,
     List<Map<String, List<String>>>? prerequisites,
   }) {
     return StudentCourse(
@@ -163,6 +163,7 @@ class StudentCourse {
       tutorialTime: tutorialTime ?? this.tutorialTime,
       labTime: labTime ?? this.labTime,
       workshopTime: workshopTime ?? this.workshopTime,
+      creditPoints: creditPoints ?? this.creditPoints,
       note: note ?? this.note,
       prerequisites: prerequisites ?? this.prerequisites,
     );
