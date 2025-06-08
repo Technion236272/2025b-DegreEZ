@@ -9,10 +9,10 @@ import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../widgets/course_calendar_panel.dart';
 import '../widgets/exam_calendar_panel.dart';
-import '../widgets/schedule_selection_dialog.dart';
 import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
+import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -23,7 +23,7 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> 
-    with CalendarDarkThemeMixin, CourseEventMixin {
+    with CalendarDarkThemeMixin, CourseEventMixin, ScheduleSelectionMixin {
   int _viewMode = 0; // 0: Week View, 1: Day View
   final TextEditingController _searchController = TextEditingController();
   final _searchQuery = '';
@@ -153,7 +153,7 @@ class _CalendarPageState extends State<CalendarPage>
           endDuration,
           filtered: true,
           searchQuery: _searchQuery,
-          onTap: _showScheduleSelectionFromEvent,
+          onTap: _onEventTap,
           onLongPress: _showCourseDetailsDialog,
         ),
         startDay: WeekDays.sunday,
@@ -186,8 +186,7 @@ class _CalendarPageState extends State<CalendarPage>
         events,
         boundary,
         startDuration,
-        endDuration,
-        onTap: _showScheduleSelectionFromEvent,
+        endDuration,          onTap: _onEventTap,
         onLongPress: _showCourseDetailsDialog,
       ),
       startHour: 8,
@@ -681,11 +680,10 @@ class _CalendarPageState extends State<CalendarPage>
         }
       }
     }
-    return null;
-  }
+    return null;  }
 
-  // Method to handle tap on calendar event - opens schedule selection
-  void _showScheduleSelectionFromEvent(CalendarEventData event) async {
+  // Method to handle tap on calendar event - opens schedule selection using shared mixin
+  void _onEventTap(CalendarEventData event) async {
     final courseInfo = _extractCourseInfoFromEvent(event);
     if (courseInfo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -743,72 +741,18 @@ class _CalendarPageState extends State<CalendarPage>
     final courseDataProvider = context.read<CourseDataProvider>();
     final courseDetails = await courseDataProvider.getCourseDetails(courseId);
 
-    if (courseDetails == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Course details not available for $courseId'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Show schedule selection dialog
+    // Use shared mixin to show schedule selection dialog
     if (mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => ScheduleSelectionDialog(
-          course: course,
-          courseDetails: courseDetails,
-          onSelectionChanged: (lectureTime, tutorialTime, labTime, workshopTime) {
-            _updateCourseScheduleSelection(course, semester, lectureTime, tutorialTime, labTime, workshopTime);
-          },
-        ),
-      );
-    }
-  }
-
-  // Method to update course schedule selection from tap event
-  void _updateCourseScheduleSelection(
-    StudentCourse course,
-    String semester,
-    String? lectureTime,
-    String? tutorialTime,
-    String? labTime,
-    String? workshopTime,
-  ) async {
-    final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
-
-    if (!studentProvider.hasStudent) return;
-
-    final success = await courseProvider.updateCourseScheduleSelection(
-      studentProvider.student!.id,
-      semester,
-      course.courseId,
-      lectureTime,
-      tutorialTime,
-      labTime,
-      workshopTime,
-    );
-
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Schedule selection updated')),
-      );
-      
-      // Refresh calendar events to show updated selection
-      final colorThemeProvider = context.read<ColorThemeProvider>();
-      _updateCalendarEvents(courseProvider, colorThemeProvider);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update schedule selection'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showScheduleSelectionDialog(
+        context,
+        course,
+        courseDetails,
+        semester: semester,
+        onSelectionUpdated: () {
+          // Refresh calendar events to show updated selection
+          final colorThemeProvider = context.read<ColorThemeProvider>();
+          _updateCalendarEvents(courseProvider, colorThemeProvider);
+        },      );
     }
   }
 }

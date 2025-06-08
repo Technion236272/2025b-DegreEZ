@@ -219,9 +219,13 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   ],
                                 ),
                                 trailing: PopupMenuButton<String>(                                  onSelected: (value) {
-                                    switch (value) {
-                                      case 'select_schedule':
-                                        _showScheduleSelection(course, courseDetails);
+                                    switch (value) {                                      case 'select_schedule':
+                                        showScheduleSelectionDialog(
+                                          context,
+                                          course,
+                                          courseDetails,
+                                          onSelectionUpdated: () => setState(() {}),
+                                        );
                                         break;
                                       case 'add_to_calendar':
                                         _addCourseToCalendar(course, courseDetails, colorThemeProvider);
@@ -301,79 +305,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         );
       },
     );
-  }
-
-  void _showScheduleSelection(StudentCourse course, courseDetails) {
-    if (courseDetails == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course details not available'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => ScheduleSelectionDialog(
-        course: course,
-        courseDetails: courseDetails,
-        onSelectionChanged: (lectureTime, tutorialTime, labTime, workshopTime) {
-          _updateCourseScheduleSelection(course, lectureTime, tutorialTime, labTime, workshopTime);
-        },
-      ),
-    );
-  }
-
-  void _updateCourseScheduleSelection(
-    StudentCourse course,
-    String? lectureTime,
-    String? tutorialTime,
-    String? labTime,
-    String? workshopTime,
-  ) async {
-    final studentProvider = context.read<StudentProvider>();
-    final courseProvider = context.read<CourseProvider>();
-
-    if (!studentProvider.hasStudent) return;
-
-    // Find which semester this course belongs to
-    String? targetSemester;
-    for (final entry in courseProvider.coursesBySemester.entries) {
-      if (entry.value.any((c) => c.courseId == course.courseId)) {
-        targetSemester = entry.key;
-        break;
-      }
-    }
-
-    if (targetSemester == null) return;
-
-    final success = await courseProvider.updateCourseScheduleSelection(
-      studentProvider.student!.id,
-      targetSemester,
-      course.courseId,
-      lectureTime,
-      tutorialTime,
-      labTime,
-      workshopTime,
-    );
-
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Schedule selection updated')),
-      );
-      
-      // Refresh calendar events
-      setState(() {});
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update schedule selection'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
   void _addCourseToCalendar(StudentCourse course, courseDetails, ColorThemeProvider colorThemeProvider) {
     if (courseDetails == null) {
