@@ -732,6 +732,7 @@ class _CalendarPageState extends State<CalendarPage>
         tutorialTime: '',
         labTime: '',
         workshopTime: '',
+        creditPoints: 0.0, // Default value, should not be used
       ),
     );
 

@@ -114,7 +114,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       });
     }
   }
-
   Future<void> _addCourse(EnhancedCourseDetails courseDetails) async {
     final course = StudentCourse(
       courseId: courseDetails.courseNumber,
@@ -124,6 +123,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       tutorialTime: '',
       labTime: '',
       workshopTime: '',
+      creditPoints: courseDetails.creditPoints, // Store credit points from API
     );
 
     final success = await context.read<CourseProvider>().addCourseToSemester(

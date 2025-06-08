@@ -4,7 +4,6 @@ import '../color/color_palette.dart';
 import '../models/student_model.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
-import '../services/course_service.dart';
 
 class GpaCalculatorPage extends StatefulWidget {
   const GpaCalculatorPage({super.key});
@@ -61,14 +60,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           if (courseDetails?.courseDetails == null) {
             // Try to load course details from API
             final currentSemester = courseProvider.currentSemester;
-            if (currentSemester != null) {
-              try {
-                final details = await CourseService.getCourseDetails(
-                  currentSemester.year,
-                  currentSemester.semester,
-                  course.courseId,
-                );
-                // Cache the details (this would need to be implemented in CourseProvider)
+            if (currentSemester != null) {              try {
+                // No longer needed - using stored credit points
               } catch (e) {
                 // Course details not available for current semester, which is expected
               }
@@ -87,45 +80,62 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     }
   }
 
-  double _calculateAverage(List<GpaCalculationItem> courses) {
-    if (courses.isEmpty) return 0.0;
+  GpaCalculationResult _calculateAverage(List<GpaCalculationItem> courses) {
+    print('DEBUG: _calculateAverage called with ${courses.length} courses');
     
-    double totalWeightedGrades = 0.0;
+    if (courses.isEmpty) {
+      print('DEBUG: No courses provided to _calculateAverage');
+      return GpaCalculationResult(gpa: 0.0, totalCredits: 0.0);
+    }
+    
+    double totalPoints = 0.0;
     double totalCredits = 0.0;
     
     for (final course in courses) {
-      totalWeightedGrades += course.grade * course.credits;
+      print('DEBUG: Processing ${course.name}: ${course.credits} credits, ${course.grade} grade');
+      final gradePoint = (course.grade / 100) * 4.0; // Convert percentage to 4.0 scale
+      final weightedPoints = gradePoint * course.credits;
+      totalPoints += weightedPoints;
       totalCredits += course.credits;
+      
+      print('DEBUG: ${course.name} - gradePoint: $gradePoint, weightedPoints: $weightedPoints');
+      print('DEBUG: Running totals - totalPoints: $totalPoints, totalCredits: $totalCredits');
     }
     
-    return totalCredits > 0 ? totalWeightedGrades / totalCredits : 0.0;
+    final gpa = totalCredits > 0 ? totalPoints / totalCredits : 0.0;
+    
+    print('DEBUG: Final calculation - totalPoints: $totalPoints, totalCredits: $totalCredits, gpa: $gpa');
+    
+    return GpaCalculationResult(gpa: gpa, totalCredits: totalCredits);
   }
-
   List<GpaCalculationItem> _getCompletedCourses(
     Map<String, List<StudentCourse>> coursesBySemester,
     CourseProvider courseProvider,
   ) {
     final List<GpaCalculationItem> completedCourses = [];
     
+    print('DEBUG: Starting _getCompletedCourses');
+    print('DEBUG: coursesBySemester.length = ${coursesBySemester.length}');
+    
     for (final entry in coursesBySemester.entries) {
       final semesterKey = entry.key;
       final semesterCourses = entry.value;
       
+      print('DEBUG: Processing semester $semesterKey with ${semesterCourses.length} courses');
+      
       for (final course in semesterCourses) {
+        print('DEBUG: Course ${course.name} - finalGrade: "${course.finalGrade}", creditPoints: ${course.creditPoints}');
+        
         // Check if the course has a numerical grade
         if (course.finalGrade.isNotEmpty) {
           final grade = double.tryParse(course.finalGrade);
+          print('DEBUG: Parsed grade for ${course.name}: $grade');
+          
           if (grade != null && grade >= 0 && grade <= 100) {
-            // Try to get actual credit points from course details
-            double credits = 3.0; // Default fallback
+            // Use stored credit points directly from the course model
+            final credits = course.creditPoints; // No more API calls needed!
             
-            final courseWithDetails = courseProvider.getCourseWithDetails(semesterKey, course.courseId);
-            if (courseWithDetails?.courseDetails != null) {
-              final courseDetails = courseWithDetails!.courseDetails as EnhancedCourseDetails;
-              if (courseDetails.creditPoints > 0) {
-                credits = courseDetails.creditPoints;
-              }
-            }
+            print('DEBUG: Adding course ${course.name} with grade $grade and credits $credits');
             
             completedCourses.add(GpaCalculationItem(
               name: course.name,
@@ -135,9 +145,18 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               isWhatIf: false,
               semesterKey: semesterKey,
             ));
+          } else {
+            print('DEBUG: Grade $grade not valid for ${course.name}');
           }
+        } else {
+          print('DEBUG: No finalGrade for ${course.name}');
         }
       }
+    }
+    
+    print('DEBUG: Total completed courses found: ${completedCourses.length}');
+    for (final course in completedCourses) {
+      print('DEBUG: Course ${course.name}: ${course.credits} credits, ${course.grade} grade');
     }
     
     return completedCourses;
@@ -229,11 +248,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ],
               ),
             );
-          }
-
-          final coursesBySemester = courseProvider.sortedCoursesBySemester;
+          }          final coursesBySemester = courseProvider.sortedCoursesBySemester;
           final completedCourses = _getCompletedCourses(coursesBySemester, courseProvider);
-          final currentAverage = _calculateAverage(completedCourses);
+          final currentResult = _calculateAverage(completedCourses);
           
           // Calculate projected average including what-if courses
           final allCourses = [
@@ -247,15 +264,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               semesterKey: 'what-if',
             )),
           ];
-          final projectedAverage = _calculateAverage(allCourses);
+          final projectedResult = _calculateAverage(allCourses);
 
-          // Calculate total credits
-          final totalCompletedCredits = completedCourses.fold<double>(
-            0.0, (sum, course) => sum + course.credits,
-          );
-          final totalProjectedCredits = allCourses.fold<double>(
-            0.0, (sum, course) => sum + course.credits,
-          );
+          // Extract GPA and credits from results
+          final currentAverage = currentResult.gpa;
+          final projectedAverage = projectedResult.gpa;
+          final totalCompletedCredits = currentResult.totalCredits;
+          final totalProjectedCredits = projectedResult.totalCredits;
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -598,9 +613,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       ],
     );
   }
-
   Widget _buildSemesterSection(String semesterKey, List<GpaCalculationItem> courses) {
-    final semesterAverage = _calculateAverage(courses);
+    final semesterResult = _calculateAverage(courses);
+    final semesterAverage = semesterResult.gpa;
     final totalCredits = courses.fold<double>(0.0, (sum, course) => sum + course.credits);
 
     return Container(
@@ -1085,5 +1100,15 @@ class WhatIfCourse {
     required this.name,
     required this.grade,
     required this.credits,
+  });
+}
+
+class GpaCalculationResult {
+  final double gpa;
+  final double totalCredits;
+
+  GpaCalculationResult({
+    required this.gpa,
+    required this.totalCredits,
   });
 }
