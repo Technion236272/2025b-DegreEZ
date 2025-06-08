@@ -564,38 +564,46 @@ class CourseProvider with ChangeNotifier {
   }
 
   // Delete semester with optimistic update
-  Future<bool> deleteSemester(String studentId, String semesterName) async {
-    if (!_coursesBySemester.containsKey(semesterName)) {
-      _error = 'Semester "$semesterName" does not exist';
-      notifyListeners();
-      return false;
-    }
-
-    // Store for rollback
-    final oldCourses = _coursesBySemester[semesterName]!;
-
-    // Optimistic update
-    _coursesBySemester.remove(semesterName);
+Future<bool> deleteSemester(String studentId, String semesterName) async {
+  if (!_coursesBySemester.containsKey(semesterName)) {
+    _error = 'Semester "$semesterName" does not exist';
     notifyListeners();
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('Students')
-          .doc(studentId)
-          .collection('Courses-per-Semesters')
-          .doc(semesterName)
-          .delete();
-
-      _error = null;
-      return true;
-    } catch (e) {
-      // Rollback
-      _coursesBySemester[semesterName] = oldCourses;
-      _error = 'Failed to delete semester: $e';
-      notifyListeners();
-      return false;
-    }
+    return false;
   }
+
+  final oldCourses = _coursesBySemester[semesterName]!;
+
+  // Optimistic update
+  _coursesBySemester.remove(semesterName);
+  notifyListeners();
+
+  try {
+    final semesterRef = FirebaseFirestore.instance
+        .collection('Students')
+        .doc(studentId)
+        .collection('Courses-per-Semesters')
+        .doc(semesterName);
+
+    // Step 1: Delete all documents in the 'Courses' subcollection
+    final courseDocs = await semesterRef.collection('Courses').get();
+    for (final doc in courseDocs.docs) {
+      await doc.reference.delete();
+    }
+
+    // Step 2: Delete the semester document
+    await semesterRef.delete();
+
+    _error = null;
+    return true;
+  } catch (e) {
+    // Rollback
+    _coursesBySemester[semesterName] = oldCourses;
+    _error = 'Failed to delete semester: $e';
+    notifyListeners();
+    return false;
+  }
+}
+
 
   // Remove course from semester with optimistic update
   Future<bool> removeCourseFromSemester(
