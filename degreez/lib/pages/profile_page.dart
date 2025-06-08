@@ -5,11 +5,9 @@ import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
 import 'package:degreez/widgets/feedback_popup.dart';
-import 'package:degreez/widgets/profile/profile_info_row.dart';
-import 'package:degreez/widgets/profile/stat_card.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
-import 'package:degreez/widgets/text_form_field_WithStyle.dart';
+import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -87,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final semesterController = TextEditingController(text: student.semester.toString());
 
   // Catalog Selection Not Implemented Yet
-  final _catalogController = TextEditingController();
+  // final _catalogController = TextEditingController();
 
   final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
   final RegExp majorValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
@@ -191,6 +189,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   catalog: '',
                   semester: student.semester,
                 );
+                dispose();
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -199,6 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+                
               },
               child: Text('Save Changes',style: TextStyle(
                     color: AppColorsDarkMode.secondaryColor,
@@ -208,40 +208,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildEditField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    TextInputType? keyboardType,
-    int maxLines = 1,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      style: TextStyle(color: AppColorsDarkMode.accentColor),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: AppColorsDarkMode.accentColorDim),
-        prefixIcon: Icon(icon, color: AppColorsDarkMode.accentColorDim),
-        filled: true,
-        fillColor: AppColorsDarkMode.mainColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.accentColorDim),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.accentColorDim),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.accentColor, width: 2),
-        ),
-      ),
     );
   }
 

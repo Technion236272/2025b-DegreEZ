@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 mixin CalendarDarkThemeMixin {
   /// Get the background color for the entire calendar
   Color getCalendarBackgroundColor(BuildContext context) => 
-      Theme.of(context).colorScheme.background;
+      Theme.of(context).colorScheme.surface;
       
   /// Get the color for calendar cell borders
   Color getBorderColor(BuildContext context) => 

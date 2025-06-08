@@ -33,10 +33,6 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                 ),
                 onPressed: () async {
                   try {
-                    final rootNavigator = Navigator.of(
-                                context,
-                                rootNavigator: true,
-                              );
                     // Attempt to sign in with Google
                     final user = await loginNotifier.signInWithGoogle();
 

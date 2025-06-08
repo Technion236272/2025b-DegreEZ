@@ -1,7 +1,3 @@
-import 'package:degreez/color/color_palette.dart';
-import 'package:flutter/material.dart';
-import 'package:degreez/color/color_palette.dart';
-import 'package:degreez/widgets/text_form_field_WithStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 

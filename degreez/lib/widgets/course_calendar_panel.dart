@@ -164,7 +164,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withAlpha(25),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
                 ),
                 child: Row(
@@ -307,9 +307,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.1),
+                                  color: Colors.orange.withAlpha(25),
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                  border: Border.all(color: Colors.orange.withAlpha(75)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,

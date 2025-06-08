@@ -1,7 +1,6 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
-import 'package:degreez/pages/not_implemented_page.dart';
 import 'package:degreez/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -314,7 +313,7 @@ onTap: () {
         ),
       ),
       selected: isSelected,
-      selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      selectedTileColor: Theme.of(context).primaryColor.withAlpha(25),
       onTap: () {
         Navigator.pop(context); // Close drawer
         onTap();

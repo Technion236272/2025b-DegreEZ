@@ -14,7 +14,7 @@ class GpaCalculatorPage extends StatefulWidget {
 }
 
 class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
-  List<WhatIfCourse> _whatIfCourses = [];
+  final List<WhatIfCourse> _whatIfCourses = [];
   final _courseNameController = TextEditingController();
   final _creditsController = TextEditingController();
   final _gradeController = TextEditingController();
@@ -63,11 +63,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             final currentSemester = courseProvider.currentSemester;
             if (currentSemester != null) {
               try {
+                  /* ISN'T REFERENCED IN THE CODE AT ALL
                 final details = await CourseService.getCourseDetails(
                   currentSemester.year,
                   currentSemester.semester,
                   course.courseId,
                 );
+                */
                 // Cache the details (this would need to be implemented in CourseProvider)
               } catch (e) {
                 // Course details not available for current semester, which is expected
@@ -503,19 +505,19 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               runSpacing: 8,
               children: gradeRanges.entries.where((entry) => entry.value > 0).map((entry) {
                 Color rangeColor;
-                if (entry.key == '90-100') rangeColor = AppColorsDarkMode.successColor;
-                else if (entry.key == '80-89') rangeColor = AppColorsDarkMode.primaryColor;
-                else if (entry.key == '70-79') rangeColor = AppColorsDarkMode.secondaryColor;
-                else if (entry.key == '60-69') rangeColor = AppColorsDarkMode.warningColor;
-                else rangeColor = AppColorsDarkMode.errorColor;
+                if (entry.key == '90-100') {rangeColor = AppColorsDarkMode.successColor;}
+                else if (entry.key == '80-89') {rangeColor = AppColorsDarkMode.primaryColor;}
+                else if (entry.key == '70-79') {rangeColor = AppColorsDarkMode.secondaryColor;}
+                else if (entry.key == '60-69') {rangeColor = AppColorsDarkMode.warningColor;}
+                else {rangeColor = AppColorsDarkMode.errorColor;}
 
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: rangeColor.withOpacity(0.1),
+                    color: rangeColor.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: rangeColor.withOpacity(0.3),
+                      color: rangeColor.withAlpha(75),
                       width: 1,
                     ),
                   ),
@@ -633,10 +635,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getGradeColor(semesterAverage).withOpacity(0.2),
+                    color: _getGradeColor(semesterAverage).withAlpha(50),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _getGradeColor(semesterAverage).withOpacity(0.3),
+                      color: _getGradeColor(semesterAverage).withAlpha(75),
                       width: 1,
                     ),
                   ),
@@ -684,10 +686,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.secondaryColor.withOpacity(0.2),
+                color: AppColorsDarkMode.secondaryColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColorsDarkMode.secondaryColor.withOpacity(0.3),
+                  color: AppColorsDarkMode.secondaryColor,
                   width: 1,
                 ),
               ),
@@ -769,10 +771,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: _getGradeColor(course.grade).withOpacity(0.1),
+              color: _getGradeColor(course.grade),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: _getGradeColor(course.grade).withOpacity(0.3),
+                color: _getGradeColor(course.grade),
                 width: 1,
               ),
             ),
@@ -850,10 +852,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: _getGradeColor(course.grade).withOpacity(0.1),
+              color: _getGradeColor(course.grade),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: _getGradeColor(course.grade).withOpacity(0.3),
+                color: _getGradeColor(course.grade),
                 width: 1,
               ),
             ),
@@ -888,7 +890,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColorsDarkMode.secondaryColor.withOpacity(0.2),
+                        color: AppColorsDarkMode.secondaryColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(

@@ -1,7 +1,6 @@
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
-import 'package:degreez/widgets/note_popup.dart';
 import 'package:degreez/widgets/course_actions_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +8,6 @@ import '../services/course_service.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
-import 'package:degreez/providers/course_data_provider.dart';
-import 'package:degreez/providers/customized_diagram_notifier.dart';
 
 enum DirectionValues { horizontal, vertical }
 
