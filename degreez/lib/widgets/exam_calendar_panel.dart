@@ -224,7 +224,7 @@ Future<List<ExamInfo>> _getExamInfo(List<StudentCourse> courses, CourseDataProvi
           rawDateString: rawDate,
           examDate: parsedDate,
           // Prepared display data
-          formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : rawDate,
+          formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : 'Date TBD',
           displayDate: parsedDate != null ? DateFormat('EEEE, dd-MM').format(parsedDate) : 'Date TBD',
           periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
           periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
@@ -255,34 +255,43 @@ Future<List<ExamInfo>> _getExamInfo(List<StudentCourse> courses, CourseDataProvi
   examList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   
   return examList;
-}
-  DateTime? _parseExamDate(String dateString) {
+}  DateTime? _parseExamDate(String dateString) {
     try {
       // Try different date formats that might be in the API
       final formats = [
-        'dd/MM/yyyy HH:mm'
+        'dd/MM/yyyy HH:mm',
+        'dd/MM/yyyy',
+        'dd-MM-yyyy HH:mm',
+        'dd-MM-yyyy',
+        'yyyy-MM-dd HH:mm',
+        'yyyy-MM-dd',
+        'MM/dd/yyyy HH:mm',
+        'MM/dd/yyyy',
+        'dd.MM.yyyy HH:mm',
+        'dd.MM.yyyy',
       ];
       
       final cleanedDateString = dateString.trim();
       
+      // Debug: Print the raw date string to see what we're trying to parse
+      debugPrint('Trying to parse exam date: "$cleanedDateString"');
+      
       for (final format in formats) {
         try {
-          return DateFormat(format).parse(cleanedDateString);
+          final parsed = DateFormat(format).parse(cleanedDateString);
+          debugPrint('Successfully parsed "$cleanedDateString" with format "$format" -> $parsed');
+          return parsed;
         } catch (e) {
           // Try next format
         }
       }
       
+      debugPrint('Failed to parse exam date with any format: "$cleanedDateString"');
       return null;
     } catch (e) {
       debugPrint('Error parsing exam date: $dateString - $e');
       return null;
-    }
-  }
-
-  String _formatExamDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy HH:mm').format(date);
-  }
+    }  }
 }
 
 // Supporting classes
