@@ -29,6 +29,9 @@ class _CalendarPageState extends State<CalendarPage>
   
   // Track manually added events to preserve them during automatic updates
   final Set<String> _manuallyAddedCourses = <String>{};
+  
+  // Flag to track if we need to trigger the initial view switch to load events
+  bool _hasTriggeredInitialLoad = false;
 
 
 
@@ -73,8 +76,22 @@ class _CalendarPageState extends State<CalendarPage>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
             _updateCalendarEvents(courseProvider, colorThemeProvider);
+            
+            // Force a rebuild to ensure events are displayed
+            if (!_hasTriggeredInitialLoad) {
+              _hasTriggeredInitialLoad = true;
+              // Force the EventController to notify its listeners
+              Future.delayed(const Duration(milliseconds: 50), () {
+                if (mounted) {
+                  // Trigger a rebuild by toggling a state that forces calendar refresh
+                  setState(() {
+                    // This setState will cause the calendar to rebuild and show events
+                  });
+                }
+              });
+            }
           }
-        });        return Column(
+        });return Column(
           children: [
             // Course Panel with integrated Toggle Button
             _buildCoursePanelWithIntegratedToggle(courseProvider),
@@ -184,8 +201,7 @@ class _CalendarPageState extends State<CalendarPage>
     );
   }
   
-  
-  // Updated calendar event creation to preserve manually added events
+    // Updated calendar event creation to preserve manually added events
   void _updateCalendarEvents(CourseProvider courseProvider, ColorThemeProvider colorThemeProvider) {
     debugPrint('=== Updating calendar events with schedule selection ===');
 
@@ -232,6 +248,7 @@ class _CalendarPageState extends State<CalendarPage>
     debugPrint('Found $semesterCount semesters with courses');
     
     final courseDataProvider = context.read<CourseDataProvider>();
+    int totalEventsAdded = 0;
     
     for (final semesterEntry in courseProvider.coursesBySemester.entries) {
       // process only the current semester
@@ -259,16 +276,26 @@ class _CalendarPageState extends State<CalendarPage>
         context.read<CourseDataProvider>().getCourseDetails(course.courseId).then((courseDetails) {
           if (courseDetails?.schedule.isNotEmpty == true) {
             debugPrint('Using API schedule for ${course.name} with selection filtering');
-            _createCalendarEventsFromSchedule(course, courseDetails!, semester, currentWeekStart, colorThemeProvider);
+            final eventsAdded = _createCalendarEventsFromSchedule(course, courseDetails!, semester, currentWeekStart, colorThemeProvider);
+            totalEventsAdded += eventsAdded;
           } else {
             debugPrint('Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}", lab: "${course.labTime}", workshop: "${course.workshopTime}")');
             // Create basic events from stored lecture/tutorial/lab/workshop times if no API schedule
-            _createBasicCalendarEvents(course, semester, currentWeekStart, colorThemeProvider);
+            final eventsAdded = _createBasicCalendarEvents(course, semester, currentWeekStart, colorThemeProvider);
+            totalEventsAdded += eventsAdded;
           }
           
+          // After processing all courses, force a UI refresh
+          if (mounted) {
+            setState(() {
+              // Force rebuild to show new events
+            });
+          }
         });
       }
     }
+    
+    debugPrint('Total events added: $totalEventsAdded');
   }
 
   // Helper method to check for time conflicts with existing events
@@ -306,9 +333,7 @@ class _CalendarPageState extends State<CalendarPage>
       }
     }
     return conflictingEvents;
-  }
-
-  void _createCalendarEventsFromSchedule(
+  }  int _createCalendarEventsFromSchedule(
     StudentCourse course, 
     EnhancedCourseDetails courseDetails, 
     String semester,
@@ -316,6 +341,7 @@ class _CalendarPageState extends State<CalendarPage>
     ColorThemeProvider colorThemeProvider,
   ) {
     debugPrint('Creating calendar events for ${course.name} with schedule selection');
+    int eventsAdded = 0;
       // Get selected schedule entries only
     final selectedEntries = context.read<CourseProvider>()
         .getSelectedScheduleEntries(course.courseId, courseDetails);
@@ -427,20 +453,22 @@ class _CalendarPageState extends State<CalendarPage>
         startTime: timeRange['start']!,
         endTime: timeRange['end']!,
         color: colorThemeProvider.getCourseColor(course.courseId),
-      );
-      
+      );      
       debugPrint('Created calendar event: ${event.title} on ${event.date} from ${event.startTime} to ${event.endTime}');
       _eventController.add(event);
+      eventsAdded++;
     }
+    
+    return eventsAdded;
   }
-
-  void _createBasicCalendarEvents(
+  int _createBasicCalendarEvents(
     StudentCourse course, 
     String semester,
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
     final courseColor = colorThemeProvider.getCourseColor(course.courseId);
+    int eventsAdded = 0;
     
     // Create events from stored lecture time
     if (course.lectureTime.isNotEmpty) {
@@ -458,6 +486,7 @@ class _CalendarPageState extends State<CalendarPage>
           debugPrint('Time conflict detected for ${course.name} lecture - allowing SideEventArranger to handle display');
         }
         _eventController.add(lectureEvent);
+        eventsAdded++;
       }
     }
     
@@ -477,8 +506,11 @@ class _CalendarPageState extends State<CalendarPage>
           debugPrint('Time conflict detected for ${course.name} tutorial - allowing SideEventArranger to handle display');
         }
         _eventController.add(tutorialEvent);
+        eventsAdded++;
       }
     }
+    
+    return eventsAdded;
   }
 
   CalendarEventData? _createEventFromTimeString(
