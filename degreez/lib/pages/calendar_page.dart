@@ -131,7 +131,7 @@ class _CalendarPageState extends State<CalendarPage>
           endDuration,
           filtered: true,
           searchQuery: _searchQuery,
-          onLongPress: _showHelloWorldDialog,
+          onLongPress: _showCourseDetailsDialog,
         ),
         startDay: WeekDays.sunday,
         startHour: 8,
@@ -139,7 +139,7 @@ class _CalendarPageState extends State<CalendarPage>
         showLiveTimeLineInAllDays: true,
         // only show events for the current week starting from sunday to thursday
         // Adjust min and max days to show the current week
-        // shpow only current week
+        // show only current week
         minDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday % 7)),
         maxDay: DateTime.now().add(Duration(days: 7 - DateTime.now().weekday % 7)),
         initialDay: DateTime.now(),
@@ -164,7 +164,7 @@ class _CalendarPageState extends State<CalendarPage>
         boundary,
         startDuration,
         endDuration,
-        onLongPress: _showHelloWorldDialog,
+        onLongPress: _showCourseDetailsDialog,
       ),
       startHour: 8,
       endHour: 22,
@@ -575,17 +575,17 @@ class _CalendarPageState extends State<CalendarPage>
     
     return parts.join('\n');
   }
-  // Method to show hello world popup on long press
-  void _showHelloWorldDialog(CalendarEventData event) {
+  // Method to show course's details popup on long press on the event tile
+  void _showCourseDetailsDialog(CalendarEventData event) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hello World!'),
+        title: const Text('Course Details'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('You long pressed on a calendar event!'),
+            // const Text('You long pressed on a calendar event!'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -607,7 +607,8 @@ class _CalendarPageState extends State<CalendarPage>
                   if (event.description != null)
                     Text('Description: ${event.description}'),
                   if (event.startTime != null && event.endTime != null)
-                    Text('Time: ${event.startTime} - ${event.endTime}'),
+                    // dont display seconds in time
+                    Text('Time: ${DateFormat('HH:mm').format(event.startTime!)} - ${DateFormat('HH:mm').format(event.endTime!)}'),
                 ],
               ),
             ),
