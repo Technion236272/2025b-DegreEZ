@@ -4,11 +4,11 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
-import 'package:degreez/services/course_service.dart';
 import 'package:degreez/widgets/semester_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
+import '../widgets/add_course_dialog.dart';
 
 Widget buildFormattedPrereqWarning(
   List<List<String>> prereqGroups,
@@ -502,9 +502,14 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                       Icons.add,
                       color: AppColorsDarkMode.secondaryColor,
                     ),
-                    tooltip: 'Add Course',
-                    onPressed: () {
-                      _showAddCourseDialog(context, semesterName, context);
+                    tooltip: 'Add Course',                    onPressed: () {
+                      AddCourseDialog.show(
+                        context, 
+                        semesterName,
+                        onCourseAdded: (courseId) {
+                          _onCourseUpdated();
+                        },
+                      );
                     },
                   ),
                   IconButton(
@@ -571,307 +576,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       ],
     );
   }
-
-  void _showAddCourseDialog(
-    BuildContext context,
-    String semesterName,
-    BuildContext rootContext,
-  ) {
-    final searchController = TextEditingController();
-    List<CourseSearchResult> results = [];
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Future<void> search(String query) async {
-              if (query.trim().isEmpty) return;
-              setState(() => isLoading = true);
-
-              final isId = RegExp(r'^\d+$').hasMatch(query);
-              final courseId = isId ? query : null;
-              final courseName = isId ? null : query;
-              print('SEARCH: id=$courseId, name=$courseName');
-
-              final fetched = await context
-                  .read<CourseProvider>()
-                  .searchCourses(
-                    courseId: courseId,
-                    courseName: courseName,
-                    pastSemestersToInclude: 4,
-                  );
-
-              if (!context.mounted) return; // <--- CRITICAL LINE
-
-              if (fetched.isEmpty) {
-                setState(() {
-                  results = [];
-                  isLoading = false;
-                });
-                return;
-              }
-
-              setState(() {
-                results = fetched;
-                isLoading = false;
-              });
-            }
-
-            return AlertDialog(
-              title: Text('Add Course to $semesterName'),
-              content: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.4, // or 0.6
-                width: 400,
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: searchController,
-                      decoration: const InputDecoration(
-                        labelText: 'Course ID or Name',
-                        hintText: 'e.g. 02340114 or פיסיקה 2',
-                      ),
-                      onChanged: (value) {
-                        if (value.length > 3) search(value);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    if (isLoading)
-                      const CircularProgressIndicator()
-                    else if (results.isEmpty &&
-                        searchController.text.isNotEmpty)
-                      const Text('No courses found.'),
-                    if (results.isNotEmpty)
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: results.length,
-                          itemBuilder: (context, index) {
-                            final courseResult = results[index];
-                            final c = courseResult.course;
-
-                            if (c == null ||
-                                c.courseNumber == null ||
-                                c.name == null) {
-                              return const ListTile(
-                                title: Text('Invalid course data'),
-                                subtitle: Text('Missing course information'),
-                              );
-                            }
-                            return ListTile(
-                              title: Text('${c.courseNumber} - ${c.name}'),
-                              subtitle: Text(
-                                '${c.points} points • ${c.faculty}',
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: () async {
-                                  final courseDetails =
-                                      await CourseService.getCourseDetails(
-                                        context
-                                            .read<CourseProvider>()
-                                            .currentSemester!
-                                            .year,
-                                        context
-                                            .read<CourseProvider>()
-                                            .currentSemester!
-                                            .semester,
-                                        c.courseNumber!,
-                                      );
-                                  final Object? rawPrereqs =
-                                      courseDetails?.prerequisites;
-                                  List<List<String>> parsedPrereqs = [];
-                                  debugPrint('📦📦📦 rawPrereqs : $rawPrereqs');
-
-                                  if (rawPrereqs is String) {
-                                    // Example: "02360703 או (02340312 ו-02340311)"
-                                    final orGroups = rawPrereqs.split(
-                                      RegExp(r'\s*או\s*'),
-                                    );
-                                    debugPrint('📦📦📦 orGroups : $orGroups');
-
-                                    for (final group in orGroups) {
-                                      // Remove parentheses and split by 'ו'
-                                      final andGroup =
-                                          group
-                                              .replaceAll(
-                                                RegExp(r'[^\d\s]'),
-                                                '',
-                                              ) // keep only digits + space
-                                              .trim()
-                                              .split(
-                                                RegExp(r'\s+'),
-                                              ) // split by any whitespace
-                                              .where(
-                                                (id) => RegExp(
-                                                  r'^\d{8}$',
-                                                ).hasMatch(id),
-                                              ) // keep only 8-digit IDs
-                                              .toList();
-
-                                      if (andGroup.isNotEmpty)
-                                        parsedPrereqs.add(andGroup);
-                                      debugPrint(
-                                        '📦📦📦 parsedPrereqs : $parsedPrereqs',
-                                      );
-                                    }
-                                  } else {
-                                    print(
-                                      '⚠️⚠️⚠️ Unexpected prerequisite format: ${rawPrereqs.runtimeType}',
-                                    );
-                                  }
-                                  final missing = context
-                                      .read<CourseProvider>()
-                                      .getMissingPrerequisites(
-                                        semesterName,
-                                        parsedPrereqs,
-                                      );
-
-                                  if (missing.isNotEmpty) {
-                                    final allTakenCourses = context
-                                      .read<CourseProvider>()
-                                        .sortedCoursesBySemester
-                                        .values
-                                        .expand((list) => list);
-                                    final courseIdToName = {
-                                      for (final course in allTakenCourses)
-                                        course.courseId: course.name,
-                                    };
-
-                                    // Add missing prereqs to the map
-                                    for (final group in parsedPrereqs) {
-                                      for (final courseId in group) {
-                                        if (!courseIdToName.containsKey(
-                                          courseId,
-                                        )) {
-                                          final name =
-                                              await CourseService.getCourseName(
-                                                courseId,
-                                              );
-                                          courseIdToName[courseId] =
-                                              name ?? 'Unknown';
-                                        }
-                                      }
-                                    }
-
-                                    final proceedAnyway = await showDialog<
-                                      bool
-                                    >(
-                                      context: dialogContext,
-                                      builder:
-                                          (ctx) => AlertDialog(
-                                            title: const Text(
-                                              'Missing Prerequisites',
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Text(
-                                                  'To register for this course, you must have completed one of the following prerequisite groups. '
-                                                  'Courses in red were not found in your previous semesters.',
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.white70,
-                                                    height: 1.4,
-                                                  ),
-                                                ),
-
-                                                const SizedBox(height: 10),
-                                                buildFormattedPrereqWarning(
-                                                  parsedPrereqs,
-                                                  missing,
-                                                  courseIdToName,
-                                                ),
-                                                const SizedBox(height: 10),
-                                                const Text(
-                                                  'Do you want to add this course anyway?',
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.of(
-                                                      ctx,
-                                                    ).pop(false),
-                                                child: const Text('Cancel'),
-                                              ),
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.of(
-                                                      ctx,
-                                                    ).pop(true),
-                                                child: const Text('Add Anyway'),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-
-                                    if (proceedAnyway != true) return;
-                                  }
-
-                                  final course = StudentCourse(
-                                    courseId: c.courseNumber,
-                                    name: c.name,
-                                    finalGrade: '',
-                                    lectureTime: '',
-                                    tutorialTime: '',
-                                    labTime: '',
-                                    workshopTime: '',
-                                  );
-                                  final success = await Provider.of<
-                                    CourseProvider
-                                  >(context, listen: false).addCourseToSemester(
-                                    context.read<StudentProvider>().student!.id,
-                                    semesterName,
-                                    course,
-                                  );
-
-                                  if (!context.mounted) return;
-
-                                  if (success) {
-                                    Navigator.of(dialogContext).pop();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Course added to $semesterName',
-                                        ),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                    // Enhanced: Trigger UI refresh
-                                    _onCourseUpdated();
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Failed to add course'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _confirmDeleteSemester(
     BuildContext context,
     String semesterName,
