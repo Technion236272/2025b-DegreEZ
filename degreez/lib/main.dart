@@ -67,6 +67,7 @@ class MyApp extends StatelessWidget {
         controller: EventController(),
         child: MaterialApp(
           title: 'DegreEZ',          theme: ThemeData.dark().copyWith(
+            dividerTheme: DividerThemeData(color: AppColorsDarkMode.dividerColor),
             scaffoldBackgroundColor: AppColorsDarkMode.mainColor,
             canvasColor: AppColorsDarkMode.mainColor,
             cardColor: AppColorsDarkMode.mainColor,

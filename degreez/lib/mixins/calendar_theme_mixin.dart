@@ -158,7 +158,7 @@ mixin CalendarDarkThemeMixin {
         color: AppColorsDarkMode.shadowColorStrong, // shadow color
         blurRadius: 4, // how blurry the shadow is
         offset: Offset(-2, 2), // horizontal and vertical displacement
-        spreadRadius: 2, // how much the shadow expands
+        spreadRadius: 3, // how much the shadow expands
       ),
     ],
           color: filteredEvents.first.color,

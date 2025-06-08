@@ -31,7 +31,7 @@ class AppColorsDarkMode {
   static const Color borderSecondary = Color(0xFF2F2F2F); // Even more subtle border
   static const Color borderAccent = Color(0x33FF6B35); // Orange border with transparency
   static const Color shadowColor = Color(0x1A000000); // Soft shadow
-  static const Color shadowColorStrong = Color(0x77000000); // Stronger shadow for elevated elements
+  static const Color shadowColorStrong = Color(0xAA000000); // Stronger shadow for elevated elements
   
   // Overlay colors for subtle effects
   static const Color overlayLight = Color(0x0AFFFFFF); // Light overlay (4% white)
@@ -39,7 +39,7 @@ class AppColorsDarkMode {
   static const Color overlayDark = Color(0x0A000000); // Dark overlay (4% black)
   
   // Divider colors for subtle separation
-  static const Color dividerColor = Color(0xFF333333); // Subtle divider
+  static const Color dividerColor = secondaryColor; // Subtle divider
   static const Color dividerColorLight = Color(0xFF404040); // Slightly lighter divider
   
   // State colors
