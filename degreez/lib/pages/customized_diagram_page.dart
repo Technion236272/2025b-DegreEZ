@@ -123,53 +123,99 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
             final courseNotifier = context.read<CourseProvider>();
             if (studentNotifier.isLoading && studentNotifier.isLoading) {
               return const Center(child: CircularProgressIndicator());
-            }
-
-            if (studentNotifier.error != '' && studentNotifier.error != null) {
+            }            if (studentNotifier.error != '' && studentNotifier.error != null) {
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error: ${studentNotifier.error}',
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColorsDarkMode.mainColor,
+                        AppColorsDarkMode.accentColorDarker,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error, size: 64, color: AppColorsDarkMode.errorColor),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error: ${studentNotifier.error}',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.errorColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
 
-            final semesters = courseNotifier.sortedCoursesBySemester;
-
-            if (semesters.isEmpty) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.timeline,
-                      size: 64,
-                      color: AppColorsDarkMode.secondaryColorDim,
+            final semesters = courseNotifier.sortedCoursesBySemester;            if (semesters.isEmpty) {
+              return Center(
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColorsDarkMode.mainColor,
+                        AppColorsDarkMode.accentColorDarker,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No courses to display',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: AppColorsDarkMode.secondaryColorDim,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Add courses to see your degree progress',
-                      style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColorDim,
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.timeline,
+                        size: 64,
+                        color: AppColorsDarkMode.secondaryColor,
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 16),
+                      Text(
+                        'No courses to display',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Add courses to see your degree progress',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.secondaryColorDim,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
@@ -269,24 +315,53 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Add New Semester'),
+          builder: (context, setState) {            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: AppColorsDarkMode.secondaryColor,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: AppColorsDarkMode.accentColor,
+              title: const Text(
+                'Add New Semester',
+                style: TextStyle(
+                  color: AppColorsDarkMode.secondaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Season dropdown
+                  // Season dropdown                  // Season dropdown
                   DropdownButtonFormField<String>(
                     iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedSeason,
-                    decoration: const InputDecoration(labelText: 'Semester',enabledBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
-    ),),
+                    style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                    decoration: InputDecoration(
+                      labelText: 'Semester',
+                      labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
+                      ),
+                      filled: true,
+                      fillColor: AppColorsDarkMode.surfaceColor,
+                    ),
+                    dropdownColor: AppColorsDarkMode.surfaceColor,
                     items:
                         ['Winter', 'Spring', 'Summer'].map((season) {
                           return DropdownMenuItem<String>(
                             value: season,
-                            child: Text(season),
+                            child: Text(
+                              season,
+                              style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                            ),
                           );
                         }).toList(),
                     onChanged: (value) {
@@ -298,19 +373,34 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     },
                   ),
 
-                  const SizedBox(height: 12),
-
-                  // Year dropdown: from 5 years ago to 5 years ahead
+                  const SizedBox(height: 12),                  // Year dropdown: from 5 years ago to 5 years ahead
                   DropdownButtonFormField<int>(
                     iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedYear,
-                    decoration: const InputDecoration(labelText: 'Year',enabledBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),)),
+                    style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                    decoration: InputDecoration(
+                      labelText: 'Year',
+                      labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
+                      ),
+                      filled: true,
+                      fillColor: AppColorsDarkMode.surfaceColor,
+                    ),
+                    dropdownColor: AppColorsDarkMode.surfaceColor,
                     items: List.generate(11, (index) {
                       int year = DateTime.now().year - 5 + index;
                       return DropdownMenuItem<int>(
                         value: year,
-                        child: Text(year.toString()),
+                        child: Text(
+                          year.toString(),
+                          style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                        ),
                       );
                     }),
                     onChanged: (value) {
@@ -366,13 +456,26 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
+      children: [        Container(
           margin: const EdgeInsets.only(top: 20, bottom: 10),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColorsDarkMode.accentColor,
-            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                AppColorsDarkMode.mainColor,
+                AppColorsDarkMode.accentColorDarker,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -444,18 +547,33 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               ),
             ],
           ),
-        ),
-
-        // Display message if no courses
+        ),        // Display message if no courses
         courses.isEmpty
-            ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+            ? Container(
+              margin: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColorsDarkMode.surfaceColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColorsDarkMode.borderPrimary,
+                  width: 0.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColorsDarkMode.shadowColor,
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
               child: Center(
                 child: Text(
                   'No courses in this semester',
                   style: TextStyle(
                     color: AppColorsDarkMode.secondaryColorDim,
                     fontStyle: FontStyle.italic,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -497,14 +615,13 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   ) {
     showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
+      builder:          (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: AppColorsDarkMode.secondaryColor,
                 width: 2,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
             backgroundColor: AppColorsDarkMode.accentColor,
             title: const Text(

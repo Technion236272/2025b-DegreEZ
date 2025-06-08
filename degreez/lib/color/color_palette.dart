@@ -207,7 +207,7 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
       const Color(0xFFFF8A65), // Light orange
       const Color(0xFFFFAB40), // Amber orange
       const Color(0xFFFF7043), // Deep orange
-      const Color(0xFFBF360C), // Dark orange
+      // const Color(0xFFBF360C), // Dark orange
       const Color(0xFF8D6E63), // Brown
       const Color(0xFF6D4C41), // Dark brown
       const Color(0xFF5D4037), // Deep brown
@@ -219,6 +219,15 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
       const Color(0xFFFFCC02), // Warm yellow
       const Color(0xFFFFA726), // Orange amber
       const Color(0xFFFF9800), // Standard orange
+      const Color(0xFFFF5722), // Vivid orange
+      const Color(0xFFFFC107), // Bright yellow
+      const Color(0xFFFFE082), // Light yellow
+      const Color(0xFFFFF176), // Pale yellow
+      const Color(0xFFFFF9C4), // Very light yellow
+      const Color(0xFFFFF3E0), // Creamy white
+      const Color(0xFFFFF8E1), // Light cream
+      const Color(0xFFFFFDE7), // Very light cream
+      const Color(0xFFFFF9C4), // Pale cream
     ];
     return colors[hash.abs() % colors.length];
   }
