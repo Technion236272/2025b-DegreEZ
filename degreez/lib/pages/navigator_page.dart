@@ -90,25 +90,7 @@ class _NavigatorPageState extends State<NavigatorPage> {
         return Scaffold(
           appBar: AppBar(
             title: Text(_currentPage),
-            centerTitle: true,
-            actions: [
-              Consumer<CourseDataProvider>(
-                builder: (context, courseDataProvider, child) {
-                  if (courseDataProvider.currentSemester != null) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Center(
-                        child: Text(
-                          // the current semester's name
-                          courseDataProvider.currentSemester!.semesterName,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+            centerTitle: true,            actions: [
               IconButton(
                 icon: const Icon(Icons.bolt_sharp),
                 onPressed: () {
