@@ -107,7 +107,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColorsDarkMode.accentColor,
       contentTextStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
       title: Text('Add Course to ${widget.semesterName}'),
       content: SizedBox(

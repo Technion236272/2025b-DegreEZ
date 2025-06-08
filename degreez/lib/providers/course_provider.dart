@@ -54,6 +54,7 @@ class CourseProvider with ChangeNotifier {
   Map<String, List<StudentCourse>> _coursesBySemester = {};
   CourseLoadingState _loadingState = const CourseLoadingState();
   String? _error;
+  final Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
   SemesterInfo? _currentSemester;
 
   SemesterInfo? get currentSemester => _currentSemester;
@@ -592,7 +593,7 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
         .collection('Courses-per-Semesters')
         .doc(semesterName);
 
-    // Step 1: Delete all documents in the 'Courses' subcollection
+    // Step 1: Delete all documents in the 'Courses' sub collection
     final courseDocs = await semesterRef.collection('Courses').get();
     for (final doc in courseDocs.docs) {
       await doc.reference.delete();
@@ -689,7 +690,7 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
 
       final yearComparison = parsedA.year.compareTo(parsedB.year);
       if (yearComparison != 0)
-        return yearComparison; // If years are different , sort by year
+        {return yearComparison;} // If years are different , sort by year
 
       return _seasonOrder(
         parsedA.season,

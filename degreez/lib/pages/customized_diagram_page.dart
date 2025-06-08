@@ -618,12 +618,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       builder:          (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(
               side: BorderSide(
-                color: AppColorsDarkMode.secondaryColor,
+                color: AppColorsDarkMode.secondaryColorDim,
                 width: 2,
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            backgroundColor: AppColorsDarkMode.accentColor,
+            backgroundColor: AppColorsDarkMode.accentColorDark,
             title: const Text(
               'Delete Semester',
               style: TextStyle(color: AppColorsDarkMode.secondaryColor),

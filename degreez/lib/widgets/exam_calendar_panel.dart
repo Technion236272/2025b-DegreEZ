@@ -6,7 +6,6 @@ import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
-import '../services/course_service.dart';
 
 class ExamDatesPanel extends StatefulWidget {
   const ExamDatesPanel({super.key});
@@ -154,8 +153,7 @@ Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvid
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: colorThemeProvider.getCourseColor(examInfo.courseId) ??
-            Colors.grey,
+        color: colorThemeProvider.getCourseColor(examInfo.courseId),
         shape: BoxShape.circle,
       ),
     ),

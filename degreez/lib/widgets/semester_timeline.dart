@@ -1,7 +1,6 @@
 // New file: semester_timeline.dart
 import 'package:flutter/material.dart';
 import 'package:degreez/color/color_palette.dart';
-import 'package:degreez/models/student_model.dart';
 
 enum SemesterStatus { completed, current, planned, empty }
 
@@ -27,11 +26,11 @@ class SemesterTimeline extends StatelessWidget {
   final Function(int) onSemesterTap;
 
   const SemesterTimeline({
-    Key? key,
+    super.key,
     required this.semesters,
     required this.currentSemesterIndex,
     required this.onSemesterTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +42,7 @@ class SemesterTimeline extends StatelessWidget {
         color: AppColorsDarkMode.accentColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withAlpha(50),
             blurRadius: 4,
             offset: Offset(0, 2),
           ),
@@ -83,7 +82,7 @@ class SemesterTimeline extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected 
               ? AppColorsDarkMode.secondaryColor 
-              : statusColor.withOpacity(0.2),
+              : statusColor.withAlpha(50),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected 

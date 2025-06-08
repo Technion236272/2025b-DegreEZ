@@ -67,7 +67,7 @@ class MyApp extends StatelessWidget {
         controller: EventController(),
         child: MaterialApp(
           title: 'DegreEZ',          theme: ThemeData.dark().copyWith(
-            dialogTheme:DialogTheme(backgroundColor: AppColorsDarkMode.accentColor,shape: RoundedRectangleBorder(
+            dialogTheme:DialogTheme(backgroundColor: AppColorsDarkMode.accentColorDark,shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: AppColorsDarkMode.secondaryColor,
                 width: 2,

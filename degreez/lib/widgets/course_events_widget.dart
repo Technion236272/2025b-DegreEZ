@@ -124,7 +124,6 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
 
       widget.eventController.add(calendarEvent);
     }
-;
   }
 
   int? _extractGroupNumber(String typeString) {
@@ -158,6 +157,7 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
     return weekStart.add(Duration(days: daysToAdd));
   }
 
+/* ISN'T REFERENCED IN THE CODE AT ALL
   void _handleLectureSelection(CourseEventData eventData) {
     if (_selectedLecture?.eventId == eventData.eventId) {
       // Deselect if same lecture is tapped again
@@ -215,7 +215,7 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
       eventData.state = CourseEventState.selected;
     }
   }
-
+*/
   void _updateEventStates() {
     for (final eventData in _allEvents.values) {
       // Reset to available if not selected
@@ -234,7 +234,7 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
     // For now, just check if times overlap with selected events
     final selectedEvents = [_selectedLecture, _selectedTutorial, _selectedLab, _selectedWorkshop]
         .whereType<CourseEventData>()
-        .where((e) => e != null && e != eventData)
+        .where((e) => e != eventData)
         .cast<CourseEventData>();
 
     for (final selectedEvent in selectedEvents) {

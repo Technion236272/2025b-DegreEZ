@@ -13,11 +13,11 @@ class CourseActionsPopup extends StatefulWidget {
   final VoidCallback? onCourseUpdated;
 
   const CourseActionsPopup({
-    Key? key,
+    super.key,
     required this.course,
     required this.semester,
     this.onCourseUpdated,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseActionsPopup> createState() => _CourseActionsPopupState();

@@ -1,6 +1,5 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
-import 'package:degreez/services/course_service.dart';
 import 'package:degreez/models/student_model.dart';
 
 /// A provider class that manages authentication state using Google Sign-In and Firebase Auth.

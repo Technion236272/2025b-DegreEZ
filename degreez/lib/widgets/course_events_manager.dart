@@ -208,7 +208,7 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
       };
     });
   }
-
+  /* ISN'T REFERENCED IN THE CODE AT ALL
   void _clearAllSelections() {
     setState(() {
       _allSelections.clear();
@@ -217,7 +217,8 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
     // Remove all events from calendar
     widget.eventController.removeWhere((event) => true);
   }
-
+  */
+  /* ISN'T REFERENCED IN THE CODE AT ALL 
   void _generateScheduleForWeek() {
     // This method could be used to generate a complete weekly schedule
     // based on all selected course times
@@ -226,4 +227,5 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
     // Implementation would go here to create calendar events
     // for the selected lecture and tutorial times
   }
+  */
 }
