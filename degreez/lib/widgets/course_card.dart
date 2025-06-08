@@ -71,14 +71,17 @@ class _CourseCardState extends State<CourseCard> {
           opacity: isFocused ? 1.0 : 0.2,
           child: AbsorbPointer(
             absorbing: !isFocused, // ✅ disable all interactions if not focused
-            child: GestureDetector(
-              // Enhanced: Add regular tap for quick actions
+            child: GestureDetector(              // Enhanced: Add regular tap for quick actions
               onTap: () async {
+                if (!mounted) return;
+                
                 showCourseActionsPopup(
                   context,
                   widget.course,
                   widget.semester,
                   onCourseUpdated: () async {
+                    if (!mounted) return;
+                    
                     final studentProvider = Provider.of<StudentProvider>(
                       context,
                       listen: false,
@@ -100,16 +103,18 @@ class _CourseCardState extends State<CourseCard> {
                       widget.course.courseId,
                     );
 
-                    // setState(() {
-                    //   _hasNote =
-                    //       refreshed?.note != null &&
-                    //       refreshed!.note!.trim().isNotEmpty;
-                    // });
+                    if (mounted) {
+                      setState(() {
+                        _hasNote =
+                            refreshed?.note != null &&
+                            refreshed!.note!.trim().isNotEmpty;
+                      });
+                    }
                   },
                 );
-              },
-
-              onLongPress: () async {
+              },              onLongPress: () async {
+                if (!mounted) return;
+                
                 final courseProvider = Provider.of<CourseProvider>(
                   context,
                   listen: false,
@@ -133,14 +138,16 @@ class _CourseCardState extends State<CourseCard> {
                 );
 
                 if (refreshed != null) {*/
-                  final notifier = Provider.of<CustomizedDiagramNotifier>(
-                    context,
-                    listen: false,
-                  );
-                  notifier.focusOnCourseWithStoredPrereqs(
-                    widget.course, // ✅ already has prerequisites
-                    courseProvider.coursesBySemester,
-                  );
+                  if (mounted) {
+                    final notifier = Provider.of<CustomizedDiagramNotifier>(
+                      context,
+                      listen: false,
+                    );
+                    notifier.focusOnCourseWithStoredPrereqs(
+                      widget.course, // ✅ already has prerequisites
+                      courseProvider.coursesBySemester,
+                    );
+                  }
                // }
               },
 
@@ -377,19 +384,22 @@ class _CourseCardState extends State<CourseCard> {
     final hasGrade = course.finalGrade.isNotEmpty;
     final courseColor = _getCourseColor(course.courseId);
 
-    return GestureDetector(
-      // Enhanced: Add tap for quick actions in horizontal mode too
+    return GestureDetector(      // Enhanced: Add tap for quick actions in horizontal mode too
       onTap: () async {
+        if (!mounted) return;
+        
         showCourseActionsPopup(
           context,
           widget.course,
           widget.semester,
           onCourseUpdated: () {
-            setState(() {
-              _hasNote =
-                  widget.course.note != null &&
-                  widget.course.note!.trim().isNotEmpty;
-            });
+            if (mounted) {
+              setState(() {
+                _hasNote =
+                    widget.course.note != null &&
+                    widget.course.note!.trim().isNotEmpty;
+              });
+            }
           },
         );
       },
