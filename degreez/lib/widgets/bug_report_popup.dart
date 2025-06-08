@@ -23,7 +23,7 @@ class _BugReportButtonState extends State<BugReportButton> {
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColorsDarkMode.accentColor,
+                      backgroundColor: AppColorsDarkMode.secondaryColor,
                       foregroundColor: AppColorsDarkMode.bug,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

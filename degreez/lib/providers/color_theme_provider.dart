@@ -81,14 +81,22 @@ class ColorThemeProvider with ChangeNotifier {
   Color _getColorfulCourseColor(String courseId) {
     final hash = courseId.hashCode;
     final colors = [
-      Colors.pink.shade300,      // Soft pink
-      Colors.blue.shade400,      // Soft blue
-      Colors.green.shade400,     // Soft green
-      Colors.orange.shade400,    // Soft orange
-      Colors.purple.shade400,    // Soft purple
-      Colors.teal.shade400,      // Soft teal
-      Colors.indigo.shade400,    // Soft indigo
-      Colors.red.shade400,       // Soft red
+      const Color(0xFFFF6B35), // Primary orange
+      const Color(0xFFFF8A65), // Light orange
+      const Color(0xFFFFAB40), // Amber orange
+      const Color(0xFFFF7043), // Deep orange
+      const Color(0xFFBF360C), // Dark orange
+      const Color(0xFF8D6E63), // Brown
+      const Color(0xFF6D4C41), // Dark brown
+      const Color(0xFF5D4037), // Deep brown
+      const Color(0xFF4E342E), // Very dark brown
+      const Color(0xFF795548), // Medium brown
+      const Color(0xFFA1887F), // Light brown
+      const Color(0xFFD7CCC8), // Very light brown
+      const Color(0xFFFFE0B2), // Light amber
+      const Color(0xFFFFCC02), // Warm yellow
+      const Color(0xFFFFA726), // Orange amber
+      const Color(0xFFFF9800), // Standard orange       // Soft red
     ];
     return colors[hash.abs() % colors.length];
   }

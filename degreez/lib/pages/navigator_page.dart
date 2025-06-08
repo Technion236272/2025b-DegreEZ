@@ -1,3 +1,4 @@
+import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/not_implemented_page.dart';
@@ -176,18 +177,26 @@ class _NavigatorPageState extends State<NavigatorPage> {
           children: [
             // Enhanced User Header
             UserAccountsDrawerHeader(
-              accountName: Text(student?.name ?? user?.displayName ?? 'User'),
-              accountEmail: Text(user?.email ?? ''),
-              currentAccountPicture: CircleAvatar(
+              accountName: Text(student?.name ?? user?.displayName ?? 'User',style: TextStyle(color: AppColorsDarkMode.accentColor,fontWeight:FontWeight.w700),),
+              accountEmail: Text(user?.email ?? '',style: TextStyle(color: AppColorsDarkMode.accentColor,fontWeight:FontWeight.w700),),
+              currentAccountPicture: Container(
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    border: Border.all(
+      color: AppColorsDarkMode.accentColor, // Border color
+      width: 3.0,         // Border width
+    ),
+  ),
+  child: CircleAvatar(
                 backgroundImage: user?.photoURL != null
                     ? NetworkImage(user!.photoURL!)
                     : null,
                 child: user?.photoURL == null
                     ? Text(user?.displayName?.substring(0, 1) ?? 'U')
                     : null,
-              ),
+              ),),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+                color: AppColorsDarkMode.secondaryColor,
               ),
               ),
             
@@ -278,13 +287,13 @@ class _NavigatorPageState extends State<NavigatorPage> {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected ? Theme.of(context).primaryColor : null,
+        color: isSelected ? null : AppColorsDarkMode.secondaryColorDim,
       ),
       title: Text(
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Theme.of(context).primaryColor : null,
+          color: isSelected ? null : AppColorsDarkMode.secondaryColorDim,
         ),
       ),
       selected: isSelected,

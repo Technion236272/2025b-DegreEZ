@@ -268,7 +268,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             : courseProvider.coursesBySemester.values.expand((courses) => courses).toList();
 
         return Card(
-          elevation: 2,
+          elevation: 5,
           margin: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,

@@ -13,13 +13,16 @@ class AppColorsDarkMode {
   
   // Secondary warm colors - supporting the orange theme
   static const Color secondaryColor = Color(0xFFFFAB91); // Warm peach
-  static const Color secondaryColorDim = Color(0xAAFFAB91);
+  static const Color secondaryColorDim = Color(0x99FFAB91);
   static const Color secondaryColorDimDD = Color(0xDDFFAB91);
+  static const Color secondaryColorExtremelyDim = Color(0x44FFAB91);
   
   // Accent colors - darker warm tones
   static const Color accentColor = Color(0xFF3E2723); // Deep brown
+  static const Color accentColorDarker = Color(0xFF4F3834); // Deep brown
   static const Color accentColorDim = Color(0xCC3E2723);
   static const Color accentColorLight = Color(0xFF5D4037); // Medium brown
+  static const Color accentColorExtremelyDim = Color(0x445D4037); // Medium brown
     // Text colors
   static const Color textPrimary = Color(0xFFFFFFFF); // White text
   static const Color textSecondary = Color(0xFFB0B0B0); // Muted text
@@ -30,7 +33,7 @@ class AppColorsDarkMode {
   static const Color borderSecondary = Color(0xFF2F2F2F); // Even more subtle border
   static const Color borderAccent = Color(0x33FF6B35); // Orange border with transparency
   static const Color shadowColor = Color(0x1A000000); // Soft shadow
-  static const Color shadowColorStrong = Color(0x33000000); // Stronger shadow for elevated elements
+  static const Color shadowColorStrong = Color(0xAA000000); // Stronger shadow for elevated elements
   
   // Overlay colors for subtle effects
   static const Color overlayLight = Color(0x0AFFFFFF); // Light overlay (4% white)
@@ -38,7 +41,7 @@ class AppColorsDarkMode {
   static const Color overlayDark = Color(0x0A000000); // Dark overlay (4% black)
   
   // Divider colors for subtle separation
-  static const Color dividerColor = Color(0xFF333333); // Subtle divider
+  static const Color dividerColor = secondaryColor; // Subtle divider
   static const Color dividerColorLight = Color(0xFF404040); // Slightly lighter divider
   
   // State colors
@@ -47,7 +50,7 @@ class AppColorsDarkMode {
   static const Color successColor = Color(0xFF81C784); // Soft green success
   static const Color warningColor = Color(0xFFFFB74D); // Warm warning yellow
   
-  static const Color bug = Color.fromARGB(255, 45, 206, 255); // Warm warning yellow
+  static const Color bug = accentColor; // Warm warning yellow
   // Convenience methods for creating subtle effects like in the design image
   
   /// Creates a subtle border decoration for cards and containers
@@ -98,27 +101,6 @@ class AppColorsDarkMode {
       ],
     );
   }
-  
-  /// Creates a primary button decoration with subtle effects
-  static BoxDecoration primaryButtonDecoration({
-    bool pressed = false,
-  }) {
-    return BoxDecoration(
-      color: pressed ? primaryColor.withOpacity(0.9) : primaryColor,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-        color: primaryColorLight.withOpacity(0.3),
-        width: 1,
-      ),
-      boxShadow: pressed ? [] : [
-        BoxShadow(
-          color: primaryColor.withOpacity(0.3),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    );
-  }
 
   // Previous color scheme - kept as backup
   // static const Color secondaryColor = Color(0xFFFCBAAD);
@@ -129,8 +111,6 @@ class AppColorsDarkMode {
   // static const Color errorColor = Color(0xFFA0221C);
   // static const Color errorColorDim = Color(0xCCA0221C);
 }
-
-
 
 
 class CourseCardColorPalette{
@@ -165,28 +145,29 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
 {
   CourseCardColorPalette1(){
     _id = 1;
-  }  @override
-  get topBarBG => AppColorsDarkMode.primaryColor;
+  }
+  @override
+  get topBarBG => AppColorsDarkMode.accentColor;
 
   @override
-  get topBarText => AppColorsDarkMode.textPrimary;
+  get topBarText => AppColorsDarkMode.secondaryColor;
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.primaryColorLight;
+  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
 
   @override
   get topBarMarkText => AppColorsDarkMode.accentColor;
 
   @override
   Color cardBG([String? courseId]){
-    return AppColorsDarkMode.cardColor;
+    return AppColorsDarkMode.secondaryColor;
     }
 
   @override
-  get cardFG => AppColorsDarkMode.primaryColor;
+  get cardFG => AppColorsDarkMode.accentColor;
   
   @override
-  get cardFGdim => AppColorsDarkMode.primaryColorDim;
+  get cardFGdim => Color(0x4441221C);
   
 }
 
@@ -194,17 +175,18 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
 {
   CourseCardColorPalette2(){
     _id = 2;
-  }  @override
-  get topBarBG => AppColorsDarkMode.surfaceColor;
+  }
+  @override
+  get topBarBG => AppColorsDarkMode.accentColorDim;
 
   @override
-  get topBarText => AppColorsDarkMode.textPrimary;
+  get topBarText => AppColorsDarkMode.secondaryColor;
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.primaryColor;
+  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
 
   @override
-  get topBarMarkText => AppColorsDarkMode.textPrimary;
+  get topBarMarkText => AppColorsDarkMode.accentColor;
 
   @override
   Color cardBG([String? courseId]){
@@ -212,14 +194,14 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     }
 
   @override
-  get cardFG => AppColorsDarkMode.textPrimary;
+  get cardFG => AppColorsDarkMode.secondaryColor;
 
    @override
-  get cardFGdim => AppColorsDarkMode.textSecondary;
+  get cardFGdim => Color(0x44FCBAAD);
   
+
   Color _getCourseColor(String courseId) {
     final hash = courseId.hashCode;
-    // Warm, modern color palette inspired by the design image
     final colors = [
       const Color(0xFFFF6B35), // Primary orange
       const Color(0xFFFF8A65), // Light orange

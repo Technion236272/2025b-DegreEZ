@@ -299,8 +299,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
           },
         ),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: AppColorsDarkMode.accentColor,
-          foregroundColor: AppColorsDarkMode.secondaryColor,
           onPressed: () {
             _showAddSemesterDialog(context);
           },
