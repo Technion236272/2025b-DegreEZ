@@ -1,4 +1,5 @@
 // lib/widgets/course_calendar_panel.dart - Updated with ColorThemeProvider
+import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:provider/provider.dart';
@@ -1167,17 +1168,17 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondary.withAlpha(20),
+          color: AppColorsDarkMode.secondaryColor,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: Theme.of(context).colorScheme.secondary.withAlpha(50),
+            color: AppColorsDarkMode.secondaryColorDim,
             width: 1,
           ),
         ),
         child: Icon(
           widget.viewMode == 0 ? Icons.view_week : Icons.view_day,
           size: 16,
-          color: Theme.of(context).colorScheme.secondary,
+          color: AppColorsDarkMode.accentColor,
         ),
       ),
     );
