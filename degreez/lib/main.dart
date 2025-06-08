@@ -82,6 +82,7 @@ class MyApp extends StatelessWidget {
             floatingActionButtonTheme: const FloatingActionButtonThemeData(
               backgroundColor: AppColorsDarkMode.secondaryColor,
               foregroundColor: AppColorsDarkMode.accentColor,
+              elevation:8,
             ),
             // Icon theme
             iconTheme: const IconThemeData(
@@ -92,9 +93,9 @@ class MyApp extends StatelessWidget {
             ),
             // Text theme with light colors from palette
             textTheme: ThemeData.dark().textTheme.copyWith(
-              bodyLarge: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-              bodyMedium: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-              bodySmall: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              bodyLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              bodyMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              bodySmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),
               headlineLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
               headlineMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
               headlineSmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),

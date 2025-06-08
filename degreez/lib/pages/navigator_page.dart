@@ -1,3 +1,4 @@
+import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
 import 'package:degreez/pages/not_implemented_page.dart';
 import 'package:degreez/pages/profile_page.dart';
@@ -286,13 +287,13 @@ class _NavigatorPageState extends State<NavigatorPage> {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected ? Theme.of(context).primaryColor : null,
+        color: isSelected ? null : AppColorsDarkMode.secondaryColorDim,
       ),
       title: Text(
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Theme.of(context).primaryColor : null,
+          color: isSelected ? null : AppColorsDarkMode.secondaryColorDim,
         ),
       ),
       selected: isSelected,

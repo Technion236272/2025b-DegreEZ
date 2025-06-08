@@ -13,13 +13,14 @@ class AppColorsDarkMode {
   
   // Secondary warm colors - supporting the orange theme
   static const Color secondaryColor = Color(0xFFFFAB91); // Warm peach
-  static const Color secondaryColorDim = Color(0xAAFFAB91);
+  static const Color secondaryColorDim = Color(0x99FFAB91);
   static const Color secondaryColorDimDD = Color(0xDDFFAB91);
   
   // Accent colors - darker warm tones
   static const Color accentColor = Color(0xFF3E2723); // Deep brown
   static const Color accentColorDim = Color(0xCC3E2723);
   static const Color accentColorLight = Color(0xFF5D4037); // Medium brown
+  static const Color accentColorExtremelyDim = Color(0x445D4037); // Medium brown
     // Text colors
   static const Color textPrimary = Color(0xFFFFFFFF); // White text
   static const Color textSecondary = Color(0xFFB0B0B0); // Muted text
@@ -47,7 +48,7 @@ class AppColorsDarkMode {
   static const Color successColor = Color(0xFF81C784); // Soft green success
   static const Color warningColor = Color(0xFFFFB74D); // Warm warning yellow
   
-  static const Color bug = Color.fromARGB(255, 45, 206, 255); // Warm warning yellow
+  static const Color bug = secondaryColor; // Warm warning yellow
   // Convenience methods for creating subtle effects like in the design image
   
   /// Creates a subtle border decoration for cards and containers
@@ -131,8 +132,6 @@ class AppColorsDarkMode {
 }
 
 
-
-
 class CourseCardColorPalette{
   int? _id;
   final Color _topBarBG = Colors.black;
@@ -165,28 +164,29 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
 {
   CourseCardColorPalette1(){
     _id = 1;
-  }  @override
-  get topBarBG => AppColorsDarkMode.primaryColor;
+  }
+  @override
+  get topBarBG => AppColorsDarkMode.accentColor;
 
   @override
-  get topBarText => AppColorsDarkMode.textPrimary;
+  get topBarText => AppColorsDarkMode.secondaryColor;
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.primaryColorLight;
+  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
 
   @override
   get topBarMarkText => AppColorsDarkMode.accentColor;
 
   @override
   Color cardBG([String? courseId]){
-    return AppColorsDarkMode.cardColor;
+    return AppColorsDarkMode.secondaryColor;
     }
 
   @override
-  get cardFG => AppColorsDarkMode.primaryColor;
+  get cardFG => AppColorsDarkMode.accentColor;
   
   @override
-  get cardFGdim => AppColorsDarkMode.primaryColorDim;
+  get cardFGdim => Color(0x4441221C);
   
 }
 
@@ -194,17 +194,18 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
 {
   CourseCardColorPalette2(){
     _id = 2;
-  }  @override
-  get topBarBG => AppColorsDarkMode.surfaceColor;
+  }
+  @override
+  get topBarBG => AppColorsDarkMode.accentColorDim;
 
   @override
-  get topBarText => AppColorsDarkMode.textPrimary;
+  get topBarText => AppColorsDarkMode.secondaryColor;
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.primaryColor;
+  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
 
   @override
-  get topBarMarkText => AppColorsDarkMode.textPrimary;
+  get topBarMarkText => AppColorsDarkMode.accentColor;
 
   @override
   Color cardBG([String? courseId]){
@@ -212,31 +213,23 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     }
 
   @override
-  get cardFG => AppColorsDarkMode.textPrimary;
+  get cardFG => AppColorsDarkMode.secondaryColor;
 
    @override
-  get cardFGdim => AppColorsDarkMode.textSecondary;
+  get cardFGdim => Color(0x44FCBAAD);
   
+
   Color _getCourseColor(String courseId) {
     final hash = courseId.hashCode;
-    // Warm, modern color palette inspired by the design image
     final colors = [
-      const Color(0xFFFF6B35), // Primary orange
-      const Color(0xFFFF8A65), // Light orange
-      const Color(0xFFFFAB40), // Amber orange
-      const Color(0xFFFF7043), // Deep orange
-      const Color(0xFFBF360C), // Dark orange
-      const Color(0xFF8D6E63), // Brown
-      const Color(0xFF6D4C41), // Dark brown
-      const Color(0xFF5D4037), // Deep brown
-      const Color(0xFF4E342E), // Very dark brown
-      const Color(0xFF795548), // Medium brown
-      const Color(0xFFA1887F), // Light brown
-      const Color(0xFFD7CCC8), // Very light brown
-      const Color(0xFFFFE0B2), // Light amber
-      const Color(0xFFFFCC02), // Warm yellow
-      const Color(0xFFFFA726), // Orange amber
-      const Color(0xFFFF9800), // Standard orange
+      Colors.teal.shade900, // Dark greenish blue
+      Colors.indigo.shade900, // Deep bluish purple
+      Colors.cyan.shade900, // Rich green-blue — bright pop
+      Colors.deepPurple.shade900, // Bold, regal purple
+      Colors.blue.shade900, // Classic dark blue
+      Colors.orange.shade900, // Dark, warm orange — still different from brown
+      Colors.red.shade900, // Blood red — intense but clearly distinct
+      Colors.lime.shade900, // Sharp and vivid green-yellow
     ];
     return colors[hash.abs() % colors.length];
   }
