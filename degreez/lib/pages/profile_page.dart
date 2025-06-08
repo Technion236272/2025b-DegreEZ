@@ -85,15 +85,15 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: AppColorsDarkMode.accentColor,
+          backgroundColor: AppColorsDarkMode.secondaryColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: AppColorsDarkMode.secondaryColor, width: 2),
+            side: BorderSide(color: AppColorsDarkMode.accentColor, width: 2),
           ),
           title: Text(
             'Edit Profile',
             style: TextStyle(
-              color: AppColorsDarkMode.secondaryColor,
+              color: AppColorsDarkMode.accentColor,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -123,13 +123,13 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                style: TextStyle(color: AppColorsDarkMode.accentColorDim),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColorsDarkMode.secondaryColor,
-                foregroundColor: AppColorsDarkMode.accentColor,
+                backgroundColor: AppColorsDarkMode.accentColor,
+                foregroundColor: AppColorsDarkMode.secondaryColor,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
@@ -169,24 +169,24 @@ class _ProfilePageState extends State<ProfilePage> {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+      style: TextStyle(color: AppColorsDarkMode.accentColor),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-        prefixIcon: Icon(icon, color: AppColorsDarkMode.secondaryColorDim),
+        labelStyle: TextStyle(color: AppColorsDarkMode.accentColorDim),
+        prefixIcon: Icon(icon, color: AppColorsDarkMode.accentColorDim),
         filled: true,
         fillColor: AppColorsDarkMode.mainColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDim),
+          borderSide: BorderSide(color: AppColorsDarkMode.accentColorDim),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDim),
+          borderSide: BorderSide(color: AppColorsDarkMode.accentColorDim),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor, width: 2),
+          borderSide: BorderSide(color: AppColorsDarkMode.accentColor, width: 2),
         ),
       ),
     );
@@ -204,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
           return const Center(
             child: Text(
               'No student profile found',
-              style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              style: TextStyle(color: AppColorsDarkMode.accentColorDim),
             ),
           );
         }
@@ -257,8 +257,8 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColorsDarkMode.secondaryColor,
-            AppColorsDarkMode.secondaryColorDim,
+            AppColorsDarkMode.mainColor,
+            AppColorsDarkMode.accentColorDarker,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -276,10 +276,18 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           // Profile Avatar
           user?.photoURL != null 
-          ?CircleAvatar(
-            radius: 40,
+          ?Container(
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    border: Border.all(
+      color: AppColorsDarkMode.secondaryColorDim, // Border color
+      width: 1.0,         // Border width
+    ),
+  ),
+  child: CircleAvatar(
+            radius: 39,
                 backgroundImage: NetworkImage(user!.photoURL!)
-              )     
+              ),)     
           :Container(
             width: 80,
             height: 80,
@@ -287,19 +295,19 @@ class _ProfilePageState extends State<ProfilePage> {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  AppColorsDarkMode.accentColor,
-                  AppColorsDarkMode.accentColorDim,
+                  AppColorsDarkMode.secondaryColor,
+                  AppColorsDarkMode.secondaryColorDim,
                 ],
               ),
               border: Border.all(
-                color: AppColorsDarkMode.accentColor,
+                color: AppColorsDarkMode.secondaryColor,
                 width: 3,
               ),
             ),
             child: Icon(
               Icons.person,
               size: 40,
-              color: AppColorsDarkMode.secondaryColor,
+              color: AppColorsDarkMode.accentColor,
             ),
           ),
           
@@ -315,7 +323,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColorsDarkMode.accentColor,
+                    color: AppColorsDarkMode.secondaryColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -323,7 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   'Major: ${student.major}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColorsDarkMode.accentColorDim,
+                    color: AppColorsDarkMode.secondaryColorDim,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -331,7 +339,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   'Faculty: ${student.faculty}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColorsDarkMode.accentColorDim,
+                    color: AppColorsDarkMode.secondaryColorDim,
                   ),
                 ),
               ],
@@ -343,10 +351,10 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () => _showEditProfileDialog(context, notifier),
             icon: Icon(
               Icons.edit,
-              color: AppColorsDarkMode.secondaryColor,
+              color: AppColorsDarkMode.accentColor,
             ),
             style: IconButton.styleFrom(
-              backgroundColor: AppColorsDarkMode.accentColor,
+              backgroundColor: AppColorsDarkMode.secondaryColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -358,14 +366,28 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildAcademicProgress(BuildContext context, double gpa, double completionPercentage, Map<String, int> stats) {
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.secondaryColor,
+        gradient: LinearGradient(
+          colors: [
+            AppColorsDarkMode.mainColor,
+            AppColorsDarkMode.accentColorDarker,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColorsDarkMode.accentColorDim),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
+      child:  Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -373,7 +395,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColorsDarkMode.accentColor,
+              color: AppColorsDarkMode.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -389,7 +411,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       'Current GPA',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColorsDarkMode.accentColorDim,
+                        color: AppColorsDarkMode.secondaryColorDim,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -415,7 +437,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       'Completion',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColorsDarkMode.accentColorDim,
+                        color: AppColorsDarkMode.secondaryColorDim,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -431,7 +453,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppColorsDarkMode.accentColor,
+                        color: AppColorsDarkMode.secondaryColor,
                       ),
                     ),
                   ],
@@ -447,9 +469,9 @@ class _ProfilePageState extends State<ProfilePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatusChip('Completed', stats['completed']!, const Color.fromARGB(255, 12, 104, 16)),
-              _buildStatusChip('Passed', stats['passed']!, const Color.fromARGB(255, 23, 75, 25)),
-              _buildStatusChip('Failed', stats['failed']!, const Color.fromARGB(255, 79, 14, 14)),
+              _buildStatusChip('Completed', stats['completed']!, const Color.fromARGB(255, 109, 228, 115)),
+              _buildStatusChip('Passed', stats['passed']!, const Color.fromARGB(255, 68, 255, 55)),
+              _buildStatusChip('Failed', stats['failed']!, const Color.fromARGB(255, 255, 49, 49)),
             ],
           ),
         ],
@@ -461,9 +483,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.accentColorExtremelyDim,
+        color: AppColorsDarkMode.secondaryColorExtremelyDim,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(),
+        border: Border.all(color: AppColorsDarkMode.secondaryColorExtremelyDim),
       ),
       child: Column(
         children: [
@@ -491,11 +513,24 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.secondaryColor,
+        gradient: LinearGradient(
+          colors: [
+            AppColorsDarkMode.mainColor,
+            AppColorsDarkMode.accentColorDarker,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColorsDarkMode.accentColorDim),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
+      child:  Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -503,7 +538,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColorsDarkMode.accentColor,
+              color: AppColorsDarkMode.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -514,19 +549,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 Icons.calendar_today,
                 'Semesters',
                 courseNotifier.coursesBySemester.length.toString(),
-                AppColorsDarkMode.accentColorDim,
+                AppColorsDarkMode.secondaryColor,
               ),
               _buildEnhancedStatCard(
                 Icons.school,
                 'Total Courses',
                 stats['total'].toString(),
-                AppColorsDarkMode.accentColor,
+                AppColorsDarkMode.secondaryColor,
               ),
               _buildEnhancedStatCard(
                 Icons.star,
                 'Credits',
                 totalCredits.toStringAsFixed(1),
-                AppColorsDarkMode.accentColor,
+                AppColorsDarkMode.secondaryColor,
               ),
             ],
           ),
@@ -539,9 +574,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.accentColorExtremelyDim,
+        color: AppColorsDarkMode.secondaryColorExtremelyDim,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColorsDarkMode.accentColor),
+        border: Border.all(color: AppColorsDarkMode.secondaryColorExtremelyDim),
       ),
       child: Column(
         children: [
@@ -559,7 +594,7 @@ class _ProfilePageState extends State<ProfilePage> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: AppColorsDarkMode.accentColorDim,
+              color: AppColorsDarkMode.secondaryColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -572,11 +607,24 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.secondaryColor,
+        gradient: LinearGradient(
+          colors: [
+            AppColorsDarkMode.mainColor,
+            AppColorsDarkMode.accentColorDarker,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColorsDarkMode.accentColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
+      child:  Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -584,7 +632,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColorsDarkMode.accentColor,
+              color: AppColorsDarkMode.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -610,7 +658,7 @@ class _ProfilePageState extends State<ProfilePage> {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppColorsDarkMode.accentColorDim,
+                color: AppColorsDarkMode.secondaryColorDim,
               ),
             ),
           ),
@@ -618,7 +666,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Text(
               value,
               style: TextStyle(
-                color: AppColorsDarkMode.accentColor,
+                color: AppColorsDarkMode.secondaryColor,
               ),
             ),
           ),
@@ -631,11 +679,24 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColorsDarkMode.secondaryColor,
+        gradient: LinearGradient(
+          colors: [
+            AppColorsDarkMode.mainColor,
+            AppColorsDarkMode.accentColorDarker,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColorsDarkMode.accentColorDim),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
+      child:  Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -643,7 +704,7 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColorsDarkMode.accentColor,
+              color: AppColorsDarkMode.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),

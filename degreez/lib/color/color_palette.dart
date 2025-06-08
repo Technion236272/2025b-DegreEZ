@@ -15,9 +15,11 @@ class AppColorsDarkMode {
   static const Color secondaryColor = Color(0xFFFFAB91); // Warm peach
   static const Color secondaryColorDim = Color(0x99FFAB91);
   static const Color secondaryColorDimDD = Color(0xDDFFAB91);
+  static const Color secondaryColorExtremelyDim = Color(0x44FFAB91);
   
   // Accent colors - darker warm tones
   static const Color accentColor = Color(0xFF3E2723); // Deep brown
+  static const Color accentColorDarker = Color(0xFF4F3834); // Deep brown
   static const Color accentColorDim = Color(0xCC3E2723);
   static const Color accentColorLight = Color(0xFF5D4037); // Medium brown
   static const Color accentColorExtremelyDim = Color(0x445D4037); // Medium brown
@@ -48,7 +50,7 @@ class AppColorsDarkMode {
   static const Color successColor = Color(0xFF81C784); // Soft green success
   static const Color warningColor = Color(0xFFFFB74D); // Warm warning yellow
   
-  static const Color bug = secondaryColor; // Warm warning yellow
+  static const Color bug = accentColor; // Warm warning yellow
   // Convenience methods for creating subtle effects like in the design image
   
   /// Creates a subtle border decoration for cards and containers
@@ -95,27 +97,6 @@ class AppColorsDarkMode {
           color: shadowColor,
           blurRadius: 4,
           offset: const Offset(0, 1),
-        ),
-      ],
-    );
-  }
-  
-  /// Creates a primary button decoration with subtle effects
-  static BoxDecoration primaryButtonDecoration({
-    bool pressed = false,
-  }) {
-    return BoxDecoration(
-      color: pressed ? primaryColor.withOpacity(0.9) : primaryColor,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-        color: primaryColorLight.withOpacity(0.3),
-        width: 1,
-      ),
-      boxShadow: pressed ? [] : [
-        BoxShadow(
-          color: primaryColor.withOpacity(0.3),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
         ),
       ],
     );
