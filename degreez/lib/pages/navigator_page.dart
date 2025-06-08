@@ -1,4 +1,5 @@
 import 'package:degreez/pages/calendar_page.dart';
+import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/not_implemented_page.dart';
 import 'package:degreez/pages/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -82,7 +83,7 @@ class _NavigatorPageState extends State<NavigatorPage> {
             body = const CustomizedDiagramPage();
             break;
           case 'GPA Calculator':
-            body = const NotImplementedPage();
+            body = const GpaCalculatorPage();
             break;
           default:
             body = Text(_currentPage);
@@ -296,8 +297,9 @@ class _NavigatorPageState extends State<NavigatorPage> {
         ),
       ),
       selected: isSelected,
+      selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
       onTap: () {
-        Navigator.pop(context);
+        Navigator.pop(context); // Close drawer
         onTap();
       },
     );
@@ -308,5 +310,4 @@ class _NavigatorPageState extends State<NavigatorPage> {
       _currentPage = page;
     });
   }
-
 }

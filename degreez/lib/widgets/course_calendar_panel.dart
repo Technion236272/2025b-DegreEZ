@@ -13,16 +13,17 @@ import '../services/course_service.dart';
 
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
-  final Function(String courseId)? onCourseManuallyAdded;
-  final Function(String courseId)? onCourseManuallyRemoved;
+  final Function(String courseId)? onCourseRemovedFromCalendar;
+  final Function(String courseId)? onCourseRestoredToCalendar;
+  final bool Function(String courseId)? isCourseRemovedFromCalendar;
   final int? viewMode;
   final VoidCallback? onToggleView;
-  
-  const CourseCalendarPanel({
+    const CourseCalendarPanel({
     super.key, 
     required this.eventController,
-    this.onCourseManuallyAdded,
-    this.onCourseManuallyRemoved,
+    this.onCourseRemovedFromCalendar,
+    this.onCourseRestoredToCalendar,
+    this.isCourseRemovedFromCalendar,
     this.viewMode,
     this.onToggleView,
   });
@@ -197,8 +198,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                       const Text('Loading...', style: TextStyle(fontSize: 12))
                                     else
                                       const Text('Details unavailable', style: TextStyle(fontSize: 12)),
-                                    
-                                    // Show selection status
+                                      // Show selection status
                                     if (course.hasCompleteScheduleSelection)
                                       Text(
                                         'Schedule: ${course.selectionSummary}',
@@ -216,9 +216,27 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                           color: Colors.grey,
                                         ),
                                       ),
+                                    
+                                    // Show calendar status
+                                    if (widget.isCourseRemovedFromCalendar?.call(course.courseId) ?? false)
+                                      const Text(
+                                        'Status: Hidden from calendar',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      )
+                                    else
+                                      const Text(
+                                        'Status: Shown in calendar',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.green,
+                                        ),
+                                      ),
                                   ],
-                                ),
-                                trailing: PopupMenuButton<String>(                                  onSelected: (value) {
+                                ),                                trailing: PopupMenuButton<String>(                                  onSelected: (value) {
                                     switch (value) {                                      case 'select_schedule':
                                         showScheduleSelectionDialog(
                                           context,
@@ -232,6 +250,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                         break;
                                       case 'remove_from_calendar':
                                         _removeCourseFromCalendar(course);
+                                        break;
+                                      case 'restore_to_calendar':
+                                        _restoreCourseToCalendar(course);
                                         break;                                      case 'remove_course':
                                         _showRemoveCourseDialog(course);
                                         break;
@@ -239,64 +260,81 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                         _showCourseDetails(context, course, courseDetails);
                                         break;
                                     }
-                                  },                                  itemBuilder: (BuildContext context) => [
-                                    const PopupMenuItem(
-                                      value: 'select_schedule',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.schedule),
-                                          SizedBox(width: 8),
-                                          Text('Select Schedule'),
-                                        ],
+                                  },                                  itemBuilder: (BuildContext context) {
+                                    final isRemovedFromCalendar = widget.isCourseRemovedFromCalendar?.call(course.courseId) ?? false;
+                                    
+                                    return [
+                                      const PopupMenuItem(
+                                        value: 'select_schedule',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.schedule),
+                                            SizedBox(width: 8),
+                                            Text('Select Schedule'),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'add_to_calendar',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.add_to_photos),
-                                          SizedBox(width: 8),
-                                          Text('Add to Calendar'),
-                                        ],
+                                      if (!isRemovedFromCalendar) ...[
+                                        const PopupMenuItem(
+                                          value: 'add_to_calendar',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.add_to_photos),
+                                              SizedBox(width: 8),
+                                              Text('Add to Calendar'),
+                                            ],
+                                          ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'remove_from_calendar',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.remove_circle),
+                                              SizedBox(width: 8),
+                                              Text('Remove from Calendar'),
+                                            ],
+                                          ),
+                                        ),
+                                      ] else ...[
+                                        const PopupMenuItem(
+                                          value: 'restore_to_calendar',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.restore, color: Colors.green),
+                                              SizedBox(width: 8),
+                                              Text('Restore to Calendar', style: TextStyle(color: Colors.green)),
+                                            ],
+                                          ),
+                                        ),                                      ],
+                                      const PopupMenuItem(
+                                        value: 'remove_course',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete_forever, color: Colors.red),
+                                            SizedBox(width: 8),
+                                            Text('Remove Course', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'remove_from_calendar',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.remove_circle),
-                                          SizedBox(width: 8),
-                                          Text('Remove from Calendar'),
-                                        ],
+                                      const PopupMenuItem(
+                                        value: 'view_details',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.info),
+                                            SizedBox(width: 8),
+                                            Text('View Details'),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'remove_course',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_forever, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Remove Course', style: TextStyle(color: Colors.red)),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'view_details',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.info),
-                                          SizedBox(width: 8),
-                                          Text('View Details'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                    ];
+                                  },
                                 ),
                               );
                             },
                           );
                         },
-                      ))
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -403,14 +441,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         widget.eventController.add(event);
         eventsAdded++;
       }
-      
-      // If no detailed schedule, try to create events from stored times
+        // If no detailed schedule, try to create events from stored times
       if (eventsAdded == 0) {
         eventsAdded += _addBasicTimeEvents(course, sunday, courseColor);
       }
-      
-      // Mark course as manually added
-      widget.onCourseManuallyAdded?.call(course.courseId);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -426,25 +460,26 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         ),
       );
     }
-  }
-  void _removeCourseFromCalendar(StudentCourse course) {
-    int removedCount = 0;
-    widget.eventController.removeWhere((event) {
-      final shouldRemove = event.title.startsWith(course.name) || 
-        event.title.startsWith('${course.name} ') ||
-        event.title.contains('${course.name} -') ||
-        event.title.contains('${course.name}:');
-      if (shouldRemove) removedCount++;
-      return shouldRemove;
-    });
-
-    // Mark course as manually removed
-    widget.onCourseManuallyRemoved?.call(course.courseId);
+  }  void _removeCourseFromCalendar(StudentCourse course) {
+    // NEW APPROACH: Mark course as removed instead of physically removing events
+    widget.onCourseRemovedFromCalendar?.call(course.courseId);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${course.name} removed from calendar ($removedCount events)'),
+        content: Text('${course.name} hidden from calendar'),
         backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _restoreCourseToCalendar(StudentCourse course) {
+    // NEW: Call the restore callback
+    widget.onCourseRestoredToCalendar?.call(course.courseId);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${course.name} restored to calendar'),
+        backgroundColor: Colors.green,
       ),
     );
   }
@@ -600,8 +635,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             backgroundColor: Colors.green,
           ),
         );
-        
-        // Also remove from calendar events
+          // Also remove from calendar events
         int removedCount = 0;
         widget.eventController.removeWhere((event) {
           final shouldRemove = event.title.contains(courseId) || 
@@ -609,9 +643,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
           if (shouldRemove) removedCount++;
           return shouldRemove;
         });
-
-        // Mark course as manually removed
-        widget.onCourseManuallyRemoved?.call(courseId);
         
         // Show additional feedback about calendar events removed
         if (removedCount > 0) {
@@ -717,8 +748,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
 
   int _addBasicTimeEvents(StudentCourse course, DateTime sunday, Color courseColor) {
     int eventsAdded = 0;
-    
-    // Create events from stored lecture time
+      // Create events from stored lecture time
     if (course.lectureTime.isNotEmpty) {
       final lectureEvent = _createEventFromTimeString(
         course, 
@@ -730,11 +760,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       if (lectureEvent != null) {
         widget.eventController.add(lectureEvent);
         eventsAdded++;
-      }
-      if (course.hasSelectedLecture) {
-        widget.onCourseManuallyAdded?.call(course.courseId);
-      } else {
-        widget.onCourseManuallyRemoved?.call(course.courseId);
       }
     }
 

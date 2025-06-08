@@ -4,6 +4,7 @@ import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
@@ -28,42 +29,47 @@ class _CalendarPageState extends State<CalendarPage>
   final TextEditingController _searchController = TextEditingController();
   final _searchQuery = '';
   
-  // Track manually added events to preserve them during automatic updates
-  final Set<String> _manuallyAddedCourses = <String>{};
-  
-  // Flag to track if we need to trigger the initial view switch to load events
+  // NEW: Track courses that should be hidden from calendar
+  final Set<String> _removedCourses = <String>{};
+    // Flag to track if we need to trigger the initial view switch to load events
   bool _hasTriggeredInitialLoad = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemovedCourses();
+  }
 
 
 
   EventController get _eventController =>
       CalendarControllerProvider.of(context).controller;
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }  // NEW: Methods to manage removed courses from calendar display
+  void _markCourseAsRemovedFromCalendar(String courseId) {
+    _removedCourses.add(courseId);
+    _saveRemovedCourses(); // Persist the change
+    debugPrint('Course $courseId marked as removed from calendar');
+    // Trigger calendar refresh
+    setState(() {});
   }
-
-  // Add method to mark course as manually added
-  void _markCourseAsManuallyAdded(String courseId) {
-    _manuallyAddedCourses.add(courseId);
+  
+  bool _isCourseRemovedFromCalendar(String courseId) {
+    return _removedCourses.contains(courseId);
   }
-  // Add method to remove course from manual tracking
-  void _removeCourseFromManualTracking(String courseId) {
-    _manuallyAddedCourses.remove(courseId);
-  }
-
   // Build the course panel with integrated toggle button
   Widget _buildCoursePanelWithIntegratedToggle(CourseProvider courseProvider) {
     if (!courseProvider.hasAnyCourses) {
       return const SizedBox.shrink();
     }
-
-    return CourseCalendarPanel(
+      return CourseCalendarPanel(
       eventController: _eventController,
-      onCourseManuallyAdded: _markCourseAsManuallyAdded,
-      onCourseManuallyRemoved: _removeCourseFromManualTracking,
+      onCourseRemovedFromCalendar: _markCourseAsRemovedFromCalendar,
+      onCourseRestoredToCalendar: _restoreCourseToCalendar,
+      isCourseRemovedFromCalendar: _isCourseRemovedFromCalendar,
       viewMode: _viewMode,
       onToggleView: () => setState(() => _viewMode = _viewMode == 0 ? 1 : 0),
     );
@@ -203,44 +209,12 @@ class _CalendarPageState extends State<CalendarPage>
       eventArranger: const SideEventArranger(),
     );
   }
-  
     // Updated calendar event creation to preserve manually added events
   void _updateCalendarEvents(CourseProvider courseProvider, ColorThemeProvider colorThemeProvider) {
     debugPrint('=== Updating calendar events with schedule selection ===');
 
-    // Store manually added events before clearing
-    final manualEvents = <CalendarEventData>[];
-    final existingEvents = _eventController.allEvents;
-    
-    for (final event in existingEvents) {
-      // Check if this event belongs to a manually added course
-      // We'll identify manual events by checking if they contain course names from manually added courses
-      for (final courseId in _manuallyAddedCourses) {
-        // Find the course name from the course provider
-        StudentCourse? course;
-        for (final semesterCourses in courseProvider.coursesBySemester.values) {
-          final foundCourse = semesterCourses.where((c) => c.courseId == courseId).firstOrNull;
-          if (foundCourse != null) {
-            course = foundCourse;
-            break;
-          }
-        }
-        
-        if (course != null && event.title.contains(course.name)) {
-          manualEvents.add(event);
-          debugPrint('Preserving manually added event: ${event.title}');
-          break;
-        }
-      }
-    }
-    
     // Clear existing events
     _eventController.removeWhere((event) => true);
-    
-    // Re-add manually added events
-    for (final manualEvent in manualEvents) {
-      _eventController.add(manualEvent);
-    }
     
     // Get current week start (Sunday)
     final now = DateTime.now();
@@ -263,12 +237,10 @@ class _CalendarPageState extends State<CalendarPage>
 
       final semester = semesterEntry.key;
       final courses = semesterEntry.value;
-      debugPrint('Processing semester "$semester" with ${courses.length} courses');
-      
-      for (final course in courses) {
-        // Skip manually added courses to avoid duplicates
-        if (_manuallyAddedCourses.contains(course.courseId)) {
-          debugPrint('Skipping course ${course.name} as it was manually added');
+      debugPrint('Processing semester "$semester" with ${courses.length} courses');      for (final course in courses) {
+        // NEW: Skip courses that are marked as removed from calendar
+        if (_isCourseRemovedFromCalendar(course.courseId)) {
+          debugPrint('Skipping course ${course.name} as it was removed from calendar');
           continue;
         }
         
@@ -343,6 +315,12 @@ class _CalendarPageState extends State<CalendarPage>
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
+    // NEW: Skip courses that are marked as removed from calendar
+    if (_isCourseRemovedFromCalendar(course.courseId)) {
+      debugPrint('Skipping events for course ${course.name} as it was removed from calendar');
+      return 0;
+    }
+    
     debugPrint('Creating calendar events for ${course.name} with schedule selection');
     int eventsAdded = 0;
       // Get selected schedule entries only
@@ -463,13 +441,18 @@ class _CalendarPageState extends State<CalendarPage>
     }
     
     return eventsAdded;
-  }
-  int _createBasicCalendarEvents(
+  }  int _createBasicCalendarEvents(
     StudentCourse course, 
     String semester,
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
+    // NEW: Skip courses that are marked as removed from calendar
+    if (_isCourseRemovedFromCalendar(course.courseId)) {
+      debugPrint('Skipping basic events for course ${course.name} as it was removed from calendar');
+      return 0;
+    }
+    
     final courseColor = colorThemeProvider.getCourseColor(course.courseId);
     int eventsAdded = 0;
     
@@ -754,5 +737,42 @@ class _CalendarPageState extends State<CalendarPage>
           _updateCalendarEvents(courseProvider, colorThemeProvider);
         },      );
     }
+  }
+
+  // NEW: Persistent storage methods for removed courses
+  Future<void> _loadRemovedCourses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final removedCoursesString = prefs.getString('removed_courses') ?? '';
+      
+      if (removedCoursesString.isNotEmpty) {
+        final removedCoursesList = removedCoursesString.split(',');
+        _removedCourses.clear();
+        _removedCourses.addAll(removedCoursesList);
+        debugPrint('Loaded ${_removedCourses.length} removed courses from storage');
+      }
+    } catch (e) {
+      debugPrint('Error loading removed courses: $e');
+    }
+  }
+
+  Future<void> _saveRemovedCourses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final removedCoursesString = _removedCourses.join(',');
+      await prefs.setString('removed_courses', removedCoursesString);
+      debugPrint('Saved ${_removedCourses.length} removed courses to storage');
+    } catch (e) {
+      debugPrint('Error saving removed courses: $e');
+    }
+  }
+
+  // NEW: Method to restore course to calendar
+  void _restoreCourseToCalendar(String courseId) {
+    _removedCourses.remove(courseId);
+    _saveRemovedCourses(); // Persist the change
+    debugPrint('Course $courseId restored to calendar');
+    // Trigger calendar refresh
+    setState(() {});
   }
 }
