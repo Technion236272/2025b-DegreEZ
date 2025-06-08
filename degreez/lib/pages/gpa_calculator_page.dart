@@ -79,7 +79,6 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       }
     }
   }
-
   GpaCalculationResult _calculateAverage(List<GpaCalculationItem> courses) {
     print('DEBUG: _calculateAverage called with ${courses.length} courses');
     
@@ -93,12 +92,12 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     
     for (final course in courses) {
       print('DEBUG: Processing ${course.name}: ${course.credits} credits, ${course.grade} grade');
-      final gradePoint = (course.grade / 100) * 4.0; // Convert percentage to 4.0 scale
-      final weightedPoints = gradePoint * course.credits;
+      // Use the grade as-is (percentage), weighted by credits
+      final weightedPoints = course.grade * course.credits;
       totalPoints += weightedPoints;
       totalCredits += course.credits;
       
-      print('DEBUG: ${course.name} - gradePoint: $gradePoint, weightedPoints: $weightedPoints');
+      print('DEBUG: ${course.name} - grade: ${course.grade}, weightedPoints: $weightedPoints');
       print('DEBUG: Running totals - totalPoints: $totalPoints, totalCredits: $totalCredits');
     }
     
