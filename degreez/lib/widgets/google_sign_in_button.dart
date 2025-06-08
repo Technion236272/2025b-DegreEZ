@@ -1,3 +1,4 @@
+import 'package:degreez/color/color_palette2.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,13 +25,10 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
       child:
           loginNotifier.isLoading || context.watch<StudentProvider>().isLoading
               ? const LinearProgressIndicator(
-                color: AppColorsDarkMode.secondaryColor,
-                backgroundColor: AppColorsDarkMode.accentColor,
+                color: AppColors.primary,
+                backgroundColor: AppColors.accent,
               )
               : TextButton(
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: AppColorsDarkMode.accentColor,
-                ),
                 onPressed: () async {
                   try {
                     final rootNavigator = Navigator.of(
@@ -53,7 +51,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Error signing in: $e'),
-                          backgroundColor: Colors.red,
+                          backgroundColor: AppColors.error,
                         ),
                       );
                     }
@@ -70,7 +68,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         height: 24.0,
                         width: 24.0,
                         decoration: const BoxDecoration(
-                          color: AppColorsDarkMode.secondaryColor,
+                          color: AppColors.background,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -84,10 +82,6 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                       const SizedBox(width: 12.0),
                       const Text(
                         'Sign in with Google',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
                       ),
                     ],
                   ),

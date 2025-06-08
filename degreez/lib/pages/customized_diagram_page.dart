@@ -1,5 +1,6 @@
 // lib/pages/degree_progress_page.dart
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/color/color_palette2.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
@@ -37,6 +38,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   // Helper method to get responsive grid count
   int _getCrossAxisCount(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    debugPrint('screenWidth =  ${screenWidth.toString()}');
     if (screenWidth > 1200) return 6;
     if (screenWidth > 800) return 5;
     if (screenWidth > 600) return 4;
@@ -103,7 +105,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
  create: (ctx) => CustomizedDiagramNotifier(),
  child: 
 Scaffold(
-      backgroundColor: AppColorsDarkMode.mainColor,
       body: Consumer2<StudentProvider, CourseProvider>(
   builder: (context, studentNotifier, courseNotifier, _){
           final courseNotifier = context.read<CourseProvider>();
@@ -116,11 +117,11 @@ Scaffold(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error, size: 64, color: Colors.red),
+                  Icon(Icons.error, size: 64, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${studentNotifier.error}',
-                    style: const TextStyle(color: Colors.red),
+                    style: const TextStyle(color: AppColors.error),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -135,16 +136,16 @@ Scaffold(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timeline, size: 64, color: AppColorsDarkMode.secondaryColorDim),
+                  Icon(Icons.timeline, size: 64, color: AppColors.textPrimaryDim),
                   SizedBox(height: 16),
                   Text(
                     'No courses to display',
-                    style: TextStyle(fontSize: 18, color: AppColorsDarkMode.secondaryColorDim),
+                    style: TextStyle(fontSize: 18, color: AppColors.textPrimaryDim),
                   ),
                   SizedBox(height: 8),
                   Text(
                     'Add courses to see your degree progress',
-                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                    style: TextStyle(color: AppColors.textPrimaryDim),
                   ),
                 ],
               ),
@@ -175,7 +176,7 @@ Scaffold(
                   padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
                   child: Text(
                     "Tap a course for quick actions • Long press to add notes",
-                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                    style: TextStyle(color: AppColors.textPrimaryDim),
                   ),
                 ),
 
@@ -216,8 +217,6 @@ Scaffold(
         },
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColorsDarkMode.accentColor,
-        foregroundColor: AppColorsDarkMode.secondaryColor,
         onPressed: () {
           _showAddSemesterDialog(context);
         },
@@ -324,9 +323,7 @@ Scaffold(
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         children: [
@@ -368,14 +365,9 @@ Scaffold(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          margin: const EdgeInsets.only(top: 20, bottom: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColorsDarkMode.accentColor,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
+        Card(
+          child: Padding(padding: EdgeInsets.only(left: 9.0,right: 9.0,top: 4.0,bottom: 4.0) ,child:  
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -386,7 +378,6 @@ Scaffold(
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColorsDarkMode.secondaryColor,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -396,7 +387,7 @@ Scaffold(
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -404,7 +395,6 @@ Scaffold(
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: AppColorsDarkMode.accentColor,
                       ),
                     ),
                   ),
@@ -415,7 +405,6 @@ Scaffold(
                   IconButton(
                     icon: const Icon(
                       Icons.add,
-                      color: AppColorsDarkMode.secondaryColor,
                     ),
                     tooltip: 'Add Course',
                     onPressed: () {
@@ -425,7 +414,6 @@ Scaffold(
                   IconButton(
                     icon: const Icon(
                       Icons.delete,
-                      color: AppColorsDarkMode.secondaryColor,
                     ),
                     tooltip: 'Delete Semester',
                     onPressed: () {
@@ -435,7 +423,7 @@ Scaffold(
                 ],
               ),
             ],
-          ),
+          ),),
         ),
 
         // Display message if no courses
@@ -446,7 +434,6 @@ Scaffold(
                 child: Text(
                   'No courses in this semester',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -638,19 +625,17 @@ Scaffold(
       builder:
           (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(
-      side: BorderSide(color:  AppColorsDarkMode.secondaryColor, width: 2),
+      side: BorderSide(color:  AppColors.accent, width: 2),
       borderRadius: BorderRadius.circular(12),
     ),
-            backgroundColor: AppColorsDarkMode.accentColor,
-            title: const Text('Delete Semester',style: TextStyle(color: AppColorsDarkMode.secondaryColor),),
+            title: const Text('Delete Semester',),
             content: Text(
-              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel',
-                  style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),
+                child: const Text('Cancel',),
               ),
               TextButton(
                 onPressed: () async {
@@ -665,7 +650,7 @@ Scaffold(
                 },
                 child: const Text(
                   'Delete',
-                  style: TextStyle(color: AppColorsDarkMode.secondaryColor,fontWeight:FontWeight.w700),
+                  style: TextStyle(fontWeight:FontWeight.w700),
                 ),
               ),
             ],

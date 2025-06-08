@@ -15,12 +15,11 @@ class ProfileInfoRow extends StatelessWidget {
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(fontWeight: FontWeight.bold,),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],

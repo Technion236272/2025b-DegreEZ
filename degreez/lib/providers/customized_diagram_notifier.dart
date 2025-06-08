@@ -17,7 +17,7 @@ class CustomizedDiagramNotifier extends ChangeNotifier {
   
   // Initialize user on startup
   void _initCustomizedDiagram() {
-    _cardColorPalette = CourseCardColorPalette1();
+    _cardColorPalette = CourseCardColorPalette2();
   }
   
   /// Sign in with Google account

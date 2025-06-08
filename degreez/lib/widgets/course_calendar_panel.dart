@@ -1,4 +1,5 @@
 // lib/widgets/course_calendar_panel.dart - Updated with ColorThemeProvider
+import 'package:degreez/color/color_palette2.dart';
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:provider/provider.dart';
@@ -48,6 +49,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
             : courseProvider.coursesBySemester.values.expand((courses) => courses).toList();
 
         return Card(
+          color: AppColors.background,
           elevation: 2,
           margin: const EdgeInsets.all(8.0),
           child: Column(
@@ -98,6 +100,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
                       )
                     else
                       Container(
+                        color: AppColors.background,
                         constraints: const BoxConstraints(
                           maxHeight: 240, // Approximate height for 3 items (80px each)
                         ),
@@ -930,17 +933,16 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEv
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondary.withAlpha(20),
+          color: AppColors.primary,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: Theme.of(context).colorScheme.secondary.withAlpha(50),
+            color: AppColors.accentExtremelyDim,
             width: 1,
           ),
         ),
         child: Icon(
           widget.viewMode == 0 ? Icons.view_week : Icons.view_day,
           size: 16,
-          color: Theme.of(context).colorScheme.secondary,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:degreez/color/color_palette2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColorsDarkMode.mainColor,
       body: Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
         builder: (context, loginNotifier, studentProvider, courseProvider, _) {
           // Display error message if any
@@ -28,11 +28,9 @@ class _LoginPageState extends State<LoginPage> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(loginNotifier.errorMessage!),
-                  backgroundColor: Colors.red,
                   duration: const Duration(seconds: 5),
                   action: SnackBarAction(
                     label: 'Dismiss',
-                    textColor: Colors.white,
                     onPressed: () {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     },
@@ -79,22 +77,18 @@ class _LoginPageState extends State<LoginPage> {
 
             // Show loading state while handling post-login
             return Scaffold(
-              backgroundColor: AppColorsDarkMode.mainColor,
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      color: AppColorsDarkMode.secondaryColor,
-                    ),
+                    CircularProgressIndicator(),
                     const SizedBox(height: 16),
                     Text(
                       loginNotifier.stayedSignedIn 
                           ? 'Welcome back! Loading your data...'
                           : 'Setting up your account...',
-                      style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColor,
-                        fontSize: 16,
+                        style: TextStyle(
+                          fontSize: 16,
                       ),
                     ),
                   ],
@@ -120,25 +114,23 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             width: 350,
                             height: 350,
-                            child: Image.asset('assets/Logo_DarkMode2.png'),
+                            child: Image.asset('assets/Logo.png'),
                           ),
                           const SizedBox(height: 16),
                           // App Name
                           Text(
                             'DegreEZ',
-                            style: TextStyle(
+                                                        style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
-                              color: AppColorsDarkMode.secondaryColor,
                               letterSpacing: 1.2,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Your academic journey made easy',
-                            style: TextStyle(
+                                                        style: TextStyle(
                               fontSize: 16,
-                              color: AppColorsDarkMode.secondaryColorDim,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -158,8 +150,6 @@ class _LoginPageState extends State<LoginPage> {
 
                               Text(
                                 'Sign in with your Google account to continue',
-                                style: TextStyle(
-                                    color: AppColorsDarkMode.secondaryColorDim),
                               ),
 
                               const SizedBox(height: 24),
@@ -173,9 +163,9 @@ class _LoginPageState extends State<LoginPage> {
                               Text(
                                 'We only use your Gmail account for authentication purposes.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                                                style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColorsDarkMode.secondaryColorDim,
+                                  color: AppColors.textPrimaryDim,
                                 ),
                               ),
                               const SizedBox(height: 24),
