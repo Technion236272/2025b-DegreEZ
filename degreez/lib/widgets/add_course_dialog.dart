@@ -53,6 +53,8 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
             TextField(
               controller: searchController,
               decoration: const InputDecoration(
+                enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),),
                 labelText: 'Course ID or Name',
                 hintText: 'e.g. 02340114 or פיסיקה 2',
                 prefixIcon: Icon(Icons.search),
