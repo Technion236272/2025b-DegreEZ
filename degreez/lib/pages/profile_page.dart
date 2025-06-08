@@ -1,8 +1,10 @@
 import 'package:degreez/providers/bug_report_notifier.dart';
 import 'package:degreez/providers/course_provider.dart';
+import 'package:degreez/providers/feedback_notifier.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
+import 'package:degreez/widgets/feedback_popup.dart';
 import 'package:degreez/widgets/profile/profile_info_row.dart';
 import 'package:degreez/widgets/profile/stat_card.dart';
 import 'package:degreez/color/color_palette.dart';
@@ -245,8 +247,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
- create: (ctx) => BugReportNotifier(),
+    return MultiProvider(
+  providers: [
+    ChangeNotifierProvider(create: (_) => BugReportNotifier()),
+    ChangeNotifierProvider(create: (_) => FeedbackNotifier()),
+    // You can add more here if needed
+  ],
  builder: (context, child) { 
     return Consumer3<StudentProvider, CourseProvider,LogInNotifier>(
       builder: (context, studentNotifier, courseNotifier,logInNotifier, _) {
@@ -760,6 +766,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
           BugReportButton(),
+          const SizedBox(height: 16),
+          FeedbackButton(),
         ],
       ),
     );
