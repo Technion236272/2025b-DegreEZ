@@ -207,9 +207,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
   }
   Color _getGradeColor(double grade) {
     if (grade >= 80) return AppColorsDarkMode.successColor; // Green for 80+
-    if (grade >= 70) return AppColorsDarkMode.primaryColor; // Blue for 70-79
-    if (grade >= 60) return AppColorsDarkMode.warningColor; // Orange for 60-69
-    return AppColorsDarkMode.errorColor; // Red for below 60
+    if (grade >= 70) return AppColorsDarkMode.warningColor; // Orange for 60-69
+    if (grade >= 55) return AppColorsDarkMode.primaryColor; // Blue for 55-69
+    return AppColorsDarkMode.errorColor; // Red for below 55
   }
 
   String _getGradeLabel(double grade) {
