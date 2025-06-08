@@ -349,11 +349,10 @@ class SemesterInfo {
       endDate: json['end'],
     );
   }
-
   String get semesterName {
     switch (semester) {
       case 200: return 'Winter $year-${year + 1}';
-      case 201: return 'Spring $year';
+      case 201: return 'Spring ${year + 1}'; // Display Spring 2024 as Spring 2025
       case 202: return 'Summer $year';
       default: return 'Semester $semester $year';
     }
