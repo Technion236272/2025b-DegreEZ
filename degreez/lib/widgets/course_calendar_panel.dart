@@ -8,8 +8,8 @@ import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
 import '../models/student_model.dart';
 import '../mixins/course_event_mixin.dart';
+import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
-import 'schedule_selection_dialog.dart';
 
 class CourseCalendarPanel extends StatefulWidget {
   final EventController eventController;
@@ -31,7 +31,8 @@ class CourseCalendarPanel extends StatefulWidget {
   State<CourseCalendarPanel> createState() => _CourseCalendarPanelState();
 }
 
-class _CourseCalendarPanelState extends State<CourseCalendarPanel> with CourseEventMixin {
+class _CourseCalendarPanelState extends State<CourseCalendarPanel> 
+    with CourseEventMixin, ScheduleSelectionMixin {
   bool _isExpanded = false;
 
   @override
