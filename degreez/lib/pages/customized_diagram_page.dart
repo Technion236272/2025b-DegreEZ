@@ -10,6 +10,73 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 
+Widget buildFormattedPrereqWarning(
+  List<List<String>> prereqGroups,
+  List<String> missingIds,
+  Map<String, String> courseNames,
+) {
+  final missingSet = missingIds.toSet();
+
+  return Directionality(
+    textDirection: TextDirection.rtl,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < prereqGroups.length; i++) ...[
+          if (i > 0)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                'או',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+            ),
+          Wrap(
+            children: [
+             // const Text('('),
+              for (int j = 0; j < prereqGroups[i].length; j++) ...[
+                if (j > 0)
+                  const Text(
+                    ' ו־ ',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: prereqGroups[i][j],
+                        style: TextStyle(
+                          color: missingSet.contains(prereqGroups[i][j])
+                              ? Colors.redAccent
+                              : Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text:
+                            ' (${courseNames[prereqGroups[i][j]] ?? 'לא ידוע'})',
+                        style: TextStyle(
+                          color: missingSet.contains(prereqGroups[i][j])
+                              ? Colors.redAccent
+                              : Colors.greenAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            //  const Text(')'),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+
+
 class CustomizedDiagramPage extends StatefulWidget {
   const CustomizedDiagramPage({super.key});
 
@@ -615,56 +682,135 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                                       );
                                   final Object? rawPrereqs =
                                       courseDetails?.prerequisites;
+                                  List<List<String>> parsedPrereqs = [];
+                                  debugPrint('📦📦📦 rawPrereqs : $rawPrereqs');
 
-                                  List<String> prereqs = [];
+                                  if (rawPrereqs is String) {
+                                    // Example: "02360703 או (02340312 ו-02340311)"
+                                    final orGroups = rawPrereqs.split(
+                                      RegExp(r'\s*או\s*'),
+                                    );
+                                    debugPrint('📦📦📦 orGroups : $orGroups');
 
-                                  if (rawPrereqs != null) {
-                                    if (rawPrereqs is List) {
-                                      prereqs =
-                                          rawPrereqs
-                                              .whereType<String>()
-                                              .map((e) => e.trim())
-                                              .where((e) => e.isNotEmpty)
+                                    for (final group in orGroups) {
+                                      // Remove parentheses and split by 'ו'
+                                      final andGroup =
+                                          group
+                                              .replaceAll(
+                                                RegExp(r'[^\d\s]'),
+                                                '',
+                                              ) // keep only digits + space
+                                              .trim()
+                                              .split(
+                                                RegExp(r'\s+'),
+                                              ) // split by any whitespace
+                                              .where(
+                                                (id) => RegExp(
+                                                  r'^\d{8}$',
+                                                ).hasMatch(id),
+                                              ) // keep only 8-digit IDs
                                               .toList();
-                                    } else if (rawPrereqs is String) {
-                                      prereqs =
-                                          rawPrereqs
-                                              .split(RegExp(r'[,\s]+'))
-                                              .map((e) => e.trim())
-                                              .where((e) => e.isNotEmpty)
-                                              .toList();
-                                    } else {
+
+                                      if (andGroup.isNotEmpty)
+                                        parsedPrereqs.add(andGroup);
                                       debugPrint(
-                                        '⚠️ Unexpected type for prerequisites: ${rawPrereqs.runtimeType}',
-                                        
+                                        '📦📦📦 parsedPrereqs : $parsedPrereqs',
                                       );
                                     }
+                                  } else {
+                                    print(
+                                      '⚠️⚠️⚠️ Unexpected prerequisite format: ${rawPrereqs.runtimeType}',
+                                    );
                                   }
-
                                   final missing = context
                                       .read<CourseProvider>()
                                       .getMissingPrerequisites(
                                         semesterName,
-                                        prereqs,
+                                        parsedPrereqs,
                                       );
 
                                   if (missing.isNotEmpty) {
-                                    debugPrint("missing is not empty");
-                                    Navigator.of(dialogContext).pop();
-                                    await Future.delayed(
-                                      const Duration(milliseconds: 100),
-                                    ); // Allow dialog to fully close
+                                    final allTakenCourses = context
+                                      .read<CourseProvider>()
+                                        .sortedCoursesBySemester
+                                        .values
+                                        .expand((list) => list);
+                                    final courseIdToName = {
+                                      for (final course in allTakenCourses)
+                                        course.courseId: course.name,
+                                    };
 
-                                    ScaffoldMessenger.of(
-                                      rootContext,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '⚠ Missing prerequisites: ${missing.join(', ')}',
-                                        ),
-                                        backgroundColor: Colors.orange.shade700,
-                                      ),
+                                    // Add missing prereqs to the map
+                                    for (final group in parsedPrereqs) {
+                                      for (final courseId in group) {
+                                        if (!courseIdToName.containsKey(
+                                          courseId,
+                                        )) {
+                                          final name =
+                                              await CourseService.getCourseName(
+                                                courseId,
+                                              );
+                                          courseIdToName[courseId] =
+                                              name ?? 'Unknown';
+                                        }
+                                      }
+                                    }
+
+                                    final proceedAnyway = await showDialog<
+                                      bool
+                                    >(
+                                      context: dialogContext,
+                                      builder:
+                                          (ctx) => AlertDialog(
+                                            title: const Text(
+                                              'Missing Prerequisites',
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Text(
+                                                  'To register for this course, you must have completed one of the following prerequisite groups. '
+                                                  'Courses in red were not found in your previous semesters.',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.white70,
+                                                    height: 1.4,
+                                                  ),
+                                                ),
+
+                                                const SizedBox(height: 10),
+                                                buildFormattedPrereqWarning(
+                                                  parsedPrereqs,
+                                                  missing,
+                                                  courseIdToName,
+                                                ),
+                                                const SizedBox(height: 10),
+                                                const Text(
+                                                  'Do you want to add this course anyway?',
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.of(
+                                                      ctx,
+                                                    ).pop(false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.of(
+                                                      ctx,
+                                                    ).pop(true),
+                                                child: const Text('Add Anyway'),
+                                              ),
+                                            ],
+                                          ),
                                     );
+
+                                    if (proceedAnyway != true) return;
                                   }
 
                                   final course = StudentCourse(

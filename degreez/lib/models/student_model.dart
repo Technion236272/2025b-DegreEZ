@@ -81,7 +81,7 @@ class StudentCourse {
   final String
   tutorialTime; // Stores selected tutorial schedule: "day time" format
   final String? note;
-  final List<String>? prerequisites;
+  final List<Map<String, List<String>>>? prerequisites;
 
   StudentCourse({
     required this.courseId,
@@ -94,6 +94,22 @@ class StudentCourse {
   });
 
   factory StudentCourse.fromFirestore(Map<String, dynamic> data) {
+    final raw = data['prerequisites'];
+    List<Map<String, List<String>>>? parsedPrereqs;
+
+    if (raw is List) {
+      parsedPrereqs =
+          raw.map<Map<String, List<String>>>((group) {
+            if (group is Map && group['and'] is List) {
+              final ids = List<String>.from(
+                group['and'].map((e) => e.toString()),
+              );
+              return {'and': ids};
+            }
+            return {'and': []};
+          }).toList();
+    }
+
     return StudentCourse(
       courseId: data['Course_Id'] ?? '',
       name: data['Name'] ?? '',
@@ -101,12 +117,12 @@ class StudentCourse {
       lectureTime: data['Lecture_time'] ?? '',
       tutorialTime: data['Tutorial_time'] ?? '',
       note: data['Note'] ?? '',
-      prerequisites: (data['prerequisites'] as List?)?.cast<String>(),
+      prerequisites: parsedPrereqs,
     );
   }
 
   Map<String, dynamic> toFirestore() {
-    final data = {
+    final data = <String, dynamic>{
       'Course_Id': courseId,
       'Name': name,
       'Final_grade': finalGrade,
@@ -115,13 +131,9 @@ class StudentCourse {
       'Note': note ?? '',
     };
 
-if (prerequisites != null && prerequisites is List<String>) {
-    data['prerequisites'] = prerequisites!.join(', '); // Safely call join
-  } else if (prerequisites == null) {
-    data['prerequisites'] = ''; // Handle null case
-  } else {
-    throw Exception('Invalid prerequisites format');
-  }
+    if (prerequisites != null) {
+      data['prerequisites'] = prerequisites;
+    }
 
     return data;
   }
@@ -131,7 +143,7 @@ if (prerequisites != null && prerequisites is List<String>) {
     String? note,
     String? lectureTime,
     String? tutorialTime,
-    List<String>? prerequisites,
+    List<Map<String, List<String>>>? prerequisites,
   }) {
     return StudentCourse(
       courseId: courseId,
@@ -140,7 +152,7 @@ if (prerequisites != null && prerequisites is List<String>) {
       lectureTime: lectureTime ?? this.lectureTime,
       tutorialTime: tutorialTime ?? this.tutorialTime,
       note: note ?? this.note,
-      prerequisites: prerequisites ?? this.prerequisites, // ✅ FIXED
+      prerequisites: prerequisites ?? this.prerequisites,
     );
   }
 

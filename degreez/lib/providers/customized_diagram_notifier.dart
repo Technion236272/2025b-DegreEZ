@@ -47,15 +47,19 @@ void focusOnCourseWithStoredPrereqs(
     return;
   }
 
-  final prereqIds = course.prerequisites ?? [];
-  debugPrint('🔍 Looking for prereqs: ${prereqIds.join(', ')}');
+  // 🔍 Flatten the nested prerequisites
+  final allPrereqIds = <String>{
+    for (final group in course.prerequisites ?? [])
+      ...group['and'] ?? [],
+  };
 
-  // Search all semesters for matching prerequisite course IDs
+  debugPrint('🔍 Looking for prereqs: ${allPrereqIds.join(', ')}');
+
   final matchingCourses = <String>{};
   for (final semesterCourses in allCoursesBySemester.values) {
-     debugPrint('📘 Courses in semester: ${semesterCourses.map((c) => c.courseId).join(', ')}');
+    debugPrint('📘 Courses in semester: ${semesterCourses.map((c) => c.courseId).join(', ')}');
     for (final c in semesterCourses) {
-      if (prereqIds.contains(c.courseId)) {
+      if (allPrereqIds.contains(c.courseId)) {
         matchingCourses.add(c.courseId);
       }
     }
@@ -65,6 +69,7 @@ void focusOnCourseWithStoredPrereqs(
   _highlightedCourseIds = {course.courseId, ...matchingCourses};
   notifyListeners();
 }
+
 
 
 

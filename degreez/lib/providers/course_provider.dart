@@ -162,48 +162,70 @@ class CourseProvider with ChangeNotifier {
         });
       }
 
-      // 🔍 Fetch prerequisites
+      // 🔍 Fetch prerequisites (as string or list from API)
       final rawPrereqs =
           (await CourseService.getCourseDetails(
             _currentSemester!.year,
             _currentSemester!.semester,
             course.courseId,
           ))?.prerequisites;
+      debugPrint('📦 Raw prerequisites from API: $rawPrereqs');
 
-      final List<String> prereqs =
-          (rawPrereqs is String)
-              ? rawPrereqs
-                  .split(' ')
-                  .map((id) => id.trim().replaceAll(RegExp(r'[^0-9]'), ''))
-                  .where((id) => id.isNotEmpty)
-                  .toList()
-              : (rawPrereqs is List)
-              ? List<String>.from(
-                (rawPrereqs ?? []).map(
-                  (id) => id.toString().replaceAll(RegExp(r'[^0-9]'), ''),
-                ),
-              )
-              : [];
+      List<List<String>> parsedPrereqs = [];
 
-      // ✅ Create enriched course before using
-      final enrichedCourse = course.copyWith(prerequisites: prereqs);
+      if (rawPrereqs is String) {
+        final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
+        debugPrint('📦 orGroups : $orGroups');
 
-      // ✅ Optimistic update with enriched course
+        for (final group in orGroups) {
+          final andGroup =
+              group
+                  .replaceAll(
+                    RegExp(r'[^\d\s]'),
+                    '',
+                  ) // keep only digits + space
+                  .trim()
+                  .split(RegExp(r'\s+'))
+                  .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+                  .toList();
+
+          if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
+        }
+      } else {
+        debugPrint(
+          '⚠️ Unexpected prerequisite format: ${rawPrereqs.runtimeType}',
+        );
+      }
+
+      // 🔁 Convert parsedPrereqs to the expected format for Firestore
+      final List<Map<String, List<String>>> mappedPrereqs =
+          parsedPrereqs.map((andGroup) => {'and': andGroup}).toList();
+
+      // ✅ Create enriched course
+      final enrichedCourse = course.copyWith(prerequisites: mappedPrereqs);
+
+      // ✅ Optimistic update
       _coursesBySemester.putIfAbsent(semesterKey, () => []).add(enrichedCourse);
       notifyListeners();
 
       // ✅ Save to Firestore
-      await semesterRef.collection('Courses').doc(course.courseId).set({
-        ...enrichedCourse.toFirestore(),
-        'prerequisites': prereqs,
-      });
+      debugPrint('📤 Writing course: ${enrichedCourse.courseId}');
+      debugPrint(
+        '✅ Writing data to Firestore: ${enrichedCourse.toFirestore()}',
+      );
 
-      // ✅ Ensure the UI shows updated info
+      await semesterRef
+          .collection('Courses')
+          .doc(course.courseId)
+          .set(enrichedCourse.toFirestore());
+
+      // ✅ Refresh UI
       await loadStudentCourses(studentId);
-
       _error = null;
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('❌ Error writing course to Firestore: $e');
+      debugPrint('📍 Stack trace: $stack');
       _coursesBySemester[semesterKey]?.removeWhere(
         (c) => c.courseId == course.courseId,
       );
@@ -748,20 +770,37 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-  
-  List<String> getMissingPrerequisites(String semesterKey, List<String> prereqs) {
-  final sortedKeys = sortedCoursesBySemester.keys.toList();
-  final currentIndex = sortedKeys.indexOf(semesterKey);
-  if (currentIndex == -1) return prereqs;
+  List<String> getMissingPrerequisites(
+    String semesterKey,
+    List<List<String>> prereqGroups,
+  ) {
+    final sortedKeys = sortedCoursesBySemester.keys.toList();
+    final currentIndex = sortedKeys.indexOf(semesterKey);
+    if (currentIndex == -1) {
+      // If semester is unknown, assume nothing taken
+      return prereqGroups.expand((g) => g).toSet().toList();
+    }
 
-  final previousKeys = sortedKeys.sublist(0, currentIndex);
+    final previousKeys = sortedKeys.sublist(0, currentIndex);
 
-  final takenCourseIds = <String>{
-    for (final sem in previousKeys)
-      ..._coursesBySemester[sem]!.map((c) => c.courseId),
-  };
+    final takenCourseIds = <String>{
+      for (final sem in previousKeys)
+        ..._coursesBySemester[sem]!.map((c) => c.courseId),
+    };
 
-  return prereqs.where((id) => !takenCourseIds.contains(id)).toList();
-}
+    // If ANY group is fully satisfied, return empty list (no missing)
+    for (final group in prereqGroups) {
+      if (group.every((id) => takenCourseIds.contains(id))) {
+        return []; // At least one group satisfied
+      }
+    }
 
+    // Otherwise, return all missing IDs from all groups
+    final missing = <String>{
+      for (final group in prereqGroups)
+        ...group.where((id) => !takenCourseIds.contains(id)),
+    };
+
+    return missing.toList();
+  }
 }

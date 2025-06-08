@@ -62,7 +62,7 @@ class _CourseCardState extends State<CourseCard> {
     }
 
     final hasGrade = course.finalGrade.isNotEmpty;
-    debugPrint('Note: fetchedStartNote:${course.note}');
+    //debugPrint('Note: fetchedStartNote:${course.note}');
 
     return Consumer<CustomizedDiagramNotifier>(
       builder: (context, notifier, child) {
@@ -126,7 +126,7 @@ class _CourseCardState extends State<CourseCard> {
                 // 🛠️ Force reload before accessing
                 await courseProvider.loadStudentCourses(studentId);
 
-                final refreshed = courseProvider.getCourseById(
+          /*      final refreshed = courseProvider.getCourseById(
                   widget.semester,
                   widget.course.courseId,
                 );
@@ -135,16 +135,16 @@ class _CourseCardState extends State<CourseCard> {
                   '👀 course.prerequisites = ${refreshed?.prerequisites}',
                 );
 
-                if (refreshed != null) {
+                if (refreshed != null) {*/
                   final notifier = Provider.of<CustomizedDiagramNotifier>(
                     context,
                     listen: false,
                   );
                   notifier.focusOnCourseWithStoredPrereqs(
-                    refreshed,
+                    widget.course, // ✅ already has prerequisites
                     courseProvider.coursesBySemester,
                   );
-                }
+               // }
               },
 
               child: child!,
