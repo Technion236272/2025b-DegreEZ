@@ -1,4 +1,5 @@
 import 'package:calendar_view/calendar_view.dart';
+import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
@@ -116,14 +117,28 @@ class _CalendarPageState extends State<CalendarPage>
         backgroundColor: getCalendarBackgroundColor(context),
         weekPageHeaderBuilder: WeekHeader.hidden,
         // add the month and year to the header but smaller to fit here in weekNumberBuilder
-        weekNumberBuilder: (date) => Text(
+        weekNumberBuilder: (date) => 
+        Padding(padding: EdgeInsets.all(3), child: Transform.rotate(
+            angle: -0.5, // 90 degrees in radians
+            child: Column(
+          children: [
+            Text(
           // put it diagonal not horizontal
-            '${DateFormat('MMM').format(date)} \n ${DateFormat('yyyy').format(date)}',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            DateFormat('yyyy').format(date),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+            Text(
+          // put it diagonal not horizontal
+            DateFormat('MMM').format(date),
+            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold,color: AppColorsDarkMode.secondaryColorDim),
             textAlign: TextAlign.center,
             
 
           ),
+          
+          ],
+        ),),),
         // showWeekTileBorder: false,
         // Completely transparent and minimal header
         // headerStyle: HeaderStyle(

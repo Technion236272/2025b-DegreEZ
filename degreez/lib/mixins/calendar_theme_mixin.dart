@@ -96,7 +96,7 @@ mixin CalendarDarkThemeMixin {
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface.withAlpha(179),
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 11,
             ),
           ),
           const SizedBox(width: 1), // Space between day name and number
@@ -105,7 +105,7 @@ mixin CalendarDarkThemeMixin {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 22,
             ),
           ),
           
