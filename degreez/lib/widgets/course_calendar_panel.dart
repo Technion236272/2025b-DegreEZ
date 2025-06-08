@@ -283,7 +283,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                             children: [
                                               Icon(Icons.remove_circle),
                                               SizedBox(width: 8),
-                                              Text('Remove from Calendar'),
+                                              Text('Hide/remove from Calendar'),
                                             ],
                                           ),
                                         ),
@@ -294,7 +294,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                             children: [
                                               Icon(Icons.restore, color: Colors.green),
                                               SizedBox(width: 8),
-                                              Text('Restore to Calendar', style: TextStyle(color: Colors.green)),
+                                              Text('Restore/show on Calendar', style: TextStyle(color: Colors.green)),
                                             ],
                                           ),
                                         ),                                      ],
