@@ -2,7 +2,7 @@ import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 
 
-textFormFieldWithStyle({
+Widget textFormFieldWithStyle({
   required String label,
   required TextEditingController controller,
   required String example,

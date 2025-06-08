@@ -199,7 +199,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               );
             }
 
-            final semesters = courseNotifier.sortedCoursesBySemester;
+            final semesters = courseNotifier.coursesBySemester;
 
             if (semesters.isEmpty) {
               return const Center(
@@ -334,8 +334,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                 children: [
                   // Season dropdown
                   DropdownButtonFormField<String>(
+                    iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedSeason,
-                    decoration: const InputDecoration(labelText: 'Semester'),
+                    decoration: const InputDecoration(labelText: 'Semester',enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
+    ),),
                     items:
                         ['Winter', 'Spring', 'Summer'].map((season) {
                           return DropdownMenuItem<String>(
@@ -356,8 +359,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
 
                   // Year dropdown: from 5 years ago to 5 years ahead
                   DropdownButtonFormField<int>(
+                    iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedYear,
-                    decoration: const InputDecoration(labelText: 'Year'),
+                    decoration: const InputDecoration(labelText: 'Year',enabledBorder: UnderlineInputBorder(
+      borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),)),
                     items: List.generate(11, (index) {
                       int year = DateTime.now().year - 5 + index;
                       return DropdownMenuItem<int>(
@@ -378,7 +383,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: const Text('Cancel',style: TextStyle(
+                    color: AppColorsDarkMode.secondaryColorDim,
+                  ),),
                 ),
                 TextButton(
                   onPressed: () {
@@ -389,7 +396,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     );
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Add'),
+                  child: const Text('Add',style: TextStyle(
+                    color: AppColorsDarkMode.secondaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),),
                 ),
               ],
             );

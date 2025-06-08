@@ -55,9 +55,9 @@ Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('Cancel'),
+            child: const Text('Cancel',style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () async {
               if (titleController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +93,10 @@ Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('Submit'),
+            child: const Text('Submit',style: TextStyle(
+                    color: AppColorsDarkMode.secondaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),),
           ),
         ],
         title: const Text('Report a Bug'),
