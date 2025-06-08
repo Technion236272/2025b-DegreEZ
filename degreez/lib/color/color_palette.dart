@@ -19,6 +19,7 @@ class AppColorsDarkMode {
   
   // Accent colors - darker warm tones
   static const Color accentColor = Color(0xFF3E2723); // Deep brown
+  static const Color accentColorDark = Color(0xFF2D1C1C); // Deep brown
   static const Color accentColorDarker = Color(0xFF4F3834); // Deep brown
   static const Color accentColorDim = Color(0xCC3E2723);
   static const Color accentColorLight = Color(0xFF5D4037); // Medium brown
