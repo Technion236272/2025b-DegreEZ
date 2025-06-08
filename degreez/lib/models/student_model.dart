@@ -32,7 +32,9 @@ class StudentModel {
       major: data['Major'] ?? '',
       faculty: data['Faculty'] ?? '',
       preferences: data['Preferences'] ?? '',
-      semester: data['Semester']?.toString() ?? '1', // Convert to String and provide default
+      semester:
+          data['Semester']?.toString() ??
+          '1', // Convert to String and provide default
       catalog: data['Catalog'] ?? '',
     );
   }
@@ -81,6 +83,7 @@ class StudentCourse {
   final String workshopTime; // Stores selected workshop schedule: "day time" format
 
   final String? note;
+  final List<Map<String, List<String>>>? prerequisites;
 
   StudentCourse({
     required this.courseId,
@@ -91,9 +94,26 @@ class StudentCourse {
     required this.labTime,
     required this.workshopTime,
     this.note,
+    this.prerequisites,
   });
 
   factory StudentCourse.fromFirestore(Map<String, dynamic> data) {
+    final raw = data['prerequisites'];
+    List<Map<String, List<String>>>? parsedPrereqs;
+
+    if (raw is List) {
+      parsedPrereqs =
+          raw.map<Map<String, List<String>>>((group) {
+            if (group is Map && group['and'] is List) {
+              final ids = List<String>.from(
+                group['and'].map((e) => e.toString()),
+              );
+              return {'and': ids};
+            }
+            return {'and': []};
+          }).toList();
+    }
+
     return StudentCourse(
       courseId: data['Course_Id'] ?? '',
       name: data['Name'] ?? '',
@@ -103,11 +123,12 @@ class StudentCourse {
       labTime: data['Lab_time'] ?? '',
       workshopTime: data['Workshop_time'] ?? '',
       note: data['Note'] ?? '',
+      prerequisites: parsedPrereqs,
     );
   }
 
   Map<String, dynamic> toFirestore() {
-    return {
+    final data = <String, dynamic>{
       'Course_Id': courseId,
       'Name': name,
       'Final_grade': finalGrade,
@@ -117,6 +138,12 @@ class StudentCourse {
       'Workshop_time': workshopTime,
       'Note': note ?? '',
     };
+
+    if (prerequisites != null) {
+      data['prerequisites'] = prerequisites;
+    }
+
+    return data;
   }
 
   StudentCourse copyWith({
@@ -126,6 +153,7 @@ class StudentCourse {
     String? tutorialTime,
     String? labTime,
     String? workshopTime,
+    List<Map<String, List<String>>>? prerequisites,
   }) {
     return StudentCourse(
       courseId: courseId,
@@ -136,6 +164,7 @@ class StudentCourse {
       labTime: labTime ?? this.labTime,
       workshopTime: workshopTime ?? this.workshopTime,
       note: note ?? this.note,
+      prerequisites: prerequisites ?? this.prerequisites,
     );
   }
 
@@ -151,7 +180,7 @@ class StudentCourse {
     if (!hasCompleteScheduleSelection) {
       return 'All times shown';
     }
-    
+
     final parts = <String>[];
     if (hasSelectedLecture) parts.add('Lecture');
     if (hasSelectedTutorial) parts.add('Tutorial');
@@ -162,7 +191,7 @@ class StudentCourse {
     }
     return '${parts.join(' + ')} selected';
   }
-  
+
   // Helper to count selections
   int get selectionCount {
     int count = 0;
@@ -181,10 +210,10 @@ class StudentCourse {
   // Helper to parse schedule string back to day and time
   Map<String, String>? parseScheduleString(String scheduleString) {
     if (scheduleString.isEmpty) return null;
-    
+
     final parts = scheduleString.split(' ');
     if (parts.length < 2) return null;
-    
+
     return {
       'day': parts[0],
       'time': parts.sublist(1).join(' '), // In case time has spaces
@@ -197,8 +226,5 @@ class StudentCourseWithDetails {
   final StudentCourse studentCourse;
   final dynamic courseDetails; // Will be EnhancedCourseDetails from service
 
-  StudentCourseWithDetails({
-    required this.studentCourse, 
-    this.courseDetails,
-  });
+  StudentCourseWithDetails({required this.studentCourse, this.courseDetails});
 }

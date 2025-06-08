@@ -1,11 +1,15 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
+import 'package:degreez/services/course_service.dart';
+import 'package:degreez/models/student_model.dart';
 
 /// A provider class that manages authentication state using Google Sign-In and Firebase Auth.
 class CustomizedDiagramNotifier extends ChangeNotifier {
   
   // Private field to store the current user
   CourseCardColorPalette? _cardColorPalette;
+  String? _focusedCourseId;
+  Set<String> _highlightedCourseIds = {};
 
   CourseCardColorPalette? get cardColorPalette => _cardColorPalette;
   
@@ -29,5 +33,50 @@ class CustomizedDiagramNotifier extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+
+String? get focusedCourseId => _focusedCourseId;
+Set<String> get highlightedCourseIds => _highlightedCourseIds;
+
+void focusOnCourseWithStoredPrereqs(
+  StudentCourse course,
+  Map<String, List<StudentCourse>> allCoursesBySemester,
+) {
+  if (_focusedCourseId == course.courseId) {
+    clearFocus();
+    return;
+  }
+
+  // 🔍 Flatten the nested prerequisites
+  final allPrereqIds = <String>{
+    for (final group in course.prerequisites ?? [])
+      ...group['and'] ?? [],
+  };
+
+  debugPrint('🔍 Looking for prereqs: ${allPrereqIds.join(', ')}');
+
+  final matchingCourses = <String>{};
+  for (final semesterCourses in allCoursesBySemester.values) {
+    debugPrint('📘 Courses in semester: ${semesterCourses.map((c) => c.courseId).join(', ')}');
+    for (final c in semesterCourses) {
+      if (allPrereqIds.contains(c.courseId)) {
+        matchingCourses.add(c.courseId);
+      }
+    }
+  }
+
+  _focusedCourseId = course.courseId;
+  _highlightedCourseIds = {course.courseId, ...matchingCourses};
+  notifyListeners();
+}
+
+
+
+
+void clearFocus() {
+  _focusedCourseId = null;
+  _highlightedCourseIds.clear();
+  notifyListeners();
+}
 
 }

@@ -5,6 +5,7 @@ import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/Widgets/note_popup.dart';
 
 class CourseActionsPopup extends StatefulWidget {
   final StudentCourse course;
@@ -107,20 +108,29 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
               style: TextStyle(color: AppColorsDarkMode.secondaryColor),
               decoration: InputDecoration(
                 hintText: 'Enter grade (0-100)',
-                hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                hintStyle: TextStyle(
+                  color: AppColorsDarkMode.secondaryColorDim,
+                ),
                 filled: true,
                 fillColor: AppColorsDarkMode.mainColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDim),
+                  borderSide: BorderSide(
+                    color: AppColorsDarkMode.secondaryColorDim,
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDim),
+                  borderSide: BorderSide(
+                    color: AppColorsDarkMode.secondaryColorDim,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor, width: 2),
+                  borderSide: BorderSide(
+                    color: AppColorsDarkMode.secondaryColor,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -138,7 +148,10 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _saveGrade,
-                      icon: Icon(Icons.save, color: AppColorsDarkMode.accentColor),
+                      icon: Icon(
+                        Icons.save,
+                        color: AppColorsDarkMode.accentColor,
+                      ),
                       label: Text(
                         'Save Grade',
                         style: TextStyle(color: AppColorsDarkMode.accentColor),
@@ -153,14 +166,56 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                     ),
                   ),
 
+                  
                   const SizedBox(height: 12),
 
+                  // Add Note Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final result = await notePopup(
+                          context,
+                          widget.course,
+                          widget.semester,
+                          widget.course.note,
+                          widget.onCourseUpdated,
+                        );
+                        if (result) {
+                          widget.onCourseUpdated?.call(); // trigger refresh
+                        }
+                      },
+                      icon: Icon(
+                        Icons.note,
+                        color: AppColorsDarkMode.secondaryColor,
+                      ),
+                      label: Text(
+                        'Add Note',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   // Delete Course Button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: _confirmDeleteCourse,
-                      icon: Icon(Icons.delete, color: AppColorsDarkMode.errorColor),
+                      icon: Icon(
+                        Icons.delete,
+                        color: AppColorsDarkMode.errorColor,
+                      ),
                       label: Text(
                         'Delete Course',
                         style: TextStyle(color: AppColorsDarkMode.errorColor),
@@ -187,7 +242,7 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
 
     try {
       final grade = _gradeController.text.trim();
-      
+
       // Validate grade
       if (grade.isNotEmpty) {
         final gradeValue = double.tryParse(grade);
@@ -229,43 +284,44 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
   void _confirmDeleteCourse() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColorsDarkMode.accentColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: AppColorsDarkMode.errorColor, width: 2),
-        ),
-        title: Text(
-          'Delete Course',
-          style: TextStyle(color: AppColorsDarkMode.secondaryColor),
-        ),
-        content: Text(
-          'Are you sure you want to delete "${widget.course.name}" from ${widget.semester}?',
-          style: TextStyle(color: AppColorsDarkMode.secondaryColor),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: AppColorsDarkMode.accentColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColorsDarkMode.errorColor, width: 2),
             ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop(); // Close confirmation dialog
-              await _deleteCourse();
-            },
-            child: Text(
-              'Delete',
-              style: TextStyle(
-                color: AppColorsDarkMode.errorColor,
-                fontWeight: FontWeight.bold,
+            title: Text(
+              'Delete Course',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
+            content: Text(
+              'Are you sure you want to delete "${widget.course.name}" from ${widget.semester}?',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                ),
               ),
-            ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(ctx).pop(); // Close confirmation dialog
+                  await _deleteCourse();
+                },
+                child: Text(
+                  'Delete',
+                  style: TextStyle(
+                    color: AppColorsDarkMode.errorColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -274,11 +330,13 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
 
     try {
       final studentId = context.read<StudentProvider>().student!.id;
-      final success = await context.read<CourseProvider>().removeCourseFromSemester(
-        studentId,
-        widget.semester,
-        widget.course.courseId,
-      );
+      final success = await context
+          .read<CourseProvider>()
+          .removeCourseFromSemester(
+            studentId,
+            widget.semester,
+            widget.course.courseId,
+          );
 
       if (!context.mounted) return;
 
@@ -334,10 +392,11 @@ void showCourseActionsPopup(
 }) {
   showDialog(
     context: context,
-    builder: (context) => CourseActionsPopup(
-      course: course,
-      semester: semester,
-      onCourseUpdated: onCourseUpdated,
-    ),
+    builder:
+        (context) => CourseActionsPopup(
+          course: course,
+          semester: semester,
+          onCourseUpdated: onCourseUpdated,
+        ),
   );
 }

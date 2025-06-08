@@ -220,6 +220,37 @@ if (a.year != b.year) {
   }
 }
 
+
+
+static Future<String?> getCourseName(String courseId) async {
+  try {
+    final allSemesters = await getAvailableSemesters();
+
+    // Sort with most recent first (e.g., Summer > Spring > Winter)
+    allSemesters.sort((a, b) => CourseService.compareSemesters(b, a));
+
+    for (final sem in allSemesters) {
+      try {
+        final details = await getCourseDetails(
+          sem.year,
+          sem.semester,
+          courseId,
+        );
+        if (details != null && details.name.isNotEmpty) {
+          return details.name;
+        }
+      } catch (_) {
+        // Ignore and try next semester
+      }
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+
 }
 
 // Enhanced models with all available data
