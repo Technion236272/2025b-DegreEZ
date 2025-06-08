@@ -139,9 +139,9 @@ class _CalendarPageState extends State<CalendarPage>
         showLiveTimeLineInAllDays: true,
         // only show events for the current week starting from sunday to thursday
         // Adjust min and max days to show the current week
-        minDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
-        maxDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
-        // maxDay: DateTime.now().add(Duration(days: 7 - DateTime.now().weekday)),
+        // shpow only current week
+        minDay: DateTime.now().subtract(Duration(days: DateTime.now().weekday % 7)),
+        maxDay: DateTime.now().add(Duration(days: 7 - DateTime.now().weekday % 7)),
         initialDay: DateTime.now(),
         heightPerMinute: 1,
         eventArranger: const SideEventArranger(),
