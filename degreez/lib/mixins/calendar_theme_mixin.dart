@@ -86,7 +86,7 @@ mixin CalendarDarkThemeMixin {
   /// put next to the day number
   Widget buildWeekDay(BuildContext context, DateTime date) {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(6),
       color: getHeaderBackgroundColor(context),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
