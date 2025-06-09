@@ -4,6 +4,7 @@ import 'package:degreez/providers/feedback_notifier.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
+import 'package:degreez/widgets/delete_user_button.dart';
 import 'package:degreez/widgets/feedback_popup.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
@@ -90,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
   final RegExp majorValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
   final RegExp facultyValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
-  final RegExp preferencesValidator = RegExp(r'^.?$');
+  final RegExp preferencesValidator = RegExp(r'^(.?)+$');
   final RegExp semesterValidator = RegExp(
     r'^(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})$',
     caseSensitive: false,
@@ -734,6 +735,8 @@ class _ProfilePageState extends State<ProfilePage> {
           BugReportButton(),
           const SizedBox(height: 16),
           FeedbackButton(),
+          const SizedBox(height: 16),
+          DeleteUserButton(),
         ],
       ),
     );

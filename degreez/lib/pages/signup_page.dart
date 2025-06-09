@@ -29,7 +29,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final RegExp _nameValidator = RegExp(r'^(?!\s*$).+');
   final RegExp _majorValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
   final RegExp _facultyValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
-  final RegExp _preferencesValidator = RegExp(r'^.?$');
+  final RegExp _preferencesValidator = RegExp(r'^(.?)+$');
   final RegExp _semesterValidator = RegExp(
     r'^(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})$',
     caseSensitive: false,

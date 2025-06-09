@@ -157,4 +157,19 @@ class LogInNotifier extends ChangeNotifier {
     _isLoading = loading;
     notifyListeners();
   }
+
+  Future<void> deleteUser() async{
+    _setLoading(true);
+    notifyListeners();
+    // Delete from Authentication
+    try {
+      await user?.delete();
+    } catch (e) {
+      debugPrint("Failed to delete User: $e");
+      _errorMessage = e.toString();
+    }
+    _setLoading(false);
+    notifyListeners();
+    
+  }
 }

@@ -572,6 +572,32 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+Future<bool> deleteStudentAndCourses(String studentId) async{
+
+  try {
+    final studentRef = FirebaseFirestore.instance
+        .collection('Students')
+        .doc(studentId);
+
+    // Step 1: Delete all documents in the 'Courses-per-Semesters' sub collection
+    final semesterDocs = await studentRef.collection('Courses-per-Semesters').get();
+    for (final doc in semesterDocs.docs) {
+      await deleteSemester(studentId, doc.get("semesterName"));
+    }
+
+    // Step 2: Delete the student document
+    await studentRef.delete();
+
+    _error = null;
+    return true;
+  } catch (e) {
+    _error = 'Failed to delete student: $e';
+    notifyListeners();
+    return false;
+  }
+
+}
+
   // Delete semester with optimistic update
 Future<bool> deleteSemester(String studentId, String semesterName) async {
   if (!_coursesBySemester.containsKey(semesterName)) {
