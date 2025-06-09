@@ -1,5 +1,6 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
+import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
 import 'package:flutter/material.dart';
@@ -228,17 +229,7 @@ class _NavigatorPageState extends State<NavigatorPage> {
               icon: Icons.info_outline_rounded,
               title: 'Credits',
 onTap: () {
-  showLicensePage(
-    context: context,
-    applicationIcon:SizedBox(
-                            width: 250,
-                            height: 250,
-                            child: Image.asset('assets/Logo_DarkMode2.png'),
-                          ),
-    applicationName: 'DegreEZ',
-    applicationVersion: '1.0.0',
-    applicationLegalese: '2025 \n © Moamen Kassem \n © Ramzy Ayan \n © Ibraheem Akaree',
-  );
+  showCreditsPage(context);
 },            ),
             
             // // Add Course - New menu item for easier access
