@@ -245,7 +245,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   Padding(
                     padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
                     child: Text(
-                      "Tap a course for quick actions • Long press to add notes",
+                      "Tap a course for quick actions • Long press to view prerequisites",
                       style: TextStyle(
                         color: AppColorsDarkMode.secondaryColorDim,
                       ),
