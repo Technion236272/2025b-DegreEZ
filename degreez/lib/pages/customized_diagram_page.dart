@@ -10,10 +10,6 @@ import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/add_course_dialog.dart';
 
-
-
-
-
 class CustomizedDiagramPage extends StatefulWidget {
   const CustomizedDiagramPage({super.key});
 
@@ -68,6 +64,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       });
     }
   }
+
   // Helper method to build timeline data
   List<SemesterTimelineData> _buildTimelineData(
     Map<String, List<StudentCourse>> semesters,
@@ -76,7 +73,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       final courses = entry.value;
       final completedCourses =
           courses.where((c) => c.finalGrade.isNotEmpty).length;
-      
+
       // Calculate total credits by summing up credit points from all courses
       final totalCredits = courses.fold<double>(
         0.0,
@@ -108,7 +105,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   void _onCourseUpdated() {
     setState(() {
       // This will trigger a rebuild and refresh the course data
-      
     });
   }
 
@@ -123,7 +119,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
             final courseNotifier = context.read<CourseProvider>();
             if (studentNotifier.isLoading && studentNotifier.isLoading) {
               return const Center(child: CircularProgressIndicator());
-            }            if (studentNotifier.error != '' && studentNotifier.error != null) {
+            }
+            if (studentNotifier.error != '' && studentNotifier.error != null) {
               return Center(
                 child: Container(
                   margin: const EdgeInsets.all(20),
@@ -149,7 +146,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.error, size: 64, color: AppColorsDarkMode.errorColor),
+                      Icon(
+                        Icons.error,
+                        size: 64,
+                        color: AppColorsDarkMode.errorColor,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Error: ${studentNotifier.error}',
@@ -166,7 +167,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               );
             }
 
-            final semesters = courseNotifier.sortedCoursesBySemester;            if (semesters.isEmpty) {
+            final semesters = courseNotifier.sortedCoursesBySemester;
+            if (semesters.isEmpty) {
               return Center(
                 child: Container(
                   margin: const EdgeInsets.all(20),
@@ -315,7 +317,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {            return AlertDialog(
+          builder: (context, setState) {
+            return AlertDialog(
               shape: RoundedRectangleBorder(
                 side: BorderSide(
                   color: AppColorsDarkMode.secondaryColor,
@@ -338,17 +341,25 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   DropdownButtonFormField<String>(
                     iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedSeason,
-                    style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                    style: const TextStyle(
+                      color: AppColorsDarkMode.secondaryColor,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Semester',
-                      labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                      labelStyle: const TextStyle(
+                        color: AppColorsDarkMode.secondaryColorDim,
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+                        borderSide: BorderSide(
+                          color: AppColorsDarkMode.borderPrimary,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
+                        borderSide: BorderSide(
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
                       ),
                       filled: true,
                       fillColor: AppColorsDarkMode.surfaceColor,
@@ -360,7 +371,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                             value: season,
                             child: Text(
                               season,
-                              style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                              style: const TextStyle(
+                                color: AppColorsDarkMode.secondaryColor,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -373,21 +386,31 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     },
                   ),
 
-                  const SizedBox(height: 12),                  // Year dropdown: from 5 years ago to 5 years ahead
+                  const SizedBox(
+                    height: 12,
+                  ), // Year dropdown: from 5 years ago to 5 years ahead
                   DropdownButtonFormField<int>(
                     iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedYear,
-                    style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                    style: const TextStyle(
+                      color: AppColorsDarkMode.secondaryColor,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Year',
-                      labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                      labelStyle: const TextStyle(
+                        color: AppColorsDarkMode.secondaryColorDim,
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+                        borderSide: BorderSide(
+                          color: AppColorsDarkMode.borderPrimary,
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
+                        borderSide: BorderSide(
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
                       ),
                       filled: true,
                       fillColor: AppColorsDarkMode.surfaceColor,
@@ -399,7 +422,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                         value: year,
                         child: Text(
                           year.toString(),
-                          style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                          style: const TextStyle(
+                            color: AppColorsDarkMode.secondaryColor,
+                          ),
                         ),
                       );
                     }),
@@ -416,9 +441,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel',style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
-                  ),),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: AppColorsDarkMode.secondaryColorDim,
+                    ),
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -429,10 +457,13 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     );
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Add',style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),),
+                  child: const Text(
+                    'Add',
+                    style: TextStyle(
+                      color: AppColorsDarkMode.secondaryColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -456,7 +487,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [        Container(
+      children: [
+        Container(
           margin: const EdgeInsets.only(top: 20, bottom: 10),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -478,54 +510,57 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text(
-                    semesterName,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColorsDarkMode.secondaryColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColorsDarkMode.secondaryColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${totalCredits.toStringAsFixed(1)} credits',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColorsDarkMode.accentColor,
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        semesterName,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColorsDarkMode.secondaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${totalCredits.toStringAsFixed(1)} credits',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColorsDarkMode.accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(
                       Icons.add,
                       color: AppColorsDarkMode.secondaryColor,
                     ),
-                    tooltip: 'Add Course',                    onPressed: () {
+                    tooltip: 'Add Course',
+                    onPressed: () {
                       AddCourseDialog.show(
-                        context, 
+                        context,
                         semesterName,
-                        onCourseAdded: (courseId) {
-                          _onCourseUpdated();
-                        },
+                        onCourseAdded: (_) => _onCourseUpdated(),
                       );
                     },
                   ),
@@ -547,10 +582,13 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               ),
             ],
           ),
-        ),        // Display message if no courses
+        ), // Display message if no courses
         courses.isEmpty
             ? Container(
-              margin: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+              margin: const EdgeInsets.symmetric(
+                vertical: 16.0,
+                horizontal: 8.0,
+              ),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColorsDarkMode.surfaceColor,
@@ -608,6 +646,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       ],
     );
   }
+
   void _confirmDeleteSemester(
     BuildContext context,
     String semesterName,
@@ -615,7 +654,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   ) {
     showDialog(
       context: context,
-      builder:          (ctx) => AlertDialog(
+      builder:
+          (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: AppColorsDarkMode.secondaryColorDim,
