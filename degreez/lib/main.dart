@@ -2,6 +2,7 @@
 import 'package:degreez/pages/navigator_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:calendar_view/calendar_view.dart';
 
@@ -23,7 +24,9 @@ import 'pages/signup_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,DeviceOrientation.portraitDown
+  ]);
   // Initialize Firebase
   try {
     Firebase.app();
