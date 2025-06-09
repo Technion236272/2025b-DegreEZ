@@ -286,7 +286,8 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
         builder:
             (ctx) => AlertDialog(
               title: const Text('Missing Prerequisites'),
-              content: Column(
+              content: SingleChildScrollView( // ✅ Fix overflow when keyboard is open
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
@@ -304,6 +305,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   const SizedBox(height: 10),
                   const Text('Do you want to add this course anyway?'),
                 ],
+                ),
               ),
               actions: [
                 TextButton(
