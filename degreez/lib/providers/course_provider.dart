@@ -1002,4 +1002,21 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       return false;
     }
   }
+
+List<List<String>> parseRawPrerequisites(String rawPrereqs) {
+  final parsed = <List<String>>[];
+  final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
+  for (final group in orGroups) {
+    final andGroup = group
+        .replaceAll(RegExp(r'[^\d\s]'), '')
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+        .toList();
+    if (andGroup.isNotEmpty) parsed.add(andGroup);
+  }
+  return parsed;
+}
+
+
 }

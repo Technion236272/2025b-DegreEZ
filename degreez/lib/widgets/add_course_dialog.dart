@@ -143,10 +143,31 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                     final courseResult = results[index];
                     final course = courseResult.course;
 
+                    final parsedPrereqs = context
+                        .read<CourseProvider>()
+                        .parseRawPrerequisites(course.prerequisites);
+                    final missing = context
+                        .read<CourseProvider>()
+                        .getMissingPrerequisites(
+                          widget.semesterName,
+                          parsedPrereqs,
+                        );
+                    final hasMissing = missing.isNotEmpty;
+
                     return ListTile(
-                      title: Text('${course.courseNumber} - ${course.name}'),
+                      title: Text(
+                        '${course.courseNumber} - ${course.name}',
+                        style: TextStyle(
+                          color:
+                              hasMissing
+                                  ? Colors.redAccent
+                                  : AppColorsDarkMode.secondaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       subtitle: Text(
                         '${course.points} points • ${course.faculty}',
+                        style: const TextStyle(fontSize: 13),
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.add),
