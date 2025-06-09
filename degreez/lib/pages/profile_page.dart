@@ -4,6 +4,7 @@ import 'package:degreez/providers/feedback_notifier.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
+import 'package:degreez/widgets/delete_user_button.dart';
 import 'package:degreez/widgets/feedback_popup.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
@@ -734,6 +735,8 @@ class _ProfilePageState extends State<ProfilePage> {
           BugReportButton(),
           const SizedBox(height: 16),
           FeedbackButton(),
+          const SizedBox(height: 16),
+          DeleteUserButton(),
         ],
       ),
     );
