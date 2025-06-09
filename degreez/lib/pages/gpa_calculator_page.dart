@@ -80,10 +80,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     }
   }
   GpaCalculationResult _calculateAverage(List<GpaCalculationItem> courses) {
-    print('DEBUG: _calculateAverage called with ${courses.length} courses');
+    debugPrint('DEBUG: _calculateAverage called with ${courses.length} courses');
     
     if (courses.isEmpty) {
-      print('DEBUG: No courses provided to _calculateAverage');
+      debugPrint('DEBUG: No courses provided to _calculateAverage');
       return GpaCalculationResult(gpa: 0.0, totalCredits: 0.0);
     }
     
@@ -91,19 +91,19 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     double totalCredits = 0.0;
     
     for (final course in courses) {
-      print('DEBUG: Processing ${course.name}: ${course.credits} credits, ${course.grade} grade');
+      debugPrint('DEBUG: Processing ${course.name}: ${course.credits} credits, ${course.grade} grade');
       // Use the grade as-is (percentage), weighted by credits
       final weightedPoints = course.grade * course.credits;
       totalPoints += weightedPoints;
       totalCredits += course.credits;
       
-      print('DEBUG: ${course.name} - grade: ${course.grade}, weightedPoints: $weightedPoints');
-      print('DEBUG: Running totals - totalPoints: $totalPoints, totalCredits: $totalCredits');
+      debugPrint('DEBUG: ${course.name} - grade: ${course.grade}, weightedPoints: $weightedPoints');
+      debugPrint('DEBUG: Running totals - totalPoints: $totalPoints, totalCredits: $totalCredits');
     }
     
     final gpa = totalCredits > 0 ? totalPoints / totalCredits : 0.0;
     
-    print('DEBUG: Final calculation - totalPoints: $totalPoints, totalCredits: $totalCredits, gpa: $gpa');
+    debugPrint('DEBUG: Final calculation - totalPoints: $totalPoints, totalCredits: $totalCredits, gpa: $gpa');
     
     return GpaCalculationResult(gpa: gpa, totalCredits: totalCredits);
   }
@@ -113,28 +113,28 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
   ) {
     final List<GpaCalculationItem> completedCourses = [];
     
-    print('DEBUG: Starting _getCompletedCourses');
-    print('DEBUG: coursesBySemester.length = ${coursesBySemester.length}');
+    debugPrint('DEBUG: Starting _getCompletedCourses');
+    debugPrint('DEBUG: coursesBySemester.length = ${coursesBySemester.length}');
     
     for (final entry in coursesBySemester.entries) {
       final semesterKey = entry.key;
       final semesterCourses = entry.value;
       
-      print('DEBUG: Processing semester $semesterKey with ${semesterCourses.length} courses');
+      debugPrint('DEBUG: Processing semester $semesterKey with ${semesterCourses.length} courses');
       
       for (final course in semesterCourses) {
-        print('DEBUG: Course ${course.name} - finalGrade: "${course.finalGrade}", creditPoints: ${course.creditPoints}');
+        debugPrint('DEBUG: Course ${course.name} - finalGrade: "${course.finalGrade}", creditPoints: ${course.creditPoints}');
         
         // Check if the course has a numerical grade
         if (course.finalGrade.isNotEmpty) {
           final grade = double.tryParse(course.finalGrade);
-          print('DEBUG: Parsed grade for ${course.name}: $grade');
+          debugPrint('DEBUG: Parsed grade for ${course.name}: $grade');
           
           if (grade != null && grade >= 0 && grade <= 100) {
             // Use stored credit points directly from the course model
             final credits = course.creditPoints; // No more API calls needed!
             
-            print('DEBUG: Adding course ${course.name} with grade $grade and credits $credits');
+            debugPrint('DEBUG: Adding course ${course.name} with grade $grade and credits $credits');
             
             completedCourses.add(GpaCalculationItem(
               name: course.name,
@@ -145,17 +145,17 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               semesterKey: semesterKey,
             ));
           } else {
-            print('DEBUG: Grade $grade not valid for ${course.name}');
+            debugPrint('DEBUG: Grade $grade not valid for ${course.name}');
           }
         } else {
-          print('DEBUG: No finalGrade for ${course.name}');
+          debugPrint('DEBUG: No finalGrade for ${course.name}');
         }
       }
     }
     
-    print('DEBUG: Total completed courses found: ${completedCourses.length}');
+    debugPrint('DEBUG: Total completed courses found: ${completedCourses.length}');
     for (final course in completedCourses) {
-      print('DEBUG: Course ${course.name}: ${course.credits} credits, ${course.grade} grade');
+      debugPrint('DEBUG: Course ${course.name}: ${course.credits} credits, ${course.grade} grade');
     }
     
     return completedCourses;
