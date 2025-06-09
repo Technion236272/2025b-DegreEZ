@@ -1,4 +1,5 @@
 // lib/pages/degree_progress_page.dart
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
@@ -244,11 +245,15 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   // Enhanced: Updated instruction text
                   Padding(
                     padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
-                    child: Text(
-                      "Tap a course for quick actions • Long press to view prerequisites",
+                    child: AutoSizeText(
+                      'Tap a course for quick actions \nLong press to view prerequisites'
+                      '\n(Long press the same course to disable prerequisites view)',
                       style: TextStyle(
                         color: AppColorsDarkMode.secondaryColorDim,
                       ),
+                      minFontSize: 10,
+                      maxFontSize: 14,
+                      maxLines: 3,
                     ),
                   ),
 
@@ -515,7 +520,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                 child: Row(
                   children: [
                     Flexible(
-                      child: Text(
+                      child: AutoSizeText(
                         semesterName,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -523,6 +528,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                           fontWeight: FontWeight.bold,
                           color: AppColorsDarkMode.secondaryColor,
                         ),
+                        minFontSize: 14,
+                        maxFontSize: 20,
                       ),
                     ),
                     const SizedBox(width: 8),

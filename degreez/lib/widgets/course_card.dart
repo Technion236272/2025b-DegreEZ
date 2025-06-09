@@ -52,7 +52,7 @@ class _CourseCardState extends State<CourseCard> {
     StudentCourse course,
     EnhancedCourseDetails? courseDetails,
   ) {
-    if (widget.course.note != '') {
+    if (widget.course.note!= null && widget.course.note != '') {
       setState(() {
         _hasNote = true;
       });
