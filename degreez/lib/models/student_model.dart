@@ -83,7 +83,7 @@ class StudentCourse {
   final String workshopTime; // Stores selected workshop schedule: "day time" format
   final double creditPoints; // Stores credit points for the course
 
-  final String? note;
+  String? note;
   final List<Map<String, List<String>>>? prerequisites;
   StudentCourse({
     required this.courseId,

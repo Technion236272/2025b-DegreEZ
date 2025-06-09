@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
 import 'package:degreez/pages/credits_page.dart';
@@ -89,7 +90,7 @@ class _NavigatorPageState extends State<NavigatorPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(_currentPage),
+            title: AutoSizeText(_currentPage,minFontSize: 14,maxFontSize: 22,),
             centerTitle: true,            actions: [
               IconButton(
                 icon: const Icon(Icons.bolt_sharp),

@@ -112,6 +112,8 @@ Future<bool> notePopup(
     controller.text,
   );
 
+  course.note = controller.text;
+
   debugPrint(
     'Note: semesterKey:$semesterName, courseId:${course.courseId}, note:${controller.text});',
   );
