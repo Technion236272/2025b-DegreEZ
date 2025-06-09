@@ -740,10 +740,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Color _getGPAColor(double gpa) {
-    if (gpa >= 90) return const Color.fromARGB(255, 18, 83, 20);
-    if (gpa >= 80) return const Color.fromARGB(255, 21, 69, 108);
-    if (gpa >= 70) return const Color.fromARGB(255, 99, 67, 20);
-    if (gpa >= 60) return const Color.fromARGB(255, 77, 51, 13);
+    if (gpa >= 90) return const Color.fromARGB(255, 49, 200, 57);
+    if (gpa >= 80) return AppColorsDarkMode.successColor;
+    if (gpa >= 70) return AppColorsDarkMode.primaryColor;
+    if (gpa >= 60) return AppColorsDarkMode.warningColor;
     return AppColorsDarkMode.errorColor;
   }
 }

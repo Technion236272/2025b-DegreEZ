@@ -861,7 +861,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: _getGradeColor(course.grade),
+              color: _getGradeColor(course.grade).withAlpha(25),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: _getGradeColor(course.grade),

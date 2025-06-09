@@ -51,11 +51,11 @@ android {
     }
     
 buildTypes {
-    // getByName("release") {
-    //     signingConfig = signingConfigs.getByName("release")
-    // }
-    
-        getByName("debug") { }
+     getByName("release") {
+         signingConfig = signingConfigs.getByName("release")
+     }
+
+      // getByName("debug") { }
 }
 
 }
