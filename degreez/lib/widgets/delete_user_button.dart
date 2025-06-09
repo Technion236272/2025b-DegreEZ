@@ -31,7 +31,7 @@ class _DeleteUserButtonState extends State<DeleteUserButton> {
             ),
             onPressed: () {confirmationPopUp();},
             icon: Icon(Icons.delete_forever, color: Colors.white),
-            label: Text('Delete User Permanently'),
+            label: Text('Delete Account Permanently'),
           ),
         );
       },
