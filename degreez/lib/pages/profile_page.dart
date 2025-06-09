@@ -91,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
   final RegExp majorValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
   final RegExp facultyValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
-  final RegExp preferencesValidator = RegExp(r'^.?$');
+  final RegExp preferencesValidator = RegExp(r'^(.?)+$');
   final RegExp semesterValidator = RegExp(
     r'^(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})$',
     caseSensitive: false,
