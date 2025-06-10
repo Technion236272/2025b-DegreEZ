@@ -41,197 +41,200 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColorsDarkMode.accentColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColorsDarkMode.secondaryColor, width: 2),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColorsDarkMode.accentColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: AppColorsDarkMode.secondaryColor, width: 2),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Course Info Header
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.course.courseId,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
-                      ),
-                      Text(
-                        widget.course.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColorsDarkMode.secondaryColorDim,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(
-                    Icons.close,
-                    color: AppColorsDarkMode.secondaryColorDim,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Grade Input
-            Text(
-              'Grade',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColorsDarkMode.secondaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _gradeController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
-              decoration: InputDecoration(
-                hintText: 'Enter grade (0-100)',
-                hintStyle: TextStyle(
-                  color: AppColorsDarkMode.secondaryColorDim,
-                ),
-                filled: true,
-                fillColor: AppColorsDarkMode.mainColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: AppColorsDarkMode.secondaryColorDim,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: AppColorsDarkMode.secondaryColorDim,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: AppColorsDarkMode.secondaryColor,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Action Buttons
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              Column(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Course Info Header
+              Row(
                 children: [
-                  // Save Grade Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _saveGrade,
-                      icon: Icon(
-                        Icons.save,
-                        color: AppColorsDarkMode.accentColor,
-                      ),
-                      label: Text(
-                        'Save Grade',
-                        style: TextStyle(color: AppColorsDarkMode.accentColor),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColorsDarkMode.secondaryColor,
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.course.courseId,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColorsDarkMode.secondaryColor,
+                          ),
                         ),
-                      ),
+                        Text(
+                          widget.course.name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColorsDarkMode.secondaryColorDim,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-
-                  
-                  const SizedBox(height: 12),
-
-                  // Add Note Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        final result = await notePopup(
-                          context,
-                          widget.course,
-                          widget.semester,
-                          widget.course.note,
-                          widget.onCourseUpdated,
-                        );
-                        if (result) {
-                          widget.onCourseUpdated?.call(); // trigger refresh
-                        }
-                      },
-                      icon: Icon(
-                        Icons.note,
-                        color: AppColorsDarkMode.secondaryColor,
-                      ),
-                      label: Text(
-                        'Add Note',
-                        style: TextStyle(
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Delete Course Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _confirmDeleteCourse,
-                      icon: Icon(
-                        Icons.delete,
-                        color: AppColorsDarkMode.errorColor,
-                      ),
-                      label: Text(
-                        'Delete Course',
-                        style: TextStyle(color: AppColorsDarkMode.errorColor),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppColorsDarkMode.errorColor),
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.close,
+                      color: AppColorsDarkMode.secondaryColorDim,
                     ),
                   ),
                 ],
               ),
-          ],
+
+              const SizedBox(height: 20),
+
+              // Grade Input
+              Text(
+                'Grade',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColorsDarkMode.secondaryColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _gradeController,
+                keyboardType: TextInputType.number,
+                style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                decoration: InputDecoration(
+                  hintText: 'Enter grade (0-100)',
+                  hintStyle: TextStyle(
+                    color: AppColorsDarkMode.secondaryColorDim,
+                  ),
+                  filled: true,
+                  fillColor: AppColorsDarkMode.mainColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: AppColorsDarkMode.secondaryColorDim,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: AppColorsDarkMode.secondaryColorDim,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: AppColorsDarkMode.secondaryColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Action Buttons
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else
+                Column(
+                  children: [
+                    // Save Grade Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _saveGrade,
+                        icon: Icon(
+                          Icons.save,
+                          color: AppColorsDarkMode.accentColor,
+                        ),
+                        label: Text(
+                          'Save Grade',
+                          style: TextStyle(
+                            color: AppColorsDarkMode.accentColor,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColorsDarkMode.secondaryColor,
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Add Note Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          final result = await notePopup(
+                            context,
+                            widget.course,
+                            widget.semester,
+                            widget.course.note,
+                            widget.onCourseUpdated,
+                          );
+                          if (result) {
+                            widget.onCourseUpdated?.call(); // trigger refresh
+                          }
+                        },
+                        icon: Icon(
+                          Icons.note,
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
+                        label: Text(
+                          'Add Note',
+                          style: TextStyle(
+                            color: AppColorsDarkMode.secondaryColor,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: AppColorsDarkMode.secondaryColor,
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Delete Course Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _confirmDeleteCourse,
+                        icon: Icon(
+                          Icons.delete,
+                          color: AppColorsDarkMode.errorColor,
+                        ),
+                        label: Text(
+                          'Delete Course',
+                          style: TextStyle(color: AppColorsDarkMode.errorColor),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppColorsDarkMode.errorColor),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -390,13 +393,21 @@ void showCourseActionsPopup(
   String semester, {
   VoidCallback? onCourseUpdated,
 }) {
-  showDialog(
+  showModalBottomSheet(
     context: context,
-    builder:
-        (context) => CourseActionsPopup(
+    isScrollControlled: true, // ✅ Important for keyboard resizing
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: CourseActionsPopup(
           course: course,
           semester: semester,
           onCourseUpdated: onCourseUpdated,
         ),
+      );
+    },
   );
 }

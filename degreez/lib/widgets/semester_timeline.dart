@@ -159,16 +159,31 @@ class SemesterTimeline extends StatelessWidget {
     }
   }
 
-  String _getShortSemesterName(String fullName) {
-    // Convert "Spring 2024" to "S'24", "Winter 2025" to "W'25", etc.
-    final parts = fullName.split(' ');
-    if (parts.length >= 2) {
-      final season = parts[0];
-      final year = parts[1];
-      final seasonShort = season.substring(0, 1);
-      final yearShort = year.substring(2);
-      return "$seasonShort'$yearShort";
+String _getShortSemesterName(String fullName) {
+  final parts = fullName.split(' ');
+  if (parts.length >= 2) {
+    final season = parts[0].toLowerCase();
+    final year = parts[1];
+    final yearShort = year.substring(2);
+
+    String seasonShort;
+    switch (season) {
+      case 'spring':
+        seasonShort = 'Sp';
+        break;
+      case 'summer':
+        seasonShort = 'Su';
+        break;
+      case 'winter':
+        seasonShort = 'W';
+        break;
+      default:
+        seasonShort = season.substring(0, 1).toUpperCase();
     }
-    return fullName.length > 6 ? fullName.substring(0, 6) : fullName;
+
+    return "$seasonShort'$yearShort";
   }
+  return fullName.length > 6 ? fullName.substring(0, 6) : fullName;
+}
+
 }
