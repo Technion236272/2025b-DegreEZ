@@ -268,6 +268,10 @@ class _ProfilePageState extends State<ProfilePage> {
               
               // Actions Section
               _buildActionsSection(context),
+              
+              const SizedBox(height: 40),
+              
+              DeleteUserButton(),
             ],
           ),
         );
@@ -735,8 +739,6 @@ class _ProfilePageState extends State<ProfilePage> {
           BugReportButton(),
           const SizedBox(height: 16),
           FeedbackButton(),
-          const SizedBox(height: 16),
-          DeleteUserButton(),
         ],
       ),
     );

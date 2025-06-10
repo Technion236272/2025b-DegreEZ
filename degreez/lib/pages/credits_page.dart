@@ -8,13 +8,17 @@ showCreditsPage(context){
   Developers:
   © Moamen Kassem
   © Ramzy Ayan
+  https://www.linkedin.com/in/ramzyAyan
   © Ibraheem Akaree
 
   Logo Designer:
   © Moamen Kassem 
   (this Logo is specifically made for this app please do not use it anywhere else)
   
-  
+  Huge thanks to Michael maltsev who provided open source synchronized data of SAP Technion courses
+
+  This program was developed under the provision of Technion's Android course
+
   ''';
   
   showLicensePage(

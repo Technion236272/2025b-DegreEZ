@@ -220,7 +220,7 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
       const Color(0xFFFFCC02), // Warm yellow
       const Color(0xFFFFA726), // Orange amber
       const Color(0xFFFF9800), // Standard orange
-      const Color(0xFFFF5722), // Vivid orange
+      // const Color(0xFFFF5722), // Vivid orange
       const Color(0xFFFFC107), // Bright yellow
       const Color(0xFFFFE082), // Light yellow
       const Color(0xFFFFF176), // Pale yellow

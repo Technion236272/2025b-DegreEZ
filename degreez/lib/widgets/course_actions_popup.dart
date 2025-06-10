@@ -192,7 +192,7 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                           color: AppColorsDarkMode.secondaryColor,
                         ),
                         label: Text(
-                          'Add Note',
+                          'Edit Note',
                           style: TextStyle(
                             color: AppColorsDarkMode.secondaryColor,
                           ),
