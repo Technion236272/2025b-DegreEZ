@@ -28,6 +28,16 @@ class CourseDataProvider with ChangeNotifier {
     await fetchCurrentSemester();
   }
 
+  extractCurrentSemester(List<SemesterInfo> semesters){
+    for (SemesterInfo semester in semesters) {
+      if (semester.semesterName == "Spring 2025")
+      {
+        return semester;
+      }
+    }
+    return semesters.first;
+  }
+  
   Future<bool> fetchCurrentSemester() async {
     if (_isLoadingCurrentSemester) return false;
 
@@ -37,7 +47,7 @@ class CourseDataProvider with ChangeNotifier {
     try {
       final semesters = await getAvailableSemesters();
       if (semesters.isNotEmpty) {
-        _currentSemester = semesters.first;
+        _currentSemester = extractCurrentSemester(semesters);
         _error = null;
         return true;
       } else {
