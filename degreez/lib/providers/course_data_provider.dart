@@ -37,7 +37,7 @@ class CourseDataProvider with ChangeNotifier {
     try {
       final semesters = await getAvailableSemesters();
       if (semesters.isNotEmpty) {
-        _currentSemester = semesters[1];
+        _currentSemester = semesters.first;
         _error = null;
         return true;
       } else {
