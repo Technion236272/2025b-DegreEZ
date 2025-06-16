@@ -761,7 +761,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.secondaryColor,
+                color: AppColorsDarkMode.secondaryColorDim,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: AppColorsDarkMode.secondaryColor,
@@ -954,7 +954,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: _getGradeColor(course.grade),
+              color: _getGradeColor(course.grade).withAlpha(25),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: _getGradeColor(course.grade),
@@ -992,7 +992,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColorsDarkMode.secondaryColor,
+                        color: AppColorsDarkMode.secondaryColorDim,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
