@@ -43,10 +43,17 @@ class AiPage extends StatefulWidget {
 }
 
 class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
+  // Smart Context Detection Feature:
+  // The AI page now intelligently detects when course-related keywords are used
+  // and automatically enables context mode only when relevant, rather than always.
+  // It also automatically disables context mode when switching to general questions.
+  // This preserves user privacy while still providing contextual assistance when needed.
+  
   final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();  final List<ChatMessage> _messages = [];
+  final ScrollController _scrollController = ScrollController();final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   bool _includeUserContext = true; // Toggle for including user context
+  bool _contextAutoEnabled = false; // Track if context was automatically enabled
   
   // Chat history management
   static const int _maxContextMessages = 10; // Keep last 10 messages for context
@@ -136,35 +143,135 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         }
       }
     }
-    
-    contextParts.add("\n--- End Context ---\n");
+      contextParts.add("\n--- End Context ---\n");
     return contextParts.join("\n");
-  }
-  // Check if user context should be included
-  bool _shouldIncludeUserContext(String userMessage) {
-    if (!_includeUserContext) return false;
+  }  // Check if user message contains context-relevant keywords
+  bool _containsContextRelevantKeywords(String message) {
+    final lowercaseMessage = message.toLowerCase();
     
+    // Academic/course-related keywords
     final contextKeywords = [
-      'my courses', 'my semester', 'my schedule', 'my grades', 'my gpa',
-      'current courses', 'this semester', 'my program', 'my major',
-      'prerequisite', 'credit', 'course plan', 'degree plan', 'study plan',
-      'what should i take', 'next semester', 'graduation', 'requirements',
-      'academic', 'transcript', 'course load', 'semester plan'
+      // Direct course references
+      'my courses', 'my course', 'course', 'courses',
+      'my classes', 'classes', 'class',
+      
+      // Degree and academic program references
+      'my degree', 'my major', 'degree', 'major',
+      'my program', 'program', 'study program',
+      
+      // Semester and time references
+      'semester', 'semesters', 'my semester',
+      'this semester', 'next semester', 'current semester',
+      
+      // Grades and performance
+      'my grades', 'grades', 'gpa', 'my gpa',
+      'grade point', 'academic performance',
+      
+      // Schedule and planning
+      'my schedule', 'schedule', 'timetable',
+      'study plan', 'academic plan',
+      
+      // Institution references
+      'my faculty', 'faculty', 'my department',
+      'my university', 'my college',
+      
+      // Academic records
+      'my catalog', 'catalog', 'course catalog',
+      'my preferences', 'preferences',
+      'my transcript', 'transcript',
+      'academic record', 'student record',
+      
+      // Credits and requirements
+      'credit points', 'credits', 'credit hours',
+      'graduation', 'graduate', 'graduation requirements',
+      'degree requirements', 'my requirements',
+      
+      // Curriculum references
+      'curriculum', 'study plan', 'course plan',
+      'academic path', 'degree path',
+      
+      // Status and progress
+      'my progress', 'progress', 'academic progress',
+      'my status', 'student status',
+      'enrollment', 'enrolled', 'registration',
+      
+      // Course types and categories
+      'requirements', 'requirement', 'required courses',
+      'electives', 'elective', 'optional courses',
+      'prerequisite', 'prerequisites', 'pre-req',
+      'core courses', 'mandatory courses', 'compulsory',
+      
+      // Academic advice seeking
+      'should i take', 'what courses', 'which courses',
+      'recommend courses', 'suggest courses',
+      'plan my', 'help me plan', 'advice on',
+      
+      // Personal academic references
+      'what am i', 'what have i', 'how many',
+      'do i need', 'can i graduate', 'when will i',
+      'my academic', 'my studies',
     ];
     
-    final lowerMessage = userMessage.toLowerCase();
-    return contextKeywords.any((keyword) => lowerMessage.contains(keyword));
-  }
-  Future<void> _sendMessage() async {
+    return contextKeywords.any((keyword) => lowercaseMessage.contains(keyword));
+  }  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) {
       return;
     }
 
     final userMessage = _messageController.text.trim();
-    _messageController.clear();    await _sendMessageWithContext(userMessage);
-  }
-  // Enhanced send message with user context
-  Future<void> _sendMessageWithContext(String userMessage, {bool forceIncludeContext = false}) async {
+    _messageController.clear();
+    
+    // Check if we should auto-disable context mode for non-academic questions
+    if (_includeUserContext && _contextAutoEnabled && !_containsContextRelevantKeywords(userMessage)) {
+      // Auto-disable context for non-academic questions if it was auto-enabled
+      setState(() {
+        _includeUserContext = false;
+        _contextAutoEnabled = false;
+      });
+      
+      // Show a brief message to inform the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Context mode disabled automatically for general question',
+            style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+          ),
+          backgroundColor: AppColorsDarkMode.accentColorDark,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    }
+    // Check if toggle is off but we should turn it on based on keywords
+    else if (!_includeUserContext) {
+      final userContext = _generateUserContext();
+      if (userContext.isNotEmpty && _containsContextRelevantKeywords(userMessage)) {
+        // Automatically turn on the toggle only for relevant queries
+        setState(() {
+          _includeUserContext = true;
+          _contextAutoEnabled = true;
+        });
+        
+        // Show a brief message to inform the user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Context mode enabled automatically for your course-related question',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
+            backgroundColor: AppColorsDarkMode.accentColorDark,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    }
+    
+    await _sendMessageWithContext(userMessage);
+  }// Enhanced send message with user context
+  Future<void> _sendMessageWithContext(String userMessage) async {
     setState(() {
       _messages.add(ChatMessage(
         text: userMessage,
@@ -180,7 +287,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     try {
       // Check if we should include user context
       String finalMessage = userMessage;
-      if (forceIncludeContext || _shouldIncludeUserContext(userMessage)) {
+      // Include context if toggle is on
+      if (_includeUserContext) {
         final userContext = _generateUserContext();
         if (userContext.isNotEmpty) {
           finalMessage = "$userContext\nUser Question: $userMessage";
@@ -442,12 +550,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                         ),
                       ],
                     ),                  ),
-                  const SizedBox(width: 8),
-                  // User context toggle button
+                  const SizedBox(width: 8),                  // User context toggle button
                   Tooltip(
                     message: _includeUserContext 
-                        ? 'Disable automatic course data sharing'
-                        : 'Enable automatic course data sharing',
+                        ? 'Context mode enabled - AI can access your course data\nTap to disable'
+                        : 'Context mode disabled - AI cannot access your course data\nWill auto-enable for course-related questions\nTap to enable manually',
                     child: Container(
                       decoration: BoxDecoration(
                         color: _includeUserContext 
@@ -458,10 +565,10 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () {
+                          borderRadius: BorderRadius.circular(8),                          onTap: () {
                             setState(() {
                               _includeUserContext = !_includeUserContext;
+                              _contextAutoEnabled = false; // Reset auto-enabled flag when manually toggled
                             });
                           },
                           child: Padding(
@@ -923,17 +1030,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             ],
           ),
           child: Material(
-            color: Colors.transparent,
-            child: InkWell(
+            color: Colors.transparent,            child: InkWell(
               borderRadius: BorderRadius.circular(25),
               onTap: _isLoading ? null : () {
                 if (_messageController.text.trim().isNotEmpty) {
                   _sendMessage();
-                }
-              },
-              onLongPress: _isLoading ? null : () {
-                if (_messageController.text.trim().isNotEmpty) {
-                  _showSendOptionsMenu();
                 }
               },
               child: Container(
@@ -973,157 +1074,6 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       ],
     );
   }
-
-  void _showSendOptionsMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppColorsDarkMode.accentColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColorsDarkMode.secondaryColorDim,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            Text(
-              'Send Options',
-              style: TextStyle(
-                color: AppColorsDarkMode.secondaryColor,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Send without context
-            ListTile(
-              leading: Icon(
-                Icons.send_outlined,
-                color: AppColorsDarkMode.secondaryColor,
-              ),
-              title: Text(
-                'Send Normal Message',
-                style: TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              subtitle: Text(
-                'Send without course data',
-                style: TextStyle(
-                  color: AppColorsDarkMode.secondaryColorDim,
-                  fontSize: 12,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                final message = _messageController.text.trim();
-                _messageController.clear();
-                _sendMessageWithContext(message, forceIncludeContext: false);
-              },
-            ),
-            
-            // Send with context
-            ListTile(
-              leading: Icon(
-                Icons.school,
-                color: AppColorsDarkMode.secondaryColor,
-              ),
-              title: Text(
-                'Send with Course Data',
-                style: TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              subtitle: Text(
-                'Include your academic information',
-                style: TextStyle(
-                  color: AppColorsDarkMode.secondaryColorDim,
-                  fontSize: 12,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                final message = _messageController.text.trim();
-                _messageController.clear();
-                _sendMessageWithContext(message, forceIncludeContext: true);
-              },
-            ),
-            
-            const SizedBox(height: 10),
-            
-            // Toggle auto-context
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColorsDarkMode.mainColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _includeUserContext ? Icons.school : Icons.school_outlined,
-                    color: AppColorsDarkMode.secondaryColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Auto-include course data',
-                          style: TextStyle(
-                            color: AppColorsDarkMode.secondaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          _includeUserContext 
-                              ? 'Automatically includes your academic data'
-                              : 'Manually choose when to include data',
-                          style: TextStyle(
-                            color: AppColorsDarkMode.secondaryColorDim,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch(
-                    value: _includeUserContext,
-                    onChanged: (value) {
-                      setState(() {
-                        _includeUserContext = value;
-                      });
-                      Navigator.pop(context);
-                    },
-                    activeColor: AppColorsDarkMode.secondaryColor,
-                  ),
-                ],
-              ),            ),
-            
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
