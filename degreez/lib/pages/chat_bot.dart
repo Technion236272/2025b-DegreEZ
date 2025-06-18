@@ -228,18 +228,17 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         _includeUserContext = false;
         _contextAutoEnabled = false;
       });
-      
-      // Show a brief message to inform the user
+        // Show a brief message to inform the user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Context mode disabled automatically for general question',
-            style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            style: TextStyle(color: AppColorsDarkMode.textPrimary),
           ),
-          backgroundColor: AppColorsDarkMode.accentColorDark,
+          backgroundColor: AppColorsDarkMode.surfaceColor,
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -252,18 +251,17 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
           _includeUserContext = true;
           _contextAutoEnabled = true;
         });
-        
-        // Show a brief message to inform the user
+          // Show a brief message to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               'Context mode enabled automatically for your course-related question',
-              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+              style: TextStyle(color: AppColorsDarkMode.textPrimary),
             ),
-            backgroundColor: AppColorsDarkMode.accentColorDark,
+            backgroundColor: AppColorsDarkMode.surfaceColor,
             duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -442,31 +440,33 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   // Show user context preview dialog
   void _showUserContextDialog() {
     final userContext = _generateUserContext();
-    showDialog(
-      context: context,
+    showDialog(      context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColorsDarkMode.accentColorDark,
+        backgroundColor: AppColorsDarkMode.cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Icon(
               Icons.school,
-              color: AppColorsDarkMode.secondaryColor,
+              color: AppColorsDarkMode.primaryColor,
               size: 24,
             ),
             const SizedBox(width: 8),
             Text(
               'Your Academic Data',
-              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+              style: TextStyle(color: AppColorsDarkMode.textPrimary),
             ),
           ],
         ),
         content: Container(
           constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
+          decoration: AppColorsDarkMode.surfaceDecoration(),
+          padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Text(
               userContext.isEmpty ? 'No academic data available to share.' : userContext,
               style: TextStyle(
-                color: AppColorsDarkMode.secondaryColorDim,
+                color: AppColorsDarkMode.textSecondary,
                 fontSize: 12,
                 fontFamily: 'monospace',
               ),
@@ -478,7 +478,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Close',
-              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+              style: TextStyle(color: AppColorsDarkMode.primaryColor),
             ),
           ),
         ],
@@ -491,40 +491,29 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: AppColorsDarkMode.mainColor,
       body: Column(
-        children: [
-          // Chat header
+        children: [          // Chat header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColorsDarkMode.accentColor,
-                  AppColorsDarkMode.accentColorDark,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+            decoration: AppColorsDarkMode.cardDecoration(
+              backgroundColor: AppColorsDarkMode.surfaceColor,
+              elevated: true,
             ),
             child: SafeArea(
               bottom: false,
               child: Row(
-                children: [
-                  Container(
+                children: [                  Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.secondaryColor.withOpacity(0.2),
+                      color: AppColorsDarkMode.overlayMedium,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColorsDarkMode.borderAccent,
+                        width: 1,
+                      ),
                     ),
                     child: Icon(
                       Icons.smart_toy,
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: AppColorsDarkMode.primaryColor,
                       size: 24,
                     ),
                   ),
@@ -532,11 +521,10 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                      children: [                        Text(
                           'AI Assistant',
                           style: TextStyle(
-                            color: AppColorsDarkMode.secondaryColor,
+                            color: AppColorsDarkMode.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -544,7 +532,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                         Text(
                           'Your academic companion',
                           style: TextStyle(
-                            color: AppColorsDarkMode.secondaryColorDim,
+                            color: AppColorsDarkMode.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -554,13 +542,18 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                   Tooltip(
                     message: _includeUserContext 
                         ? 'Context mode enabled - AI can access your course data\nTap to disable'
-                        : 'Context mode disabled - AI cannot access your course data\nWill auto-enable for course-related questions\nTap to enable manually',
-                    child: Container(
+                        : 'Context mode disabled - AI cannot access your course data\nWill auto-enable for course-related questions\nTap to enable manually',                    child: Container(
                       decoration: BoxDecoration(
                         color: _includeUserContext 
-                            ? AppColorsDarkMode.secondaryColor.withOpacity(0.2)
-                            : AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                            ? AppColorsDarkMode.overlayMedium
+                            : AppColorsDarkMode.overlayLight,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _includeUserContext 
+                              ? AppColorsDarkMode.borderAccent
+                              : AppColorsDarkMode.borderSecondary,
+                          width: 1,
+                        ),
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -572,12 +565,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                             });
                           },
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Icon(
+                            padding: const EdgeInsets.all(8.0),                            child: Icon(
                               _includeUserContext ? Icons.school : Icons.school_outlined,
                               color: _includeUserContext 
-                                  ? AppColorsDarkMode.secondaryColor
-                                  : AppColorsDarkMode.secondaryColorDim,
+                                  ? AppColorsDarkMode.primaryColor
+                                  : AppColorsDarkMode.textSecondary,
                               size: 20,
                             ),
                           ),
@@ -587,11 +579,14 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                   const SizedBox(width: 8),
                   // Preview context data button
                   Tooltip(
-                    message: 'Preview what data can be shared with AI',
-                    child: Container(
+                    message: 'Preview what data can be shared with AI',                    child: Container(
                       decoration: BoxDecoration(
-                        color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                        color: AppColorsDarkMode.overlayLight,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: AppColorsDarkMode.borderSecondary,
+                          width: 1,
+                        ),
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -599,10 +594,9 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(8),
                           onTap: _showUserContextDialog,
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Icon(
+                            padding: const EdgeInsets.all(8.0),                            child: Icon(
                               Icons.preview,
-                              color: AppColorsDarkMode.secondaryColor,
+                              color: AppColorsDarkMode.primaryColor,
                               size: 20,
                             ),
                           ),
@@ -610,12 +604,15 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Clear chat button
+                  const SizedBox(width: 8),                  // Clear chat button
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                      color: AppColorsDarkMode.overlayLight,
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColorsDarkMode.borderSecondary,
+                        width: 1,
+                      ),
                     ),
                     child: Material(
                       color: Colors.transparent,
@@ -623,23 +620,23 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(8),
                         onTap: () {
                           showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              backgroundColor: AppColorsDarkMode.accentColorDark,
+                            context: context,                            builder: (context) => AlertDialog(
+                              backgroundColor: AppColorsDarkMode.cardColor,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               title: Text(
                                 'Clear Chat History',
-                                style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                                style: TextStyle(color: AppColorsDarkMode.textPrimary),
                               ),
                               content: Text(
                                 'Are you sure you want to clear all chat messages?',
-                                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                                style: TextStyle(color: AppColorsDarkMode.textSecondary),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
                                   child: Text(
                                     'Cancel',
-                                    style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                                    style: TextStyle(color: AppColorsDarkMode.textSecondary),
                                   ),
                                 ),
                                 TextButton(
@@ -649,7 +646,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                                   },
                                   child: Text(
                                     'Clear',
-                                    style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                                    style: TextStyle(color: AppColorsDarkMode.primaryColor),
                                   ),
                                 ),
                               ],
@@ -657,10 +654,9 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                           );
                         },
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(
+                          padding: const EdgeInsets.all(8.0),                          child: Icon(
                             Icons.refresh,
-                            color: AppColorsDarkMode.secondaryColor,
+                            color: AppColorsDarkMode.primaryColor,
                             size: 20,
                           ),
                         ),
@@ -672,12 +668,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                       padding: const EdgeInsets.all(8),
                       child: AnimatedBuilder(
                         animation: _typingAnimation,
-                        builder: (context, child) {
-                          return Container(
+                        builder: (context, child) {                          return Container(
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: AppColorsDarkMode.secondaryColor.withOpacity(_typingAnimation.value),
+                              color: AppColorsDarkMode.primaryColor.withOpacity(_typingAnimation.value),
                               shape: BoxShape.circle,
                             ),
                           );
@@ -717,52 +712,48 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!message.isUser) ...[
+        children: [          if (!message.isUser) ...[
             Container(
               margin: const EdgeInsets.only(right: 8, top: 4),
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.accentColor,
+                color: AppColorsDarkMode.surfaceColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColorsDarkMode.borderAccent,
+                  width: 1,
+                ),
               ),
               child: Icon(
                 Icons.smart_toy,
-                color: AppColorsDarkMode.secondaryColor,
+                color: AppColorsDarkMode.primaryColor,
                 size: 16,
               ),
             ),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message.isUser 
-                    ? AppColorsDarkMode.secondaryColor 
-                    : AppColorsDarkMode.accentColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(message.isUser ? 20 : 4),
-                  bottomRight: Radius.circular(message.isUser ? 4 : 20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+          ],            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: AppColorsDarkMode.cardDecoration(
+                  backgroundColor: message.isUser 
+                      ? AppColorsDarkMode.primaryColor 
+                      : AppColorsDarkMode.surfaceColor,
+                  elevated: true,
+                ).copyWith(
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(message.isUser ? 20 : 4),
+                    bottomRight: Radius.circular(message.isUser ? 4 : 20),
                   ),
-                ],
-              ),
+                ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+                children: [                  Text(
                     message.text,
                     style: TextStyle(
                       color: message.isUser 
-                          ? AppColorsDarkMode.accentColor 
-                          : AppColorsDarkMode.secondaryColor,
+                          ? AppColorsDarkMode.textPrimary 
+                          : AppColorsDarkMode.textPrimary,
                       fontSize: 16,
                       height: 1.4,
                     ),
@@ -772,26 +763,29 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                     _formatTime(message.timestamp),
                     style: TextStyle(
                       color: message.isUser 
-                          ? AppColorsDarkMode.accentColorDim 
-                          : AppColorsDarkMode.secondaryColorDim,
+                          ? AppColorsDarkMode.textSecondary 
+                          : AppColorsDarkMode.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          if (message.isUser) ...[
+          ),          if (message.isUser) ...[
             Container(
               margin: const EdgeInsets.only(left: 8, top: 4),
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.secondaryColor,
+                color: AppColorsDarkMode.primaryColor,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColorsDarkMode.borderAccent,
+                  width: 1,
+                ),
               ),
               child: Icon(
                 Icons.person,
-                color: AppColorsDarkMode.accentColor,
+                color: AppColorsDarkMode.textPrimary,
                 size: 16,
               ),
             ),
@@ -805,24 +799,26 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
-        children: [
-          Container(
+        children: [          Container(
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColorsDarkMode.accentColor,
+              color: AppColorsDarkMode.surfaceColor,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColorsDarkMode.borderAccent,
+                width: 1,
+              ),
             ),
             child: Icon(
               Icons.smart_toy,
-              color: AppColorsDarkMode.secondaryColor,
+              color: AppColorsDarkMode.primaryColor,
               size: 16,
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColorsDarkMode.accentColor,
+            decoration: AppColorsDarkMode.surfaceDecoration().copyWith(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -842,12 +838,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                       return Container(
                         margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
                         child: Transform.translate(
-                          offset: Offset(0, -4 * (1 - (1 - animationValue).abs())),
-                          child: Container(
+                          offset: Offset(0, -4 * (1 - (1 - animationValue).abs())),                          child: Container(
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: AppColorsDarkMode.secondaryColorDim,
+                              color: AppColorsDarkMode.textSecondary,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -869,34 +864,37 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColorsDarkMode.secondaryColor.withOpacity(0.05),
+              color: AppColorsDarkMode.overlayLight,
               border: Border(
                 top: BorderSide(
-                  color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.1),
+                  color: AppColorsDarkMode.borderSecondary,
                   width: 1,
                 ),
               ),
             ),
             child: Row(
-              children: [
-                Container(
+              children: [                Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                    color: AppColorsDarkMode.overlayMedium,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColorsDarkMode.borderAccent,
+                      width: 1,
+                    ),
                   ),
                   child: Icon(
                     Icons.school,
-                    color: AppColorsDarkMode.secondaryColor,
+                    color: AppColorsDarkMode.primaryColor,
                     size: 12,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child:                  Text(
                     'Course data sharing enabled',
                     style: TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: AppColorsDarkMode.textPrimary,
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
@@ -907,24 +905,21 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                     setState(() {
                       _includeUserContext = false;
                     });
-                  },
-                  child: Icon(
+                  },                  child: Icon(
                     Icons.close,
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: AppColorsDarkMode.textSecondary,
                     size: 14,
                   ),
                 ),
               ],
             ),
-          ),
-        // Message input
+          ),        // Message input
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColorsDarkMode.accentColorDark,
+          decoration: AppColorsDarkMode.surfaceDecoration().copyWith(
             border: Border(
               top: BorderSide(
-                color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.2),
+                color: AppColorsDarkMode.borderSecondary,
                 width: 1,
               ),
             ),
@@ -933,32 +928,27 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             top: false,
             child: Row(
               children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColorsDarkMode.mainColor,
+                Expanded(                  child: Container(
+                    decoration: AppColorsDarkMode.cardDecoration(
+                      backgroundColor: AppColorsDarkMode.mainColor,
+                      withBorder: true,
+                    ).copyWith(
                       borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),                    child: TextField(
+                    ),child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
                         hintText: _includeUserContext 
                             ? 'Ask me anything about your studies...'
-                            : 'Ask me anything... (Long press send for course data)',
-                        hintStyle: TextStyle(
-                          color: AppColorsDarkMode.secondaryColorDim,
+                            : 'Ask me anything... (Long press send for course data)',                        hintStyle: TextStyle(
+                          color: AppColorsDarkMode.textTertiary,
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 12,
                         ),
-                      ),
-                      style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColor,
+                      ),                      style: TextStyle(
+                        color: AppColorsDarkMode.textPrimary,
                         fontSize: 16,
                       ),
                       maxLines: null,
@@ -986,44 +976,41 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         // Context toggle button (only when auto-context is off and there's text)
         if (shouldShowContextOption)
           Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _includeUserContext = true;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColorsDarkMode.mainColor,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.3),
+            margin: const EdgeInsets.only(right: 8),              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _includeUserContext = true;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: AppColorsDarkMode.cardDecoration(
+                    backgroundColor: AppColorsDarkMode.mainColor,
+                    withBorder: true,
+                  ).copyWith(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(
+                    Icons.school_outlined,
+                    color: AppColorsDarkMode.textSecondary,
+                    size: 18,
                   ),
                 ),
-                child: Icon(
-                  Icons.school_outlined,
-                  color: AppColorsDarkMode.secondaryColorDim,
-                  size: 18,
-                ),
               ),
-            ),
           ),
-        
-        // Main send button with smart behavior
+          // Main send button with smart behavior
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColorsDarkMode.secondaryColor,
-                AppColorsDarkMode.secondaryColor.withOpacity(0.8),
+                AppColorsDarkMode.primaryColor,
+                AppColorsDarkMode.primaryColorLight,
               ],
             ),
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: AppColorsDarkMode.secondaryColor.withOpacity(0.3),
+                color: AppColorsDarkMode.shadowColor,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1041,25 +1028,23 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                 padding: const EdgeInsets.all(12),
                 child: Stack(
                   alignment: Alignment.center,
-                  children: [
-                    Icon(
+                  children: [                    Icon(
                       _isLoading ? Icons.hourglass_empty : Icons.send,
-                      color: AppColorsDarkMode.accentColor,
+                      color: AppColorsDarkMode.textPrimary,
                       size: 20,
                     ),
                     // Small context indicator
                     if (_includeUserContext && !_isLoading)
                       Positioned(
                         top: -2,
-                        right: -2,
-                        child: Container(
+                        right: -2,                        child: Container(
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: AppColorsDarkMode.accentColor,
+                            color: AppColorsDarkMode.mainColor,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColorsDarkMode.secondaryColor,
+                              color: AppColorsDarkMode.textPrimary,
                               width: 1,
                             ),
                           ),
