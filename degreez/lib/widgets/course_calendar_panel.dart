@@ -1085,8 +1085,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
   // Method to show course removal confirmation dialog
   void _showRemoveCourseDialog(StudentCourse course) {
     final courseDataProvider = context.read<CourseDataProvider>();
-    final currentSemester =
-        courseDataProvider.currentSemester?.semesterName ?? 'Unknown';
+  final selectedSemester = widget.selectedSemester;
+
 
     showDialog(
       context: context,
@@ -1119,7 +1119,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text('Course ID: ${course.courseId}'),
-                      Text('Semester: $currentSemester'),
+                      Text('Semester: $selectedSemester'),
                     ],
                   ),
                 ),
@@ -1138,7 +1138,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _removeCourseFromSemester(course.courseId, currentSemester);
+                  _removeCourseFromSemester(course.courseId, selectedSemester);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,

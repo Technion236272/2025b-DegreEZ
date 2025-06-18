@@ -199,7 +199,8 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     final fetched = await context.read<CourseProvider>().searchCourses(
       courseId: courseId,
       courseName: courseName,
-      pastSemestersToInclude: 4,
+      selectedSemester: widget.semesterName,
+     // pastSemestersToInclude: 4,
     );
 
     if (mounted) {

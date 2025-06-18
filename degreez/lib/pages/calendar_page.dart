@@ -53,6 +53,33 @@ class _CalendarPageState extends State<CalendarPage>
     final savedSemester = prefs.getString('lastSelectedSemester');
 
     final semesters = await GlobalConfigService.getAvailableSemesters();
+    semesters.sort((a, b) {
+      int getSortYear(String semesterName) {
+        final parts = semesterName.split(' ');
+        final yearPart = parts.length > 1 ? parts[1] : '';
+
+        if (yearPart.contains('-')) {
+          final years = yearPart.split('-');
+          return int.tryParse(years.last) ?? 0; // Use later year
+        }
+        return int.tryParse(yearPart) ?? 0;
+      }
+
+      int getSeasonOrder(String semesterName) {
+        final season = semesterName.split(' ').first;
+        const order = {'Winter': 0,'Spring': 1, 'Summer': 2, };
+        return order[season] ?? 99;
+      }
+
+      final yearA = getSortYear(a);
+      final yearB = getSortYear(b);
+      if (yearA != yearB) return yearA.compareTo(yearB);
+
+      final seasonA = getSeasonOrder(a);
+      final seasonB = getSeasonOrder(b);
+      return seasonA.compareTo(seasonB);
+    });
+
     final current = await GlobalConfigService.getCurrentSemester();
 
     final initialSemester =

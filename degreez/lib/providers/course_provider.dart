@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
+import '../services/GlobalConfigService.dart';
 
 class CourseLoadingState {
   final bool isLoadingCourses;
@@ -879,8 +880,25 @@ class CourseProvider with ChangeNotifier {
     String? courseId,
     String? courseName,
     String? faculty,
+     String? selectedSemester,
     int pastSemestersToInclude = 0,
   }) async {
+
+     if (selectedSemester != null) {
+    final parsed = _parseSemesterCode(selectedSemester);
+    if (parsed == null) {
+      debugPrint('❌ Invalid selectedSemester format: $selectedSemester');
+      return [];
+    }
+    final (year, semesterCode) = parsed;
+    return await CourseService.searchCourses(
+      year: year,
+      semester: semesterCode,
+      courseId: courseId,
+      courseName: courseName,
+      faculty: faculty,
+    );
+  }
     if (_currentSemester == null) {
       await _fetchLatestSemester();
     }
@@ -899,17 +917,29 @@ class CourseProvider with ChangeNotifier {
       );
     } else {
       // ✅ Fetch all semesters from API
-      final allSemesters = await CourseService.getAvailableSemesters();
+      final allSemesters = await GlobalConfigService.getAvailableSemesters();
       debugPrint('📅 All semesters fetched:');
       for (var s in allSemesters) {
-        debugPrint('  ${s.semester} ${s.year}');
+        debugPrint('  ${_parseSemester(s).season} ${_parseSemester(s).year}');
       }
       // ✅ Sort them based on custom order (Winter < Spring < Summer)
-      allSemesters.sort(CourseService.compareSemesters);
+      allSemesters.sort((a, b) {
+        final parsedA = _parseSemester(a);
+        final parsedB = _parseSemester(b);
+
+        final yearCompare = parsedA.year.compareTo(parsedB.year);
+        if (yearCompare != 0) return yearCompare;
+
+        // Season order: Winter < Spring < Summer
+        final seasonOrder = {'Winter': 0, 'Spring': 1, 'Summer': 2};
+        return seasonOrder[parsedA.season]!.compareTo(
+          seasonOrder[parsedB.season]!,
+        );
+      });
 
       debugPrint('📅 Sorted semesters:');
       for (var s in allSemesters) {
-        debugPrint('  ${s.semester} ${s.year}');
+        debugPrint('  ${_parseSemester(s).season} ${_parseSemester(s).year}');
       }
 
       debugPrint(
@@ -917,11 +947,16 @@ class CourseProvider with ChangeNotifier {
       );
 
       // ✅ Find the current semester index
-      final currentIndex = allSemesters.indexWhere(
-        (s) =>
-            s.year == _currentSemester!.year &&
-            s.semester == _currentSemester!.semester,
-      );
+      final currentIndex = allSemesters.indexWhere((s) {
+        final parsed = _parseSemesterCode(s);
+        if (parsed == null) return false;
+        final (year, code) = parsed;
+        debugPrint(
+          '🔍 Checking semester: $s (year: $year, code: $code)',
+        );
+        return year == _currentSemester!.year &&
+            code == _currentSemester!.semester;
+      });
 
       debugPrint('🔢 Current index in sorted list: $currentIndex');
 
@@ -942,14 +977,20 @@ class CourseProvider with ChangeNotifier {
 
       debugPrint('📚 Semesters to search in:');
       for (var s in selectedSemesters) {
-        debugPrint('  ${s.semester} ${s.year}');
+        debugPrint('  ${_parseSemester(s).season} ${_parseSemester(s).year}');
       }
       final Map<String, CourseSearchResult> resultMap = {};
 
       for (final sem in selectedSemesters) {
+        final parsed = _parseSemesterCode(sem);
+        if (parsed == null) {
+          debugPrint('❌ Invalid semester format: $sem');
+          continue;
+        }
+        final (year, semesterCode) = parsed;
         final res = await CourseService.searchCourses(
-          year: sem.year,
-          semester: sem.semester,
+          year: year,
+          semester: semesterCode,
           courseId: courseId,
           courseName: courseName,
           faculty: faculty,
