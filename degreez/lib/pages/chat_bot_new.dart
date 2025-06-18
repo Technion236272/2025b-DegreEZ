@@ -74,9 +74,10 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       });
     }
   }
-
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty) return;
+    if (_messageController.text.trim().isEmpty || _isLoading) {
+      return; // Prevent sending if already loading or empty message
+    }
 
     final userMessage = _messageController.text.trim();
     _messageController.clear();
