@@ -776,10 +776,10 @@ class CourseProvider with ChangeNotifier {
 
     semesterNames.sort((a, b) {
       // Sort semesters by year and season
-      final parsedA = _parseSemester(
+      final parsedA = parseSemester(
         a,
       ); //turns "Spring 2025" into {season: "Spring", year: 2025}
-      final parsedB = _parseSemester(b);
+      final parsedB = parseSemester(b);
 
       final yearComparison = parsedA.year.compareTo(parsedB.year);
       if (yearComparison != 0) {
@@ -846,7 +846,7 @@ class CourseProvider with ChangeNotifier {
     );
   }
 
-  ({String season, int year}) _parseSemester(String semesterName) {
+  static ({String season, int year}) parseSemester(String semesterName) {
     final parts = semesterName.split(' ');
     final season = parts[0];
     final yearPart = parts.length > 1 ? parts[1] : '';
@@ -920,12 +920,12 @@ class CourseProvider with ChangeNotifier {
       final allSemesters = await GlobalConfigService.getAvailableSemesters();
       debugPrint('📅 All semesters fetched:');
       for (var s in allSemesters) {
-        debugPrint('  ${_parseSemester(s).season} ${_parseSemester(s).year}');
+        debugPrint('  ${parseSemester(s).season} ${parseSemester(s).year}');
       }
       // ✅ Sort them based on custom order (Winter < Spring < Summer)
       allSemesters.sort((a, b) {
-        final parsedA = _parseSemester(a);
-        final parsedB = _parseSemester(b);
+        final parsedA = parseSemester(a);
+        final parsedB = parseSemester(b);
 
         final yearCompare = parsedA.year.compareTo(parsedB.year);
         if (yearCompare != 0) return yearCompare;
@@ -939,7 +939,7 @@ class CourseProvider with ChangeNotifier {
 
       debugPrint('📅 Sorted semesters:');
       for (var s in allSemesters) {
-        debugPrint('  ${_parseSemester(s).season} ${_parseSemester(s).year}');
+        debugPrint('  ${parseSemester(s).season} ${parseSemester(s).year}');
       }
 
       debugPrint(
@@ -977,7 +977,7 @@ class CourseProvider with ChangeNotifier {
 
       debugPrint('📚 Semesters to search in:');
       for (var s in selectedSemesters) {
-        debugPrint('  ${_parseSemester(s).season} ${_parseSemester(s).year}');
+        debugPrint('  ${parseSemester(s).season} ${parseSemester(s).year}');
       }
       final Map<String, CourseSearchResult> resultMap = {};
 
@@ -1179,4 +1179,35 @@ class CourseProvider with ChangeNotifier {
     }
     return parsed;
   }
+
+Future<String> getClosestAvailableSemester(String requestedSemester) async {
+  final available = await GlobalConfigService.getAvailableSemesters();
+
+  if (available.contains(requestedSemester)) {
+    return requestedSemester;
+  }
+
+  final requested = parseSemester(requestedSemester);
+
+  // Filter semesters with the same season
+  final sameSeason = available.where((s) => parseSemester(s).season == requested.season).toList();
+
+  if (sameSeason.isEmpty) {
+    return available.last; // Fallback if no season match
+  }
+
+  // Sort by absolute year difference
+  sameSeason.sort((a, b) {
+    final yearA = parseSemester(a).year;
+    final yearB = parseSemester(b).year;
+    return (yearA - requested.year).abs().compareTo(
+      (yearB - requested.year).abs(),
+    );
+  });
+
+  return sameSeason.first;
+}
+
+
+
 }

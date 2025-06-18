@@ -196,11 +196,20 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     final courseId = isId ? query : null;
     final courseName = isId ? null : query;
 
+    
+  final requestedSemester = widget.semesterName;
+  debugPrint('🔍 Requested search in semester: $requestedSemester');
+
+    final fallbackSemester = await context
+        .read<CourseProvider>()
+        .getClosestAvailableSemester(requestedSemester);
+        
+ debugPrint('✅ Actual semester used for search: $fallbackSemester');
+
     final fetched = await context.read<CourseProvider>().searchCourses(
       courseId: courseId,
       courseName: courseName,
-      selectedSemester: widget.semesterName,
-     // pastSemestersToInclude: 4,
+      selectedSemester: fallbackSemester,
     );
 
     if (mounted) {
@@ -287,25 +296,26 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
         builder:
             (ctx) => AlertDialog(
               title: const Text('Missing Prerequisites'),
-              content: SingleChildScrollView( // ✅ Fix overflow when keyboard is open
+              content: SingleChildScrollView(
+                // ✅ Fix overflow when keyboard is open
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'To register for this course, you must have completed one of the following prerequisite groups. '
-                    'Courses in red were not found in your previous semesters.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, height: 1.4),
-                  ),
-                  const SizedBox(height: 10),
-                  buildFormattedPrereqWarning(
-                    parsedPrereqs,
-                    missing,
-                    courseIdToName,
-                  ),
-                  const SizedBox(height: 10),
-                  const Text('Do you want to add this course anyway?'),
-                ],
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'To register for this course, you must have completed one of the following prerequisite groups. '
+                      'Courses in red were not found in your previous semesters.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, height: 1.4),
+                    ),
+                    const SizedBox(height: 10),
+                    buildFormattedPrereqWarning(
+                      parsedPrereqs,
+                      missing,
+                      courseIdToName,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text('Do you want to add this course anyway?'),
+                  ],
                 ),
               ),
               actions: [
