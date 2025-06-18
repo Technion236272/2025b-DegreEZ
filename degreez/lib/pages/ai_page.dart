@@ -2,7 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
 import '../color/color_palette.dart';
+import '../providers/student_provider.dart';
+import '../providers/course_provider.dart';
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  final DateTime timestamp;
+
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'isUser': isUser,
+      'timestamp': timestamp.millisecondsSinceEpoch,
+    };
+  }
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      text: json['text'],
+      isUser: json['isUser'],
+      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
+    );
+  }
+}
 
 class AiPage extends StatefulWidget {
   const AiPage({super.key});
@@ -15,6 +46,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();  final List<ChatMessage> _messages = [];
   bool _isLoading = false;
+  bool _includeUserContext = true; // Toggle for including user context
   
   // Chat history management
   static const int _maxContextMessages = 10; // Keep last 10 messages for context
@@ -27,7 +59,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     // Initialize the Gemini Developer API backend service
-    _model = FirebaseAI.googleAI().generativeModel(model: 'gemini-1.5-flash');
+    _model = FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
     
     // Initialize chat session for context management
     _chatSession = _model.startChat(history: []);
@@ -62,6 +94,66 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     _scrollController.dispose();
     _typingAnimationController.dispose();
     super.dispose();
+  }  // Generate user context for AI prompts
+  String _generateUserContext() {
+    final studentProvider = Provider.of<StudentProvider>(context, listen: false);
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    
+    final student = studentProvider.student;
+    final coursesBySemester = courseProvider.coursesBySemester;
+    
+    if (student == null) {
+      return "";
+    }
+    
+    final contextParts = <String>[
+      "--- User Academic Context ---",
+      "Student Name: ${student.name}",
+      "Major: ${student.major}",
+      "Faculty: ${student.faculty}",
+      "Current Semester: ${student.semester}",
+      "Catalog: ${student.catalog}",
+      "Preferences: ${student.preferences}",
+    ];
+    
+    if (coursesBySemester.isNotEmpty) {
+      contextParts.add("\n--- Course Information by Semester ---");
+      
+      for (final entry in coursesBySemester.entries) {
+        final semesterKey = entry.key;
+        final courses = entry.value;
+          if (courses.isNotEmpty) {
+          contextParts.add("\nSemester $semesterKey:");
+          for (final course in courses) {
+            final courseInfo = [
+              "  • ${course.name} (${course.courseId})",
+              if (course.finalGrade.isNotEmpty) "Grade: ${course.finalGrade}",
+              "Credits: ${course.creditPoints}",
+              if (course.note != null && course.note!.isNotEmpty) "Note: ${course.note}",
+            ].join(", ");
+            contextParts.add(courseInfo);
+          }
+        }
+      }
+    }
+    
+    contextParts.add("\n--- End Context ---\n");
+    return contextParts.join("\n");
+  }
+  // Check if user context should be included
+  bool _shouldIncludeUserContext(String userMessage) {
+    if (!_includeUserContext) return false;
+    
+    final contextKeywords = [
+      'my courses', 'my semester', 'my schedule', 'my grades', 'my gpa',
+      'current courses', 'this semester', 'my program', 'my major',
+      'prerequisite', 'credit', 'course plan', 'degree plan', 'study plan',
+      'what should i take', 'next semester', 'graduation', 'requirements',
+      'academic', 'transcript', 'course load', 'semester plan'
+    ];
+    
+    final lowerMessage = userMessage.toLowerCase();
+    return contextKeywords.any((keyword) => lowerMessage.contains(keyword));
   }
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) {
@@ -69,8 +161,10 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     }
 
     final userMessage = _messageController.text.trim();
-    _messageController.clear();
-
+    _messageController.clear();    await _sendMessageWithContext(userMessage);
+  }
+  // Enhanced send message with user context
+  Future<void> _sendMessageWithContext(String userMessage, {bool forceIncludeContext = false}) async {
     setState(() {
       _messages.add(ChatMessage(
         text: userMessage,
@@ -84,9 +178,18 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     _typingAnimationController.repeat();
 
     try {
+      // Check if we should include user context
+      String finalMessage = userMessage;
+      if (forceIncludeContext || _shouldIncludeUserContext(userMessage)) {
+        final userContext = _generateUserContext();
+        if (userContext.isNotEmpty) {
+          finalMessage = "$userContext\nUser Question: $userMessage";
+        }
+      }
+
       // Use chat session to maintain context
-      final response = await _chatSession.sendMessage(Content.text(userMessage));
-        setState(() {
+      final response = await _chatSession.sendMessage(Content.text(finalMessage));
+      setState(() {
         _messages.add(ChatMessage(
           text: response.text ?? 'Sorry, I could not generate a response.',
           isUser: false,
@@ -113,9 +216,9 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         _isLoading = false;
       });
       _typingAnimationController.stop();
-      _scrollToBottom();
-    }
+      _scrollToBottom();    }
   }
+
   void _cleanupOldMessages() {
     // Keep only the last _maxContextMessages in the chat session
     // This prevents the context from growing too large
@@ -153,10 +256,15 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     _chatSession = _model.startChat(history: []);
     _saveChatHistory(); // Save the cleared state
   }
+
   Future<void> _saveChatHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final messagesJson = _messages.map((message) => message.toJson()).toList();
+      final messagesJson = _messages.map((message) => {
+        'text': message.text,
+        'isUser': message.isUser,
+        'timestamp': message.timestamp.millisecondsSinceEpoch,
+      }).toList();
       await prefs.setString('chat_history', json.encode(messagesJson));
     } catch (e) {
       print('Error saving chat history: $e');
@@ -169,9 +277,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       final historyString = prefs.getString('chat_history');
       if (historyString != null) {
         final messagesJson = json.decode(historyString) as List;
-        final loadedMessages = messagesJson
-            .map((messageData) => ChatMessage.fromJson(messageData))
-            .toList();
+        final loadedMessages = messagesJson.map((messageData) => ChatMessage(
+          text: messageData['text'],
+          isUser: messageData['isUser'],
+          timestamp: DateTime.fromMillisecondsSinceEpoch(messageData['timestamp']),
+        )).toList();
         
         setState(() {
           _messages.clear();
@@ -220,6 +330,52 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         );
       }
     });
+  }
+  // Show user context preview dialog
+  void _showUserContextDialog() {
+    final userContext = _generateUserContext();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColorsDarkMode.accentColorDark,
+        title: Row(
+          children: [
+            Icon(
+              Icons.school,
+              color: AppColorsDarkMode.secondaryColor,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Your Academic Data',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
+          ],
+        ),
+        content: Container(
+          constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
+          child: SingleChildScrollView(
+            child: Text(
+              userContext.isEmpty ? 'No academic data available to share.' : userContext,
+              style: TextStyle(
+                color: AppColorsDarkMode.secondaryColorDim,
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Close',
+              style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -286,7 +442,68 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                         ),
                       ],
                     ),                  ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
+                  // User context toggle button
+                  Tooltip(
+                    message: _includeUserContext 
+                        ? 'Disable automatic course data sharing'
+                        : 'Enable automatic course data sharing',
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _includeUserContext 
+                            ? AppColorsDarkMode.secondaryColor.withOpacity(0.2)
+                            : AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
+                            setState(() {
+                              _includeUserContext = !_includeUserContext;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Icon(
+                              _includeUserContext ? Icons.school : Icons.school_outlined,
+                              color: _includeUserContext 
+                                  ? AppColorsDarkMode.secondaryColor
+                                  : AppColorsDarkMode.secondaryColorDim,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),                  ),
+                  const SizedBox(width: 8),
+                  // Preview context data button
+                  Tooltip(
+                    message: 'Preview what data can be shared with AI',
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: _showUserContextDialog,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Icon(
+                              Icons.preview,
+                              color: AppColorsDarkMode.secondaryColor,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   // Clear chat button
                   Container(
                     decoration: BoxDecoration(
@@ -537,91 +754,370 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         ],
       ),
     );
-  }
-
-  Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColorsDarkMode.accentColorDark,
-        border: Border(
-          top: BorderSide(
-            color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColorsDarkMode.mainColor,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    hintText: 'Ask me anything about your studies...',
-                    hintStyle: TextStyle(
-                      color: AppColorsDarkMode.secondaryColorDim,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                  ),
-                  style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColor,
-                    fontSize: 16,
-                  ),
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _sendMessage(),
+  }  Widget _buildMessageInput() {
+    return Column(
+      children: [        // Simplified context indicator
+        if (_includeUserContext)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColorsDarkMode.secondaryColor.withOpacity(0.05),
+              border: Border(
+                top: BorderSide(
+                  color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.1),
+                  width: 1,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColorsDarkMode.secondaryColor,
-                    AppColorsDarkMode.secondaryColor.withOpacity(0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColorsDarkMode.secondaryColor.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColorsDarkMode.secondaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                  child: Icon(
+                    Icons.school,
+                    color: AppColorsDarkMode.secondaryColor,
+                    size: 12,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Course data sharing enabled',
+                    style: TextStyle(
+                      color: AppColorsDarkMode.secondaryColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _includeUserContext = false;
+                    });
+                  },
+                  child: Icon(
+                    Icons.close,
+                    color: AppColorsDarkMode.secondaryColorDim,
+                    size: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        // Message input
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColorsDarkMode.accentColorDark,
+            border: Border(
+              top: BorderSide(
+                color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.2),
+                width: 1,
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(25),
-                  onTap: _isLoading ? null : _sendMessage,
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              children: [
+                Expanded(
                   child: Container(
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(
+                    decoration: BoxDecoration(
+                      color: AppColorsDarkMode.mainColor,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: _includeUserContext 
+                            ? 'Ask me anything about your studies...'
+                            : 'Ask me anything... (Long press send for course data)',
+                        hintStyle: TextStyle(
+                          color: AppColorsDarkMode.secondaryColorDim,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: AppColorsDarkMode.secondaryColor,
+                        fontSize: 16,
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      onSubmitted: (_) => _sendMessage(),                    ),
+                  ),
+                ),                const SizedBox(width: 8),
+                // Smart Send Button with Context Toggle
+                _buildSmartSendButton(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSmartSendButton() {
+    final hasText = _messageController.text.trim().isNotEmpty;
+    final shouldShowContextOption = !_includeUserContext && hasText;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Context toggle button (only when auto-context is off and there's text)
+        if (shouldShowContextOption)
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _includeUserContext = true;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColorsDarkMode.mainColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.3),
+                  ),
+                ),
+                child: Icon(
+                  Icons.school_outlined,
+                  color: AppColorsDarkMode.secondaryColorDim,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+        
+        // Main send button with smart behavior
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColorsDarkMode.secondaryColor,
+                AppColorsDarkMode.secondaryColor.withOpacity(0.8),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: AppColorsDarkMode.secondaryColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(25),
+              onTap: _isLoading ? null : () {
+                if (_messageController.text.trim().isNotEmpty) {
+                  _sendMessage();
+                }
+              },
+              onLongPress: _isLoading ? null : () {
+                if (_messageController.text.trim().isNotEmpty) {
+                  _showSendOptionsMenu();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
                       _isLoading ? Icons.hourglass_empty : Icons.send,
                       color: AppColorsDarkMode.accentColor,
                       size: 20,
                     ),
-                  ),
+                    // Small context indicator
+                    if (_includeUserContext && !_isLoading)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColorsDarkMode.accentColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColorsDarkMode.secondaryColor,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showSendOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppColorsDarkMode.accentColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColorsDarkMode.secondaryColorDim,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            Text(
+              'Send Options',
+              style: TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Send without context
+            ListTile(
+              leading: Icon(
+                Icons.send_outlined,
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              title: Text(
+                'Send Normal Message',
+                style: TextStyle(
+                  color: AppColorsDarkMode.secondaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: Text(
+                'Send without course data',
+                style: TextStyle(
+                  color: AppColorsDarkMode.secondaryColorDim,
+                  fontSize: 12,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                final message = _messageController.text.trim();
+                _messageController.clear();
+                _sendMessageWithContext(message, forceIncludeContext: false);
+              },
+            ),
+            
+            // Send with context
+            ListTile(
+              leading: Icon(
+                Icons.school,
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              title: Text(
+                'Send with Course Data',
+                style: TextStyle(
+                  color: AppColorsDarkMode.secondaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: Text(
+                'Include your academic information',
+                style: TextStyle(
+                  color: AppColorsDarkMode.secondaryColorDim,
+                  fontSize: 12,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                final message = _messageController.text.trim();
+                _messageController.clear();
+                _sendMessageWithContext(message, forceIncludeContext: true);
+              },
+            ),
+            
+            const SizedBox(height: 10),
+            
+            // Toggle auto-context
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColorsDarkMode.mainColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _includeUserContext ? Icons.school : Icons.school_outlined,
+                    color: AppColorsDarkMode.secondaryColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Auto-include course data',
+                          style: TextStyle(
+                            color: AppColorsDarkMode.secondaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          _includeUserContext 
+                              ? 'Automatically includes your academic data'
+                              : 'Manually choose when to include data',
+                          style: TextStyle(
+                            color: AppColorsDarkMode.secondaryColorDim,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _includeUserContext,
+                    onChanged: (value) {
+                      setState(() {
+                        _includeUserContext = value;
+                      });
+                      Navigator.pop(context);
+                    },
+                    activeColor: AppColorsDarkMode.secondaryColor,
+                  ),
+                ],
+              ),            ),
+            
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -641,34 +1137,6 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     } else {
       return '${dateTime.day}/${dateTime.month}';
     }
-  }
-}
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    required this.timestamp,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'text': text,
-      'isUser': isUser,
-      'timestamp': timestamp.millisecondsSinceEpoch,
-    };
-  }
-
-  factory ChatMessage.fromJson(Map<String, dynamic> json) {
-    return ChatMessage(
-      text: json['text'],
-      isUser: json['isUser'],
-      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
-    );
   }
 }
 
