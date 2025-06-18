@@ -98,15 +98,19 @@ class ChatInputWidget extends StatelessWidget {
                       withBorder: true,
                     ).copyWith(
                       borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: TextField(
+                    ),                    child: TextField(
                       controller: messageController,
+                      enabled: !isLoading,
                       decoration: InputDecoration(
-                        hintText: includeUserContext 
-                            ? 'Ask me anything about your studies... :)'
-                            : 'Ask me anything... :)',
+                        hintText: isLoading 
+                            ? 'Processing your message...'
+                            : includeUserContext 
+                                ? 'Ask me anything about your studies... :)'
+                                : 'Ask me anything... :)',
                         hintStyle: TextStyle(
-                          color: AppColorsDarkMode.textTertiary,
+                          color: isLoading 
+                              ? AppColorsDarkMode.textTertiary.withOpacity(0.5)
+                              : AppColorsDarkMode.textTertiary,
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
@@ -115,12 +119,14 @@ class ChatInputWidget extends StatelessWidget {
                         ),
                       ),
                       style: TextStyle(
-                        color: AppColorsDarkMode.textPrimary,
+                        color: isLoading 
+                            ? AppColorsDarkMode.textTertiary
+                            : AppColorsDarkMode.textPrimary,
                         fontSize: 16,
                       ),
                       maxLines: null,
                       textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => onSendMessage(),
+                      onSubmitted: (_) => !isLoading ? onSendMessage() : null,
                     ),
                   ),
                 ),
@@ -134,10 +140,9 @@ class ChatInputWidget extends StatelessWidget {
       ],
     );
   }
-
   Widget _buildSmartSendButton() {
     final hasText = messageController.text.trim().isNotEmpty;
-    final shouldShowContextOption = !includeUserContext && hasText;
+    final shouldShowContextOption = !includeUserContext && hasText && !isLoading;
     
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -167,39 +172,49 @@ class ChatInputWidget extends StatelessWidget {
         // Main send button
         Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColorsDarkMode.primaryColor,
-                AppColorsDarkMode.primaryColorLight,
-              ],
-            ),
+            gradient: isLoading 
+                ? LinearGradient(
+                    colors: [
+                      AppColorsDarkMode.textTertiary.withOpacity(0.4),
+                      AppColorsDarkMode.textTertiary.withOpacity(0.3),
+                    ],
+                  )
+                : LinearGradient(
+                    colors: [
+                      AppColorsDarkMode.primaryColor,
+                      AppColorsDarkMode.primaryColorLight,
+                    ],
+                  ),
             borderRadius: BorderRadius.circular(25),
-            boxShadow: [
-              BoxShadow(
-                color: AppColorsDarkMode.shadowColor,
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            boxShadow: isLoading 
+                ? []
+                : [
+                    BoxShadow(
+                      color: AppColorsDarkMode.shadowColor,
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Material(
-            color: Colors.transparent,
-            child: InkWell(
+            color: Colors.transparent,            child: InkWell(
               borderRadius: BorderRadius.circular(25),
-              onTap: isLoading ? null : () {
-                if (messageController.text.trim().isNotEmpty) {
-                  onSendMessage();
-                }
-              },
+              onTap: isLoading ? null : onSendMessage,
               child: Container(
                 padding: const EdgeInsets.all(12),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Icon(
-                      isLoading ? Icons.hourglass_empty : Icons.send,
-                      color: AppColorsDarkMode.textPrimary,
-                      size: 20,
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        isLoading ? Icons.stop_circle_outlined : Icons.send,
+                        key: ValueKey(isLoading),
+                        color: isLoading 
+                            ? AppColorsDarkMode.textTertiary
+                            : AppColorsDarkMode.textPrimary,
+                        size: 20,
+                      ),
                     ),
                     // Small context indicator
                     if (includeUserContext && !isLoading)

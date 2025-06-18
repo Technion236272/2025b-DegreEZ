@@ -165,25 +165,7 @@ class ChatHeaderWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-            ),
-            if (isLoading)
-              Container(
-                padding: const EdgeInsets.all(8),
-                child: AnimatedBuilder(
-                  animation: typingAnimationController,
-                  builder: (context, child) {
-                    return Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: AppColorsDarkMode.primaryColor.withOpacity(typingAnimationController.value),
-                        shape: BoxShape.circle,
-                      ),
-                    );
-                  },
-                ),
-              ),
+              ),            ),
           ],
         ),
       ),

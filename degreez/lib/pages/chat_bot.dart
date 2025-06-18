@@ -74,9 +74,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       });
     }
   }
-
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty) return;
+    if (_messageController.text.trim().isEmpty || _isLoading) return;
 
     final userMessage = _messageController.text.trim();
     _messageController.clear();
@@ -111,7 +110,6 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       }
     }
   }
-
   Future<void> _sendMessageWithStreaming(String userMessage) async {
     setState(() {
       _messages.add(ChatMessage(
@@ -133,40 +131,37 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         if (userContext.isNotEmpty) {
           finalMessage = "$userContext\nUser Question: $userMessage";
         }
-      }
-
-      // Add streaming response placeholder
-      setState(() {
-        _messages.add(ChatMessage(
-          text: '●●●',
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
-        _isLoading = false;
-      });
-      _scrollToBottom();
-
-      // Stream response
+      }      // Stream response
       final responseStream = _chatService.sendMessageStream(finalMessage);
       String fullResponse = '';
       bool isFirstChunk = true;
+      ChatMessage? responseMessage;
 
       await for (final chunk in responseStream) {
         if (chunk.text != null && chunk.text!.isNotEmpty) {
           if (isFirstChunk) {
             fullResponse = chunk.text!;
             isFirstChunk = false;
-          } else {
-            fullResponse += chunk.text!;
-          }
-
-          setState(() {
-            _messages.last = ChatMessage(
+            // Add the first response message
+            responseMessage = ChatMessage(
               text: fullResponse,
               isUser: false,
-              timestamp: _messages.last.timestamp,
+              timestamp: DateTime.now(),
             );
-          });
+            setState(() {
+              _messages.add(responseMessage!);
+            });
+          } else {
+            fullResponse += chunk.text!;
+            // Update the existing response message
+            setState(() {
+              _messages.last = ChatMessage(
+                text: fullResponse,
+                isUser: false,
+                timestamp: responseMessage!.timestamp,
+              );
+            });
+          }
           _scrollToBottom();
 
           // Small delay to make streaming visible
@@ -177,27 +172,26 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       // Ensure we have a response
       if (fullResponse.isEmpty) {
         setState(() {
-          _messages.last = ChatMessage(
+          _messages.add(ChatMessage(
             text: 'Sorry, I could not generate a response.',
             isUser: false,
-            timestamp: _messages.last.timestamp,
-          );
+            timestamp: DateTime.now(),
+          ));
         });
       }
 
       // Save chat history
-      ChatStorageService.saveChatHistory(_messages);
-      _typingAnimationController.stop();
-    } catch (e) {
+      ChatStorageService.saveChatHistory(_messages);    } catch (e) {
       setState(() {
-        if (_messages.isNotEmpty && _messages.last.text.isEmpty) {
-          _messages.removeLast();
-        }
         _messages.add(ChatMessage(
           text: 'Sorry, I encountered an error: ${e.toString()}',
           isUser: false,
           timestamp: DateTime.now(),
         ));
+      });
+    } finally {
+      // Always ensure loading state is cleared
+      setState(() {
         _isLoading = false;
       });
       _typingAnimationController.stop();
