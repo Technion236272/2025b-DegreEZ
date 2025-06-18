@@ -58,4 +58,65 @@ class FirestoreService {
       return {};
     }
   }
+
+  /// Fetches global application settings and the current user's courses for all available semesters.
+  ///
+  /// This function retrieves:
+  /// 1. Global settings from the 'Global/Settings' document, which includes the
+  ///    current semester and a list of all available semesters.
+  /// 2. The current user's courses for each of the available semesters.
+  ///
+  /// Returns a map containing the global settings and a 'coursesBySemester' map,
+  /// where keys are semester IDs and values are lists of course data.
+  /// Returns an empty map if the user is not logged in or if global settings are not found.
+  Future<Map<String, dynamic>> getGlobalData() async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      // Return an empty map if no user is logged in
+      return {};
+    }
+
+    try {
+      // 1. Fetch global settings
+      final settingsDoc =
+          await _firestore.collection('Global').doc('Settings').get();
+
+      if (!settingsDoc.exists) {
+        // Return an empty map if global settings document doesn't exist
+        return {};
+      }
+
+      Map<String, dynamic> globalData = settingsDoc.data()!;
+      List<String> availableSemesters =
+          List<String>.from(globalData['availableSemesters'] ?? []);
+
+      // 2. Fetch user's courses for each available semester
+      Map<String, List<Map<String, dynamic>>> coursesBySemester = {};
+      final studentDocRef = _firestore.collection('Students').doc(user.uid);
+
+      await Future.wait(availableSemesters.map((semesterId) async {
+        final coursesSnapshot = await studentDocRef
+            .collection('Courses-per-Semesters')
+            .doc(semesterId)
+            .collection('Courses')
+            .get();
+
+        if (coursesSnapshot.docs.isNotEmpty) {
+          final coursesList = coursesSnapshot.docs
+              .map((courseDoc) => courseDoc.data())
+              .toList();
+          coursesBySemester[semesterId] = coursesList;
+        }
+      }));
+
+      // 3. Combine global data with the user's course data
+      globalData['coursesBySemester'] = coursesBySemester;
+
+      return globalData;
+    } catch (e) {
+      // ignore: avoid_print
+      print("Error fetching global data: $e");
+      return {};
+    }
+  }
 }
