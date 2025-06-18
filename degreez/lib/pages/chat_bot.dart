@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../color/color_palette.dart';
 import '../models/chat/chat_message.dart';
 import '../services/chat/gemini_chat_service.dart';
 import '../services/chat/chat_storage_service.dart';
 import '../services/chat/context_generator_service.dart';
+import '../services/firestore_service.dart';
 import '../widgets/chat/chat_message_bubble.dart';
 import '../widgets/chat/chat_header_widget.dart';
 import '../widgets/chat/chat_input_widget.dart';
@@ -27,6 +29,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   // Services
   late GeminiChatService _chatService;
   late AnimationController _typingAnimationController;
+  late FirestoreService _firestoreService;
 
   @override
   void initState() {
@@ -34,7 +37,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     
     // Initialize services
     _chatService = GeminiChatService();
-      // Initialize typing animation
+    _firestoreService = FirestoreService();
+    // Initialize typing animation
     _typingAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -74,6 +78,35 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       });
     }
   }
+
+  Future<String> _getCombinedUserContext() async {
+    // Get context from providers (local session data)
+    // final providerContext = ContextGeneratorService.generateUserContext(context);
+
+    // Get context from Firestore (full academic history)
+    final firestoreData = await _firestoreService.getFullStudentData();
+
+    String firestoreContext = "";
+    if (firestoreData.isNotEmpty) {
+      // The firestoreContextParts list was used to build a formatted,
+      // human-readable string from the map. This is easier for the AI to
+      // understand than a raw JSON string.
+      // We can simplify this by encoding the map to a formatted
+      // JSON string, which is also highly readable for the model.
+      const jsonEncoder = JsonEncoder.withIndent('  ');
+      final formattedJson = jsonEncoder.convert(firestoreData);
+
+      firestoreContext = [
+        "--- User Firebase Data ---",
+        formattedJson,
+        "--------------------------"
+      ].join("\n");
+    }
+
+    // Combine local and Firestore contexts
+    return firestoreContext;
+  }
+
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty || _isLoading) return;
 
@@ -89,7 +122,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
 
   Future<void> _handleContextDetection(String userMessage) async {
     // Auto-disable context for non-academic questions
-    if (_includeUserContext && _contextAutoEnabled && 
+    if (_includeUserContext &&
+        _contextAutoEnabled &&
         !ContextGeneratorService.containsContextRelevantKeywords(userMessage)) {
       setState(() {
         _includeUserContext = false;
@@ -99,17 +133,19 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     }
     // Auto-enable context for academic questions
     else if (!_includeUserContext) {
-      final userContext = ContextGeneratorService.generateUserContext(context);
-      if (userContext.isNotEmpty && 
+      final userContext = await _getCombinedUserContext();
+      if (userContext.isNotEmpty &&
           ContextGeneratorService.containsContextRelevantKeywords(userMessage)) {
         setState(() {
           _includeUserContext = true;
           _contextAutoEnabled = true;
         });
-        _showSnackBar('Context mode enabled automatically for your course-related question');
+        _showSnackBar(
+            'Context mode enabled automatically for your course-related question');
       }
     }
   }
+
   Future<void> _sendMessageWithStreaming(String userMessage) async {
     setState(() {
       _messages.add(ChatMessage(
@@ -127,7 +163,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       // Prepare message with context if enabled
       String finalMessage = userMessage;
       if (_includeUserContext) {
-        final userContext = ContextGeneratorService.generateUserContext(context);
+        final userContext = await _getCombinedUserContext();
         if (userContext.isNotEmpty) {
           finalMessage = "$userContext\nUser Question: $userMessage";
         }
@@ -181,7 +217,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       }
 
       // Save chat history
-      ChatStorageService.saveChatHistory(_messages);    } catch (e) {
+      ChatStorageService.saveChatHistory(_messages);
+    } catch (e) {
       setState(() {
         _messages.add(ChatMessage(
           text: 'Sorry, I encountered an error: ${e.toString()}',
@@ -212,8 +249,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     ChatStorageService.saveChatHistory(_messages);
   }
 
-  void _showUserContextDialog() {
-    final userContext = ContextGeneratorService.generateUserContext(context);
+  void _showUserContextDialog() async {
+    final userContext = await _getCombinedUserContext();
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(

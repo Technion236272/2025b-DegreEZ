@@ -64,7 +64,7 @@ class ContextGeneratorService {
       // Specific course actions
       'register', 'enroll', 'drop', 'add',
       'schedule', 'timetable', 'calendar',
-      'exam', 'exams', 'test', 'tests', 'assignment', 'assignments',
+      'catalog', 'exam', 'exams', 'test', 'tests', 'assignment', 'assignments',
       'professor', 'instructor', 'teacher',
       
       // Academic planning
