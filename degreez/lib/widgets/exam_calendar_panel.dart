@@ -17,6 +17,39 @@ class ExamDatesPanel extends StatefulWidget {
 class _ExamDatesPanelState extends State<ExamDatesPanel> {
   bool _isExpanded = false;
 
+
+    (int, int)? _parseSemesterCode(String semesterName) {
+    final match = RegExp(
+      r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
+    ).firstMatch(semesterName);
+    if (match == null) return null;
+
+    final season = match.group(1)!;
+    final firstYear = int.parse(match.group(2)!);
+
+    int apiYear;
+    int semesterCode;
+
+    switch (season) {
+      case 'Winter':
+        apiYear = firstYear; // Use the first year for Winter
+        semesterCode = 200;
+        break;
+      case 'Spring':
+        apiYear = firstYear - 1;
+        semesterCode = 201;
+        break;
+      case 'Summer':
+        apiYear = firstYear - 1;
+        semesterCode = 202;
+        break;
+      default:
+        return null;
+    }
+
+    return (apiYear, semesterCode);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer3<CourseProvider, CourseDataProvider, ColorThemeProvider>(
@@ -32,7 +65,8 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
         }
 
         return FutureBuilder<List<ExamInfo>>(
-          future: _getExamInfo(currentCourses, courseDataProvider),
+          future: _getExamInfo(currentCourses, courseDataProvider, currentSemester!),
+
           builder: (context, snapshot) {
             final examData = snapshot.data ?? [];
             
@@ -202,58 +236,75 @@ Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvid
     ),
   );
 }
-Future<List<ExamInfo>> _getExamInfo(List<StudentCourse> courses, CourseDataProvider courseDataProvider) async {
+Future<List<ExamInfo>> _getExamInfo(
+  List<StudentCourse> courses,
+  CourseDataProvider courseDataProvider,
+  String semesterName,
+) async {
+  final parsed = _parseSemesterCode(semesterName);
+  if (parsed == null) return [];
+
+  final year = parsed.$1;
+  final semesterCode = parsed.$2;
+
   final examList = <ExamInfo>[];
-  
+
   for (final course in courses) {
-    final courseDetails = await courseDataProvider.getCourseDetails(course.courseId);
+    final courseDetails = await courseDataProvider.getCourseDetails(
+      year,
+      semesterCode,
+      course.courseId,
+    );
     if (courseDetails?.hasExams == true) {
       final exams = courseDetails!.exams;
-      
-      // Helper function to create exam info with prepared data
+
       ExamInfo createExamInfo(String examKey, ExamPeriod period, String examType) {
         final rawDate = exams[examKey]!;
         final parsedDate = _parseExamDate(rawDate);
-          return ExamInfo(
+        return ExamInfo(
           courseId: course.courseId,
           courseName: course.name,
           period: period,
           examType: examType,
           rawDateString: rawDate,
           examDate: parsedDate,
-          // Prepared display data
-          formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : 'Date TBD',
-          displayDate: parsedDate != null ? DateFormat('EEEE, dd-MM').format(parsedDate) : 'Date TBD',
+          formattedDate: parsedDate != null
+              ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate)
+              : 'Date TBD',
+          displayDate: parsedDate != null
+              ? DateFormat('EEEE, dd-MM').format(parsedDate)
+              : 'Date TBD',
           periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
           periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
-          sortOrder: parsedDate != null ? (parsedDate.month * 100 + parsedDate.day) : 999999, // Sort by month first, then day
+          sortOrder: parsedDate != null
+              ? (parsedDate.month * 100 + parsedDate.day)
+              : 999999,
         );
       }
-      
-      // Process all exam types
+
       if (exams.containsKey('מועד א') && exams['מועד א']!.isNotEmpty) {
         examList.add(createExamInfo('מועד א', ExamPeriod.periodA, 'Final Exam'));
       }
-      
+
       if (exams.containsKey('מועד ב') && exams['מועד ב']!.isNotEmpty) {
         examList.add(createExamInfo('מועד ב', ExamPeriod.periodB, 'Final Exam'));
       }
-      
+
       if (exams.containsKey('בוחן מועד א') && exams['בוחן מועד א']!.isNotEmpty) {
-        examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm'));
+        examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'Midterm'));
       }
-      
+
       if (exams.containsKey('בוחן מועד ב') && exams['בוחן מועד ב']!.isNotEmpty) {
-        examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm'));
+        examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'Midterm'));
       }
     }
   }
-  
-  // Sort by prepared sort order
+
   examList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-  
   return examList;
-}  DateTime? _parseExamDate(String dateString) {
+}
+  
+ DateTime? _parseExamDate(String dateString) {
     try {
       // Try different date formats that might be in the API
       final formats = [

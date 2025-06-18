@@ -89,37 +89,38 @@ class CourseDataProvider with ChangeNotifier {
     }
   }
 
-  Future<EnhancedCourseDetails?> getCourseDetails(String courseId) async {
-    final cached = _courseDetailsCache[courseId];
-    
-    if (cached != null && !cached.isExpired) {
-      return cached.data;
-    }
+Future<EnhancedCourseDetails?> getCourseDetails(
+  int year,
+  int semesterCode,
+  String courseId,
+) async {
+  final cacheKey = '$courseId|$year|$semesterCode';
+  final cached = _courseDetailsCache[cacheKey];
 
-    if (_currentSemester == null) {
-      await fetchCurrentSemester();
-      if (_currentSemester == null) return null;
-    }
-
-    try {
-      final details = await CourseService.getCourseDetails(
-        _currentSemester!.year,
-        _currentSemester!.semester,
-        courseId,
-      );
-
-      if (details != null) {
-        _courseDetailsCache[courseId] = CacheEntry(details, Duration(hours: 2));
-        notifyListeners(); // Notify for UI updates
-      }
-
-      return details;
-    } catch (e) {
-      debugPrint('Error fetching course details for $courseId: $e');
-      // Return expired cache if available
-      return cached?.data;
-    }
+  if (cached != null && !cached.isExpired) {
+    return cached.data;
   }
+
+  try {
+    final details = await CourseService.getCourseDetails(
+      year,
+      semesterCode,
+      courseId,
+    );
+
+    if (details != null) {
+      _courseDetailsCache[cacheKey] = CacheEntry(details, Duration(hours: 2));
+      notifyListeners();
+    }
+
+    return details;
+  } catch (e) {
+    debugPrint('Error fetching course details for $courseId in $year-$semesterCode: $e');
+    return cached?.data;
+  }
+}
+
+
 
   void invalidateCourseCache(String courseId) {
     _courseDetailsCache.remove(courseId);

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/add_course_dialog.dart';
+import '../services/GlobalConfigService.dart';
 
 class CustomizedDiagramPage extends StatefulWidget {
   const CustomizedDiagramPage({super.key});
@@ -304,19 +305,13 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
     );
   }
 
-  void _showAddSemesterDialog(BuildContext context) {
-    // Auto-select season based on the current month
-    final month = DateTime.now().month;
-    String selectedSeason;
-    if (month <= 2) {
-      selectedSeason = 'Winter';
-    } else if (month <= 6) {
-      selectedSeason = 'Spring';
-    } else {
-      selectedSeason = 'Summer';
-    }
-
-    int selectedYear = DateTime.now().year;
+  void _showAddSemesterDialog(BuildContext context) async {
+    String? selectedSeason = await GlobalConfigService.getCurrentSemester();
+    int currentYear = DateTime.now().year;
+    String selectedYear =
+        selectedSeason == 'Winter'
+            ? '${currentYear - 1}-$currentYear'
+            : '$currentYear';
 
     showDialog(
       context: context,
@@ -342,7 +337,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Season dropdown                  // Season dropdown
+                  // Season Dropdown
                   DropdownButtonFormField<String>(
                     iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedSeason,
@@ -386,15 +381,17 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                       if (value != null) {
                         setState(() {
                           selectedSeason = value;
+                          selectedYear =
+                              value == 'Winter'
+                                  ? '${currentYear - 1}-$currentYear'
+                                  : '$currentYear';
                         });
                       }
                     },
                   ),
-
-                  const SizedBox(
-                    height: 12,
-                  ), // Year dropdown: from 5 years ago to 5 years ahead
-                  DropdownButtonFormField<int>(
+                  const SizedBox(height: 12),
+                  // Year Dropdown
+                  DropdownButtonFormField<String>(
                     iconEnabledColor: AppColorsDarkMode.secondaryColor,
                     value: selectedYear,
                     style: const TextStyle(
@@ -422,11 +419,15 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     ),
                     dropdownColor: AppColorsDarkMode.surfaceColor,
                     items: List.generate(11, (index) {
-                      int year = DateTime.now().year - 5 + index;
-                      return DropdownMenuItem<int>(
-                        value: year,
+                      int baseYear = currentYear - 5 + index;
+                      final yearLabel =
+                          selectedSeason == 'Winter'
+                              ? '${baseYear}-${baseYear + 1}'
+                              : '$baseYear';
+                      return DropdownMenuItem<String>(
+                        value: yearLabel,
                         child: Text(
-                          year.toString(),
+                          yearLabel,
                           style: const TextStyle(
                             color: AppColorsDarkMode.secondaryColor,
                           ),
@@ -517,22 +518,18 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
           child: Row(
             children: [
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: AutoSizeText(
-                        semesterName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
-                        minFontSize: 14,
-                        maxFontSize: 20,
+                    Text(
+                      semesterName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColorsDarkMode.secondaryColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,

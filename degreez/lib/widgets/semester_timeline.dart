@@ -164,7 +164,6 @@ String _getShortSemesterName(String fullName) {
   if (parts.length >= 2) {
     final season = parts[0].toLowerCase();
     final year = parts[1];
-    final yearShort = year.substring(2);
 
     String seasonShort;
     switch (season) {
@@ -181,9 +180,21 @@ String _getShortSemesterName(String fullName) {
         seasonShort = season.substring(0, 1).toUpperCase();
     }
 
-    return "$seasonShort'$yearShort";
+    if (year.contains('-')) {
+      // Example: 2024-2025 → '24–25
+      final parts = year.split('-');
+      final y1 = parts[0].substring(2);
+      final y2 = parts[1].substring(2);
+      return "$seasonShort'$y1–$y2";
+    } else {
+      // Single year
+      final y = year.substring(2);
+      return "$seasonShort'$y";
+    }
   }
+
   return fullName.length > 6 ? fullName.substring(0, 6) : fullName;
 }
+
 
 }

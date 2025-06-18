@@ -25,39 +25,94 @@ class CourseEventsManager extends StatefulWidget {
 
 class _CourseEventsManagerState extends State<CourseEventsManager> {
   final Map<String, Map<String, CourseEventData?>> _allSelections = {};
-  
+
+  (int, int)? _parseSemesterCode(String semesterName) {
+    final match = RegExp(
+      r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
+    ).firstMatch(semesterName);
+    if (match == null) return null;
+
+    final season = match.group(1)!;
+    final firstYear = int.parse(match.group(2)!);
+
+    int apiYear;
+    int semesterCode;
+
+    switch (season) {
+      case 'Winter':
+        apiYear = firstYear; // Use the first year for Winter
+        semesterCode = 200;
+        break;
+      case 'Spring':
+        apiYear = firstYear - 1;
+        semesterCode = 201;
+        break;
+      case 'Summer':
+        apiYear = firstYear - 1;
+        semesterCode = 202;
+        break;
+      default:
+        return null;
+    }
+
+    return (apiYear, semesterCode);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer3<StudentProvider, CourseProvider, CourseDataProvider>(
-      builder: (context, studentProvider, courseProvider, courseDataProvider, _) {
+      builder: (
+        context,
+        studentProvider,
+        courseProvider,
+        courseDataProvider,
+        _,
+      ) {
         final coursesBySemester = courseProvider.coursesBySemester;
-        
+
         if (coursesBySemester.isEmpty) {
-          return const Center(
-            child: Text('No courses available'),
-          );
+          return const Center(child: Text('No courses available'));
         }
 
         return Column(
           children: [
             // Course selection summary
             _buildSelectionSummary(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Individual course widgets
             Expanded(
               child: ListView.builder(
                 itemCount: _getTotalCourses(coursesBySemester),
                 itemBuilder: (context, index) {
-                  final courseInfo = _getCourseAtIndex(coursesBySemester, index);
-                  
+                  final courseInfo = _getCourseAtIndex(
+                    coursesBySemester,
+                    index,
+                  );
+
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 8,
+                    ),
                     child: FutureBuilder<EnhancedCourseDetails?>(
-                      future: courseDataProvider.getCourseDetails(courseInfo['courseId']!),
+                      future: () {
+                        final parsed = _parseSemesterCode(
+                          courseInfo['semester']!,
+                        );
+                        if (parsed == null) return Future.value(null);
+                        final (year, semesterCode) = parsed;
+                        return courseDataProvider.getCourseDetails(
+                          year,
+                          semesterCode,
+                          courseInfo['courseId']!,
+                        );
+                      }(),
+
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return ListTile(
                             title: Text(courseInfo['courseName']!),
                             subtitle: const Text('Loading course details...'),
@@ -68,13 +123,15 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
                         if (snapshot.hasError || snapshot.data == null) {
                           return ListTile(
                             title: Text(courseInfo['courseName']!),
-                            subtitle: const Text('Failed to load course details'),
+                            subtitle: const Text(
+                              'Failed to load course details',
+                            ),
                             leading: const Icon(Icons.error, color: Colors.red),
                           );
                         }
 
                         final courseDetails = snapshot.data!;
-                        
+
                         return ExpansionTile(
                           title: Text(courseDetails.name),
                           subtitle: Text('ID: ${courseDetails.courseNumber}'),
@@ -83,8 +140,20 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
                               courseDetails: courseDetails,
                               eventController: widget.eventController,
                               weekStartDate: widget.currentWeek,
-                              onSelectionChanged: (courseId, lecture, tutorial, lab, workshop) {
-                                _updateCourseSelection(courseId, lecture, tutorial, lab, workshop);
+                              onSelectionChanged: (
+                                courseId,
+                                lecture,
+                                tutorial,
+                                lab,
+                                workshop,
+                              ) {
+                                _updateCourseSelection(
+                                  courseId,
+                                  lecture,
+                                  tutorial,
+                                  lab,
+                                  workshop,
+                                );
                               },
                             ),
                           ],
@@ -139,16 +208,27 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   if (lecture != null)
-                    Text('  Lecture: ${lecture.scheduleEntry.day} ${lecture.scheduleEntry.time}'),
+                    Text(
+                      '  Lecture: ${lecture.scheduleEntry.day} ${lecture.scheduleEntry.time}',
+                    ),
                   if (tutorial != null)
-                    Text('  Tutorial: ${tutorial.scheduleEntry.day} ${tutorial.scheduleEntry.time}'),
+                    Text(
+                      '  Tutorial: ${tutorial.scheduleEntry.day} ${tutorial.scheduleEntry.time}',
+                    ),
                   if (lecture == null && tutorial == null)
-                    const Text('  No times selected', style: TextStyle(color: Colors.grey)),
-                
-                  if (lab != null )
-                    Text('  Lab: ${lab.scheduleEntry.day} ${lab.scheduleEntry.time}'),
+                    const Text(
+                      '  No times selected',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+
+                  if (lab != null)
+                    Text(
+                      '  Lab: ${lab.scheduleEntry.day} ${lab.scheduleEntry.time}',
+                    ),
                   if (workshop != null)
-                    Text('  Workshop: ${workshop.scheduleEntry.day} ${workshop.scheduleEntry.time}'),
+                    Text(
+                      '  Workshop: ${workshop.scheduleEntry.day} ${workshop.scheduleEntry.time}',
+                    ),
                 ],
               ),
             );
@@ -159,19 +239,22 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
   }
 
   int _getTotalCourses(Map<String, List<StudentCourse>> coursesBySemester) {
-    return coursesBySemester.values.fold(0, (sum, courses) => sum + courses.length);
+    return coursesBySemester.values.fold(
+      0,
+      (sum, courses) => sum + courses.length,
+    );
   }
 
   Map<String, String> _getCourseAtIndex(
-    Map<String, List<StudentCourse>> coursesBySemester, 
+    Map<String, List<StudentCourse>> coursesBySemester,
     int index,
   ) {
     int currentIndex = 0;
-    
+
     for (final entry in coursesBySemester.entries) {
       final semester = entry.key;
       final courses = entry.value;
-      
+
       for (final course in courses) {
         if (currentIndex == index) {
           return {
@@ -183,18 +266,14 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
         currentIndex++;
       }
     }
-    
+
     // Fallback - should never reach here
-    return {
-      'semester': '',
-      'courseId': '',
-      'courseName': '',
-    };
+    return {'semester': '', 'courseId': '', 'courseName': ''};
   }
 
   void _updateCourseSelection(
-    String courseId, 
-    CourseEventData? lecture, 
+    String courseId,
+    CourseEventData? lecture,
     CourseEventData? tutorial,
     CourseEventData? lab,
     CourseEventData? workshop,
@@ -208,6 +287,7 @@ class _CourseEventsManagerState extends State<CourseEventsManager> {
       };
     });
   }
+
   /* ISN'T REFERENCED IN THE CODE AT ALL
   void _clearAllSelections() {
     setState(() {

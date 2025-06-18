@@ -115,6 +115,7 @@ class CourseProvider with ChangeNotifier {
 
       for (final semesterDoc in semestersSnapshot.docs) {
         final semesterKey = semesterDoc.id;
+        debugPrint('📘 Found semester: $semesterKey');
         final coursesSnapshot =
             await semesterDoc.reference.collection('Courses').get();
 
@@ -774,12 +775,22 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     );
   }
 
-  ({String season, int year}) _parseSemester(String semesterName) {
-    final parts = semesterName.split(' ');
-    final season = parts[0];
-    final year = (parts.length > 1) ? int.tryParse(parts[1]) ?? 0 : 0;
-    return (season: season, year: year);
+({String season, int year}) _parseSemester(String semesterName) {
+  final parts = semesterName.split(' ');
+  final season = parts[0];
+  final yearPart = parts.length > 1 ? parts[1] : '';
+
+  int year;
+  if (yearPart.contains('-')) {
+    final years = yearPart.split('-');
+    year = int.tryParse(years.last) ?? 0; // Use the later year for sorting
+  } else {
+    year = int.tryParse(yearPart) ?? 0;
   }
+
+  return (season: season, year: year);
+}
+
 
   int _seasonOrder(String season) {
     switch (season.toLowerCase()) {
