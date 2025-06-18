@@ -21,62 +21,6 @@ class ChatInputWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Simplified context indicator
-        if (includeUserContext)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColorsDarkMode.overlayLight,
-              border: Border(
-                top: BorderSide(
-                  color: AppColorsDarkMode.borderSecondary,
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColorsDarkMode.overlayMedium,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColorsDarkMode.borderAccent,
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.school,
-                    color: AppColorsDarkMode.primaryColor,
-                    size: 12,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Course data sharing enabled',
-                    style: TextStyle(
-                      color: AppColorsDarkMode.textPrimary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                if (onToggleContext != null)
-                  GestureDetector(
-                    onTap: onToggleContext,
-                    child: Icon(
-                      Icons.close,
-                      color: AppColorsDarkMode.textSecondary,
-                      size: 14,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        // Message input
         Container(
           padding: const EdgeInsets.all(16),
           decoration: AppColorsDarkMode.surfaceDecoration().copyWith(
