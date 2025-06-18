@@ -4,7 +4,7 @@ import 'package:degreez/pages/calendar_page.dart';
 import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
-import 'package:degreez/pages/ai_page.dart';
+import 'package:degreez/pages/chat_bot.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
