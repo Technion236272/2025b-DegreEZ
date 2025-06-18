@@ -4,6 +4,7 @@ import 'package:degreez/pages/calendar_page.dart';
 import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
+import 'package:degreez/pages/ai_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
@@ -69,9 +70,7 @@ class _NavigatorPageState extends State<NavigatorPage> {
     return Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
       builder: (context, loginNotifier, studentProvider, courseProvider, _) {
 
-        Widget body;
-
-        switch (_currentPage) {
+        Widget body;        switch (_currentPage) {
           case 'Calendar':
             body = const CalendarPage();
             break;
@@ -84,23 +83,15 @@ class _NavigatorPageState extends State<NavigatorPage> {
           case 'GPA Calculator':
             body = const GpaCalculatorPage();
             break;
+          case 'AI Assistant':
+            body = const AiPage();
+            break;
           default:
             body = Text(_currentPage);
-        }
-
-        return Scaffold(
+        }        return Scaffold(
           appBar: AppBar(
             title: AutoSizeText(_currentPage,minFontSize: 14,maxFontSize: 22,),
-            centerTitle: true,            actions: [
-              IconButton(
-                icon: const Icon(Icons.bolt_sharp),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('AI Assistant coming soon!')),
-                  );
-                },
-              ),
-            ],
+            centerTitle: true,
           ),
           drawer: _buildSideDrawer(context, loginNotifier, studentProvider),
           body: studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses
@@ -201,12 +192,17 @@ class _NavigatorPageState extends State<NavigatorPage> {
               title: 'Customized Diagram',
               isSelected: _currentPage == 'Customized Diagram',
               onTap: () => _changePage('Customized Diagram'),
-            ),
-            _buildDrawerItem(
+            ),            _buildDrawerItem(
               icon: Icons.calculate,
               title: 'GPA Calculator',
               isSelected: _currentPage == 'GPA Calculator',
               onTap: () => _changePage('GPA Calculator'),
+            ),
+            _buildDrawerItem(
+              icon: Icons.smart_toy,
+              title: 'AI Assistant',
+              isSelected: _currentPage == 'AI Assistant',
+              onTap: () => _changePage('AI Assistant'),
             ),
             
             const Divider(),
