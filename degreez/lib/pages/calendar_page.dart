@@ -21,7 +21,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/GlobalConfigService.dart';
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
+  final void Function(String selectedSemester)? onSemesterChanged; // NEW
+  const CalendarPage({super.key, this.onSemesterChanged});
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -187,6 +188,9 @@ class _CalendarPageState extends State<CalendarPage>
                       _selectedSemester = value;
                     });
                     await _loadGlobalSemesterCourses(value);
+
+                    // 🔔 Notify parent
+                    widget.onSemesterChanged?.call(value);
 
                     // ✅ Force update calendar after changing semester
                     final courseProvider = context.read<CourseProvider>();

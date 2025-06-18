@@ -14,7 +14,6 @@ import '../widgets/add_course_dialog.dart';
 
 import 'customized_diagram_page.dart';
 
-
 class NavigatorPage extends StatefulWidget {
   const NavigatorPage({super.key});
 
@@ -23,8 +22,9 @@ class NavigatorPage extends StatefulWidget {
 }
 
 class _NavigatorPageState extends State<NavigatorPage> {
-   String _currentPage = 'Calendar';
+  String _currentPage = 'Calendar';
   bool _hasInitializedData = false;
+  String? _selectedCalendarSemester;
 
   @override
   void initState() {
@@ -50,16 +50,17 @@ class _NavigatorPageState extends State<NavigatorPage> {
       studentProvider.fetchStudentData(loginNotifier.user!.uid).then((success) {
         if (success && mounted) {
           // Only load courses if not already loaded or loading
-          if (!courseProvider.hasLoadedData && !courseProvider.loadingState.isLoadingCourses) {
+          if (!courseProvider.hasLoadedData &&
+              !courseProvider.loadingState.isLoadingCourses) {
             courseProvider.loadStudentCourses(studentProvider.student!.id);
           }
         }
       });
     }
     // Handle case where student is loaded but courses aren't
-    else if (studentProvider.hasStudent && 
-             !courseProvider.hasLoadedData && 
-             !courseProvider.loadingState.isLoadingCourses) {
+    else if (studentProvider.hasStudent &&
+        !courseProvider.hasLoadedData &&
+        !courseProvider.loadingState.isLoadingCourses) {
       courseProvider.loadStudentCourses(studentProvider.student!.id);
     }
   }
@@ -68,13 +69,19 @@ class _NavigatorPageState extends State<NavigatorPage> {
   Widget build(BuildContext context) {
     return Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
       builder: (context, loginNotifier, studentProvider, courseProvider, _) {
-
         Widget body;
 
         switch (_currentPage) {
           case 'Calendar':
-            body = const CalendarPage();
+            body = CalendarPage(
+              onSemesterChanged: (semester) {
+                setState(() {
+                  _selectedCalendarSemester = semester;
+                });
+              },
+            );
             break;
+
           case 'Profile':
             body = const ProfilePage();
             break;
@@ -90,8 +97,9 @@ class _NavigatorPageState extends State<NavigatorPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: AutoSizeText(_currentPage,minFontSize: 14,maxFontSize: 22,),
-            centerTitle: true,            actions: [
+            title: AutoSizeText(_currentPage, minFontSize: 14, maxFontSize: 22),
+            centerTitle: true,
+            actions: [
               IconButton(
                 icon: const Icon(Icons.bolt_sharp),
                 onPressed: () {
@@ -103,46 +111,47 @@ class _NavigatorPageState extends State<NavigatorPage> {
             ],
           ),
           drawer: _buildSideDrawer(context, loginNotifier, studentProvider),
-          body: studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading your data...'),
-                    ],
-                  ),
-                )
-              : body,
+          body:
+              studentProvider.isLoading ||
+                      courseProvider.loadingState.isLoadingCourses
+                  ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading your data...'),
+                      ],
+                    ),
+                  )
+                  : body,
           // Updated FAB - now navigates to AddCoursePage
-          floatingActionButton: _currentPage == 'Calendar'
-    ? Consumer<CourseDataProvider>(
-        builder: (context, courseDataProvider, _) {
-          return FloatingActionButton(
-            onPressed: () {
-              final currentSemester = courseDataProvider.currentSemester;
-              if (currentSemester != null) {
-                AddCourseDialog.show(
-                  context, 
-                  currentSemester.semesterName,
-                  onCourseAdded: (courseId) {
-                    // Optional: Notify calendar to refresh or mark as manually added
-                  },
-                );
-              }
-            },
-            tooltip: 'Add Course',
-            child: const Icon(Icons.add),
-          );
-        },
-      )
-    : null,
+          floatingActionButton:
+              _currentPage == 'Calendar'
+                  ? FloatingActionButton(
+                    onPressed: () {
+                      if (_selectedCalendarSemester != null) {
+                        AddCourseDialog.show(
+                          context,
+                          _selectedCalendarSemester!,
+                          onCourseAdded: (courseId) {
+                            // Optional: trigger calendar refresh if needed
+                          },
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No semester selected')),
+                        );
+                      }
+                    },
+                    tooltip: 'Add Course',
+                    child: const Icon(Icons.add),
+                  )
+                  : null,
         );
       },
     );
   }
-
 
   Widget _buildSideDrawer(
     BuildContext context,
@@ -160,29 +169,44 @@ class _NavigatorPageState extends State<NavigatorPage> {
           children: [
             // Enhanced User Header
             UserAccountsDrawerHeader(
-              accountName: Text(student?.name ?? user?.displayName ?? 'User',style: TextStyle(color: AppColorsDarkMode.accentColor,fontWeight:FontWeight.w700),),
-              accountEmail: Text(user?.email ?? '',style: TextStyle(color: AppColorsDarkMode.accentColor,fontWeight:FontWeight.w700),),
+              accountName: Text(
+                student?.name ?? user?.displayName ?? 'User',
+                style: TextStyle(
+                  color: AppColorsDarkMode.accentColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              accountEmail: Text(
+                user?.email ?? '',
+                style: TextStyle(
+                  color: AppColorsDarkMode.accentColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               currentAccountPicture: Container(
-  decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    border: Border.all(
-      color: AppColorsDarkMode.accentColor, // Border color
-      width: 3.0,         // Border width
-    ),
-  ),
-  child: CircleAvatar(
-                backgroundImage: user?.photoURL != null
-                    ? NetworkImage(user!.photoURL!)
-                    : null,
-                child: user?.photoURL == null
-                    ? Text(user?.displayName?.substring(0, 1) ?? 'U')
-                    : null,
-              ),),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColorsDarkMode.accentColor, // Border color
+                    width: 3.0, // Border width
+                  ),
+                ),
+                child: CircleAvatar(
+                  backgroundImage:
+                      user?.photoURL != null
+                          ? NetworkImage(user!.photoURL!)
+                          : null,
+                  child:
+                      user?.photoURL == null
+                          ? Text(user?.displayName?.substring(0, 1) ?? 'U')
+                          : null,
+                ),
+              ),
               decoration: BoxDecoration(
                 color: AppColorsDarkMode.secondaryColor,
               ),
-              ),
-            
+            ),
+
             // Navigation Items
             _buildDrawerItem(
               icon: Icons.calendar_today,
@@ -208,7 +232,7 @@ class _NavigatorPageState extends State<NavigatorPage> {
               isSelected: _currentPage == 'GPA Calculator',
               onTap: () => _changePage('GPA Calculator'),
             ),
-            
+
             const Divider(),
             _buildDrawerItem(
               isSelected: _currentPage == 'Log Out',
@@ -229,10 +253,11 @@ class _NavigatorPageState extends State<NavigatorPage> {
               isSelected: _currentPage == 'Credits',
               icon: Icons.info_outline_rounded,
               title: 'Credits',
-onTap: () {
-  showCreditsPage(context);
-},            ),
-            
+              onTap: () {
+                showCreditsPage(context);
+              },
+            ),
+
             // // Add Course - New menu item for easier access
             // ListTile(
             //   leading: const Icon(Icons.add_circle_outline),
@@ -247,9 +272,9 @@ onTap: () {
             //     );
             //   },
             // ),
-            
+
             // const Divider(),
-            
+
             // Sign out
             // ListTile(
             //   leading: const Icon(Icons.logout, color: Colors.red),

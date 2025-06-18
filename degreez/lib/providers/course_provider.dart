@@ -59,6 +59,38 @@ class CourseProvider with ChangeNotifier {
 
   SemesterInfo? get currentSemester => _currentSemester;
 
+  (int, int)? _parseSemesterCode(String semesterName) {
+    final match = RegExp(
+      r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
+    ).firstMatch(semesterName);
+    if (match == null) return null;
+
+    final season = match.group(1)!;
+    final firstYear = int.parse(match.group(2)!);
+
+    int apiYear;
+    int semesterCode;
+
+    switch (season) {
+      case 'Winter':
+        apiYear = firstYear; // Use the first year for Winter
+        semesterCode = 200;
+        break;
+      case 'Spring':
+        apiYear = firstYear - 1;
+        semesterCode = 201;
+        break;
+      case 'Summer':
+        apiYear = firstYear - 1;
+        semesterCode = 202;
+        break;
+      default:
+        return null;
+    }
+
+    return (apiYear, semesterCode);
+  }
+
   // Getters
   List<StudentCourse> getCoursesForSemester(String semesterKey) {
     return _coursesBySemester[semesterKey] ?? [];
@@ -125,19 +157,23 @@ class CourseProvider with ChangeNotifier {
                 .toList();
 
         newCoursesBySemester[semesterKey] = courses;
-      }      _coursesBySemester = newCoursesBySemester;
+      }
+      _coursesBySemester = newCoursesBySemester;
       _error = null;
-      
+
       // Check if we need to migrate any courses that don't have credit points
-      final needsMigration = _coursesBySemester.values
-          .any((courses) => courses.any((course) => course.creditPoints <= 0));
-      
+      final needsMigration = _coursesBySemester.values.any(
+        (courses) => courses.any((course) => course.creditPoints <= 0),
+      );
+
       if (needsMigration) {
-        debugPrint('🔄 Detected courses without credit points, starting migration...');
+        debugPrint(
+          '🔄 Detected courses without credit points, starting migration...',
+        );
         // Run migration in background without blocking the UI
         migrateCreditPointsForExistingCourses(studentId);
       }
-      
+
       return true;
     } catch (e) {
       _error = 'Failed to load courses: $e';
@@ -173,10 +209,16 @@ class CourseProvider with ChangeNotifier {
       }
 
       // 🔍 Fetch prerequisites (as string or list from API)
+      final parsed = _parseSemesterCode(semesterKey);
+      if (parsed == null) {
+        debugPrint('❌ Invalid semester format: $semesterKey');
+        return false;
+      }
+      final (year, semesterCode) = parsed;
       final rawPrereqs =
           (await CourseService.getCourseDetails(
-            _currentSemester!.year,
-            _currentSemester!.semester,
+            year,
+            semesterCode,
             course.courseId,
           ))?.prerequisites;
       debugPrint('📦 Raw prerequisites from API: $rawPrereqs');
@@ -399,9 +441,10 @@ class CourseProvider with ChangeNotifier {
       return false;
     }
   }
+
   // Helper method to get selected schedule entries for a course
   Map<String, List<ScheduleEntry>> getSelectedScheduleEntries(
-    String courseId, 
+    String courseId,
     EnhancedCourseDetails? courseDetails,
   ) {
     if (courseDetails == null) {
@@ -429,16 +472,22 @@ class CourseProvider with ChangeNotifier {
           final group = int.tryParse(parts[2]);
           if (group != null) {
             selectedLectures.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
+              courseDetails.schedule
+                  .where(
+                    (schedule) =>
+                        schedule.type == type && schedule.group == group,
+                  )
+                  .toList(),
             );
           }
         }
       } else {
         // Backward compatibility: old time format
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.lectureTime == scheduleString) {
             selectedLectures.add(schedule);
             break;
@@ -457,16 +506,22 @@ class CourseProvider with ChangeNotifier {
           final group = int.tryParse(parts[2]);
           if (group != null) {
             selectedTutorials.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
+              courseDetails.schedule
+                  .where(
+                    (schedule) =>
+                        schedule.type == type && schedule.group == group,
+                  )
+                  .toList(),
             );
           }
         }
       } else {
         // Backward compatibility: old time format
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.tutorialTime == scheduleString) {
             selectedTutorials.add(schedule);
             break;
@@ -485,16 +540,22 @@ class CourseProvider with ChangeNotifier {
           final group = int.tryParse(parts[2]);
           if (group != null) {
             selectedLabs.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
+              courseDetails.schedule
+                  .where(
+                    (schedule) =>
+                        schedule.type == type && schedule.group == group,
+                  )
+                  .toList(),
             );
           }
         }
       } else {
         // Backward compatibility: old time format
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.labTime == scheduleString) {
             selectedLabs.add(schedule);
             break;
@@ -513,16 +574,22 @@ class CourseProvider with ChangeNotifier {
           final group = int.tryParse(parts[2]);
           if (group != null) {
             selectedWorkshops.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
+              courseDetails.schedule
+                  .where(
+                    (schedule) =>
+                        schedule.type == type && schedule.group == group,
+                  )
+                  .toList(),
             );
           }
         }
       } else {
         // Backward compatibility: old time format
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.workshopTime == scheduleString) {
             selectedWorkshops.add(schedule);
             break;
@@ -573,73 +640,71 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-Future<bool> deleteStudentAndCourses(String studentId) async{
+  Future<bool> deleteStudentAndCourses(String studentId) async {
+    try {
+      final studentRef = FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId);
 
-  try {
-    final studentRef = FirebaseFirestore.instance
-        .collection('Students')
-        .doc(studentId);
+      // Step 1: Delete all documents in the 'Courses-per-Semesters' sub collection
+      final semesterDocs =
+          await studentRef.collection('Courses-per-Semesters').get();
+      for (final doc in semesterDocs.docs) {
+        await deleteSemester(studentId, doc.get("semesterName"));
+      }
 
-    // Step 1: Delete all documents in the 'Courses-per-Semesters' sub collection
-    final semesterDocs = await studentRef.collection('Courses-per-Semesters').get();
-    for (final doc in semesterDocs.docs) {
-      await deleteSemester(studentId, doc.get("semesterName"));
+      // Step 2: Delete the student document
+      await studentRef.delete();
+
+      _error = null;
+      return true;
+    } catch (e) {
+      _error = 'Failed to delete student: $e';
+      notifyListeners();
+      return false;
     }
-
-    // Step 2: Delete the student document
-    await studentRef.delete();
-
-    _error = null;
-    return true;
-  } catch (e) {
-    _error = 'Failed to delete student: $e';
-    notifyListeners();
-    return false;
   }
-
-}
 
   // Delete semester with optimistic update
-Future<bool> deleteSemester(String studentId, String semesterName) async {
-  if (!_coursesBySemester.containsKey(semesterName)) {
-    _error = 'Semester "$semesterName" does not exist';
-    notifyListeners();
-    return false;
-  }
-
-  final oldCourses = _coursesBySemester[semesterName]!;
-
-  // Optimistic update
-  _coursesBySemester.remove(semesterName);
-  notifyListeners();
-
-  try {
-    final semesterRef = FirebaseFirestore.instance
-        .collection('Students')
-        .doc(studentId)
-        .collection('Courses-per-Semesters')
-        .doc(semesterName);
-
-    // Step 1: Delete all documents in the 'Courses' sub collection
-    final courseDocs = await semesterRef.collection('Courses').get();
-    for (final doc in courseDocs.docs) {
-      await doc.reference.delete();
+  Future<bool> deleteSemester(String studentId, String semesterName) async {
+    if (!_coursesBySemester.containsKey(semesterName)) {
+      _error = 'Semester "$semesterName" does not exist';
+      notifyListeners();
+      return false;
     }
 
-    // Step 2: Delete the semester document
-    await semesterRef.delete();
+    final oldCourses = _coursesBySemester[semesterName]!;
 
-    _error = null;
-    return true;
-  } catch (e) {
-    // Rollback
-    _coursesBySemester[semesterName] = oldCourses;
-    _error = 'Failed to delete semester: $e';
+    // Optimistic update
+    _coursesBySemester.remove(semesterName);
     notifyListeners();
-    return false;
-  }
-}
 
+    try {
+      final semesterRef = FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId)
+          .collection('Courses-per-Semesters')
+          .doc(semesterName);
+
+      // Step 1: Delete all documents in the 'Courses' sub collection
+      final courseDocs = await semesterRef.collection('Courses').get();
+      for (final doc in courseDocs.docs) {
+        await doc.reference.delete();
+      }
+
+      // Step 2: Delete the semester document
+      await semesterRef.delete();
+
+      _error = null;
+      return true;
+    } catch (e) {
+      // Rollback
+      _coursesBySemester[semesterName] = oldCourses;
+      _error = 'Failed to delete semester: $e';
+      notifyListeners();
+      return false;
+    }
+  }
 
   // Remove course from semester with optimistic update
   Future<bool> removeCourseFromSemester(
@@ -716,8 +781,9 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       final parsedB = _parseSemester(b);
 
       final yearComparison = parsedA.year.compareTo(parsedB.year);
-      if (yearComparison != 0)
-        {return yearComparison;} // If years are different , sort by year
+      if (yearComparison != 0) {
+        return yearComparison;
+      } // If years are different , sort by year
 
       return _seasonOrder(
         parsedA.season,
@@ -726,6 +792,7 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
 
     return {for (final name in semesterNames) name: _coursesBySemester[name]!};
   }
+
   // Get total credits for a semester
   double getTotalCreditsForSemester(String semesterKey) {
     final courses = _coursesBySemester[semesterKey] ?? [];
@@ -737,14 +804,15 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     }
 
     return total;
-  }// Get course with details (updated return type)
+  } // Get course with details (updated return type)
+
   StudentCourseWithDetails? getCourseWithDetails(
     String semesterKey,
     String courseId,
   ) {
     final courses = _coursesBySemester[semesterKey];
     if (courses == null) return null;
-    
+
     StudentCourse? studentCourse;
     try {
       studentCourse = courses.firstWhere(
@@ -752,7 +820,7 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       );
     } catch (e) {
       return null;
-    }    // Create a basic course details object using stored credit points
+    } // Create a basic course details object using stored credit points
     final courseDetails = EnhancedCourseDetails(
       courseNumber: studentCourse.courseId,
       name: studentCourse.name,
@@ -762,7 +830,9 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       prerequisites: '',
       adjacentCourses: '',
       noAdditionalCredit: '',
-      points: studentCourse.creditPoints.toString(), // Convert credit points to string format
+      points:
+          studentCourse.creditPoints
+              .toString(), // Convert credit points to string format
       responsible: '',
       notes: '',
       exams: {},
@@ -775,22 +845,21 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     );
   }
 
-({String season, int year}) _parseSemester(String semesterName) {
-  final parts = semesterName.split(' ');
-  final season = parts[0];
-  final yearPart = parts.length > 1 ? parts[1] : '';
+  ({String season, int year}) _parseSemester(String semesterName) {
+    final parts = semesterName.split(' ');
+    final season = parts[0];
+    final yearPart = parts.length > 1 ? parts[1] : '';
 
-  int year;
-  if (yearPart.contains('-')) {
-    final years = yearPart.split('-');
-    year = int.tryParse(years.last) ?? 0; // Use the later year for sorting
-  } else {
-    year = int.tryParse(yearPart) ?? 0;
+    int year;
+    if (yearPart.contains('-')) {
+      final years = yearPart.split('-');
+      year = int.tryParse(years.last) ?? 0; // Use the later year for sorting
+    } else {
+      year = int.tryParse(yearPart) ?? 0;
+    }
+
+    return (season: season, year: year);
   }
-
-  return (season: season, year: year);
-}
-
 
   int _seasonOrder(String season) {
     switch (season.toLowerCase()) {
@@ -965,25 +1034,29 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
   // Migration method to add credit points to existing courses
   Future<bool> migrateCreditPointsForExistingCourses(String studentId) async {
     debugPrint('🔄 Starting credit points migration for existing courses...');
-    
+
     try {
       bool hasUpdates = false;
-      
+
       for (final entry in _coursesBySemester.entries) {
         final semesterKey = entry.key;
         final courses = entry.value;
-        
+
         for (int i = 0; i < courses.length; i++) {
           final course = courses[i];
-          
+
           // Check if course already has credit points stored
           if (course.creditPoints > 0) {
-            debugPrint('✅ Course ${course.courseId} already has credit points: ${course.creditPoints}');
+            debugPrint(
+              '✅ Course ${course.courseId} already has credit points: ${course.creditPoints}',
+            );
             continue;
           }
-          
-          debugPrint('🔍 Migrating credit points for course: ${course.courseId}');
-          
+
+          debugPrint(
+            '🔍 Migrating credit points for course: ${course.courseId}',
+          );
+
           // Fetch credit points from course details
           double creditPoints = 3.0; // Default fallback
           try {
@@ -992,21 +1065,27 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
               _currentSemester?.semester ?? 200,
               course.courseId,
             );
-            
+
             if (courseDetails != null && courseDetails.creditPoints > 0) {
               creditPoints = courseDetails.creditPoints;
-              debugPrint('📚 Found credit points for ${course.courseId}: $creditPoints');
+              debugPrint(
+                '📚 Found credit points for ${course.courseId}: $creditPoints',
+              );
             } else {
-              debugPrint('⚠️ No credit points found for ${course.courseId}, using default: $creditPoints');
+              debugPrint(
+                '⚠️ No credit points found for ${course.courseId}, using default: $creditPoints',
+              );
             }
           } catch (e) {
-            debugPrint('❌ Error fetching credit points for ${course.courseId}: $e');
+            debugPrint(
+              '❌ Error fetching credit points for ${course.courseId}: $e',
+            );
           }
-          
+
           // Update course with credit points
           final updatedCourse = course.copyWith(creditPoints: creditPoints);
           courses[i] = updatedCourse;
-          
+
           // Update in Firestore
           try {
             await FirebaseFirestore.instance
@@ -1017,22 +1096,26 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
                 .collection('Courses')
                 .doc(course.courseId)
                 .update({'Credit_points': creditPoints});
-            
-            debugPrint('✅ Updated credit points for ${course.courseId} in Firestore');
+
+            debugPrint(
+              '✅ Updated credit points for ${course.courseId} in Firestore',
+            );
             hasUpdates = true;
           } catch (e) {
-            debugPrint('❌ Failed to update ${course.courseId} in Firestore: $e');
+            debugPrint(
+              '❌ Failed to update ${course.courseId} in Firestore: $e',
+            );
           }
         }
       }
-      
+
       if (hasUpdates) {
         notifyListeners();
         debugPrint('🎉 Credit points migration completed successfully!');
       } else {
         debugPrint('ℹ️ No courses needed migration');
       }
-      
+
       return true;
     } catch (e) {
       debugPrint('❌ Credit points migration failed: $e');
@@ -1040,20 +1123,19 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     }
   }
 
-List<List<String>> parseRawPrerequisites(String rawPrereqs) {
-  final parsed = <List<String>>[];
-  final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
-  for (final group in orGroups) {
-    final andGroup = group
-        .replaceAll(RegExp(r'[^\d\s]'), '')
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
-        .toList();
-    if (andGroup.isNotEmpty) parsed.add(andGroup);
+  List<List<String>> parseRawPrerequisites(String rawPrereqs) {
+    final parsed = <List<String>>[];
+    final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
+    for (final group in orGroups) {
+      final andGroup =
+          group
+              .replaceAll(RegExp(r'[^\d\s]'), '')
+              .trim()
+              .split(RegExp(r'\s+'))
+              .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+              .toList();
+      if (andGroup.isNotEmpty) parsed.add(andGroup);
+    }
+    return parsed;
   }
-  return parsed;
-}
-
-
 }
