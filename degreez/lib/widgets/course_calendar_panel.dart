@@ -14,7 +14,7 @@ import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
 
 // Add exam-related classes and functionality
-enum ExamPeriod { periodA, periodB }
+enum ExamPeriod { periodA, periodB, midtermA, midtermB }
 
 class ExamInfo {
   final String courseId;
@@ -79,11 +79,32 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       final courseDetails = await courseDataProvider.getCourseDetails(course.courseId);
       if (courseDetails?.hasExams == true) {
         final exams = courseDetails!.exams;
-        
-        // Helper function to create exam info with prepared data
+          // Helper function to create exam info with prepared data
         ExamInfo createExamInfo(String examKey, ExamPeriod period, String examType) {
           final rawDate = exams[examKey]!;
           final parsedDate = _parseExamDate(rawDate);
+          
+          // Determine color and text based on period
+          Color periodColor;
+          String periodText;
+          switch (period) {
+            case ExamPeriod.periodA:
+              periodColor = Colors.red;
+              periodText = 'Period A';
+              break;
+            case ExamPeriod.periodB:
+              periodColor = Colors.blue;
+              periodText = 'Period B';
+              break;
+            case ExamPeriod.midtermA:
+              periodColor = Colors.orange;
+              periodText = 'Midterm A';
+              break;
+            case ExamPeriod.midtermB:
+              periodColor = Colors.purple;
+              periodText = 'Midterm B';
+              break;
+          }          
           return ExamInfo(
             courseId: course.courseId,
             courseName: course.name,
@@ -93,8 +114,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             examDate: parsedDate,
             formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : 'Date TBD',
             displayDate: parsedDate != null ? DateFormat('EEEE, dd-MM').format(parsedDate) : 'Date TBD',
-            periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
-            periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
+            periodColor: periodColor,
+            periodText: periodText,
             sortOrder: parsedDate != null ? (parsedDate.month * 100 + parsedDate.day) : 999999,
           );
         }
@@ -109,11 +130,11 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         }
         
         if (exams.containsKey('בוחן מועד א') && exams['בוחן מועד א']!.isNotEmpty) {
-          examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm'));
+          examList.add(createExamInfo('בוחן מועד א', ExamPeriod.midtermA, 'midterm A'));
         }
         
         if (exams.containsKey('בוחן מועד ב') && exams['בוחן מועד ב']!.isNotEmpty) {
-          examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm'));
+          examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.midtermB, 'midterm B'));
         }
       }
     }
@@ -295,9 +316,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                           if (examData.isEmpty) {
                             return const SizedBox.shrink();
                           }
-                          
-                          final periodAExams = examData.where((e) => e.period == ExamPeriod.periodA).length;
+                            final periodAExams = examData.where((e) => e.period == ExamPeriod.periodA).length;
                           final periodBExams = examData.where((e) => e.period == ExamPeriod.periodB).length;
+                          final midtermAExams = examData.where((e) => e.period == ExamPeriod.midtermA).length;
+                          final midtermBExams = examData.where((e) => e.period == ExamPeriod.midtermB).length;
                           
                           return Container(
                             margin: const EdgeInsets.only(left: 8),
@@ -327,8 +349,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                         fontWeight: FontWeight.bold,
                                         color: Colors.orange,
                                       ),
-                                    ),
-                                    if (periodAExams > 0 || periodBExams > 0) ...[
+                                    ),                                    if (periodAExams > 0 || periodBExams > 0 || midtermAExams > 0 || midtermBExams > 0) ...[
                                       const SizedBox(width: 4),
                                       if (periodAExams > 0)
                                         Container(
@@ -346,6 +367,26 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                           height: 6,
                                           decoration: const BoxDecoration(
                                             color: Colors.blue,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      if (midtermAExams > 0)
+                                        Container(
+                                          margin: EdgeInsets.only(left: (periodAExams > 0 || periodBExams > 0) ? 2 : 0),
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.orange,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      if (midtermBExams > 0)
+                                        Container(
+                                          margin: EdgeInsets.only(left: (periodAExams > 0 || periodBExams > 0 || midtermAExams > 0) ? 2 : 0),
+                                          width: 6,
+                                          height: 6,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.purple,
                                             shape: BoxShape.circle,
                                           ),
                                         ),
