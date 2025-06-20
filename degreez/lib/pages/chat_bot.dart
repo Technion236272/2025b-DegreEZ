@@ -78,7 +78,6 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       });
     }
   }
-
   Future<String> _getCombinedUserContext() async {
     // Get context from providers (local session data)
     // final providerContext = ContextGeneratorService.generateUserContext(context);
@@ -88,13 +87,17 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
 
     String firestoreContext = "";
     if (firestoreData.isNotEmpty) {
+      // Remove the Id field from the data before displaying to user
+      final dataWithoutId = Map<String, dynamic>.from(firestoreData);
+      dataWithoutId.remove('Id');
+      
       // The firestoreContextParts list was used to build a formatted,
       // human-readable string from the map. This is easier for the AI to
       // understand than a raw JSON string.
       // We can simplify this by encoding the map to a formatted
       // JSON string, which is also highly readable for the model.
       const jsonEncoder = JsonEncoder.withIndent('  ');
-      final formattedJson = jsonEncoder.convert(firestoreData);
+      final formattedJson = jsonEncoder.convert(dataWithoutId);
 
       firestoreContext = [
         "--- User Firebase Data ---",
@@ -270,9 +273,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
               style: TextStyle(color: AppColorsDarkMode.textPrimary),
             ),
           ],
-        ),
-        content: Container(
-          constraints: const BoxConstraints(maxHeight: 400, maxWidth: 400),
+        ),        content: Container(
+          constraints: const BoxConstraints(maxHeight: 600, maxWidth: 500),
           decoration: AppColorsDarkMode.surfaceDecoration(),
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
