@@ -6,7 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:calendar_view/calendar_view.dart';
 
+
 import 'services/firebase_options.dart';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'color/color_palette.dart';
 
@@ -37,6 +39,9 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
+  // final model =
+  //     FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
+
 
   runApp(const MyApp());
 }

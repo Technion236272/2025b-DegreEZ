@@ -14,7 +14,7 @@ import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
 
 // Add exam-related classes and functionality
-enum ExamPeriod { periodA, periodB }
+enum ExamPeriod { periodA, periodB, midtermA, midtermB }
 
 class ExamInfo {
   final String courseId;
@@ -136,6 +136,28 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         ) {
           final rawDate = exams[examKey]!;
           final parsedDate = _parseExamDate(rawDate);
+          
+          // Determine color and text based on period
+          Color periodColor;
+          String periodText;
+          switch (period) {
+            case ExamPeriod.periodA:
+              periodColor = Colors.red;
+              periodText = 'Period A';
+              break;
+            case ExamPeriod.periodB:
+              periodColor = Colors.blue;
+              periodText = 'Period B';
+              break;
+            case ExamPeriod.midtermA:
+              periodColor = Colors.orange;
+              periodText = 'Midterm A';
+              break;
+            case ExamPeriod.midtermB:
+              periodColor = Colors.purple;
+              periodText = 'Midterm B';
+              break;
+          }          
           return ExamInfo(
             courseId: course.courseId,
             courseName: course.name,
@@ -463,6 +485,26 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                             shape: BoxShape.circle,
                                           ),
                                         ),
+                                      // if (midtermAExams > 0)
+                                      //   Container(
+                                      //     margin: EdgeInsets.only(left: (periodAExams > 0 || periodBExams > 0) ? 2 : 0),
+                                      //     width: 6,
+                                      //     height: 6,
+                                      //     decoration: const BoxDecoration(
+                                      //       color: Colors.orange,
+                                      //       shape: BoxShape.circle,
+                                      //     ),
+                                      //   ),
+                                      // if (midtermBExams > 0)
+                                      //   Container(
+                                      //     margin: EdgeInsets.only(left: (periodAExams > 0 || periodBExams > 0 || midtermAExams > 0) ? 2 : 0),
+                                      //     width: 6,
+                                      //     height: 6,
+                                      //     decoration: const BoxDecoration(
+                                      //       color: Colors.purple,
+                                      //       shape: BoxShape.circle,
+                                      //     ),
+                                      //   ),
                                     ],
                                   ],
                                 ),
