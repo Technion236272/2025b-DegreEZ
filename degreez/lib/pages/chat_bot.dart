@@ -222,6 +222,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       setState(() {
         _messages.add(ChatMessage(
           text: 'Sorry, I encountered an error: ${e.toString()}',
+          
           isUser: false,
           timestamp: DateTime.now(),
         ));

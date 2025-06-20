@@ -29,9 +29,7 @@ class GeminiChatService {
       history: [],
       // System instructions are built into the model configuration above
     );
-  }
-
-  void rebuildChatSession(List<ChatMessage> messages) {
+  }  void rebuildChatSession(List<ChatMessage> messages) {
     // SDK handles context automatically, we just need to restore conversation history
     final conversationHistory = <Content>[];
     
@@ -41,12 +39,12 @@ class GeminiChatService {
         .toList();
     
     // Take recent conversation pairs for context
-    for (int i = 0; i < chatMessages.length - 1; i += 2) {
-      if (i + 1 < chatMessages.length && 
-          chatMessages[i].isUser && 
-          !chatMessages[i + 1].isUser) {
-        conversationHistory.add(Content.text(chatMessages[i].text));
-        conversationHistory.add(Content.model([TextPart(chatMessages[i + 1].text)]));
+    for (final message in chatMessages) {
+      if (message.isUser) {
+        conversationHistory.add(Content.text(message.text));
+      } else {
+        // For model responses, use Content.model with TextPart
+        conversationHistory.add(Content.model([TextPart(message.text)]));
       }
     }
     
