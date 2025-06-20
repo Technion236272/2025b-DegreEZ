@@ -52,10 +52,13 @@ class ChatMessageBubble extends StatelessWidget {
                   bottomLeft: Radius.circular(message.isUser ? 20 : 4),
                   bottomRight: Radius.circular(message.isUser ? 4 : 20),
                 ),
-              ),
-              child: Column(
+              ),              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // PDF Attachment (show before text for user messages)
+                  if (message.isUser && message.pdfAttachment != null)
+                    _buildPdfAttachment(),
+                  
                   Text(
                     message.text,
                     style: TextStyle(
@@ -66,6 +69,11 @@ class ChatMessageBubble extends StatelessWidget {
                       height: 1.4,
                     ),
                   ),
+                  
+                  // PDF Attachment (show after text for AI messages, if any)
+                  if (!message.isUser && message.pdfAttachment != null)
+                    _buildPdfAttachment(),
+                  
                   const SizedBox(height: 4),
                   Text(
                     _formatTime(message.timestamp),
@@ -100,10 +108,79 @@ class ChatMessageBubble extends StatelessWidget {
             ),
           ],
         ],
+      ),    );
+  }
+
+  Widget _buildPdfAttachment() {
+    if (message.pdfAttachment == null) return const SizedBox.shrink();
+    
+    final attachment = message.pdfAttachment!;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: message.isUser 
+            ? AppColorsDarkMode.primaryColorLight.withOpacity(0.3)
+            : AppColorsDarkMode.cardColor.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: message.isUser 
+              ? AppColorsDarkMode.textPrimary.withOpacity(0.3)
+              : AppColorsDarkMode.borderAccent,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.picture_as_pdf,
+            color: message.isUser 
+                ? AppColorsDarkMode.textPrimary
+                : AppColorsDarkMode.primaryColor,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  attachment.fileName,
+                  style: TextStyle(
+                    color: message.isUser 
+                        ? AppColorsDarkMode.textPrimary
+                        : AppColorsDarkMode.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),                Text(
+                  _formatFileSize(attachment.fileSize),
+                  style: TextStyle(
+                    color: message.isUser 
+                        ? AppColorsDarkMode.textSecondary
+                        : AppColorsDarkMode.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '${bytes}B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
+  }
+  
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

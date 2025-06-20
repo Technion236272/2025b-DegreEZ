@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../color/color_palette.dart';
+import '../../models/chat/pdf_attachment.dart';
 
 class ChatInputWidget extends StatelessWidget {
   final TextEditingController messageController;
@@ -7,6 +8,9 @@ class ChatInputWidget extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onSendMessage;
   final VoidCallback? onToggleContext;
+  final VoidCallback? onAttachPdf;
+  final PdfAttachment? currentPdfAttachment;
+  final VoidCallback? onRemovePdf;
 
   const ChatInputWidget({
     super.key,
@@ -15,12 +19,68 @@ class ChatInputWidget extends StatelessWidget {
     required this.isLoading,
     required this.onSendMessage,
     this.onToggleContext,
+    this.onAttachPdf,
+    this.currentPdfAttachment,
+    this.onRemovePdf,
   });
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // PDF Attachment Preview
+        if (currentPdfAttachment != null)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.all(12),
+            decoration: AppColorsDarkMode.cardDecoration(
+              backgroundColor: AppColorsDarkMode.cardColor,
+              withBorder: true,
+            ).copyWith(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.picture_as_pdf,
+                  color: AppColorsDarkMode.primaryColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        currentPdfAttachment!.fileName,
+                        style: TextStyle(
+                          color: AppColorsDarkMode.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),                      Text(
+                        formatFileSize(currentPdfAttachment!.fileSize),
+                        style: TextStyle(
+                          color: AppColorsDarkMode.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: onRemovePdf,
+                  icon: Icon(
+                    Icons.close,
+                    color: AppColorsDarkMode.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: AppColorsDarkMode.surfaceDecoration().copyWith(
@@ -35,6 +95,32 @@ class ChatInputWidget extends StatelessWidget {
             top: false,
             child: Row(
               children: [
+                // PDF Attachment Button
+                if (onAttachPdf != null)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: isLoading ? null : onAttachPdf,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: AppColorsDarkMode.cardDecoration(
+                          backgroundColor: currentPdfAttachment != null 
+                              ? AppColorsDarkMode.primaryColor.withOpacity(0.2)
+                              : AppColorsDarkMode.mainColor,
+                          withBorder: true,
+                        ).copyWith(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          Icons.attach_file,
+                          color: currentPdfAttachment != null 
+                              ? AppColorsDarkMode.primaryColor
+                              : AppColorsDarkMode.textSecondary,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: Container(
                     decoration: AppColorsDarkMode.cardDecoration(
@@ -42,7 +128,7 @@ class ChatInputWidget extends StatelessWidget {
                       withBorder: true,
                     ).copyWith(
                       borderRadius: BorderRadius.circular(25),
-                    ),                    child: TextField(
+                    ),child: TextField(
                       controller: messageController,
                       enabled: !isLoading,
                       decoration: InputDecoration(
@@ -80,10 +166,17 @@ class ChatInputWidget extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ],
+        ),      ],
     );
   }
+
+  String formatFileSize(int bytes) {
+    if (bytes < 1024) return '${bytes}B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
+  }
+  
   Widget _buildSmartSendButton() {
     final hasText = messageController.text.trim().isNotEmpty;
     final shouldShowContextOption = !includeUserContext && hasText && !isLoading;

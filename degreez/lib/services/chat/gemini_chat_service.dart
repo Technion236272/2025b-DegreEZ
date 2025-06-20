@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:firebase_ai/firebase_ai.dart';
 import '../../models/chat/chat_message.dart';
 
@@ -51,9 +52,26 @@ class GeminiChatService {
     // Let SDK handle the rest
     _chatSession = _model.startChat(history: conversationHistory);
   }
-
   Stream<GenerateContentResponse> sendMessageStream(String message) {
     return _chatSession.sendMessageStream(Content.text(message));
+  }
+
+  Stream<GenerateContentResponse> sendMessageWithPdfStream(String message, File pdfFile) async* {
+    try {
+      // Read PDF as bytes
+      final pdfBytes = await pdfFile.readAsBytes();
+      
+      // Create content with text and PDF
+      final content = Content.multi([
+        TextPart(message),
+        InlineDataPart('application/pdf', pdfBytes),
+      ]);
+      
+      // Stream response
+      yield* _chatSession.sendMessageStream(content);
+    } catch (e) {
+      throw Exception('Failed to process PDF: $e');
+    }
   }
 
   void clearSession() {
