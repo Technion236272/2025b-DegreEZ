@@ -889,13 +889,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
           }
         }        // Add courses to the semester (replicating AddCourseDialog functionality)
         for (final courseData in semesterCourses) {
-          final courseId = courseData['Course ID'] as String? ?? '';
-          final grade = courseData['Grade'] as String? ?? '';
-          
-          if (courseId.isEmpty) {
-            continue; // Skip invalid courses
-          }
+          final courseId = courseData['courseId'] as String? ?? '';
+          // parse it to int and if it is not a valid int, dont define the variable
+          final grade = courseData['Final_grade'] as String? ?? '';
 
+          
           // Check if course already exists in this semester
           final existingCourses = courseProvider.getCoursesForSemester(semesterName);
           final courseExists = existingCourses.any((c) => c.courseId == courseId);
