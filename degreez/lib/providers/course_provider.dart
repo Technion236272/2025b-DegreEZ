@@ -641,6 +641,58 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  // Helper function to convert semester ID to semester name
+  String _getSemesterNameFromId(int semesterId, int year) {
+    switch (semesterId) {
+      case 200:
+        return 'Winter $year-${year + 1}';
+      case 201:
+        return 'Spring ${year + 1}';
+      case 202:
+        return 'Summer $year';
+      default:
+        return 'Semester $semesterId $year';
+    }
+  }
+
+  // Add semester by ID with validation
+  Future<bool> addSemesterById(String studentId, int semesterId, int year) async {
+    final semesterName = _getSemesterNameFromId(semesterId, year);
+    
+    if (_coursesBySemester.containsKey(semesterName)) {
+      _error = 'Semester "$semesterName" already exists';
+      notifyListeners();
+      return false;
+    }
+
+    // Optimistic update
+    _coursesBySemester[semesterName] = [];
+    notifyListeners();
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId)
+          .collection('Courses-per-Semesters')
+          .doc(semesterName)
+          .set({
+            'semesterName': semesterName,
+            'semesterId': semesterId,
+            'year': year,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+      _error = null;
+      return true;
+    } catch (e) {
+      // Rollback
+      _coursesBySemester.remove(semesterName);
+      _error = 'Failed to add semester: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> deleteStudentAndCourses(String studentId) async {
     try {
       final studentRef = FirebaseFirestore.instance

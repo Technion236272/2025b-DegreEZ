@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'ai/ai_config.dart';
 
 class PdfService {
-  static const int maxFileSizeBytes = 20 * 1024 * 1024; // 20MB limit (Gemini's limit)
+  static const int maxFileSizeBytes = AiConfig.maxFileSizeBytes;
 
   /// Pick a PDF file from device storage
   static Future<File?> pickPdfFile() async {
