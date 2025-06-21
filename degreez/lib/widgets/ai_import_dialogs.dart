@@ -26,7 +26,7 @@ class AiImportDialogs {
               color: AppColorsDarkMode.primaryColor,
               size: 20,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 0),
             Text(
               'AI Grade Sheet Import',
               style: TextStyle(color: AppColorsDarkMode.textPrimary),
@@ -40,7 +40,7 @@ class AiImportDialogs {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Import your courses automatically from a grade sheet or transcript PDF.',
+                'Follow these steps to import your grade sheet:',
                 style: TextStyle(color: AppColorsDarkMode.textSecondary),
               ),
               const SizedBox(height: 16),
@@ -54,21 +54,15 @@ class AiImportDialogs {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'How it works:',
-                      style: TextStyle(
-                        color: AppColorsDarkMode.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     const SizedBox(height: 8),
                     Text(
-                      '1. Select a PDF grade sheet or transcript\n'
-                      '2. AI extracts course information automatically\n'
-                      '3. Review and import the extracted courses',
+                      '1. Go to your SAP account and request your grade sheet. (תעודת ציונים)\n'
+                      '2. Select the english version of your grade sheet and save it in your drive / phone\n'
+                      '3. import it here so the AI can extract course information automatically\n'
+                      '4. Review and import the extracted courses',
                       style: TextStyle(
                         color: AppColorsDarkMode.textSecondary,
-                        fontSize: 12,
+                        fontSize: 14,
                       ),
                     ),
                   ],

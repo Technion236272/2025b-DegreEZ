@@ -10,8 +10,8 @@ import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
-import '../providers/course_data_provider.dart';
 import '../widgets/add_course_dialog.dart';
+import '../mixins/ai_import_mixin.dart';
 
 import 'customized_diagram_page.dart';
 
@@ -22,7 +22,7 @@ class NavigatorPage extends StatefulWidget {
   State<NavigatorPage> createState() => _NavigatorPageState();
 }
 
-class _NavigatorPageState extends State<NavigatorPage> {
+class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
   String _currentPage = 'Calendar';
   bool _hasInitializedData = false;
   String? _selectedCalendarSemester;
@@ -35,7 +35,30 @@ class _NavigatorPageState extends State<NavigatorPage> {
         _hasInitializedData = true;
         _loadStudentDataIfNeeded();
       }
-    });
+    });  }
+  /// Override from AiImportMixin to handle post-import actions
+  @override
+  void onImportCompleted() {
+    // Refresh the providers after import
+    final loginNotifier = context.read<LogInNotifier>();
+    final studentProvider = context.read<StudentProvider>();
+    final courseProvider = context.read<CourseProvider>();
+    
+    // Refresh data by reloading from Firebase
+    if (loginNotifier.user != null && studentProvider.hasStudent) {
+      studentProvider.fetchStudentData(loginNotifier.user!.uid);
+      courseProvider.loadStudentCourses(studentProvider.student!.id);
+    }
+    
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Grade sheet imported successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   void _loadStudentDataIfNeeded() {
@@ -96,20 +119,10 @@ class _NavigatorPageState extends State<NavigatorPage> {
             break;
           default:
             body = Text(_currentPage);
-        }        return Scaffold(
-          appBar: AppBar(
+        }        return Scaffold(          appBar: AppBar(
             title: AutoSizeText(_currentPage, minFontSize: 14, maxFontSize: 22),
             centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.bolt_sharp),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('AI Assistant coming soon!')),
-                  );
-                },
-              ),
-            ],
+            actions: _buildAppBarActions(),
           ),
           drawer: _buildSideDrawer(context, loginNotifier, studentProvider),
           body:
@@ -150,8 +163,39 @@ class _NavigatorPageState extends State<NavigatorPage> {
                   )
                   : null,
         );
-      },
-    );
+      },    );
+  }
+
+  /// Builds context-sensitive AppBar actions based on the current page
+  List<Widget> _buildAppBarActions() {
+    switch (_currentPage) {
+      case 'Customized Diagram':
+        return [
+          IconButton(
+            icon: const Icon(Icons.smart_toy),
+            onPressed: showAiImportDialog, // Use the mixin method
+            tooltip: 'Import Grade Sheet with AI',
+          ),
+        ];
+      
+      case 'AI Assistant':
+        // For AI Assistant page, maybe no additional AI button needed
+        return [];
+      
+      default:
+        // For other pages, show a generic AI assistant button
+        return [
+          IconButton(
+            icon: const Icon(Icons.bolt_sharp),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('AI Assistant coming soon!')),
+              );
+            },
+            tooltip: 'AI Assistant',
+          ),
+        ];
+    }
   }
 
   Widget _buildSideDrawer(

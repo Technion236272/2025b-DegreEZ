@@ -297,28 +297,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 ],
               ),
             );
-          },        ),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [            // AI Grade Sheet Import Button - Now uses the mixin
-            FloatingActionButton(
-              heroTag: "ai_import",
-              onPressed: showAiImportDialog, // Use the mixin method
-              backgroundColor: AppColorsDarkMode.primaryColor,
-              child: const Icon(Icons.smart_toy),
-              tooltip: 'Import Grade Sheet with AI',
-            ),
-            const SizedBox(height: 12),
-            // Add Semester Button
-            FloatingActionButton(
-              heroTag: "add_semester",
-              onPressed: () {
-                _showAddSemesterDialog(context);
-              },
-              child: const Icon(Icons.add),
-              tooltip: 'Add Semester',
-            ),
-          ],
+          },        ),        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _showAddSemesterDialog(context);
+          },
+          child: const Icon(Icons.add),
+          tooltip: 'Add Semester',
         ),
       ),
     );
