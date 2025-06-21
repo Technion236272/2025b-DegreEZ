@@ -14,6 +14,46 @@ import '../services/diagram_ai_agent.dart';
 import '../services/GlobalConfigService.dart';
 import '../services/course_service.dart';
 
+// Data structure to track course addition results
+class CourseAdditionResult {
+  final String semesterName;
+  final String courseId;
+  final String courseName;
+  final bool isSuccess;
+  final String? errorMessage;
+  final bool wasUpdated; // true if course existed and was updated, false if newly added
+
+  CourseAdditionResult({
+    required this.semesterName,
+    required this.courseId,
+    required this.courseName,
+    required this.isSuccess,
+    this.errorMessage,
+    this.wasUpdated = false,
+  });
+}
+
+// Summary data structure
+class ImportSummary {
+  final int totalCourses;
+  final int successfullyAdded;
+  final int successfullyUpdated;
+  final int failed;
+  final int semestersAdded;
+  final List<CourseAdditionResult> results;
+
+  ImportSummary({
+    required this.totalCourses,
+    required this.successfullyAdded,
+    required this.successfullyUpdated,
+    required this.failed,
+    required this.semestersAdded,
+    required this.results,
+  });
+
+  int get totalSuccess => successfullyAdded + successfullyUpdated;
+}
+
 class CustomizedDiagramPage extends StatefulWidget {
   const CustomizedDiagramPage({super.key});
 
@@ -136,18 +176,16 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                         AppColorsDarkMode.accentColorDarker,
                       ],
                       begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                      end: Alignment.bottomRight,                    ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black,
+                        color: AppColorsDarkMode.shadowColor,
                         blurRadius: 8,
                         offset: Offset(0, 4),
                       ),
                     ],
-                  ),
-                  child: Column(
+                  ),                child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
@@ -169,9 +207,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   ),
                 ),
               );
-            }
-
-            final semesters = courseNotifier.sortedCoursesBySemester;
+            }            final semesters = courseNotifier.sortedCoursesBySemester;
             if (semesters.isEmpty) {
               return Center(
                 child: Container(
@@ -189,7 +225,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black,
+                        color: AppColorsDarkMode.shadowColorStrong,
                         blurRadius: 8,
                         offset: Offset(0, 4),
                       ),
@@ -202,8 +238,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                         Icons.timeline,
                         size: 64,
                         color: AppColorsDarkMode.secondaryColor,
-                      ),
-                      SizedBox(height: 16),
+                      ),                      SizedBox(height: 16),
                       Text(
                         'No courses to display',
                         style: TextStyle(
@@ -523,11 +558,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
+            ),            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black,
+                color: AppColorsDarkMode.shadowColorStrong,
                 blurRadius: 8,
                 offset: Offset(0, 4),
               ),
@@ -815,7 +849,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       ),
     );
   }
-
   // Enhanced: Start AI Import Process
   void _startAiImport() async {
     try {
@@ -828,10 +861,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
         final courses = aiAgent.getCoursesForApp();
         _showSnackBar('Successfully extracted ${courses.length} courses!', isSuccess: true);
         
-        // Show the extracted data
-        // _showExtractedCoursesDialog(aiAgent);        // for each course here, we use the add method from CourseProvider to add the course to the suitable semester
-        // and then update the grade of that course in the user's course list
-        await _addCoursesToUser(courses);
+        // Add courses and get summary
+        final summary = await _addCoursesToUser(courses);
+        
+        // Show the results dialog
+        _displayExtractedCoursesDialog(summary, aiAgent);
 
       } else {
         _showSnackBar('Import cancelled by user.');
@@ -842,8 +876,19 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   }
 
   // Method to add AI-imported courses to user's account using existing functionality
-  Future<void> _addCoursesToUser(List<Map<String, dynamic>> courses) async {
-    if (courses.isEmpty) return;
+  Future<ImportSummary> _addCoursesToUser(List<Map<String, dynamic>> courses) async {
+    final List<CourseAdditionResult> results = [];
+    
+    if (courses.isEmpty) {
+      return ImportSummary(
+        totalCourses: 0,
+        successfullyAdded: 0,
+        successfullyUpdated: 0,
+        failed: 0,
+        semestersAdded: 0,
+        results: [],
+      );
+    }
     
     try {
       final courseProvider = context.read<CourseProvider>();
@@ -852,7 +897,20 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       
       if (studentId == null) {
         _showSnackBar('Student ID not found', isError: true);
-        return;
+        return ImportSummary(
+          totalCourses: courses.length,
+          successfullyAdded: 0,
+          successfullyUpdated: 0,
+          failed: courses.length,
+          semestersAdded: 0,
+          results: courses.map((course) => CourseAdditionResult(
+            semesterName: 'Unknown',
+            courseId: course['courseId'] as String? ?? 'Unknown',
+            courseName: course['Name'] as String? ?? 'Unknown Course',
+            isSuccess: false,
+            errorMessage: 'Student ID not found',
+          )).toList(),
+        );
       }
 
       // Group courses by semester/year
@@ -870,6 +928,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       }
 
       int totalCoursesAdded = 0;
+      int totalCoursesUpdated = 0;
       int totalSemestersAdded = 0;
 
       // Process each semester
@@ -888,12 +947,24 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
             _showSnackBar('Added semester: $semesterName');
           } else {
             _showSnackBar('Failed to add semester: $semesterName', isError: true);
+            // Add failed results for all courses in this semester
+            for (final courseData in semesterCourses) {
+              results.add(CourseAdditionResult(
+                semesterName: semesterName,
+                courseId: courseData['courseId'] as String? ?? 'Unknown',
+                courseName: courseData['Name'] as String? ?? 'Unknown Course',
+                isSuccess: false,
+                errorMessage: 'Failed to create semester',
+              ));
+            }
             continue; // Skip courses for this semester if semester creation failed
           }
-        }        // Add courses to the semester (replicating AddCourseDialog functionality)
+        }
+        
+        // Add courses to the semester (replicating AddCourseDialog functionality)
         for (final courseData in semesterCourses) {
           final courseId = courseData['courseId'] as String? ?? '';
-          // parse it to int and if it is not a valid int, dont define the variable
+          final courseName = courseData['Name'] as String? ?? 'Unknown Course';
           final grade = courseData['Final_grade'] as String? ?? '';
 
           
@@ -911,8 +982,33 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                 grade
               );
               if (success) {
-                totalCoursesAdded++;
+                totalCoursesUpdated++;
+                results.add(CourseAdditionResult(
+                  semesterName: semesterName,
+                  courseId: courseId,
+                  courseName: courseName,
+                  isSuccess: true,
+                  wasUpdated: true,
+                ));
+              } else {
+                results.add(CourseAdditionResult(
+                  semesterName: semesterName,
+                  courseId: courseId,
+                  courseName: courseName,
+                  isSuccess: false,
+                  errorMessage: 'Failed to update grade',
+                  wasUpdated: true,
+                ));
               }
+            } else {
+              results.add(CourseAdditionResult(
+                semesterName: semesterName,
+                courseId: courseId,
+                courseName: courseName,
+                isSuccess: true,
+                wasUpdated: true,
+                errorMessage: 'Course already exists (no grade to update)',
+              ));
             }
           } else {
             // Search for course details (same as AddCourseDialog)
@@ -953,237 +1049,186 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               
               if (success) {
                 totalCoursesAdded++;
+                results.add(CourseAdditionResult(
+                  semesterName: semesterName,
+                  courseId: courseId,
+                  courseName: courseName,
+                  isSuccess: true,
+                ));
+              } else {
+                results.add(CourseAdditionResult(
+                  semesterName: semesterName,
+                  courseId: courseId,
+                  courseName: courseName,
+                  isSuccess: false,
+                  errorMessage: 'Failed to add course to semester',
+                ));
               }
             } else {
+              results.add(CourseAdditionResult(
+                semesterName: semesterName,
+                courseId: courseId,
+                courseName: courseName,
+                isSuccess: false,
+                errorMessage: 'Course not found in course catalog',
+              ));
               _showSnackBar('Course $courseId not found in course catalog');
             }
           }
         }
       }
 
+      // Create and return summary
+      final summary = ImportSummary(
+        totalCourses: courses.length,
+        successfullyAdded: totalCoursesAdded,
+        successfullyUpdated: totalCoursesUpdated,
+        failed: results.where((r) => !r.isSuccess).length,
+        semestersAdded: totalSemestersAdded,
+        results: results,
+      );
+
       // Show final summary
-      if (totalCoursesAdded > 0 || totalSemestersAdded > 0) {
+      if (summary.totalSuccess > 0 || totalSemestersAdded > 0) {
         _showSnackBar(
-          'Import completed! Added $totalSemestersAdded semesters and $totalCoursesAdded courses.',
+          'Import completed! Added $totalSemestersAdded semesters, ${summary.successfullyAdded} new courses, and updated ${summary.successfullyUpdated} existing courses.',
           isSuccess: true
         );
         
         // Trigger UI update
         _onCourseUpdated();
       } else {
-        _showSnackBar('No new courses were added. All courses may already exist.', isError: true);
+        _showSnackBar('No courses were successfully processed.', isError: true);
       }
+      
+      return summary;
       
     } catch (e) {
       _showSnackBar('Error adding courses: ${e.toString()}', isError: true);
+      return ImportSummary(
+        totalCourses: courses.length,
+        successfullyAdded: 0,
+        successfullyUpdated: 0,
+        failed: courses.length,
+        semestersAdded: 0,
+        results: courses.map((course) => CourseAdditionResult(
+          semesterName: 'Error',
+          courseId: course['courseId'] as String? ?? 'Unknown',
+          courseName: course['Name'] as String? ?? 'Unknown Course',
+          isSuccess: false,
+          errorMessage: e.toString(),
+        )).toList(),
+      );
     }
   }
-
-  // Enhanced: Show Extracted Courses Dialog
-  void _showExtractedCoursesDialog(DiagramAiAgent aiAgent) {
-    final coursesBySemester = aiAgent.getCoursesBySemester();
-    
+  // Enhanced: Show Import Results Dialog
+  void _displayExtractedCoursesDialog(ImportSummary summary, DiagramAiAgent aiAgent) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColorsDarkMode.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.green,
+          children: [            Icon(
+              summary.totalSuccess > 0 ? Icons.check_circle : Icons.warning,
+              color: summary.totalSuccess > 0 ? AppColorsDarkMode.successColor : AppColorsDarkMode.warningColor,
               size: 24,
             ),
             const SizedBox(width: 8),
             Text(
-              'Courses Extracted',
+              'Import Results',
               style: TextStyle(color: AppColorsDarkMode.textPrimary),
             ),
           ],
-        ),        content: Container(
+        ),
+        content: Container(
           constraints: const BoxConstraints(maxHeight: 600, maxWidth: 700),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Summary Statistics
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColorsDarkMode.surfaceColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColorsDarkMode.borderPrimary),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.analytics,
+                          color: AppColorsDarkMode.primaryColor,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Import Summary',
+                          style: TextStyle(
+                            color: AppColorsDarkMode.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),                    Row(
+                      children: [
+                        _buildSummaryChip('Total Courses', summary.totalCourses.toString(), AppColorsDarkMode.primaryColor),
+                        const SizedBox(width: 8),
+                        _buildSummaryChip('Added', summary.successfullyAdded.toString(), AppColorsDarkMode.successColor),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildSummaryChip('Updated', summary.successfullyUpdated.toString(), AppColorsDarkMode.warningColor),
+                        const SizedBox(width: 8),
+                        _buildSummaryChip('Failed', summary.failed.toString(), AppColorsDarkMode.errorColor),
+                      ],
+                    ),
+                    if (summary.semestersAdded > 0) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildSummaryChip('New Semesters', summary.semestersAdded.toString(), AppColorsDarkMode.secondaryColor),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+                // Course Results List
               Row(
                 children: [
                   Icon(
-                    Icons.analytics,
+                    Icons.schedule,
                     color: AppColorsDarkMode.primaryColor,
-                    size: 20,
+                    size: 16,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Found ${aiAgent.getCoursesForApp().length} courses organized by semester:',
+                    'Detailed Results:',
                     style: TextStyle(
                       color: AppColorsDarkMode.textPrimary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: coursesBySemester.entries.map((entry) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColorsDarkMode.surfaceColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColorsDarkMode.borderPrimary),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.calendar_today,
-                                  color: AppColorsDarkMode.primaryColor,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${entry.key}',
-                                  style: TextStyle(
-                                    color: AppColorsDarkMode.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: AppColorsDarkMode.primaryColor.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    '${entry.value.length} courses',
-                                    style: TextStyle(
-                                      color: AppColorsDarkMode.primaryColor,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),...entry.value.map((course) => Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColorsDarkMode.accentColorDarker,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${course['courseId'] ?? 'N/A'}: ${course['Name'] ?? 'Unknown Course'}',
-                                          style: TextStyle(
-                                            color: AppColorsDarkMode.textPrimary,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.school,
-                                              color: AppColorsDarkMode.textSecondary,
-                                              size: 14,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${course['Credit_points'] ?? 0} credits',
-                                              style: TextStyle(
-                                                color: AppColorsDarkMode.textSecondary,
-                                                fontSize: 11,
-                                              ),
-                                            ),
-                                            if (course['Year'] != null && course['Year'].toString().isNotEmpty) ...[
-                                              const SizedBox(width: 12),
-                                              Icon(
-                                                Icons.calendar_view_week,
-                                                color: AppColorsDarkMode.textSecondary,
-                                                size: 14,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                course['Year'].toString(),
-                                                style: TextStyle(
-                                                  color: AppColorsDarkMode.textSecondary,
-                                                  fontSize: 11,
-                                                ),
-                                              ),
-                                            ],
-                                            if (course['Final_grade'] != null && course['Final_grade'].toString().isNotEmpty) ...[
-                                              const SizedBox(width: 12),
-                                              Icon(
-                                                Icons.grade,
-                                                color: AppColorsDarkMode.primaryColor,
-                                                size: 14,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'Grade: ${course['Final_grade']}',
-                                                style: TextStyle(
-                                                  color: AppColorsDarkMode.primaryColor,
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                    children: _buildResultsBySemester(summary.results),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColorsDarkMode.accentColorDarker,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info,
-                      color: AppColorsDarkMode.primaryColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'This feature extracts and displays course data. Full integration with the course management system is coming soon.',
-                        style: TextStyle(
-                          color: AppColorsDarkMode.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
@@ -1196,41 +1241,526 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               'Close',
               style: TextStyle(color: AppColorsDarkMode.textSecondary),
             ),
-          ),
+          ),          if (summary.failed > 0)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showFailedCoursesDetail(summary.results.where((r) => !r.isSuccess).toList(), summary, aiAgent);
+              },              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColorsDarkMode.primaryColor,
+                foregroundColor: AppColorsDarkMode.textPrimary,
+              ),
+              child: const Text('Review Failed'),
+            ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _showRawJsonDialog(aiAgent);
+              _showRawJsonDialog(aiAgent, summary);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColorsDarkMode.surfaceColor,
               foregroundColor: AppColorsDarkMode.textPrimary,
             ),
-            child: const Text('View Raw JSON'),
+            child: const Text('View Raw Data'),
           ),
         ],
       ),
     );
   }
 
-  // Enhanced: Show Raw JSON Dialog
-  void _showRawJsonDialog(DiagramAiAgent aiAgent) {
+  // Helper method to build summary chips
+  Widget _buildSummaryChip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color.withOpacity(0.8),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to sort semesters chronologically
+  List<MapEntry<String, List<CourseAdditionResult>>> _sortSemestersByYear(
+    Map<String, List<CourseAdditionResult>> resultsBySemester
+  ) {
+    final entries = resultsBySemester.entries.toList();
+    
+    entries.sort((a, b) {
+      final semesterA = a.key;
+      final semesterB = b.key;
+      
+      // Extract year and season from semester name (e.g., "Winter 2023-2024", "Spring 2024")
+      final partsA = semesterA.split(' ');
+      final partsB = semesterB.split(' ');
+      
+      if (partsA.length < 2 || partsB.length < 2) return 0;
+      
+      final seasonA = partsA[0];
+      final yearStrA = partsA[1];
+      final seasonB = partsB[0];
+      final yearStrB = partsB[1];
+      
+      // Extract year for comparison
+      int yearA, yearB;
+      
+      if (yearStrA.contains('-')) {
+        // Winter format: "2023-2024" -> use the second year (2024)
+        yearA = int.tryParse(yearStrA.split('-').last) ?? 0;
+      } else {
+        // Spring/Summer format: "2024" -> use as is
+        yearA = int.tryParse(yearStrA) ?? 0;
+      }
+      
+      if (yearStrB.contains('-')) {
+        yearB = int.tryParse(yearStrB.split('-').last) ?? 0;
+      } else {
+        yearB = int.tryParse(yearStrB) ?? 0;
+      }
+      
+      // Compare by year first
+      if (yearA != yearB) {
+        return yearA.compareTo(yearB);
+      }
+      
+      // If same year, compare by season order: Winter -> Spring -> Summer
+      final seasonOrder = {'Winter': 1, 'Spring': 2, 'Summer': 3};
+      final orderA = seasonOrder[seasonA] ?? 4;
+      final orderB = seasonOrder[seasonB] ?? 4;
+      
+      return orderA.compareTo(orderB);
+    });
+    
+    return entries;
+  }
+
+  // Helper method to build results grouped by semester
+  List<Widget> _buildResultsBySemester(List<CourseAdditionResult> results) {
+    final Map<String, List<CourseAdditionResult>> resultsBySemester = {};
+    
+    for (final result in results) {
+      resultsBySemester.putIfAbsent(result.semesterName, () => []);
+      resultsBySemester[result.semesterName]!.add(result);
+    }
+
+    // Sort semesters chronologically by year and season
+    final sortedEntries = _sortSemestersByYear(resultsBySemester);
+
+    return sortedEntries.map((entry) {
+      final semesterName = entry.key;
+      final semesterResults = entry.value;
+      final successCount = semesterResults.where((r) => r.isSuccess).length;
+      final failedCount = semesterResults.length - successCount;
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColorsDarkMode.surfaceColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColorsDarkMode.borderPrimary),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  color: AppColorsDarkMode.primaryColor,
+                  size: 16,
+                ),                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        semesterName,
+                        style: TextStyle(
+                          color: AppColorsDarkMode.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '${semesterResults.length} course${semesterResults.length != 1 ? 's' : ''}',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (successCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(                      color: AppColorsDarkMode.successColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$successCount ✓',
+                      style: TextStyle(
+                        color: AppColorsDarkMode.successColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                if (failedCount > 0) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(                      color: AppColorsDarkMode.errorColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$failedCount ✗',
+                      style: TextStyle(
+                        color: AppColorsDarkMode.errorColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...semesterResults.map((result) => Container(
+              margin: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(                color: result.isSuccess 
+                    ? AppColorsDarkMode.successColor.withOpacity(0.1)
+                    : AppColorsDarkMode.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: result.isSuccess 
+                      ? AppColorsDarkMode.successColor.withOpacity(0.3)
+                      : AppColorsDarkMode.errorColor.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    result.isSuccess ? Icons.check_circle : Icons.error,
+                    color: result.isSuccess ? AppColorsDarkMode.successColor : AppColorsDarkMode.errorColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${result.courseId}: ${result.courseName}',
+                          style: TextStyle(
+                            color: AppColorsDarkMode.textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (result.errorMessage != null && result.errorMessage!.isNotEmpty)
+                          Text(
+                            result.errorMessage!,                            style: TextStyle(
+                              color: result.isSuccess 
+                                  ? AppColorsDarkMode.textSecondary
+                                  : AppColorsDarkMode.errorColor,
+                              fontSize: 10,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (result.wasUpdated)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),                      decoration: BoxDecoration(
+                        color: AppColorsDarkMode.warningColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Updated',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.warningColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    )
+                  else if (result.isSuccess)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColorsDarkMode.successColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),                      child: Text(
+                        'Added',
+                        style: TextStyle(
+                          color: AppColorsDarkMode.successColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            )),
+          ],
+        ),
+      );
+    }).toList();
+  }
+  // Method to show detailed failed courses dialog
+  void _showFailedCoursesDetail(List<CourseAdditionResult> failedResults, ImportSummary summary, DiagramAiAgent aiAgent) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColorsDarkMode.cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.code,
-              color: AppColorsDarkMode.primaryColor,
-              size: 24,
+            Row(
+              children: [                Icon(
+                  Icons.error_outline,
+                  color: AppColorsDarkMode.errorColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Failed Courses (${failedResults.length})',
+                  style: TextStyle(color: AppColorsDarkMode.textPrimary),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              'Extracted JSON Data',
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  'Import Results',
+                  style: TextStyle(
+                    color: AppColorsDarkMode.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColorsDarkMode.textSecondary,
+                  size: 16,
+                ),
+                Text(
+                  'Failed Courses',
+                  style: TextStyle(
+                    color: AppColorsDarkMode.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        content: Container(
+          constraints: const BoxConstraints(maxHeight: 500, maxWidth: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'The following courses could not be imported:',
+                style: TextStyle(
+                  color: AppColorsDarkMode.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: failedResults.map((result) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(                        color: AppColorsDarkMode.errorColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColorsDarkMode.errorColor.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.school,
+                                color: AppColorsDarkMode.errorColor,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${result.courseId}: ${result.courseName}',
+                                  style: TextStyle(
+                                    color: AppColorsDarkMode.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: AppColorsDarkMode.textSecondary,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                result.semesterName,
+                                style: TextStyle(
+                                  color: AppColorsDarkMode.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (result.errorMessage != null && result.errorMessage!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColorsDarkMode.surfaceColor,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [                                  Icon(
+                                    Icons.info_outline,
+                                    color: AppColorsDarkMode.warningColor,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      result.errorMessage!,
+                                      style: TextStyle(
+                                        color: AppColorsDarkMode.textSecondary,
+                                        fontSize: 11,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )).toList(),
+                  ),
+                ),
+              ),            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _displayExtractedCoursesDialog(summary, aiAgent);
+            },
+            icon: Icon(
+              Icons.arrow_back,
+              size: 16,
+              color: AppColorsDarkMode.textPrimary,
+            ),
+            label: Text(
+              'Back to Summary',
               style: TextStyle(color: AppColorsDarkMode.textPrimary),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColorsDarkMode.primaryColor,
+              foregroundColor: AppColorsDarkMode.textPrimary,
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Close',
+              style: TextStyle(color: AppColorsDarkMode.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  // Enhanced: Show Raw JSON Dialog
+  void _showRawJsonDialog(DiagramAiAgent aiAgent, ImportSummary summary) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColorsDarkMode.cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.code,
+                  color: AppColorsDarkMode.primaryColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Extracted JSON Data',
+                  style: TextStyle(color: AppColorsDarkMode.textPrimary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  'Import Results',
+                  style: TextStyle(
+                    color: AppColorsDarkMode.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColorsDarkMode.textSecondary,
+                  size: 16,
+                ),
+                Text(
+                  'Raw Data',
+                  style: TextStyle(
+                    color: AppColorsDarkMode.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1252,10 +1782,28 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   fontFamily: 'monospace',
                 ),
               ),
-            ),
-          ),
+            ),          ),
         ),
         actions: [
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _displayExtractedCoursesDialog(summary, aiAgent);
+            },
+            icon: Icon(
+              Icons.arrow_back,
+              size: 16,
+              color: AppColorsDarkMode.textPrimary,
+            ),
+            label: Text(
+              'Back to Summary',
+              style: TextStyle(color: AppColorsDarkMode.textPrimary),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColorsDarkMode.primaryColor,
+              foregroundColor: AppColorsDarkMode.textPrimary,
+            ),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
@@ -1272,13 +1820,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
   void _showSnackBar(String message, {bool isError = false, bool isSuccess = false, bool isLoading = false}) {
     Color backgroundColor;
     Color textColor = AppColorsDarkMode.textPrimary;
-    IconData? icon;
-
-    if (isError) {
+    IconData? icon;    if (isError) {
       backgroundColor = AppColorsDarkMode.errorColor;
       icon = Icons.error;
     } else if (isSuccess) {
-      backgroundColor = Colors.green.shade700;
+      backgroundColor = AppColorsDarkMode.successColor;
       icon = Icons.check_circle;
     } else if (isLoading) {
       backgroundColor = AppColorsDarkMode.primaryColor;
