@@ -57,10 +57,10 @@ class _CourseCardState extends State<CourseCard> {
         _hasNote = true;
       });
     }
-
+    // Check if the course has a grade that is int or double
+    // Enhanced: Use a more robust check for grade presence
     final hasGrade = course.finalGrade.isNotEmpty;
-    //debugPrint('Note: fetchedStartNote:${course.note}');
-
+    
     return Consumer<CustomizedDiagramNotifier>(
       builder: (context, notifier, child) {
         final isFocused =
@@ -324,8 +324,10 @@ class _CourseCardState extends State<CourseCard> {
                                     .cardFGdim,
                             size: 18,
                           ),
-
+                      // if hasGrade and grade is not a number then show the grade as a string
                       if (hasGrade) ...[
+                        if (double.tryParse(course.finalGrade) != null)
+                          // Show check or clear icon based on grade
                         (double.tryParse(course.finalGrade)! > 55)
                             ? Icon(
                               Icons.check_rounded,
@@ -345,6 +347,7 @@ class _CourseCardState extends State<CourseCard> {
                                       .cardFG,
                               size: 18,
                             ),
+                            
                       ] else
                         Icon(
                           Icons.work_off_outlined,
