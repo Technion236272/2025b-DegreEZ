@@ -738,12 +738,13 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
             Icon(
               Icons.smart_toy,
               color: AppColorsDarkMode.primaryColor,
-              size: 24,
+              size: 20,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 0),
             Text(
               'AI Grade Sheet Import',
               style: TextStyle(color: AppColorsDarkMode.textPrimary),
+              
             ),
           ],
         ),
@@ -860,8 +861,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       for (final course in courses) {
         final semester = course['Semester'] as String? ?? 'Unknown';
         final year = course['Year'] as String? ?? 'Unknown';
-        final semesterKey = '$semester $year';
-        
+        // Extract the right year from "YYYY-YYYY" format (e.g., "2024-2025" -> "2025")
+        final rightYear = year.contains('-') ? year.split('-').last.trim() : year;
+        final semesterKey = (semester == "Winter") ? '$semester $year' : '$semester $rightYear';
+
         coursesBySemester.putIfAbsent(semesterKey, () => []);
         coursesBySemester[semesterKey]!.add(course);
       }

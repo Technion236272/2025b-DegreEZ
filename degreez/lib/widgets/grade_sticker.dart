@@ -1,6 +1,7 @@
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class GradeSticker extends StatefulWidget {
   final String grade;
@@ -10,22 +11,18 @@ class GradeSticker extends StatefulWidget {
   State<GradeSticker> createState() => _GradeStickerState();
 }
 
-class _GradeStickerState extends State<GradeSticker> {
-  @override
+class _GradeStickerState extends State<GradeSticker> {  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        border: Border.all(color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG, width: 1), // background color
-        shape: BoxShape.circle,
+    return AutoSizeText(
+      widget.grade.trim(),
+      style: TextStyle(
+        color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,
+        fontSize: 10,
+        fontWeight: FontWeight.w900,
       ),
-      child: Center(
-        child: Text(
-              widget.grade.trim(),
-              style: TextStyle(color: context.watch<CustomizedDiagramNotifier>().cardColorPalette!.cardFG,fontSize: 7, fontWeight: FontWeight.w900),
-            ),
-      ),
+      maxLines: 1,
+      minFontSize: 6,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
