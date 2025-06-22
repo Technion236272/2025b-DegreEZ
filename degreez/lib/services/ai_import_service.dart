@@ -354,8 +354,9 @@ class AiImportService {
       );
 
       // Add course to semester
+      
       final success = await courseProvider.addCourseToSemester(
-        studentId, semesterName, course,
+        studentId, semesterName, course,fallbackSemester
       );
       
       return CourseAdditionResult(
