@@ -1,4 +1,5 @@
 // services/course_service.dart
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -107,6 +108,7 @@ class CourseService {
     for (final courseData in allCourses) {
       final general = courseData['general'] as Map<String, dynamic>;
       if (general['מספר מקצוע'] == courseId) {
+//        debugPrint('🧩 Raw course JSON for $courseId: ${jsonEncode(courseData)}');
         return EnhancedCourseDetails.fromSapJson(courseData);
       }
     }
@@ -289,6 +291,13 @@ class EnhancedCourseDetails {
     final general = json['general'] as Map<String, dynamic>;
     final scheduleList = json['schedule'] as List<dynamic>;
     
+
+   //  debugPrint('🧪 Parsing course: ${general['מספר מקצוע']}');
+ // debugPrint('🗓️ Schedule entries found: ${scheduleList.length}');
+    for (var i = 0; i < scheduleList.length; i++) {
+ //   debugPrint('   🔹 Entry $i: ${scheduleList[i]}');
+  }
+
     // Parse exams
     final exams = <String, String>{};
     final examKeys = ['מועד א', 'מועד ב', 'מועד ג', 'בוחן מועד א', 'בוחן מועד ב'];

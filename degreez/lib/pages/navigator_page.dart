@@ -14,7 +14,7 @@ import '../providers/course_provider.dart';
 import '../widgets/add_course_dialog.dart';
 import '../mixins/ai_import_mixin.dart';
 import '../services/GlobalConfigService.dart';
-
+import 'package:degreez/pages/course_map_page.dart';
 import 'customized_diagram_page.dart';
 
 class NavigatorPage extends StatefulWidget {
@@ -28,7 +28,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
   String _currentPage = 'Calendar';
   bool _hasInitializedData = false;
   String? _selectedCalendarSemester;
-  
+
   // Semester selection state (moved from CalendarPage)
   List<String> _allSemesters = [];
   String? _selectedSemester;
@@ -41,8 +41,9 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         _loadStudentDataIfNeeded();
         _initializeSemesters(); // Add semester initialization
       }
-    });  }
-  
+    });
+  }
+
   /// Initialize semester selection (moved from CalendarPage)
   Future<void> _initializeSemesters() async {
     final prefs = await SharedPreferences.getInstance();
@@ -63,7 +64,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
 
       int getSeasonOrder(String semesterName) {
         final season = semesterName.split(' ').first;
-        const order = {'Winter': 0,'Spring': 1, 'Summer': 2, };
+        const order = {'Winter': 0, 'Spring': 1, 'Summer': 2};
         return order[season] ?? 99;
       }
 
@@ -91,6 +92,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
       _selectedCalendarSemester = initialSemester; // Keep both in sync
     });
   }
+
   /// Override from AiImportMixin to handle post-import actions
   @override
   void onImportCompleted() {
@@ -98,13 +100,13 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     final loginNotifier = context.read<LogInNotifier>();
     final studentProvider = context.read<StudentProvider>();
     final courseProvider = context.read<CourseProvider>();
-    
+
     // Refresh data by reloading from Firebase
     if (loginNotifier.user != null && studentProvider.hasStudent) {
       studentProvider.fetchStudentData(loginNotifier.user!.uid);
       courseProvider.loadStudentCourses(studentProvider.student!.id);
     }
-    
+
     // Show success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -148,8 +150,9 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
   Widget build(BuildContext context) {
     return Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
       builder: (context, loginNotifier, studentProvider, courseProvider, _) {
-
-        Widget body;        switch (_currentPage) {          case 'Calendar':
+        Widget body;
+        switch (_currentPage) {
+          case 'Calendar':
             body = CalendarPage(
               selectedSemester: _selectedSemester, // Pass the selected semester
               onSemesterChanged: (semester) {
@@ -172,12 +175,23 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
           case 'AI Assistant':
             body = const AiPage();
             break;
+          case 'Map':
+            body = CourseMapPage(selectedSemester: _selectedSemester ?? '');
+            break;
+
           default:
             body = Text(_currentPage);
-        }        return Scaffold(          appBar: AppBar(
-            title: _currentPage == 'Calendar' 
-                ? _buildSemesterDropdown() 
-                : AutoSizeText(_currentPage, minFontSize: 14, maxFontSize: 22),
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title:
+                _currentPage == 'Calendar'
+                    ? _buildSemesterDropdown()
+                    : AutoSizeText(
+                      _currentPage,
+                      minFontSize: 14,
+                      maxFontSize: 22,
+                    ),
             centerTitle: true,
             actions: _buildAppBarActions(),
           ),
@@ -220,7 +234,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                   )
                   : null,
         );
-      },    );
+      },
+    );
   }
 
   /// Builds context-sensitive AppBar actions based on the current page
@@ -234,11 +249,11 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             tooltip: 'Import Grade Sheet with AI',
           ),
         ];
-      
+
       case 'AI Assistant':
         // For AI Assistant page, maybe no additional AI button needed
         return [];
-      
+
       default:
         // For other pages, show a generic AI assistant button
         return [
@@ -327,7 +342,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               title: 'Customized Diagram',
               isSelected: _currentPage == 'Customized Diagram',
               onTap: () => _changePage('Customized Diagram'),
-            ),            _buildDrawerItem(
+            ),
+            _buildDrawerItem(
               icon: Icons.calculate,
               title: 'GPA Calculator',
               isSelected: _currentPage == 'GPA Calculator',
@@ -339,7 +355,13 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               isSelected: _currentPage == 'AI Assistant',
               onTap: () => _changePage('AI Assistant'),
             ),
-            
+            _buildDrawerItem(
+              icon: Icons.map,
+              title: 'Map',
+              isSelected: _currentPage == 'Map',
+              onTap: () => _changePage('Map'),
+            ),
+
             const Divider(),
             _buildDrawerItem(
               isSelected: _currentPage == 'Log Out',
@@ -438,7 +460,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     if (_allSemesters.isEmpty) {
       return const AutoSizeText('Calendar', minFontSize: 14, maxFontSize: 22);
     }
-    
+
     return DropdownButton<String>(
       value: _selectedSemester,
       hint: const Text("Select Semester", style: TextStyle(fontSize: 16)),
@@ -455,26 +477,27 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             _selectedSemester = value;
             _selectedCalendarSemester = value;
           });
-          
+
           // Save preference
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('lastSelectedSemester', value);
-          
+
           // The CalendarPage will handle the course loading when it receives the new semester
         }
       },
-      items: _allSemesters.map((sem) {
-        return DropdownMenuItem<String>(
-          value: sem,
-          child: Text(
-            sem,
-            style: const TextStyle(
-              color: AppColorsDarkMode.secondaryColor,
-              fontSize: 16,
-            ),
-          ),
-        );
-      }).toList(),
+      items:
+          _allSemesters.map((sem) {
+            return DropdownMenuItem<String>(
+              value: sem,
+              child: Text(
+                sem,
+                style: const TextStyle(
+                  color: AppColorsDarkMode.secondaryColor,
+                  fontSize: 16,
+                ),
+              ),
+            );
+          }).toList(),
     );
   }
 }
