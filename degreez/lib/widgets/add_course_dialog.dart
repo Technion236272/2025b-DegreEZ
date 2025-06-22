@@ -345,11 +345,17 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       creditPoints: courseDetails.creditPoints, // Store credit points from API
     );
 
-    final success = await context.read<CourseProvider>().addCourseToSemester(
-      context.read<StudentProvider>().student!.id,
-      widget.semesterName,
-      course,
-    );
+final fallbackSemester = await context
+    .read<CourseProvider>()
+    .getClosestAvailableSemester(widget.semesterName);
+
+final success = await context.read<CourseProvider>().addCourseToSemester(
+  context.read<StudentProvider>().student!.id,
+  widget.semesterName, // ⬅️ This is still where it will be saved
+  course,
+  fallbackSemester, // NEW
+);
+
 
     if (!mounted) return;
 

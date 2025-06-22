@@ -189,6 +189,7 @@ class CourseProvider with ChangeNotifier {
     String studentId,
     String semesterKey,
     StudentCourse course,
+    String? fallbackSemesterForFetch,
   ) async {
     _setLoadingState(_loadingState.copyWith(isAddingCourse: true));
 
@@ -210,7 +211,8 @@ class CourseProvider with ChangeNotifier {
       }
 
       // 🔍 Fetch prerequisites (as string or list from API)
-      final parsed = _parseSemesterCode(semesterKey);
+      final usedSemester = fallbackSemesterForFetch ?? semesterKey;
+      final parsed = _parseSemesterCode(usedSemester);
       if (parsed == null) {
         debugPrint('❌ Invalid semester format: $semesterKey');
         return false;
