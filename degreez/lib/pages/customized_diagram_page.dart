@@ -320,8 +320,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
+          builder: (context, setState) {            return AlertDialog(
               shape: RoundedRectangleBorder(
                 side: BorderSide(
                   color: AppColorsDarkMode.secondaryColor,
@@ -329,7 +328,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              backgroundColor: AppColorsDarkMode.accentColor,
+              backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
               title: const Text(
                 'Add New Semester',
                 style: TextStyle(
@@ -667,9 +666,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 color: AppColorsDarkMode.secondaryColorDim,
                 width: 2,
               ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            backgroundColor: AppColorsDarkMode.accentColorDark,
+              borderRadius: BorderRadius.circular(16),            ),
+            backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
             title: const Text(
               'Delete Semester',
               style: TextStyle(color: AppColorsDarkMode.secondaryColor),

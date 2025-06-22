@@ -228,8 +228,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     if (grade >= 80) return 'Very Good';
     if (grade >= 70) return 'Good';
     if (grade >= 60) return 'Pass';
-    return 'Fail';
-  }
+    return 'Fail';  }
 
   void _toggleCourseExclusion(String courseId) {
     setState(() {
@@ -245,12 +244,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
 
   void _showModifyGradeDialog(GpaCalculationItem course) {
     final gradeController = TextEditingController(text: course.grade.toString());
-    
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: AppColorsDarkMode.accentColor,
+          backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
           title: Text(
             'Modify Grade',
             style: TextStyle(color: AppColorsDarkMode.secondaryColor),
@@ -385,8 +383,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       
       // Remove from modified courses (if it was modified)
       _modifiedCourses.remove(courseId);
-      
-      // Remove any what-if course that was created from this modification
+        // Remove any what-if course that was created from this modification
       _whatIfCourses.removeWhere((course) => 
         course.isModified && course.originalCourseId == courseId);
     });

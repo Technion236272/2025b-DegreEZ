@@ -75,28 +75,31 @@ class ColorThemeProvider with ChangeNotifier {
       case ColorThemeMode.classic:
         return _classicPalette.cardBG(courseId);
     }
-  }
-
-  // Colorful color system (new soft colors)
+  }  // Colorful color system (refined vibrant colors)
   Color _getColorfulCourseColor(String courseId) {
     final hash = courseId.hashCode;
     final colors = [
-      const Color(0xFFFF6B35), // Primary orange
-      const Color(0xFFFF8A65), // Light orange
-      const Color(0xFFFFAB40), // Amber orange
-      const Color(0xFFFF7043), // Deep orange
-      const Color(0xFFBF360C), // Dark orange
-      const Color(0xFF8D6E63), // Brown
-      const Color(0xFF6D4C41), // Dark brown
-      const Color(0xFF5D4037), // Deep brown
-      const Color(0xFF4E342E), // Very dark brown
-      const Color(0xFF795548), // Medium brown
-      const Color(0xFFA1887F), // Light brown
-      const Color(0xFFD7CCC8), // Very light brown
-      const Color(0xFFFFE0B2), // Light amber
-      const Color(0xFFFFCC02), // Warm yellow
-      const Color(0xFFFFA726), // Orange amber
-      const Color(0xFFFF9800), // Standard orange       // Soft red
+      // Vibrant colors for easy distinction, refined for sophistication
+      const Color(0xFF4CAF50), // Material Green
+      const Color(0xFFFF9800), // Material Orange
+      const Color(0xFFF44336), // Material Red
+      const Color(0xFF2196F3), // Material Blue
+      const Color(0xFF9C27B0), // Material Purple
+      const Color(0xFFFFC107), // Material Amber
+      const Color(0xFF00BCD4), // Material Cyan
+      const Color(0xFFFF5722), // Material Deep Orange
+      const Color(0xFF795548), // Material Brown
+      const Color(0xFF607D8B), // Material Blue Grey
+      const Color(0xFF8BC34A), // Material Light Green
+      const Color(0xFFE91E63), // Material Pink
+      const Color(0xFF3F51B5), // Material Indigo
+      const Color(0xFF009688), // Material Teal
+      const Color(0xFFCDDC39), // Material Lime
+      // Additional sophisticated colors that complement the theme
+      const Color(0xFF5D7B8A), // Muted blue-gray (harmonizes with Payne's Gray)
+      const Color(0xFF8A6B5D), // Warm brown-gray
+      const Color(0xFF6B8A5D), // Sage green
+      const Color(0xFF8A5D6B), // Muted rose
     ];
     return colors[hash.abs() % colors.length];
   }

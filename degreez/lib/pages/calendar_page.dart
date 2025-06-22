@@ -746,15 +746,10 @@ class _CalendarPageState extends State<CalendarPage>
               children: [
                 // const Text('You long pressed on a calendar event!'),
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
-                      width: 1,
-                    ),
+                Container(                  padding: const EdgeInsets.all(12),
+                  decoration: AppColorsDarkMode.seamlessDecoration(
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    elevation: 1.0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

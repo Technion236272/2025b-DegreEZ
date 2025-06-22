@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import '../services/ai_import_service.dart';
-import '../services/diagram_ai_agent.dart';
 import '../widgets/ai_import_dialogs.dart';
 
 /// Mixin to provide AI import functionality to any StatefulWidget
@@ -36,19 +35,42 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
           'Successfully processed ${summary.totalSuccess} courses!',
           isSuccess: true,
         );
-        
-        // Trigger UI update if callback is provided
+          // Trigger UI update if callback is provided
         onImportCompleted();
         
         // Show results dialog
-        final aiAgent = DiagramAiAgent();
-        AiImportDialogs.showImportResultsDialog(context, summary, aiAgent);
+        if (mounted) {
+          AiImportDialogs.showResultsDialog(
+            context,
+            result: summary,
+            onConfirm: (confirmedSummary) {
+              // Handle confirmation - could save to database, etc.
+              showSnackBar('Import confirmed and saved!', isSuccess: true);
+            },
+            onRetry: () {
+              // Restart the import process
+              startAiImport();
+            },
+          );
+        }
       } else {
         showSnackBar('No courses were successfully processed.', isError: true);
         
         // Still show results dialog for failed imports
-        final aiAgent = DiagramAiAgent();
-        AiImportDialogs.showImportResultsDialog(context, summary, aiAgent);
+        if (mounted) {
+          AiImportDialogs.showResultsDialog(
+            context,
+            result: summary,
+            onConfirm: (confirmedSummary) {
+              // Handle confirmation even for failed imports
+              showSnackBar('Results acknowledged.', isSuccess: true);
+            },
+            onRetry: () {
+              // Restart the import process
+              startAiImport();
+            },
+          );
+        }
       }
       
     } catch (e) {

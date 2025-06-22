@@ -281,9 +281,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   void _showUserContextDialog() async {
     final userContext = await _getCombinedUserContext();
     showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColorsDarkMode.cardColor,
+      context: context,      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
