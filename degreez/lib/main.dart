@@ -74,15 +74,18 @@ class MyApp extends StatelessWidget {
       child: CalendarControllerProvider(
         controller: EventController(),
         child: MaterialApp(
-          title: 'DegreEZ',          theme: ThemeData.dark().copyWith(
-            dialogTheme:DialogTheme(backgroundColor: AppColorsDarkMode.accentColorDark,shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: AppColorsDarkMode.secondaryColor,
-                width: 2,
+          title: 'DegreEZ',          theme: ThemeData.dark().copyWith(            dialogTheme: DialogTheme(
+              backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
+              shape: const RoundedRectangleBorder(
+                // Removed border and border radius for modern seamless look
+                side: BorderSide.none,
+                borderRadius: BorderRadius.zero,
               ),
-              borderRadius: BorderRadius.circular(12),
-            ),),
-            dividerTheme: DividerThemeData(color: AppColorsDarkMode.dividerColor),
+            ),
+            dividerTheme: const DividerThemeData(
+              color: Colors.transparent, // Make dividers invisible for seamless look
+              thickness: 0,
+            ),
             scaffoldBackgroundColor: AppColorsDarkMode.mainColor,
             canvasColor: AppColorsDarkMode.mainColor,
             cardColor: AppColorsDarkMode.mainColor,
@@ -124,6 +127,17 @@ class MyApp extends StatelessWidget {
               backgroundColor: AppColorsDarkMode.mainColor,
               foregroundColor: AppColorsDarkMode.secondaryColor,
               iconTheme: IconThemeData(color: AppColorsDarkMode.secondaryColor),
+            ),
+            // Bottom sheet theme
+            bottomSheetTheme: const BottomSheetThemeData(
+              backgroundColor: AppColorsDarkMode.mainColor, // Night black for bottom sheets
+              modalBackgroundColor: AppColorsDarkMode.mainColor, // Night black for modal bottom sheets
+              elevation: 0, // Minimal elevation for modern look
+            ),
+            // Popup menu theme
+            popupMenuTheme: const PopupMenuThemeData(
+              color: AppColorsDarkMode.mainColor, // Night black for popup menus
+              elevation: 4,
             ),
           ),
           initialRoute: '/',

@@ -41,9 +41,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColorsDarkMode.accentColor,
+    return Container(      decoration: BoxDecoration(
+        color: AppColorsDarkMode.mainColor, // Changed to night black
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border.all(color: AppColorsDarkMode.secondaryColor, width: 2),
       ),
@@ -285,11 +284,10 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
   }
 
   void _confirmDeleteCourse() {
-    showDialog(
-      context: context,
+    showDialog(      context: context,
       builder:
           (ctx) => AlertDialog(
-            backgroundColor: AppColorsDarkMode.accentColor,
+            backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(color: AppColorsDarkMode.errorColor, width: 2),

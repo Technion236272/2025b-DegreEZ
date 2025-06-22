@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
 import '../color/color_palette.dart';
 import '../models/chat/chat_message.dart';
+import '../models/chat/pdf_attachment.dart';
 import '../services/chat/gemini_chat_service.dart';
 import '../services/chat/chat_storage_service.dart';
 import '../services/chat/context_generator_service.dart';
 import '../services/firestore_service.dart';
+import '../services/pdf_service.dart';
 import '../widgets/chat/chat_message_bubble.dart';
 import '../widgets/chat/chat_header_widget.dart';
 import '../widgets/chat/chat_input_widget.dart';
@@ -22,10 +26,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   // Controllers and state
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
-  bool _isLoading = false;
+  final List<ChatMessage> _messages = [];  bool _isLoading = false;
   bool _includeUserContext = true;
   bool _contextAutoEnabled = false;
+  PdfAttachment? _currentPdfAttachment;
+  
   // Services
   late GeminiChatService _chatService;
   late AnimationController _typingAnimationController;
@@ -147,15 +152,17 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             'Context mode enabled automatically for your course-related question');
       }
     }
-  }
-
-  Future<void> _sendMessageWithStreaming(String userMessage) async {
+  }  Future<void> _sendMessageWithStreaming(String userMessage) async {
+    // Create message with PDF attachment if available
+    final messageToAdd = ChatMessage(
+      text: userMessage,
+      isUser: true,
+      timestamp: DateTime.now(),
+      pdfAttachment: _currentPdfAttachment,
+    );
+    
     setState(() {
-      _messages.add(ChatMessage(
-        text: userMessage,
-        isUser: true,
-        timestamp: DateTime.now(),
-      ));
+      _messages.add(messageToAdd);
       _isLoading = true;
     });
 
@@ -170,8 +177,19 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         if (userContext.isNotEmpty) {
           finalMessage = "$userContext\nUser Question: $userMessage";
         }
-      }      // Stream response
-      final responseStream = _chatService.sendMessageStream(finalMessage);
+      }
+
+      // Choose stream method based on PDF attachment
+      Stream<GenerateContentResponse> responseStream;
+      if (_currentPdfAttachment != null) {
+        responseStream = _chatService.sendMessageWithPdfStream(
+          finalMessage, 
+          _currentPdfAttachment!.file
+        );
+      } else {
+        responseStream = _chatService.sendMessageStream(finalMessage);
+      }
+
       String fullResponse = '';
       bool isFirstChunk = true;
       ChatMessage? responseMessage;
@@ -219,6 +237,13 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
         });
       }
 
+      // Clear PDF attachment after sending
+      if (_currentPdfAttachment != null) {
+        setState(() {
+          _currentPdfAttachment = null;
+        });
+      }
+
       // Save chat history
       ChatStorageService.saveChatHistory(_messages);
     } catch (e) {
@@ -256,9 +281,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   void _showUserContextDialog() async {
     final userContext = await _getCombinedUserContext();
     showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColorsDarkMode.cardColor,
+      context: context,      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
@@ -327,6 +351,53 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       }
     });
   }
+  Future<void> _attachPdf() async {
+    try {
+      // Show loading indicator
+      _showSnackBar('Selecting PDF file...');
+      
+      // Pick PDF file
+      final file = await PdfService.pickPdfFile();
+      if (file == null) return;
+      
+      // Show processing indicator
+      _showSnackBar('Processing PDF file...');
+      
+      // Validate PDF
+      final isValid = await PdfService.isValidPdf(file);
+      if (!isValid) {
+        _showSnackBar('Selected file is not a valid PDF.');
+        return;
+      }
+      
+      // Get PDF info (no text extraction needed)
+      final pdfInfo = await PdfService.getPdfInfo(file);
+        // Create PDF attachment
+      final attachment = PdfAttachment(
+        file: file,
+        fileName: pdfInfo['fileName'],
+        fileSize: pdfInfo['fileSize'],
+        pageCount: 0, // Not needed anymore
+        metadata: pdfInfo,
+        attachedAt: DateTime.now(),
+      );
+      
+      setState(() {
+        _currentPdfAttachment = attachment;
+      });
+      
+      _showSnackBar('PDF attached successfully! ${attachment.fileName}');
+    } catch (e) {
+      _showSnackBar('Error attaching PDF: ${e.toString()}');
+    }
+  }
+
+  void _removePdfAttachment() {
+    setState(() {
+      _currentPdfAttachment = null;
+    });
+    _showSnackBar('PDF attachment removed');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -365,8 +436,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
               },
             ),
           ),
-          
-          // Message input
+            // Message input
           ChatInputWidget(
             messageController: _messageController,
             includeUserContext: _includeUserContext,
@@ -377,6 +447,9 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                 _includeUserContext = true;
               });
             },
+            onAttachPdf: _attachPdf,
+            currentPdfAttachment: _currentPdfAttachment,
+            onRemovePdf: _removePdfAttachment,
           ),
         ],
       ),

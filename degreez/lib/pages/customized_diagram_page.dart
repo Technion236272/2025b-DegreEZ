@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/add_course_dialog.dart';
 import '../services/GlobalConfigService.dart';
+import '../mixins/ai_import_mixin.dart';
 
 class CustomizedDiagramPage extends StatefulWidget {
   const CustomizedDiagramPage({super.key});
@@ -19,7 +20,8 @@ class CustomizedDiagramPage extends StatefulWidget {
   State<CustomizedDiagramPage> createState() => _CustomizedDiagramPageState();
 }
 
-class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
+class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> 
+    with AiImportMixin { // Add the mixin here
   late ScrollController _scrollController;
   final List<GlobalKey> _semesterKeys = [];
   int _currentSemesterIndex = 0;
@@ -102,12 +104,19 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       );
     }).toList();
   }
-
   // Enhanced: Callback to refresh UI when course is updated
   void _onCourseUpdated() {
     setState(() {
       // This will trigger a rebuild and refresh the course data
     });
+  }
+
+  // Override the mixin method to handle post-import actions
+  @override
+  void onImportCompleted() {
+    super.onImportCompleted();
+    // Additional actions specific to this page
+    _onCourseUpdated();
   }
 
   @override
@@ -134,18 +143,16 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                         AppColorsDarkMode.accentColorDarker,
                       ],
                       begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                      end: Alignment.bottomRight,                    ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black,
+                        color: AppColorsDarkMode.shadowColor,
                         blurRadius: 8,
                         offset: Offset(0, 4),
                       ),
                     ],
-                  ),
-                  child: Column(
+                  ),                child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
@@ -167,9 +174,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                   ),
                 ),
               );
-            }
-
-            final semesters = courseNotifier.sortedCoursesBySemester;
+            }            final semesters = courseNotifier.sortedCoursesBySemester;
             if (semesters.isEmpty) {
               return Center(
                 child: Container(
@@ -187,7 +192,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black,
+                        color: AppColorsDarkMode.shadowColorStrong,
                         blurRadius: 8,
                         offset: Offset(0, 4),
                       ),
@@ -200,8 +205,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                         Icons.timeline,
                         size: 64,
                         color: AppColorsDarkMode.secondaryColor,
-                      ),
-                      SizedBox(height: 16),
+                      ),                      SizedBox(height: 16),
                       Text(
                         'No courses to display',
                         style: TextStyle(
@@ -293,13 +297,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                 ],
               ),
             );
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
+          },        ),        floatingActionButton: FloatingActionButton(
           onPressed: () {
             _showAddSemesterDialog(context);
           },
           child: const Icon(Icons.add),
+          tooltip: 'Add Semester',
         ),
       ),
     );
@@ -317,8 +320,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
+          builder: (context, setState) {            return AlertDialog(
               shape: RoundedRectangleBorder(
                 side: BorderSide(
                   color: AppColorsDarkMode.secondaryColor,
@@ -326,7 +328,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              backgroundColor: AppColorsDarkMode.accentColor,
+              backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
               title: const Text(
                 'Add New Semester',
                 style: TextStyle(
@@ -505,11 +507,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
+            ),            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black,
+                color: AppColorsDarkMode.shadowColorStrong,
                 blurRadius: 8,
                 offset: Offset(0, 4),
               ),
@@ -665,9 +666,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
                 color: AppColorsDarkMode.secondaryColorDim,
                 width: 2,
               ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            backgroundColor: AppColorsDarkMode.accentColorDark,
+              borderRadius: BorderRadius.circular(16),            ),
+            backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
             title: const Text(
               'Delete Semester',
               style: TextStyle(color: AppColorsDarkMode.secondaryColor),
@@ -705,6 +705,5 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> {
               ),
             ],
           ),
-    );
-  }
+    );  }
 }

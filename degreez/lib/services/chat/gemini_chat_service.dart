@@ -1,35 +1,25 @@
+import 'dart:io';
 import 'package:firebase_ai/firebase_ai.dart';
 import '../../models/chat/chat_message.dart';
+import '../ai/base_ai_service.dart';
+import '../ai/ai_config.dart';
 
-class GeminiChatService {
-  late final GenerativeModel _model;
+class GeminiChatService extends BaseAiService {
   late ChatSession _chatSession;
 
-  GeminiChatService() {
-    _initializeModel();
-  }
-
-  void _initializeModel() {
-    // Initialize the Gemini Developer API backend service with system instructions
-    _model = FirebaseAI.googleAI().generativeModel(
-      model: 'gemini-2.5-flash',
-      systemInstruction: Content.text(
-        "You are an AI assistant for DegreEZ, an academic planning app. "
-        "Help students with course planning, academic advice, study tips, and education questions. "
-        "When user context is provided, use it for personalized advice. "
-        "Be helpful, concise, kind and academically focused."
-      ),
-    );
-    
+  GeminiChatService() : super(
+    modelName: AiConfig.defaultModel,
+    systemInstruction: AiConfig.chatSystemInstruction,
+  ) {
     _initializeChatSession();
   }
 
   void _initializeChatSession() {
-    _chatSession = _model.startChat(
+    _chatSession = model.startChat(
       history: [],
       // System instructions are built into the model configuration above
     );
-  }  void rebuildChatSession(List<ChatMessage> messages) {
+  }void rebuildChatSession(List<ChatMessage> messages) {
     // SDK handles context automatically, we just need to restore conversation history
     final conversationHistory = <Content>[];
     
@@ -47,13 +37,25 @@ class GeminiChatService {
         conversationHistory.add(Content.model([TextPart(message.text)]));
       }
     }
-    
-    // Let SDK handle the rest
-    _chatSession = _model.startChat(history: conversationHistory);
+      // Let SDK handle the rest
+    _chatSession = model.startChat(history: conversationHistory);
   }
-
   Stream<GenerateContentResponse> sendMessageStream(String message) {
     return _chatSession.sendMessageStream(Content.text(message));
+  }
+  Stream<GenerateContentResponse> sendMessageWithPdfStream(String message, File pdfFile) async* {
+    try {
+      // Read PDF as bytes
+      final pdfBytes = await pdfFile.readAsBytes();
+        // Use base class method for streaming with file
+      yield* generateContentStreamWithFile(
+        prompt: message,
+        fileBytes: pdfBytes,
+        mimeType: AiConfig.pdfMimeType,
+      );
+    } catch (e) {
+      throw Exception('Failed to process PDF: $e');
+    }
   }
 
   void clearSession() {

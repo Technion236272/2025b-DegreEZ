@@ -7,11 +7,13 @@ import 'package:degreez/pages/profile_page.dart';
 import 'package:degreez/pages/chat_bot.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
-import '../providers/course_data_provider.dart';
 import '../widgets/add_course_dialog.dart';
+import '../mixins/ai_import_mixin.dart';
+import '../services/GlobalConfigService.dart';
 
 import 'customized_diagram_page.dart';
 
@@ -22,11 +24,14 @@ class NavigatorPage extends StatefulWidget {
   State<NavigatorPage> createState() => _NavigatorPageState();
 }
 
-class _NavigatorPageState extends State<NavigatorPage> {
+class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
   String _currentPage = 'Calendar';
   bool _hasInitializedData = false;
   String? _selectedCalendarSemester;
-
+  
+  // Semester selection state (moved from CalendarPage)
+  List<String> _allSemesters = [];
+  String? _selectedSemester;
   @override
   void initState() {
     super.initState();
@@ -34,8 +39,81 @@ class _NavigatorPageState extends State<NavigatorPage> {
       if (!_hasInitializedData) {
         _hasInitializedData = true;
         _loadStudentDataIfNeeded();
+        _initializeSemesters(); // Add semester initialization
       }
+    });  }
+  
+  /// Initialize semester selection (moved from CalendarPage)
+  Future<void> _initializeSemesters() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedSemester = prefs.getString('lastSelectedSemester');
+
+    final semesters = await GlobalConfigService.getAvailableSemesters();
+    semesters.sort((a, b) {
+      int getSortYear(String semesterName) {
+        final parts = semesterName.split(' ');
+        final yearPart = parts.length > 1 ? parts[1] : '';
+
+        if (yearPart.contains('-')) {
+          final years = yearPart.split('-');
+          return int.tryParse(years.last) ?? 0; // Use later year
+        }
+        return int.tryParse(yearPart) ?? 0;
+      }
+
+      int getSeasonOrder(String semesterName) {
+        final season = semesterName.split(' ').first;
+        const order = {'Winter': 0,'Spring': 1, 'Summer': 2, };
+        return order[season] ?? 99;
+      }
+
+      final yearA = getSortYear(a);
+      final yearB = getSortYear(b);
+      if (yearA != yearB) return yearA.compareTo(yearB);
+
+      final seasonA = getSeasonOrder(a);
+      final seasonB = getSeasonOrder(b);
+      return seasonA.compareTo(seasonB);
     });
+
+    final current = await GlobalConfigService.getCurrentSemester();
+
+    final initialSemester =
+        savedSemester != null && semesters.contains(savedSemester)
+            ? savedSemester
+            : current ?? (semesters.isNotEmpty ? semesters.last : null);
+
+    if (initialSemester == null) return;
+
+    setState(() {
+      _allSemesters = semesters;
+      _selectedSemester = initialSemester;
+      _selectedCalendarSemester = initialSemester; // Keep both in sync
+    });
+  }
+  /// Override from AiImportMixin to handle post-import actions
+  @override
+  void onImportCompleted() {
+    // Refresh the providers after import
+    final loginNotifier = context.read<LogInNotifier>();
+    final studentProvider = context.read<StudentProvider>();
+    final courseProvider = context.read<CourseProvider>();
+    
+    // Refresh data by reloading from Firebase
+    if (loginNotifier.user != null && studentProvider.hasStudent) {
+      studentProvider.fetchStudentData(loginNotifier.user!.uid);
+      courseProvider.loadStudentCourses(studentProvider.student!.id);
+    }
+    
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Grade sheet imported successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   void _loadStudentDataIfNeeded() {
@@ -71,9 +149,9 @@ class _NavigatorPageState extends State<NavigatorPage> {
     return Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
       builder: (context, loginNotifier, studentProvider, courseProvider, _) {
 
-        Widget body;        switch (_currentPage) {
-          case 'Calendar':
+        Widget body;        switch (_currentPage) {          case 'Calendar':
             body = CalendarPage(
+              selectedSemester: _selectedSemester, // Pass the selected semester
               onSemesterChanged: (semester) {
                 setState(() {
                   _selectedCalendarSemester = semester;
@@ -96,20 +174,12 @@ class _NavigatorPageState extends State<NavigatorPage> {
             break;
           default:
             body = Text(_currentPage);
-        }        return Scaffold(
-          appBar: AppBar(
-            title: AutoSizeText(_currentPage, minFontSize: 14, maxFontSize: 22),
+        }        return Scaffold(          appBar: AppBar(
+            title: _currentPage == 'Calendar' 
+                ? _buildSemesterDropdown() 
+                : AutoSizeText(_currentPage, minFontSize: 14, maxFontSize: 22),
             centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.bolt_sharp),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('AI Assistant coming soon!')),
-                  );
-                },
-              ),
-            ],
+            actions: _buildAppBarActions(),
           ),
           drawer: _buildSideDrawer(context, loginNotifier, studentProvider),
           body:
@@ -150,8 +220,39 @@ class _NavigatorPageState extends State<NavigatorPage> {
                   )
                   : null,
         );
-      },
-    );
+      },    );
+  }
+
+  /// Builds context-sensitive AppBar actions based on the current page
+  List<Widget> _buildAppBarActions() {
+    switch (_currentPage) {
+      case 'Customized Diagram':
+        return [
+          IconButton(
+            icon: const Icon(Icons.smart_toy),
+            onPressed: showAiImportDialog, // Use the mixin method
+            tooltip: 'Import Grade Sheet with AI',
+          ),
+        ];
+      
+      case 'AI Assistant':
+        // For AI Assistant page, maybe no additional AI button needed
+        return [];
+      
+      default:
+        // For other pages, show a generic AI assistant button
+        return [
+          IconButton(
+            icon: const Icon(Icons.bolt_sharp),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('AI Assistant coming soon!')),
+              );
+            },
+            tooltip: 'AI Assistant',
+          ),
+        ];
+    }
   }
 
   Widget _buildSideDrawer(
@@ -330,5 +431,50 @@ class _NavigatorPageState extends State<NavigatorPage> {
     setState(() {
       _currentPage = page;
     });
+  }
+
+  /// Builds the semester dropdown for the AppBar when on Calendar page
+  Widget _buildSemesterDropdown() {
+    if (_allSemesters.isEmpty) {
+      return const AutoSizeText('Calendar', minFontSize: 14, maxFontSize: 22);
+    }
+    
+    return DropdownButton<String>(
+      value: _selectedSemester,
+      hint: const Text("Select Semester", style: TextStyle(fontSize: 16)),
+      underline: Container(), // Remove the default underline
+      dropdownColor: Theme.of(context).appBarTheme.backgroundColor,
+      style: const TextStyle(
+        color: AppColorsDarkMode.secondaryColor,
+        fontSize: 18,
+        fontWeight: FontWeight.w500,
+      ),
+      onChanged: (String? value) async {
+        if (value != null && value != _selectedSemester) {
+          setState(() {
+            _selectedSemester = value;
+            _selectedCalendarSemester = value;
+          });
+          
+          // Save preference
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('lastSelectedSemester', value);
+          
+          // The CalendarPage will handle the course loading when it receives the new semester
+        }
+      },
+      items: _allSemesters.map((sem) {
+        return DropdownMenuItem<String>(
+          value: sem,
+          child: Text(
+            sem,
+            style: const TextStyle(
+              color: AppColorsDarkMode.secondaryColor,
+              fontSize: 16,
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 }

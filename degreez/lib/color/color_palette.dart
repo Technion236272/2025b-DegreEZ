@@ -1,116 +1,287 @@
 import 'package:flutter/material.dart';
 
+/// Enhanced color palette architecture for easy theme switching and maintainability
+/// 
+/// USAGE GUIDE:
+/// 1. Use AppColorsDarkMode.colorName throughout your app (maintains backward compatibility)
+/// 2. To switch to a different palette, change the implementation of AppColorsDarkMode
+/// 3. All decoration methods are included for consistent styling
+/// 4. Color names follow semantic conventions for easy understanding
+/// 
+/// FUTURE PALETTE CHANGES:
+/// - Create a new class implementing the same structure as AppColorsDarkMode
+/// - Replace the implementation or add palette switching logic
+/// - All app colors will automatically update
+
 class AppColorsDarkMode {
-  // Main background colors - inspired by the dark theme in the image
-  static const Color mainColor = Color(0xFF121212); // Rich dark background
-  static const Color surfaceColor = Color(0xFF1E1E1E); // Card/surface background
-  static const Color cardColor = Color(0xFF2A2A2A); // Elevated card background
+  // =============================================================================
+  // MAIN BACKGROUND COLORS - Sophisticated Dark Theme
+  // =============================================================================
+  // Based on elegant Eerie Black + Payne's Gray + Powder Blue color scheme
   
-  // Primary orange/coral accent - main brand color from the image
-  static const Color primaryColor = Color(0xFFFF6B35); // Vibrant orange accent
-  static const Color primaryColorDim = Color(0xAAFF6B35); // Semi-transparent primary
-  static const Color primaryColorLight = Color(0xFFFF8A65); // Lighter variant
+  /// Primary background - Eerie Black for elegant dark foundation
+  static const Color mainColor = Color(0xFF17191B);
   
-  // Secondary warm colors - supporting the orange theme
-  static const Color secondaryColor = Color(0xFFFFAB91); // Warm peach
-  static const Color secondaryColorDim = Color(0x99FFAB91);
-  static const Color secondaryColorDimDD = Color(0xDDFFAB91);
-  static const Color secondaryColorExtremelyDim = Color(0x44FFAB91);
+  /// Secondary surface - Slightly lighter than main, creates subtle layering
+  static const Color surfaceColor = Color(0xFF1F2123);
   
-  // Accent colors - darker warm tones
-  static const Color accentColor = Color(0xFF3E2723); // Deep brown
-  static const Color accentColorDark = Color(0xFF2D1C1C); // Deep brown
-  static const Color accentColorDarker = Color(0xFF4F3834); // Deep brown
-  static const Color accentColorDim = Color(0xCC3E2723);
-  static const Color accentColorLight = Color(0xFF5D4037); // Medium brown
-  static const Color accentColorExtremelyDim = Color(0x445D4037); // Medium brown
-    // Text colors
-  static const Color textPrimary = Color(0xFFFFFFFF); // White text
-  static const Color textSecondary = Color(0xFFB0B0B0); // Muted text
-  static const Color textTertiary = Color(0xFF808080); // Subtle text
+  /// Card background - Elevated elements with clear hierarchy
+  static const Color cardColor = Color(0xFF242628);
   
-  // Border and shade colors - inspired by the subtle borders in the design
-  static const Color borderPrimary = Color(0xFF3A3A3A); // Subtle border for cards
-  static const Color borderSecondary = Color(0xFF2F2F2F); // Even more subtle border
-  static const Color borderAccent = Color(0x33FF6B35); // Orange border with transparency
-  static const Color shadowColor = Color(0x1A000000); // Soft shadow
-  static const Color shadowColorStrong = Color(0xAA000000); // Stronger shadow for elevated elements
+  // =============================================================================
+  // PRIMARY COLORS - Payne's Gray Accent System
+  // =============================================================================
   
-  // Overlay colors for subtle effects
-  static const Color overlayLight = Color(0x0AFFFFFF); // Light overlay (4% white)
-  static const Color overlayMedium = Color(0x1AFFFFFF); // Medium overlay (10% white)
-  static const Color overlayDark = Color(0x0A000000); // Dark overlay (4% black)
+  /// Main primary color - Payne's Gray, sophisticated blue accent
+  static const Color primaryColor = Color(0xFF306780);
   
-  // Divider colors for subtle separation
-  static const Color dividerColor = secondaryColor; // Subtle divider
-  static const Color dividerColorLight = Color(0xFF404040); // Slightly lighter divider
+  /// Semi-transparent primary for overlays and hover states
+  static const Color primaryColorDim = Color(0xAA306780);
   
-  // State colors
-  static const Color errorColor = Color(0xFFE57373); // Soft red error
+  /// Light primary - Powder Blue, soft and refined
+  static const Color primaryColorLight = Color(0xFFB8C7D6);
+  
+  // =============================================================================
+  // SECONDARY COLORS - Supporting the sophisticated theme
+  // =============================================================================
+  
+  /// Main secondary - Powder Blue for text and UI elements
+  static const Color secondaryColor = Color(0xFFB8C7D6);
+  
+  /// Medium transparency secondary
+  static const Color secondaryColorDim = Color(0x99B8C7D6);
+  
+  /// High opacity secondary for prominent elements
+  static const Color secondaryColorDimDD = Color(0xDDB8C7D6);
+  
+  /// Very subtle secondary for background effects
+  static const Color secondaryColorExtremelyDim = Color(0x44B8C7D6);
+  
+  // =============================================================================
+  // ACCENT COLORS - Refined blue tones for highlights and emphasis
+  // =============================================================================
+  
+  /// Main accent - Payne's Gray for buttons and active states
+  static const Color accentColor = Color(0xFF306780);
+  
+  /// Darker accent variations
+  static const Color accentColorDark = Color(0xFF25525F);
+  static const Color accentColorDarker = Color(0xFF1A3D47);
+  
+  /// Semi-transparent accent
+  static const Color accentColorDim = Color(0xCC306780);
+  
+  /// Lighter accent variations
+  static const Color accentColorLight = Color(0xFF4A8099);
+  static const Color accentColorExtremelyDim = Color(0x444A8099);
+  
+  // =============================================================================
+  // TEXT COLORS - Hierarchical text system
+  // =============================================================================
+  
+  /// Primary text - White for main content
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  
+  /// Secondary text - Muted for supporting content
+  static const Color textSecondary = Color(0xFFB0B0B0);
+  
+  /// Tertiary text - Subtle for hints and labels
+  static const Color textTertiary = Color(0xFF808080);
+  
+  // =============================================================================
+  // BORDER AND SHADE COLORS - Refined to complement Eerie Black
+  // =============================================================================
+  
+  /// Primary borders - Harmonious with Eerie Black family
+  static const Color borderPrimary = Color(0xFF2C2E30);
+  
+  /// Secondary borders - More subtle, stays within theme
+  static const Color borderSecondary = Color(0xFF212325);
+  
+  /// Accent borders - Payne's Gray with transparency
+  static const Color borderAccent = Color(0x33306780);
+  
+  /// Soft shadow for subtle depth
+  static const Color shadowColor = Color(0x1A000000);
+  
+  /// Stronger shadow for elevated elements
+  static const Color shadowColorStrong = Color(0xAA000000);
+  
+  // =============================================================================
+  // OVERLAY COLORS - For subtle layering effects
+  // =============================================================================
+  
+  /// Light overlay (4% white) for subtle highlights
+  static const Color overlayLight = Color(0x0AFFFFFF);
+  
+  /// Medium overlay (10% white) for hover states
+  static const Color overlayMedium = Color(0x1AFFFFFF);
+  
+  /// Dark overlay (4% black) for subtle shadows
+  static const Color overlayDark = Color(0x0A000000);
+  
+  // =============================================================================
+  // DIVIDER COLORS - For subtle content separation
+  // =============================================================================
+  
+  /// Main divider - More subtle than direct secondary color
+  static const Color dividerColor = Color(0xFF3A4147);
+  
+  /// Lighter divider for less prominent separations
+  static const Color dividerColorLight = Color(0xFF4A525A);
+  
+  // =============================================================================
+  // STATE COLORS - Semantic colors for different states
+  // =============================================================================
+  
+  /// Error color - Soft red that fits the sophisticated theme
+  static const Color errorColor = Color(0xFFE57373);
+  
+  /// Semi-transparent error
   static const Color errorColorDim = Color(0xCCE57373);
-  static const Color successColor = Color(0xFF81C784); // Soft green success
-  static const Color warningColor = Color(0xFFFFB74D); // Warm warning yellow
   
-  static const Color bug = accentColor; // Warm warning yellow
-  // Convenience methods for creating subtle effects like in the design image
+  /// Success color - Uses Powder Blue to maintain theme consistency
+  static const Color successColor = Color(0xFFB8C7D6);
   
-  /// Creates a subtle border decoration for cards and containers
+  /// Warning color - Warm yellow that complements the blue palette
+  static const Color warningColor = Color(0xFFFFB74D);
+  
+  /// Bug/debug color - Uses accent color
+  static const Color bug = accentColor;  
+  // =============================================================================
+  // CONVENIENCE DECORATION METHODS - For consistent modern styling
+  // =============================================================================
+  
+  /// Creates a modern borderless decoration for cards and containers
+  /// Perfect for the seamless, modern UI aesthetic
   static BoxDecoration cardDecoration({
     Color? backgroundColor,
     bool elevated = false,
-    bool withBorder = true,
+    bool withBorder = false, // Default false for modern borderless look
   }) {
     return BoxDecoration(
-      color: backgroundColor ?? cardColor,
-      borderRadius: BorderRadius.circular(12),
+      color: backgroundColor ?? AppColorsDarkMode.cardColor,
+      borderRadius: BorderRadius.circular(0), // Removed rounded corners for seamless blend
       border: withBorder ? Border.all(
-        color: borderPrimary,
+        color: AppColorsDarkMode.borderPrimary,
         width: 0.5,
       ) : null,
       boxShadow: elevated ? [
         BoxShadow(
-          color: shadowColor,
-          blurRadius: 8,
-          offset: const Offset(0, 2),
+          color: AppColorsDarkMode.shadowColor,
+          blurRadius: 12, // Increased blur for softer shadows
+          offset: const Offset(0, 3),
         ),
         BoxShadow(
-          color: shadowColorStrong,
-          blurRadius: 16,
-          offset: const Offset(0, 4),
+          color: AppColorsDarkMode.shadowColorStrong,
+          blurRadius: 24, // Larger blur for depth without harsh edges
+          offset: const Offset(0, 6),
         ),
       ] : null,
     );
   }
   
-  /// Creates a subtle surface decoration for elevated elements
+  /// Creates a modern borderless surface decoration for elevated elements
   static BoxDecoration surfaceDecoration({
     bool withAccentBorder = false,
   }) {
     return BoxDecoration(
-      color: surfaceColor,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(
-        color: withAccentBorder ? borderAccent : borderSecondary,
-        width: withAccentBorder ? 1.0 : 0.5,
-      ),
+      color: AppColorsDarkMode.surfaceColor,
+      borderRadius: BorderRadius.circular(0), // Removed rounded corners
+      border: withAccentBorder ? Border.all(
+        color: AppColorsDarkMode.borderAccent,
+        width: 0, // Removed border width for seamless look
+      ) : null,
       boxShadow: [
         BoxShadow(
-          color: shadowColor,
-          blurRadius: 4,
+          color: AppColorsDarkMode.shadowColor,
+          blurRadius: 8, // Softer shadow
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
+  }
+  
+  /// Creates a completely seamless decoration with subtle elevation
+  static BoxDecoration seamlessDecoration({
+    Color? backgroundColor,
+    double elevation = 1.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsDarkMode.surfaceColor,
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsDarkMode.shadowColor,
+          blurRadius: elevation * 4,
+          offset: Offset(0, elevation),
+        ),
+      ],
+    );
+  }
+
+  /// Creates a blended decoration that transitions smoothly with background
+  static BoxDecoration blendedDecoration({
+    Color? backgroundColor,
+    double opacity = 0.8,
+  }) {
+    return BoxDecoration(
+      color: (backgroundColor ?? AppColorsDarkMode.cardColor).withOpacity(opacity),
+      // No borders, no radius - completely seamless
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsDarkMode.shadowColor.withOpacity(0.5),
+          blurRadius: 6,
           offset: const Offset(0, 1),
         ),
       ],
     );
   }
 
-  // Previous color scheme - kept as backup
+  /// Creates a modern card decoration with very minimal styling
+  static BoxDecoration modernCardDecoration({
+    Color? backgroundColor,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsDarkMode.cardColor,
+      // Minimal shadow for subtle depth
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsDarkMode.shadowColor.withOpacity(0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
+  }
+
+  // =============================================================================
+  // THEME DOCUMENTATION AND PALETTE CHANGE GUIDE
+  // =============================================================================
+  
+  /// To change the entire app's color palette:
+  /// 
+  /// METHOD 1 - Direct replacement:
+  /// Replace the color values in this class with your new palette
+  /// 
+  /// METHOD 2 - Multiple palettes:
+  /// Create additional classes (e.g., AppColorsLightMode, AppColorsCustom)
+  /// with the same structure and switch between them
+  /// 
+  /// METHOD 3 - Dynamic switching:
+  /// Use a provider/service to switch between different palette instances
+  /// 
+  /// NAMING CONVENTIONS:
+  /// - mainColor: Primary background
+  /// - surfaceColor: Secondary surfaces
+  /// - cardColor: Elevated cards/containers
+  /// - primaryColor: Main brand color
+  /// - secondaryColor: Supporting colors
+  /// - accentColor: Emphasis and highlights
+  /// - Suffixes: Dim (transparent), Light/Dark (variants)
+    // Previous color scheme kept as reference for easy rollback
   // static const Color secondaryColor = Color(0xFFFCBAAD);
-  // static const Color secondaryColorDim = Color(0xAAFCBAAD);
-  // static const Color secondaryColorDimDD = Color(0xDDFCBAAD);
   // static const Color accentColor = Color(0xFF41221C);
-  // static const Color accentColorDim = Color(0xCC41221C);
   // static const Color errorColor = Color(0xFFA0221C);
-  // static const Color errorColorDim = Color(0xCCA0221C);
 }
 
 
@@ -165,10 +336,8 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
     }
 
   @override
-  get cardFG => AppColorsDarkMode.accentColor;
-  
-  @override
-  get cardFGdim => Color(0x4441221C);
+  get cardFG => AppColorsDarkMode.accentColor;  @override
+  get cardFGdim => Color(0x44355F8C);
   
 }
 
@@ -195,40 +364,36 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     }
 
   @override
-  get cardFG => AppColorsDarkMode.secondaryColor;
-
-   @override
-  get cardFGdim => Color(0x44FCBAAD);
-  
-
-  Color _getCourseColor(String courseId) {
+  get cardFG => AppColorsDarkMode.secondaryColor;  @override
+  get cardFGdim => Color(0x44B8C7D6);  Color _getCourseColor(String courseId) {
     final hash = courseId.hashCode;
     final colors = [
-      const Color(0xFFFF6B35), // Primary orange
-      const Color(0xFFFF8A65), // Light orange
-      const Color(0xFFFFAB40), // Amber orange
-      const Color(0xFFFF7043), // Deep orange
-      // const Color(0xFFBF360C), // Dark orange
-      const Color(0xFF8D6E63), // Brown
-      const Color(0xFF6D4C41), // Dark brown
-      const Color(0xFF5D4037), // Deep brown
-      const Color(0xFF4E342E), // Very dark brown
-      const Color(0xFF795548), // Medium brown
-      const Color(0xFFA1887F), // Light brown
-      const Color(0xFFD7CCC8), // Very light brown
-      const Color(0xFFFFE0B2), // Light amber
-      const Color(0xFFFFCC02), // Warm yellow
-      const Color(0xFFFFA726), // Orange amber
-      const Color(0xFFFF9800), // Standard orange
-      // const Color(0xFFFF5722), // Vivid orange
-      const Color(0xFFFFC107), // Bright yellow
-      const Color(0xFFFFE082), // Light yellow
-      const Color(0xFFFFF176), // Pale yellow
-      const Color(0xFFFFF9C4), // Very light yellow
-      const Color(0xFFFFF3E0), // Creamy white
-      const Color(0xFFFFF8E1), // Light cream
-      const Color(0xFFFFFDE7), // Very light cream
-      const Color(0xFFFFF9C4), // Pale cream
+      // Vibrant colors for easy distinction, refined for sophistication
+      const Color(0xFF4CAF50), // Material Green
+      const Color(0xFFFF9800), // Material Orange
+      const Color(0xFFF44336), // Material Red
+      const Color(0xFF2196F3), // Material Blue
+      const Color(0xFF9C27B0), // Material Purple
+      const Color(0xFFFFC107), // Material Amber
+      const Color(0xFF00BCD4), // Material Cyan
+      const Color(0xFFFF5722), // Material Deep Orange
+      const Color(0xFF795548), // Material Brown
+      const Color(0xFF607D8B), // Material Blue Grey
+      const Color(0xFF8BC34A), // Material Light Green
+      const Color(0xFFE91E63), // Material Pink
+      const Color(0xFF673AB7), // Material Deep Purple
+      const Color(0xFF3F51B5), // Material Indigo
+      const Color(0xFF009688), // Material Teal
+      const Color(0xFFCDDC39), // Material Lime
+      // Additional sophisticated colors that complement the theme
+      const Color(0xFF5D7B8A), // Muted blue-gray (harmonizes with Payne's Gray)
+      const Color(0xFF8A6B5D), // Warm brown-gray
+      const Color(0xFF6B8A5D), // Sage green
+      const Color(0xFF8A5D6B), // Muted rose
+      const Color(0xFF7A5D8A), // Muted purple-gray
+      const Color(0xFF5D8A7A), // Teal-gray
+      const Color(0xFFB8860B), // Dark goldenrod
+      const Color(0xFF4682B4), // Steel blue
     ];
     return colors[hash.abs() % colors.length];
   }

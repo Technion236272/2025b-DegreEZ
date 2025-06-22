@@ -17,12 +17,11 @@ import '../mixins/calendar_theme_mixin.dart';
 import '../mixins/course_event_mixin.dart';
 import '../mixins/schedule_selection_mixin.dart';
 import '../services/course_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/GlobalConfigService.dart';
 
 class CalendarPage extends StatefulWidget {
-  final void Function(String selectedSemester)? onSemesterChanged; // NEW
-  const CalendarPage({super.key, this.onSemesterChanged});
+  final String? selectedSemester; // Receive selected semester from NavigatorPage
+  final void Function(String selectedSemester)? onSemesterChanged; // Keep for compatibility
+  const CalendarPage({super.key, this.selectedSemester, this.onSemesterChanged});
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -33,8 +32,10 @@ class _CalendarPageState extends State<CalendarPage>
   int _viewMode = 0; // 0: Week View, 1: Day View
   final TextEditingController _searchController = TextEditingController();
   final _searchQuery = '';
-  List<String> _allSemesters = [];
-  String? _selectedSemester;
+  
+  // Remove semester management - now handled by NavigatorPage
+  // List<String> _allSemesters = [];
+  // String? _selectedSemester;
 
   // NEW: Track courses that should be hidden from calendar
   final Set<String> _removedCourses = <String>{};
@@ -44,58 +45,11 @@ class _CalendarPageState extends State<CalendarPage>
   @override
   void initState() {
     super.initState();
-    _initializeSemesters();
+    // Remove semester initialization - now handled by NavigatorPage
+    // _initializeSemesters();
     _loadRemovedCourses();
   }
-
-  Future<void> _initializeSemesters() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedSemester = prefs.getString('lastSelectedSemester');
-
-    final semesters = await GlobalConfigService.getAvailableSemesters();
-    semesters.sort((a, b) {
-      int getSortYear(String semesterName) {
-        final parts = semesterName.split(' ');
-        final yearPart = parts.length > 1 ? parts[1] : '';
-
-        if (yearPart.contains('-')) {
-          final years = yearPart.split('-');
-          return int.tryParse(years.last) ?? 0; // Use later year
-        }
-        return int.tryParse(yearPart) ?? 0;
-      }
-
-      int getSeasonOrder(String semesterName) {
-        final season = semesterName.split(' ').first;
-        const order = {'Winter': 0,'Spring': 1, 'Summer': 2, };
-        return order[season] ?? 99;
-      }
-
-      final yearA = getSortYear(a);
-      final yearB = getSortYear(b);
-      if (yearA != yearB) return yearA.compareTo(yearB);
-
-      final seasonA = getSeasonOrder(a);
-      final seasonB = getSeasonOrder(b);
-      return seasonA.compareTo(seasonB);
-    });
-
-    final current = await GlobalConfigService.getCurrentSemester();
-
-    final initialSemester =
-        savedSemester != null && semesters.contains(savedSemester)
-            ? savedSemester
-            : current ?? (semesters.isNotEmpty ? semesters.last : null);
-
-    if (initialSemester == null) return;
-
-    setState(() {
-      _allSemesters = semesters;
-      _selectedSemester = initialSemester;
-    });
-
-    await _loadGlobalSemesterCourses(initialSemester);
-  }
+  // Remove _initializeSemesters method - now handled by NavigatorPage
 
   (int, int)? _parseSemesterCode(String semesterName) {
     final match = RegExp(
@@ -153,9 +107,8 @@ class _CalendarPageState extends State<CalendarPage>
   Widget _buildCoursePanelWithIntegratedToggle(CourseProvider courseProvider) {
     if (!courseProvider.hasAnyCourses) {
       return const SizedBox.shrink();
-    }
-    return CourseCalendarPanel(
-      selectedSemester: _selectedSemester ?? '',
+    }    return CourseCalendarPanel(
+      selectedSemester: widget.selectedSemester ?? '',
       eventController: _eventController,
       onCourseRemovedFromCalendar: _markCourseAsRemovedFromCalendar,
       onCourseRestoredToCalendar: _restoreCourseToCalendar,
@@ -180,16 +133,15 @@ class _CalendarPageState extends State<CalendarPage>
         courseProvider,
         colorThemeProvider,
         _,
-      ) {
-        // Update calendar events when courses change
+      ) {        // Update calendar events when courses change
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_selectedSemester == null) return;
+          if (widget.selectedSemester == null) return;
 
           if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
             _updateCalendarEvents(
               courseProvider,
               colorThemeProvider,
-              forceSemester: _selectedSemester, // ⬅️ use selected semester
+              forceSemester: widget.selectedSemester, // ⬅️ use selected semester
             );
 
             if (!_hasTriggeredInitialLoad) {
@@ -199,49 +151,9 @@ class _CalendarPageState extends State<CalendarPage>
               });
             }
           }
-        });
-
-        return Column(
+        });        return Column(
           children: [
             // Course Panel with integrated Toggle Button
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: DropdownButton<String>(
-                value: _selectedSemester,
-                hint: const Text("Select semsester"),
-                onChanged: (String? value) async {
-                  if (value != null) {
-                    setState(() {
-                      _selectedSemester = value;
-                    });
-                    await _loadGlobalSemesterCourses(value);
-
-                    // 🔔 Notify parent
-                    widget.onSemesterChanged?.call(value);
-
-                    // ✅ Force update calendar after changing semester
-                    final courseProvider = context.read<CourseProvider>();
-                    final colorThemeProvider =
-                        context.read<ColorThemeProvider>();
-
-                    _updateCalendarEvents(
-                      courseProvider,
-                      colorThemeProvider,
-                      forceSemester: value,
-                    );
-                  }
-                },
-
-                items:
-                    _allSemesters.map((sem) {
-                      return DropdownMenuItem<String>(
-                        value: sem,
-                        child: Text(sem),
-                      );
-                    }).toList(),
-              ),
-            ),
-
             _buildCoursePanelWithIntegratedToggle(courseProvider),
 
             // Calendar Views - Full Width
@@ -389,18 +301,14 @@ class _CalendarPageState extends State<CalendarPage>
     // debugPrint('=== Updating calendar events with schedule selection ===');
 
     // Clear existing events
-    _eventController.removeWhere((event) => true);
-
-    // Get current week start (Sunday)
+    _eventController.removeWhere((event) => true);    // Get current week start (Sunday)
     final now = DateTime.now();
     final currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
     //  debugPrint('Current week start (Sunday): $currentWeekStart');
 
-    final semesterCount = courseProvider.coursesBySemester.length;
-    //    debugPrint('Found $semesterCount semesters with courses');
+    // debugPrint('Found ${courseProvider.coursesBySemester.length} semesters with courses');
 
     final courseDataProvider = context.read<CourseDataProvider>();
-    int totalEventsAdded = 0;
 
     for (final semesterEntry in courseProvider.coursesBySemester.entries) {
       // process only the current semester
@@ -435,30 +343,27 @@ class _CalendarPageState extends State<CalendarPage>
         CourseService.getCourseDetails(
           year,
           semesterCode,
-          course.courseId,
-        ).then((courseDetails) {
+          course.courseId,        ).then((courseDetails) {
           if (courseDetails?.schedule.isNotEmpty == true) {
             //   debugPrint( 'Using API schedule for ${course.name} with selection filtering', );
-            final eventsAdded = _createCalendarEventsFromSchedule(
+            _createCalendarEventsFromSchedule(
               course,
               courseDetails!,
               semester,
               currentWeekStart,
               colorThemeProvider,
             );
-            totalEventsAdded += eventsAdded;
           } else {
             debugPrint(
               'Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}", lab: "${course.labTime}", workshop: "${course.workshopTime}")',
             );
             // Create basic events from stored lecture/tutorial/lab/workshop times if no API schedule
-            final eventsAdded = _createBasicCalendarEvents(
+            _createBasicCalendarEvents(
               course,
               semester,
               currentWeekStart,
               colorThemeProvider,
             );
-            totalEventsAdded += eventsAdded;
           }
 
           // After processing all courses, force a UI refresh
@@ -542,43 +447,29 @@ class _CalendarPageState extends State<CalendarPage>
     final selectedWorkshops = selectedEntries['workshop'] ?? <ScheduleEntry>[];
 
     // Create events only for selected schedule entries
-    final scheduleEntriesToShow = <ScheduleEntry>[];
-
-    // Add all selected lectures
+    final scheduleEntriesToShow = <ScheduleEntry>[];    // Add all selected lectures
     scheduleEntriesToShow.addAll(selectedLectures);
     if (selectedLectures.isNotEmpty) {
       //debugPrint('Adding ${selectedLectures.length} selected lectures');
-      for (final lecture in selectedLectures) {
-        // debugPrint('  - Lecture: ${lecture.day} ${lecture.time}');
-      }
     }
 
     // Add all selected tutorials
     scheduleEntriesToShow.addAll(selectedTutorials);
     if (selectedTutorials.isNotEmpty) {
       //   debugPrint('Adding ${selectedTutorials.length} selected tutorials');
-      for (final tutorial in selectedTutorials) {
-        //   debugPrint('  - Tutorial: ${tutorial.day} ${tutorial.time}');
-      }
     }
 
     // Add all selected labs
     scheduleEntriesToShow.addAll(selectedLabs);
     if (selectedLabs.isNotEmpty) {
       //   debugPrint('Adding ${selectedLabs.length} selected labs');
-      for (final lab in selectedLabs) {
-        //   debugPrint('  - Lab: ${lab.day} ${lab.time}');
-      }
     }
 
     // Add all selected workshops
     scheduleEntriesToShow.addAll(selectedWorkshops);
     if (selectedWorkshops.isNotEmpty) {
       // debugPrint('Adding ${selectedWorkshops.length} selected workshops');
-      for (final workshop in selectedWorkshops) {
-        //   debugPrint('  - Workshop: ${workshop.day} ${workshop.time}');
-      }
-    } // If no selections made, show all (backward compatibility)
+    }// If no selections made, show all (backward compatibility)
     if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
       scheduleEntriesToShow.addAll(courseDetails.schedule);
       //   debugPrint(
@@ -855,15 +746,10 @@ class _CalendarPageState extends State<CalendarPage>
               children: [
                 // const Text('You long pressed on a calendar event!'),
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
-                      width: 1,
-                    ),
+                Container(                  padding: const EdgeInsets.all(12),
+                  decoration: AppColorsDarkMode.seamlessDecoration(
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    elevation: 1.0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1034,44 +920,5 @@ class _CalendarPageState extends State<CalendarPage>
     // Trigger calendar refresh
     setState(() {});
   }
-
-  Future<void> _loadGlobalSemesterCourses(String semesterName) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('lastSelectedSemester', semesterName);
-    final student = context.read<StudentProvider>().student;
-    if (student == null) {
-      debugPrint('❌ No logged-in student. Aborting semester load.');
-      return;
-    }
-    final studentId = student.id;
-    final courseProvider = context.read<CourseProvider>();
-    final colorThemeProvider = context.read<ColorThemeProvider>();
-
-    // Make sure courses are loaded (in case user just logged in)
-    if (!courseProvider.hasLoadedData) {
-      await courseProvider.loadStudentCourses(studentId);
-    }
-
-    // Clear old events
-    _eventController.removeWhere((_) => true);
-
-    final weekStart = DateTime.now().subtract(
-      Duration(days: DateTime.now().weekday % 7),
-    );
-    final courses = courseProvider.getCoursesForSemester(semesterName);
-
-    int total = 0;
-    for (final course in courses) {
-      total += _createBasicCalendarEvents(
-        course,
-        semesterName,
-        weekStart,
-        colorThemeProvider,
-      );
-    }
-
-    debugPrint('📅 Loaded $total events for "$semesterName"');
-    setState(() {}); // Refresh UI
-    _eventController.notifyListeners();
-  }
+  // Removed _loadGlobalSemesterCourses - semester management now handled by NavigatorPage
 }

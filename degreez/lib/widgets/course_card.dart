@@ -57,10 +57,10 @@ class _CourseCardState extends State<CourseCard> {
         _hasNote = true;
       });
     }
-
+    // Check if the course has a grade that is int or double
+    // Enhanced: Use a more robust check for grade presence
     final hasGrade = course.finalGrade.isNotEmpty;
-    //debugPrint('Note: fetchedStartNote:${course.note}');
-
+    
     return Consumer<CustomizedDiagramNotifier>(
       builder: (context, notifier, child) {
         final isFocused =
@@ -254,27 +254,37 @@ class _CourseCardState extends State<CourseCard> {
                   ],
                 ),
               ),
-            ),
-            //Card Middle (Course name)
+            ),            //Card Middle (Course name and grade)
             Expanded(
               flex: 6,
               child: Container(
                 padding: EdgeInsets.only(right: 3, left: 1, top: 3, bottom: 2),
                 width: double.infinity,
-                child: AutoSizeText(
-                  maxLines: 3,
-                  minFontSize: 7,
-                  textDirection: TextDirection.rtl,
-                  course.name,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color:
-                        context
-                            .watch<CustomizedDiagramNotifier>()
-                            .cardColorPalette!
-                            .cardFG,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: AutoSizeText(
+                        maxLines: 2,
+                        minFontSize: 7,
+                        textDirection: TextDirection.rtl,
+                        course.name,                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color:
+                              context
+                                  .watch<CustomizedDiagramNotifier>()
+                                  .cardColorPalette!
+                                  .cardFG,
+                        ),
+                      ),
+                    ),
+                    if (hasGrade)
+                      Padding(
+                        padding: EdgeInsets.only(top: 2),
+                        child: GradeSticker(grade: course.finalGrade),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -292,18 +302,15 @@ class _CourseCardState extends State<CourseCard> {
                 child: Padding(
                   padding: EdgeInsets.only(right: 1, left: 1),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      hasGrade
-                          ? GradeSticker(grade: course.finalGrade)
-                          : Icon(
-                            Icons.work_off_outlined,
-                            color: context
-                                .watch<CustomizedDiagramNotifier>()
-                                .cardColorPalette!
-                                .cardBG(course.courseId),
-                            size: 18,
-                          ),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,                    children: [
+                      Icon(
+                        Icons.work_off_outlined,
+                        color: context
+                            .watch<CustomizedDiagramNotifier>()
+                            .cardColorPalette!
+                            .cardBG(course.courseId),
+                        size: 18,
+                      ),
 
                       _hasNote
                           ? Icon(
@@ -324,8 +331,9 @@ class _CourseCardState extends State<CourseCard> {
                                     .cardFGdim,
                             size: 18,
                           ),
-
-                      if (hasGrade) ...[
+                      // if hasGrade and grade is not a number then show the grade as a string
+                      if (hasGrade && double.tryParse(course.finalGrade) != null) ...[
+                          // Show check or clear icon based on grade
                         (double.tryParse(course.finalGrade)! > 55)
                             ? Icon(
                               Icons.check_rounded,
@@ -345,6 +353,7 @@ class _CourseCardState extends State<CourseCard> {
                                       .cardFG,
                               size: 18,
                             ),
+                            
                       ] else
                         Icon(
                           Icons.work_off_outlined,
@@ -454,24 +463,13 @@ class _CourseCardState extends State<CourseCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-              if (hasGrade)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
+              ),              if (hasGrade)
+                Text(
+                  course.finalGrade,
+                  style: TextStyle(
+                    fontSize: 12,
                     color: _getGradeColor(course.finalGrade),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    course.finalGrade,
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
             ],
