@@ -3,9 +3,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../providers/course_provider.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
+import '../services/geocode_cache_service.dart';
+import '../services/building_geocode_map.dart';
 
 class CourseMapPage extends StatefulWidget {
   final String selectedSemester;
@@ -20,23 +24,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
   LatLng? userLocation;
   List<Marker> courseMarkers = [];
   bool isLoading = true;
-
-  String _normalizeBuildingName(String raw) {
-    if (raw.contains('טאוב')) return 'Taub';
-    if (raw.contains('אולמן')) return 'Ullman';
-    if (raw.contains('מאייר')) return 'Meyer';
-    if (raw.contains('עמדו')) return 'Amado';
-    if (raw.contains('דדו')) return 'Dado';
-    return raw; // fallback
-  }
-
-  final Map<String, LatLng> buildingCoordinates = {
-    'Taub': LatLng(32.7777, 35.0219),
-    'Ullman': LatLng(32.777143, 35.023714),
-    'Meyer': LatLng(32.7751, 35.0222),
-    'Amado': LatLng(32.7748, 35.0226),
-    'Dado': LatLng(32.7762, 35.0241),
-  };
+  final _geoService = GeocodeCacheService();
 
   (int, int)? _parseSemesterCode(String semesterName) {
     final match = RegExp(
@@ -70,10 +58,55 @@ class _CourseMapPageState extends State<CourseMapPage> {
     return (apiYear, semesterCode);
   }
 
+  Future<LatLng?> fetchCoordinates(String buildingName) async {
+    // 1. Check manual override
+    if (manualBuildingCoordinates.containsKey(buildingName)) {
+      debugPrint('📍 Manual override for: $buildingName');
+      return manualBuildingCoordinates[buildingName];
+    }
+
+    final normalizedQuery = getHebrewBuildingQuery(buildingName);
+    // 2. Check cached geocode
+    if (_geoService.containsKey(normalizedQuery)) {
+      debugPrint('✅ Cache hit for: $normalizedQuery');
+      return _geoService.get(normalizedQuery);
+    } else {
+      debugPrint('❌ Cache miss for: $normalizedQuery');
+    }
+
+ // 3. Fallback to online geocoding
+    final query = Uri.encodeComponent(normalizedQuery);
+
+    final url = Uri.parse(
+      'https://nominatim.openstreetmap.org/search?q=$query&format=json&limit=1',
+    );
+
+    final headers = {'User-Agent': 'DegreEZApp/1.0 (contact@degreez.app)'};
+
+    try {
+      final response = await http.get(url, headers: headers);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is List && data.isNotEmpty) {
+          final lat = double.parse(data[0]['lat']);
+          final lon = double.parse(data[0]['lon']);
+          final latlng = LatLng(lat, lon);
+          _geoService.put(normalizedQuery, latlng);
+
+          return latlng;
+        }
+      }
+    } catch (e) {
+      print('Geocoding error: $e');
+    }
+
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
-    _initializeMapData();
+    _geoService.loadCache().then((_) => _initializeMapData());
   }
 
   Future<void> _initializeMapData() async {
@@ -132,20 +165,6 @@ class _CourseMapPageState extends State<CourseMapPage> {
         details,
       );
 
-      if (entries.values.every((list) => list.isEmpty)) {
-        debugPrint('⚠️ No matched schedule entries for ${course.name}');
-        debugPrint('🧾 lectureTime: ${course.lectureTime}');
-        debugPrint('🧾 tutorialTime: ${course.tutorialTime}');
-        debugPrint('🧾 labTime: ${course.labTime}');
-        debugPrint('🧾 workshopTime: ${course.workshopTime}');
-        debugPrint('📅 Course schedule from API:');
-        for (final e in details.schedule) {
-          debugPrint(
-            '  - ${e.type} ${e.group} | ${e.day} ${e.time} @ ${e.building}',
-          );
-        }
-      }
-
       for (final type in ['lecture', 'tutorial', 'lab', 'workshop']) {
         for (final entry in entries[type] ?? []) {
           final scheduleString = StudentCourse.formatScheduleString(
@@ -155,9 +174,9 @@ class _CourseMapPageState extends State<CourseMapPage> {
           debugPrint(
             '🔍 Checking entry: ${entry.type}, ${entry.day} ${entry.time} → $scheduleString',
           );
-          final normalized = _normalizeBuildingName(entry.building);
-          final loc = buildingCoordinates[normalized];
-          debugPrint('📍 Building: ${entry.building}, Found LatLng: $loc');
+          if (entry.building.trim().isEmpty) continue;
+          LatLng? loc = await fetchCoordinates(entry.building);
+          debugPrint('🌍 Geocoded: ${entry.building} → $loc');
 
           if (loc != null) {
             markers.add(
