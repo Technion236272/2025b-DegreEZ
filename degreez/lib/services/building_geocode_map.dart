@@ -23,7 +23,7 @@ String getHebrewBuildingQuery(String building) {
   if (building.contains('בית הסטודנט')) return 'בית הסטודנט טכניון';
   if (building.contains('טכניון')) return building; // fallback
 
-  return '$building טכניון';
+  return 'הטכניון $building' ;
 }
 
 

@@ -27,6 +27,8 @@ class _CourseMapPageState extends State<CourseMapPage> {
   final _geoService = GeocodeCacheService();
   final Map<String, Color> courseColors = {};
   bool legendVisible = true;
+  final Map<String, int> _buildingPinCounts = {};
+  final double _offsetStep = 0.00005; // About 5 meters
   int colorIndex = 0;
   final List<Color> availableColors = [
     Colors.red,
@@ -198,7 +200,21 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
           if (entry.building.trim().isEmpty) continue;
 
-          LatLng? loc = await fetchCoordinates(entry.building);
+          LatLng? baseLoc = await fetchCoordinates(entry.building);
+          if (baseLoc == null) continue;
+
+          // Track how many pins already placed at this building
+          final key = '${baseLoc.latitude},${baseLoc.longitude}';
+          final count = _buildingPinCounts.putIfAbsent(key, () => 0);
+
+          // Offset slightly based on count
+          final offsetLat = baseLoc.latitude + (count * _offsetStep);
+          final offsetLon = baseLoc.longitude + (count * _offsetStep);
+          final loc = LatLng(offsetLat, offsetLon);
+
+          // Increment count for next pin at this building
+          _buildingPinCounts[key] = count + 1;
+
           debugPrint('🌍 Geocoded: ${entry.building} → $loc');
 
           if (loc != null) {
