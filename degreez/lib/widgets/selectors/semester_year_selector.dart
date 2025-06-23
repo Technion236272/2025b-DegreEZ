@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class SemesterYearSelector extends StatefulWidget {
-  final int? year = null;
-  const SemesterYearSelector({super.key,year});
+  final int? year;
+  const SemesterYearSelector({super.key,this.year});
 
   @override
   State<SemesterYearSelector> createState() => _SemesterYearSelectorState();
@@ -22,12 +22,16 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
         currentYear = widget.year!;
       });
     }
+    else {
+      currentYear = DateTime.now().year;
+    }
     super.initState();
   }
   @override
   Widget build(BuildContext context) {
     return Consumer<SignUpProvider>(
       builder: (context, signUpProvider, _) {
+        selectedYear = signUpProvider.selectedSemesterYear;
         final selectedSeason = signUpProvider.selectedSemesterSeason;
         
         // Update local selectedYear if provider value changes
@@ -42,25 +46,31 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
             color: AppColorsDarkMode.secondaryColor,
           ),
           decoration: InputDecoration(
-            labelText: 'Year',
-            labelStyle: const TextStyle(
-              color: AppColorsDarkMode.secondaryColorDim,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: AppColorsDarkMode.borderPrimary,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: AppColorsDarkMode.secondaryColor,
-              ),
-            ),
-            filled: true,
-            fillColor: AppColorsDarkMode.surfaceColor,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.secondaryColor,
+            width: 2.0,
           ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.errorColor,
+            width: 2.0,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+        ),
+        alignLabelWithHint: true,
+        labelText: "Enrollment Year",
+        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor,fontSize: 15 ),
+        hoverColor: AppColorsDarkMode.secondaryColor,
+        hintText: "Year",
+        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+      ),
           dropdownColor: AppColorsDarkMode.surfaceColor,
           items: List.generate(11, (index) {
             int baseYear = currentYear - 5 + index;
@@ -87,6 +97,8 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
               signUpProvider.setSelectedSemesterYear(value);
             }
           },
+          validator: (value) =>
+        (value == null || value.isEmpty) ? "This field is required." : null,
         );
       },
     );

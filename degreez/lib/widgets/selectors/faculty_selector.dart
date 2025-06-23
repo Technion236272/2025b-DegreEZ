@@ -66,6 +66,7 @@ class _FacultySelectorState extends State<FacultySelector> {
   Widget build(BuildContext context) {
     return Consumer<SignUpProvider>(
       builder: (context, signUpProvider, _) {
+        selectedFaculty = context.read<SignUpProvider>().selectedFaculty;
         final currentCatalog = signUpProvider.selectedCatalog;
         
         // Load faculties if catalog has changed
@@ -80,24 +81,40 @@ class _FacultySelectorState extends State<FacultySelector> {
 
         return DropdownButtonFormField<String>(
           iconEnabledColor: AppColorsDarkMode.secondaryColor,
-          value: selectedFaculty,
+          value: _faculties.contains(selectedFaculty) ? selectedFaculty : null,
           style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
           decoration: InputDecoration(
-            labelText: isLoading ? 'Loading faculties...' : 'Faculty',
-            labelStyle: const TextStyle(
-              color: AppColorsDarkMode.secondaryColorDim,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
-            ),
-            filled: true,
-            fillColor: AppColorsDarkMode.surfaceColor,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.secondaryColor,
+            width: 2.0,
           ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.errorColor,
+            width: 2.0,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+        ),
+        alignLabelWithHint: true,
+        labelText: "Faculty",
+        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
+        hoverColor: AppColorsDarkMode.secondaryColor,
+        hintText: currentCatalog == null 
+                          ? 'Please select catalog first'
+                          : isLoading 
+                              ? 'Loading...'
+                              : _faculties.isEmpty
+                                ?'No faculties available'
+                                :"Please Select Your Faculty",
+        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+      ),
           dropdownColor: AppColorsDarkMode.surfaceColor,
           items: _faculties.isEmpty
               ? [
@@ -131,9 +148,13 @@ class _FacultySelectorState extends State<FacultySelector> {
                   if (value != null) {
                     signUpProvider.setSelectedFaculty(value);
                   }
+                  signUpProvider.resetMajor();
                 }
               : null,
+                      validator: (value) =>
+        (value == null || value.isEmpty) && isEnabled ? "don't you belong to a faculty? please choose it" : null,
         );
+        
       },
     );
   }

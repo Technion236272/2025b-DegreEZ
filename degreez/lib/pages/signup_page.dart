@@ -24,22 +24,11 @@ class _SignUpPageState extends State<SignUpPage> {
   // These controllers will be used to get the text input from the user
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _majorController = TextEditingController();
-  final _facultyController = TextEditingController();
   final _preferencesController = TextEditingController();
-  final _semesterController = TextEditingController();
-
-  // Catalog Selection Not Implemented Yet
-  final _catalogController = TextEditingController();
 
   final RegExp _nameValidator = RegExp(r'^(?!\s*$).+');
-  final RegExp _majorValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
-  final RegExp _facultyValidator = RegExp(r'^(?!\s*$)[A-Za-z\s]+$');
   final RegExp _preferencesValidator = RegExp(r'^(.?)+$');
-  final RegExp _semesterValidator = RegExp(
-    r'^(Winter|Spring|Summer) (\d{4}-\d{2}|\d{4})$',
-    caseSensitive: false,
-  );
+
 
   // Catalog Selection Not Implemented Yet
   // final RegExp _catalogValidator = RegExp(r'');
@@ -49,11 +38,7 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _majorController.dispose();
-    _facultyController.dispose();
     _preferencesController.dispose();
-    _semesterController.dispose();
-    _catalogController.dispose();
     super.dispose();
   }
 
@@ -171,21 +156,38 @@ class _SignUpPageState extends State<SignUpPage> {
                             validatorRegex: _nameValidator,
                             errorMessage: "Really? an empty name ...",
                           ),
-                          CatalogSelector(),
-                          FacultySelector(),
-                          MajorSelector(),
-                          Row(children: [
-            Expanded(flex: 4,child: SemesterSeasonSelector(),),
-            Expanded(flex: 5,child: SemesterYearSelector(year: DateTime.now().year-5,),)
-            ]
-            ),
-                          textFormFieldWithStyle(
-                            label: 'Semester',
-                            controller: _semesterController,
-                            example: 'e.g. Winter 2024-25 or Summer 2021',
-                            validatorRegex: _semesterValidator,
-                            errorMessage:
-                                "should match this template 'Winter 2024-25'",
+                          Padding(
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
+                            child: CatalogSelector(),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
+                            child: FacultySelector(),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
+                            child: MajorSelector(),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 10,
+                                  child: SemesterSeasonSelector(),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: const SizedBox(height: 2),
+                                ),
+                                Expanded(
+                                  flex: 10,
+                                  child: SemesterYearSelector(
+                                    year: DateTime.now().year - 5,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           textFormFieldWithStyle(
                             label: 'Preferences',
@@ -210,17 +212,18 @@ class _SignUpPageState extends State<SignUpPage> {
                               backgroundColor: AppColorsDarkMode.accentColor,
                             ),
                             onPressed: () async {
-                              if (_formKey.currentState?.validate() != true)
-                                {return;}
+                              if (_formKey.currentState?.validate() != true) {
+                                return;
+                              }
 
                               final student = StudentModel(
                                 id: user.uid,
                                 name: _nameController.text.trim(),
-                                major: _majorController.text.trim(),
-                                faculty: _facultyController.text.trim(),
+                                major: signUpProvider.selectedMajor!,
+                                faculty: signUpProvider.selectedFaculty!,
                                 preferences: _preferencesController.text.trim(),
-                                semester: _semesterController.text.trim(),
-                                catalog: _catalogController.text.trim(),
+                                semester: signUpProvider.selectedSemester!,
+                                catalog: signUpProvider.selectedCatalog!,
                               );
 
                               // Create student using StudentProvider
@@ -244,6 +247,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                           TextButton(
                             onPressed: () async {
+                              // signUpProvider.resetSelected();
                               final rootNavigator = Navigator.of(
                                 context,
                                 rootNavigator: true,
@@ -271,5 +275,3 @@ class _SignUpPageState extends State<SignUpPage> {
         );
   }
 }
-
-

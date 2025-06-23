@@ -12,10 +12,8 @@ class CatalogSelector extends StatefulWidget {
 }
 
 class _CatalogSelectorState extends State<CatalogSelector> {
-  List<String> _faculties = [];
+  List<String> _catalogs = [];
   String? selectedCatalog;
-
-  
 
   @override
   void initState() {
@@ -24,43 +22,50 @@ class _CatalogSelectorState extends State<CatalogSelector> {
   }
 
   Future<void> _loadItemsFromFile() async {
-    final data = await rootBundle.loadString(
-      'assets/catalogsList.txt',
-    );
-    List<String> lines =
-        data
-            .split('\n')
-            .map((line) => line.trim())
-            .toList();  
+    final data = await rootBundle.loadString('assets/catalogsList.txt');
+    List<String> lines = data.split('\n').map((line) => line.trim()).toList();
 
     setState(() {
-      _faculties = lines;
+      _catalogs = lines;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    selectedCatalog = context.read<SignUpProvider>().selectedCatalog;
     return DropdownButtonFormField<String>(
-      iconEnabledColor: AppColorsDarkMode.secondaryColor,
-      value: selectedCatalog,
+      iconEnabledColor: const Color.fromRGBO(184, 199, 214, 1),
+      value: _catalogs.contains(selectedCatalog) ? selectedCatalog : null,
       style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
       decoration: InputDecoration(
-        labelText: 'Catalog',
-        labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.secondaryColor,
+            width: 2.0,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
+          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
         ),
-        filled: true,
-        fillColor: AppColorsDarkMode.surfaceColor,
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.errorColor,
+            width: 2.0,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+        ),
+        alignLabelWithHint: true,
+        labelText: "Catalog",
+        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
+        hoverColor: AppColorsDarkMode.secondaryColor,
+        hintText: "Please Select Catalog Year",
+        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
       ),
       dropdownColor: AppColorsDarkMode.surfaceColor,
       items:
-          _faculties.map((item) {
+          _catalogs.map((item) {
             return DropdownMenuItem<String>(value: item, child: Text(item));
           }).toList(),
       onChanged: (value) {
@@ -70,7 +75,11 @@ class _CatalogSelectorState extends State<CatalogSelector> {
             context.read<SignUpProvider>().setSelectedCatalog(value);
           });
         }
+        context.read<SignUpProvider>().resetFaculty();
+        context.read<SignUpProvider>().resetMajor();
       },
+      validator: (value) =>
+        (value == null || value.isEmpty) ? "can't leave this one empty ;)" : null,
     );
   }
 }

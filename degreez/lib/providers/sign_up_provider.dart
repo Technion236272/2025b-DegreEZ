@@ -13,6 +13,13 @@ class SignUpProvider extends ChangeNotifier {
   String? get selectedCatalog => _selectedCatalog;
   String? get selectedSemesterSeason => _selectedSemesterSeason;
   String? get selectedSemesterYear => _selectedSemesterYear;
+  String? get selectedSemester => '$_selectedSemesterSeason $_selectedSemesterYear';
+
+  void resetFaculty(){_selectedFaculty=null;}  
+  void resetMajor(){_selectedMajor=null;}  
+  void resetCatalog(){_selectedCatalog=null;}  
+  void resetSemesterSeason(){_selectedSemesterSeason=null;}  
+  void resetSemesterYear(){_selectedSemesterYear=null;}  
   
   void setSelectedFaculty(String val) {
     _selectedFaculty = val;
@@ -37,5 +44,13 @@ class SignUpProvider extends ChangeNotifier {
   void setSelectedSemesterYear(String val) {
     _selectedSemesterYear = val;
     notifyListeners();
+  }
+
+  void resetSelected(){
+    resetFaculty();
+    resetMajor();
+    resetCatalog();
+    resetSemesterSeason();
+    resetSemesterYear();
   }
 }

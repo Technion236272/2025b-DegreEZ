@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +100,7 @@ class _MajorSelectorState extends State<MajorSelector> {
   Widget build(BuildContext context) {
     return Consumer<SignUpProvider>(
       builder: (context, signUpProvider, _) {
+        selectedMajor = context.read<SignUpProvider>().selectedMajor;
         final currentFaculty = signUpProvider.selectedFaculty;
         final currentCatalog = signUpProvider.selectedCatalog;
         
@@ -120,24 +122,42 @@ class _MajorSelectorState extends State<MajorSelector> {
 
         return DropdownButtonFormField<String>(
           iconEnabledColor: AppColorsDarkMode.secondaryColor,
-          value: selectedMajor,
+          value: _majors.contains(selectedMajor) ? selectedMajor : null,
           style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
           decoration: InputDecoration(
-            labelText: isLoading ? 'Loading majors...' : 'Major',
-            labelStyle: const TextStyle(
-              color: AppColorsDarkMode.secondaryColorDim,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColorsDarkMode.secondaryColor),
-            ),
-            filled: true,
-            fillColor: AppColorsDarkMode.surfaceColor,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.secondaryColor,
+            width: 2.0,
           ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.errorColor,
+            width: 2.0,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+        ),
+        alignLabelWithHint: true,
+        labelText: "Major",
+        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
+        hoverColor: AppColorsDarkMode.secondaryColor,
+        hintText: currentCatalog == null 
+                          ? 'Please select catalog first'
+                          : currentFaculty == null 
+                              ? 'Please select faculty first'
+                              : isLoading 
+                                  ? 'Loading...'
+                                  : _majors.isEmpty
+                                      ? 'No majors available'
+                                      : 'Please Select Your Major',
+        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+      ),
           dropdownColor: AppColorsDarkMode.surfaceColor,
           items: _majors.isEmpty
               ? [
@@ -161,7 +181,19 @@ class _MajorSelectorState extends State<MajorSelector> {
               : _majors.map((item) {
                   return DropdownMenuItem<String>(
                     value: item,
-                    child: Text(item),
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.7, // Constrain width
+                      child: AutoSizeText(
+                        item,
+                        maxFontSize: 15,
+                        minFontSize: 8,
+                        maxLines: 2, // Allow text to wrap to 2 lines if needed
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColorsDarkMode.secondaryColor,
+                        ),
+                      ),
+                    ),
                   );
                 }).toList(),
           onChanged: isEnabled
@@ -175,6 +207,8 @@ class _MajorSelectorState extends State<MajorSelector> {
                   }
                 }
               : null,
+        validator: (value) =>
+        (value == null || value.isEmpty) && isEnabled ? "Can't leave your major empty :)" : null,
         );
       },
     );

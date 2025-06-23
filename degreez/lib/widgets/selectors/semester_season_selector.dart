@@ -18,6 +18,7 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
   Widget build(BuildContext context) {
     return Consumer<SignUpProvider>(
       builder: (context, signUpProvider, _) {
+        selectedSemesterSeason = signUpProvider.selectedSemesterSeason;
         return DropdownButtonFormField<String>(
           iconEnabledColor: AppColorsDarkMode.secondaryColor,
           value: selectedSemesterSeason,
@@ -25,25 +26,31 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
             color: AppColorsDarkMode.secondaryColor,
           ),
           decoration: InputDecoration(
-            labelText: 'Semester',
-            labelStyle: const TextStyle(
-              color: AppColorsDarkMode.secondaryColorDim,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: AppColorsDarkMode.borderPrimary,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: AppColorsDarkMode.secondaryColor,
-              ),
-            ),
-            filled: true,
-            fillColor: AppColorsDarkMode.surfaceColor,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.secondaryColor,
+            width: 2.0,
           ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: AppColorsDarkMode.errorColor,
+            width: 2.0,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+        ),
+        alignLabelWithHint: true,
+        labelText: "Enrollment Semester",
+        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor,fontSize: 15),
+        hoverColor: AppColorsDarkMode.secondaryColor,
+        hintText: "Season",
+        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+      ),
           dropdownColor: AppColorsDarkMode.surfaceColor,
           items: ['Winter', 'Spring', 'Summer'].map((season) {
             return DropdownMenuItem<String>(
@@ -72,6 +79,8 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
               signUpProvider.setSelectedSemesterYear(autoYear);
             }
           },
+          validator: (value) =>
+        (value == null || value.isEmpty) ? "This field is required." : null,
         );
       },
     );
