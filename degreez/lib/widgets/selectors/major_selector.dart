@@ -16,32 +16,35 @@ class _MajorSelectorState extends State<MajorSelector> {
   String? selectedMajor;
   bool isLoading = false;
   String? lastLoadedFaculty;
+  String? lastLoadedCatalog;
 
   @override
   void initState() {
     super.initState();
     // Load majors after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final faculty = context.read<SignUpProvider>().selectedFaculty;
-      if (faculty != null) {
-        _loadItemsFromFile(faculty);
+      final signUpProvider = context.read<SignUpProvider>();
+      final faculty = signUpProvider.selectedFaculty;
+      final catalog = signUpProvider.selectedCatalog;
+      if (faculty != null && catalog != null) {
+        _loadItemsFromFile(catalog, faculty);
       }
     });
   }
 
-  Future<void> _loadItemsFromFile(String faculty) async {
-    if (faculty == lastLoadedFaculty || isLoading) {
-      return; // Avoid reloading the same faculty or loading while already loading
+  Future<void> _loadItemsFromFile(String catalog, String faculty) async {
+    if ((faculty == lastLoadedFaculty && catalog == lastLoadedCatalog) || isLoading) {
+      return; // Avoid reloading the same catalog/faculty combination or loading while already loading
     }
 
     setState(() {
       isLoading = true;
-      selectedMajor = null; // Reset selection when faculty changes
+      selectedMajor = null; // Reset selection when catalog or faculty changes
     });
 
     try {
       final data = await rootBundle.loadString(
-        'assets/Faculties2025/$faculty.txt',
+        'assets/Faculties$catalog/$faculty.txt',
       );
       
       List<String> lines = data.split('\n').map((line) => line.trim()).toList();
@@ -54,6 +57,7 @@ class _MajorSelectorState extends State<MajorSelector> {
           _majors = [];
           isLoading = false;
           lastLoadedFaculty = faculty;
+          lastLoadedCatalog = catalog;
         });
         return;
       }
@@ -77,14 +81,16 @@ class _MajorSelectorState extends State<MajorSelector> {
         _majors = majors;
         isLoading = false;
         lastLoadedFaculty = faculty;
+        lastLoadedCatalog = catalog;
       });
     } catch (e) {
       // Handle file loading error
-      debugPrint('Error loading majors for faculty $faculty: $e');
+      debugPrint('Error loading majors for catalog $catalog, faculty $faculty: $e');
       setState(() {
         _majors = [];
         isLoading = false;
         lastLoadedFaculty = faculty;
+        lastLoadedCatalog = catalog;
       });
     }
   }
@@ -94,16 +100,23 @@ class _MajorSelectorState extends State<MajorSelector> {
     return Consumer<SignUpProvider>(
       builder: (context, signUpProvider, _) {
         final currentFaculty = signUpProvider.selectedFaculty;
+        final currentCatalog = signUpProvider.selectedCatalog;
         
-        // Load majors if faculty has changed
-        if (currentFaculty != null && currentFaculty != lastLoadedFaculty && !isLoading) {
+        // Load majors if catalog or faculty has changed
+        if (currentFaculty != null && 
+            currentCatalog != null && 
+            (currentFaculty != lastLoadedFaculty || currentCatalog != lastLoadedCatalog) && 
+            !isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _loadItemsFromFile(currentFaculty);
+            _loadItemsFromFile(currentCatalog, currentFaculty);
           });
         }
 
         // Determine if dropdown should be enabled
-        bool isEnabled = currentFaculty != null && _majors.isNotEmpty && !isLoading;
+        bool isEnabled = currentFaculty != null && 
+                        currentCatalog != null && 
+                        _majors.isNotEmpty && 
+                        !isLoading;
 
         return DropdownButtonFormField<String>(
           iconEnabledColor: AppColorsDarkMode.secondaryColor,
@@ -132,11 +145,13 @@ class _MajorSelectorState extends State<MajorSelector> {
                     value: null,
                     enabled: false,
                     child: Text(
-                      currentFaculty == null 
-                          ? 'Please select faculty first'
-                          : isLoading 
-                              ? 'Loading...'
-                              : 'No majors available',
+                      currentCatalog == null 
+                          ? 'Please select catalog first'
+                          : currentFaculty == null 
+                              ? 'Please select faculty first'
+                              : isLoading 
+                                  ? 'Loading...'
+                                  : 'No majors available',
                       style: TextStyle(
                         color: AppColorsDarkMode.secondaryColorDim,
                       ),

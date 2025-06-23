@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 
 /// A provider class that manages authentication state using Google Sign-In and Firebase Auth.
 class SignUpProvider extends ChangeNotifier {
-  String? _selectedFaculty = null;
-  String? _selectedMajor = null;
-  
+  String? _selectedCatalog;
+  String? _selectedFaculty;
+  String? _selectedMajor;
+  String? _selectedSemesterSeason;
+  String? _selectedSemesterYear;
   
   String? get selectedFaculty => _selectedFaculty;
   String? get selectedMajor => _selectedMajor;
+  String? get selectedCatalog => _selectedCatalog;
+  String? get selectedSemesterSeason => _selectedSemesterSeason;
+  String? get selectedSemesterYear => _selectedSemesterYear;
   
   void setSelectedFaculty(String val) {
     _selectedFaculty = val;
@@ -19,4 +24,18 @@ class SignUpProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedCatalog(String val) {
+    _selectedCatalog = val;
+    notifyListeners();
+  }
+
+  void setSelectedSemesterSeason(String val) {
+    _selectedSemesterSeason = val;
+    notifyListeners();
+  }
+
+  void setSelectedSemesterYear(String val) {
+    _selectedSemesterYear = val;
+    notifyListeners();
+  }
 }

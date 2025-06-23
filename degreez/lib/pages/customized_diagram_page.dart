@@ -5,6 +5,8 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/widgets/selectors/semester_season_selector.dart';
+import 'package:degreez/widgets/selectors/semester_year_selector.dart';
 import 'package:degreez/widgets/semester_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -338,113 +340,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Season Dropdown
-                  DropdownButtonFormField<String>(
-                    iconEnabledColor: AppColorsDarkMode.secondaryColor,
-                    value: selectedSeason,
-                    style: const TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Semester',
-                      labelStyle: const TextStyle(
-                        color: AppColorsDarkMode.secondaryColorDim,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: AppColorsDarkMode.borderPrimary,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: AppColorsDarkMode.surfaceColor,
-                    ),
-                    dropdownColor: AppColorsDarkMode.surfaceColor,
-                    items:
-                        ['Winter', 'Spring', 'Summer'].map((season) {
-                          return DropdownMenuItem<String>(
-                            value: season,
-                            child: Text(
-                              season,
-                              style: const TextStyle(
-                                color: AppColorsDarkMode.secondaryColor,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedSeason = value;
-                          selectedYear =
-                              value == 'Winter'
-                                  ? '${currentYear - 1}-$currentYear'
-                                  : '$currentYear';
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // Year Dropdown
-                  DropdownButtonFormField<String>(
-                    iconEnabledColor: AppColorsDarkMode.secondaryColor,
-                    value: selectedYear,
-                    style: const TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Year',
-                      labelStyle: const TextStyle(
-                        color: AppColorsDarkMode.secondaryColorDim,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: AppColorsDarkMode.borderPrimary,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: AppColorsDarkMode.secondaryColor,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: AppColorsDarkMode.surfaceColor,
-                    ),
-                    dropdownColor: AppColorsDarkMode.surfaceColor,
-                    items: List.generate(11, (index) {
-                      int baseYear = currentYear - 5 + index;
-                      final yearLabel =
-                          selectedSeason == 'Winter'
-                              ? '${baseYear}-${baseYear + 1}'
-                              : '$baseYear';
-                      return DropdownMenuItem<String>(
-                        value: yearLabel,
-                        child: Text(
-                          yearLabel,
-                          style: const TextStyle(
-                            color: AppColorsDarkMode.secondaryColor,
-                          ),
-                        ),
-                      );
-                    }),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          selectedYear = value;
-                        });
-                      }
-                    },
-                  ),
-                ],
+children: [
+  SemesterSeasonSelector(),
+  const SizedBox(height: 12),
+  SemesterYearSelector(),
+],
               ),
               actions: [
                 TextButton(

@@ -3,8 +3,11 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/widgets/selectors/catalog_selector.dart';
 import 'package:degreez/widgets/selectors/faculty_selector.dart';
 import 'package:degreez/widgets/selectors/major_selector.dart';
+import 'package:degreez/widgets/selectors/semester_season_selector.dart';
+import 'package:degreez/widgets/selectors/semester_year_selector.dart';
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -160,8 +163,6 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          FacultySelector(),
-                          MajorSelector(),
                           const SizedBox(height: 16),
                           textFormFieldWithStyle(
                             label: 'Name',
@@ -170,22 +171,14 @@ class _SignUpPageState extends State<SignUpPage> {
                             validatorRegex: _nameValidator,
                             errorMessage: "Really? an empty name ...",
                           ),
-                          textFormFieldWithStyle(
-                            label: 'Major',
-                            controller: _majorController,
-                            example: 'e.g. Data Analysis',
-                            validatorRegex: _majorValidator,
-                            errorMessage:
-                                "Invalid Input! remember to write the major in English",
-                          ),
-                          textFormFieldWithStyle(
-                            label: 'Faculty',
-                            controller: _facultyController,
-                            example: 'e.g. Computer Science',
-                            validatorRegex: _facultyValidator,
-                            errorMessage:
-                                "Invalid Input! remember to write the faculty in English",
-                          ),
+                          CatalogSelector(),
+                          FacultySelector(),
+                          MajorSelector(),
+                          Row(children: [
+            Expanded(flex: 4,child: SemesterSeasonSelector(),),
+            Expanded(flex: 5,child: SemesterYearSelector(year: DateTime.now().year-5,),)
+            ]
+            ),
                           textFormFieldWithStyle(
                             label: 'Semester',
                             controller: _semesterController,
