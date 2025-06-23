@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:calendar_view/calendar_view.dart';
 
-
 import 'services/firebase_options.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -27,7 +26,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,DeviceOrientation.portraitDown
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
   ]);
   // Initialize Firebase
   try {
@@ -42,7 +42,6 @@ Future<void> main() async {
   // final model =
   //     FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
-
   runApp(const MyApp());
 }
 
@@ -55,7 +54,7 @@ class MyApp extends StatelessWidget {
       providers: [
         // Authentication
         ChangeNotifierProvider(create: (_) => LogInNotifier()),
-        
+
         // New improved providers
         ChangeNotifierProvider(create: (_) => StudentProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),
@@ -66,7 +65,7 @@ class MyApp extends StatelessWidget {
             return provider;
           },
         ),
-        
+
         // UI providers
         ChangeNotifierProvider(create: (_) => CustomizedDiagramNotifier()),
         ChangeNotifierProvider(create: (_) => ColorThemeProvider()),
@@ -74,8 +73,11 @@ class MyApp extends StatelessWidget {
       child: CalendarControllerProvider(
         controller: EventController(),
         child: MaterialApp(
-          title: 'DegreEZ',          theme: ThemeData.dark().copyWith(            dialogTheme: DialogTheme(
-              backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
+          title: 'DegreEZ',
+          theme: ThemeData.dark().copyWith(
+            dialogTheme: DialogTheme(
+              backgroundColor:
+                  AppColorsDarkMode.mainColor, // Changed to night black
               shape: const RoundedRectangleBorder(
                 // Removed border and border radius for modern seamless look
                 side: BorderSide.none,
@@ -83,7 +85,9 @@ class MyApp extends StatelessWidget {
               ),
             ),
             dividerTheme: const DividerThemeData(
-              color: Colors.transparent, // Make dividers invisible for seamless look
+              color:
+                  Colors
+                      .transparent, // Make dividers invisible for seamless look
               thickness: 0,
             ),
             scaffoldBackgroundColor: AppColorsDarkMode.mainColor,
@@ -101,7 +105,7 @@ class MyApp extends StatelessWidget {
             floatingActionButtonTheme: const FloatingActionButtonThemeData(
               backgroundColor: AppColorsDarkMode.secondaryColor,
               foregroundColor: AppColorsDarkMode.accentColor,
-              elevation:8,
+              elevation: 8,
             ),
             // Icon theme
             iconTheme: const IconThemeData(
@@ -112,15 +116,33 @@ class MyApp extends StatelessWidget {
             ),
             // Text theme with light colors from palette
             textTheme: ThemeData.dark().textTheme.copyWith(
-              bodyLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              bodyMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              bodySmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              headlineLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              headlineMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              headlineSmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              titleLarge: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              titleMedium: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-              titleSmall: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+              bodyLarge: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              bodyMedium: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              bodySmall: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              headlineLarge: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              headlineMedium: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              headlineSmall: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              titleLarge: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              titleMedium: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
+              titleSmall: const TextStyle(
+                color: AppColorsDarkMode.secondaryColor,
+              ),
             ),
             // App bar theme
             appBarTheme: const AppBarTheme(
@@ -130,8 +152,11 @@ class MyApp extends StatelessWidget {
             ),
             // Bottom sheet theme
             bottomSheetTheme: const BottomSheetThemeData(
-              backgroundColor: AppColorsDarkMode.mainColor, // Night black for bottom sheets
-              modalBackgroundColor: AppColorsDarkMode.mainColor, // Night black for modal bottom sheets
+              backgroundColor:
+                  AppColorsDarkMode.mainColor, // Night black for bottom sheets
+              modalBackgroundColor:
+                  AppColorsDarkMode
+                      .mainColor, // Night black for modal bottom sheets
               elevation: 0, // Minimal elevation for modern look
             ),
             // Popup menu theme

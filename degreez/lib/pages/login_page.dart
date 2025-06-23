@@ -120,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             width: 350,
                             height: 350,
-                            child: Image.asset('assets/Logo_DarkMode2.png'),
+                            child: Image.asset('assets/Logo_DarkMode3.png'),
                           ),
                           const SizedBox(height: 16),
                           // App Name

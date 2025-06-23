@@ -38,3 +38,4 @@ flutter:
   assets:
     - .env
     - assets/
+    - assets/Faculties2025/
