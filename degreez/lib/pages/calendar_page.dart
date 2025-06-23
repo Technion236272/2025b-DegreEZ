@@ -134,11 +134,11 @@ class _CalendarPageState extends State<CalendarPage>
         colorThemeProvider,
         _,
       ) {        // Update calendar events when courses change
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (widget.selectedSemester == null) return;
 
           if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
-            _updateCalendarEvents(
+            await _updateCalendarEvents(
               courseProvider,
               colorThemeProvider,
               forceSemester: widget.selectedSemester, // ⬅️ use selected semester
@@ -146,12 +146,10 @@ class _CalendarPageState extends State<CalendarPage>
 
             if (!_hasTriggeredInitialLoad) {
               _hasTriggeredInitialLoad = true;
-              Future.delayed(const Duration(milliseconds: 50), () {
-                if (mounted) setState(() {});
-              });
+              if (mounted) setState(() {});
             }
           }
-        });        return Column(
+        });return Column(
           children: [
             // Course Panel with integrated Toggle Button
             _buildCoursePanelWithIntegratedToggle(courseProvider),
@@ -291,24 +289,26 @@ class _CalendarPageState extends State<CalendarPage>
       eventArranger: const SideEventArranger(),
     );
   }
-
   // Updated calendar event creation to preserve manually added events
-  void _updateCalendarEvents(
+  Future<void> _updateCalendarEvents(
     CourseProvider courseProvider,
     ColorThemeProvider colorThemeProvider, {
     String? forceSemester,
-  }) {
-    // debugPrint('=== Updating calendar events with schedule selection ===');
-
-    // Clear existing events
-    _eventController.removeWhere((event) => true);    // Get current week start (Sunday)
+  }) async {
+    // debugPrint('=== Updating calendar events with schedule selection ===');    // Clear existing events
+    _eventController.removeWhere((event) => true);
+    
+    // Get current week start (Sunday)
     final now = DateTime.now();
     final currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
     //  debugPrint('Current week start (Sunday): $currentWeekStart');
 
     // debugPrint('Found ${courseProvider.coursesBySemester.length} semesters with courses');
-
+    
     final courseDataProvider = context.read<CourseDataProvider>();
+    
+    // Collect all course detail requests to await them properly
+    final List<Future<void>> courseDetailFutures = [];
 
     for (final semesterEntry in courseProvider.coursesBySemester.entries) {
       // process only the current semester
@@ -340,41 +340,53 @@ class _CalendarPageState extends State<CalendarPage>
           continue;
         }
         final (year, semesterCode) = parsed;
-        CourseService.getCourseDetails(
-          year,
-          semesterCode,
-          course.courseId,        ).then((courseDetails) {
-          if (courseDetails?.schedule.isNotEmpty == true) {
-            //   debugPrint( 'Using API schedule for ${course.name} with selection filtering', );
-            _createCalendarEventsFromSchedule(
-              course,
-              courseDetails!,
-              semester,
-              currentWeekStart,
-              colorThemeProvider,
-            );
-          } else {
-            debugPrint(
-              'Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}", lab: "${course.labTime}", workshop: "${course.workshopTime}")',
-            );
-            // Create basic events from stored lecture/tutorial/lab/workshop times if no API schedule
+        
+        // Add the course detail future to our list
+        courseDetailFutures.add(
+          CourseService.getCourseDetails(
+            year,
+            semesterCode,
+            course.courseId,
+          ).then((courseDetails) {
+            if (courseDetails?.schedule.isNotEmpty == true) {
+              //   debugPrint( 'Using API schedule for ${course.name} with selection filtering', );
+              _createCalendarEventsFromSchedule(
+                course,
+                courseDetails!,
+                semester,
+                currentWeekStart,
+                colorThemeProvider,
+              );
+            } else {
+              debugPrint(
+                'Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}", lab: "${course.labTime}", workshop: "${course.workshopTime}")',
+              );
+              // Create basic events from stored lecture/tutorial/lab/workshop times if no API schedule
+              _createBasicCalendarEvents(
+                course,
+                semester,
+                currentWeekStart,
+                colorThemeProvider,
+              );
+            }
+          }).catchError((error) {
+            debugPrint('Error getting course details for ${course.courseId}: $error');
+            // Fallback to basic events if API fails
             _createBasicCalendarEvents(
               course,
               semester,
               currentWeekStart,
               colorThemeProvider,
             );
-          }
-
-          // After processing all courses, force a UI refresh
-          if (mounted) {
-            setState(() {
-              // Force rebuild to show new events
-            });
-          }
-        });
+          }),
+        );
       }
     }
+    
+    // Wait for all course details to be processed
+    await Future.wait(courseDetailFutures);
+    
+    debugPrint('All course details processed, total events: ${_eventController.allEvents.length}');
 
     //    debugPrint('Total events added: $totalEventsAdded');
   }
@@ -825,9 +837,7 @@ class _CalendarPageState extends State<CalendarPage>
         ),
       );
       return;
-    }
-
-    // Find the course in the semester
+    }    // Find the course in the semester with better error handling
     final semesterCourses = courseProvider.coursesBySemester[semester];
     if (semesterCourses == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -839,44 +849,98 @@ class _CalendarPageState extends State<CalendarPage>
       return;
     }
 
-    final course = semesterCourses.firstWhere(
-      (c) => c.courseId == courseId,
-      orElse:
-          () => StudentCourse(
-            courseId: courseId,
-            name: 'Unknown Course',
-            finalGrade: '',
-            lectureTime: '',
-            tutorialTime: '',
-            labTime: '',
-            workshopTime: '',
-            creditPoints: 0.0, // Default value, should not be used
-          ),
-    );
+    // Try to find the actual course instead of creating a dummy one
+    StudentCourse? foundCourse;
+    try {
+      foundCourse = semesterCourses.firstWhere((c) => c.courseId == courseId);
+    } catch (e) {
+      // Course not found in the semester
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Course "$courseId" not found in semester "$semester"'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
-    // Get course details for schedule selection
+    final course = foundCourse;    // Get course details for schedule selection with error handling
     final courseDataProvider = context.read<CourseDataProvider>();
     final parsed = _parseSemesterCode(semester);
-    if (parsed == null) return;
+    if (parsed == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid semester format: "$semester"'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     final (year, semesterCode) = parsed;
 
-    final courseDetails = await courseDataProvider.getCourseDetails(
-      year,
-      semesterCode,
-      courseId,
-    );
+    EnhancedCourseDetails? courseDetails;
+    try {
+      courseDetails = await courseDataProvider.getCourseDetails(
+        year,
+        semesterCode,
+        courseId,
+      );
+    } catch (e) {
+      debugPrint('Error fetching course details for event tap: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load course details: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
 
-    // Use shared mixin to show schedule selection dialog
+    if (courseDetails == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Course details not available for "$courseId"'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }// Use shared mixin to show schedule selection dialog
     if (mounted) {
       showScheduleSelectionDialog(
         context,
         course,
         courseDetails,
-        semester: semester,
-        onSelectionUpdated: () {
-          // Refresh calendar events to show updated selection
-          final colorThemeProvider = context.read<ColorThemeProvider>();
-          _updateCalendarEvents(courseProvider, colorThemeProvider);
+        semester: semester,        onSelectionUpdated: () async {
+          // Match the course panel's callback behavior for consistency
+          debugPrint('Schedule selection updated from event tap, refreshing...');
+          
+          // Small delay to ensure Firebase update consistency
+          await Future.delayed(const Duration(milliseconds: 100));
+          
+          if (mounted) {
+            // First update the local UI state
+            setState(() {});
+            
+            // Then refresh the calendar events with proper error handling
+            try {
+              final colorThemeProvider = context.read<ColorThemeProvider>();
+              await refreshCalendarEvents(context, courseProvider, colorThemeProvider);
+              debugPrint('Calendar events refreshed successfully after event tap schedule selection');
+            } catch (e) {
+              debugPrint('Error refreshing calendar events from event tap: $e');
+              // Still show success message to user even if refresh fails
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Schedule updated, but calendar refresh failed. Please reload the page.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            }
+          }
         },
       );
     }
@@ -919,6 +983,32 @@ class _CalendarPageState extends State<CalendarPage>
     debugPrint('Course $courseId restored to calendar');
     // Trigger calendar refresh
     setState(() {});
+  }  // Override the mixin's calendar refresh method to properly update calendar events
+  @override
+  Future<void> refreshCalendarEvents(
+    BuildContext context,
+    CourseProvider courseProvider,
+    ColorThemeProvider colorThemeProvider,
+  ) async {
+    debugPrint('Refreshing calendar events after schedule selection change');
+    
+    // Clear existing events first to ensure clean refresh
+    _eventController.removeWhere((event) => true);
+    
+    // Force a complete calendar refresh with current semester
+    await _updateCalendarEvents(
+      courseProvider,
+      colorThemeProvider,
+      forceSemester: widget.selectedSemester,
+    );
+    
+    // Force UI update after the async operations complete
+    if (mounted) {
+      setState(() {
+        // Force rebuild to show updated events
+      });
+    }
   }
+
   // Removed _loadGlobalSemesterCourses - semester management now handled by NavigatorPage
 }

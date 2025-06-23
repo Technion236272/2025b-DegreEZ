@@ -90,10 +90,12 @@ mixin ScheduleSelectionMixin {
       workshopTime,
     );
 
-    if (success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    if (success && context.mounted) {      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Schedule selection updated')),
       );
+      
+      // Wait a bit to ensure Firebase data is consistent
+      await Future.delayed(const Duration(milliseconds: 200));
       
       // Call the callback to refresh UI if provided
       onSelectionUpdated?.call();
@@ -102,7 +104,7 @@ mixin ScheduleSelectionMixin {
       try {
         final colorThemeProvider = context.read<ColorThemeProvider>();
         if (context.mounted) {
-          _refreshCalendarEvents(context, courseProvider, colorThemeProvider);
+          await refreshCalendarEvents(context, courseProvider, colorThemeProvider);
         }
       } catch (e) {
         // ColorThemeProvider might not be available in all contexts
@@ -116,14 +118,12 @@ mixin ScheduleSelectionMixin {
         ),
       );
     }
-  }
-
-  /// Refresh calendar events - can be overridden by implementing classes
-  void _refreshCalendarEvents(
+  }  /// Refresh calendar events - can be overridden by implementing classes
+  Future<void> refreshCalendarEvents(
     BuildContext context,
     CourseProvider courseProvider,
     ColorThemeProvider colorThemeProvider,
-  ) {
+  ) async {
     // Default implementation - can be overridden by classes that use this mixin
     debugPrint('Default calendar refresh - should be overridden by implementing class');
   }

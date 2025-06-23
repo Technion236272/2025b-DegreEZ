@@ -778,14 +778,33 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   ),
                                   trailing: PopupMenuButton<String>(
                                     onSelected: (value) {
-                                      switch (value) {
-                                        case 'select_schedule':
+                                      switch (value) {                                        case 'select_schedule':
                                           showScheduleSelectionDialog(
                                             context,
                                             course,
                                             courseDetails,
-                                            onSelectionUpdated:
-                                                () => setState(() {}),
+                                            semester: widget.selectedSemester, // Add semester parameter
+                                            onSelectionUpdated: () async {
+                                              // Match the calendar page's callback behavior
+                                              debugPrint('Schedule selection updated from course panel, refreshing...');
+                                              
+                                              // Small delay to ensure consistency
+                                              await Future.delayed(const Duration(milliseconds: 100));
+                                              
+                                              if (mounted) {
+                                                setState(() {});
+                                                
+                                                // Also refresh the calendar events if possible
+                                                // This ensures both functionalities behave the same way
+                                                try {
+                                                  final colorThemeProvider = context.read<ColorThemeProvider>();
+                                                  final courseProvider = context.read<CourseProvider>();
+                                                  await refreshCalendarEvents(context, courseProvider, colorThemeProvider);
+                                                } catch (e) {
+                                                  debugPrint('Could not refresh calendar events from course panel: $e');
+                                                }
+                                              }
+                                            },
                                           );
                                           break;
                                         case 'add_to_calendar':
