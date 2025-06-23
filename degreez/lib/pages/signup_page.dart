@@ -1,8 +1,10 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/login_notifier.dart';
+import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
-import 'package:degreez/widgets/major_selector.dart';
+import 'package:degreez/widgets/selectors/faculty_selector.dart';
+import 'package:degreez/widgets/selectors/major_selector.dart';
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -65,6 +67,7 @@ class _SignUpPageState extends State<SignUpPage> {
     debugPrint("entered SignUp Page");
     final loginNotifier = context.watch<LogInNotifier>();
     final studentNotifier = context.watch<StudentProvider>();
+    final signUpProvider = context.watch<SignUpProvider>();
 
     if (loginNotifier.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -157,7 +160,8 @@ class _SignUpPageState extends State<SignUpPage> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          CatalogSelector(),
+                          FacultySelector(),
+                          MajorSelector(),
                           const SizedBox(height: 16),
                           textFormFieldWithStyle(
                             label: 'Name',

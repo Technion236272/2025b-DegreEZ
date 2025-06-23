@@ -1,17 +1,21 @@
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:provider/provider.dart';
 
-class MajorSelector extends StatefulWidget {
-  const MajorSelector({super.key});
+class FacultySelector extends StatefulWidget {
+  const FacultySelector({super.key});
 
   @override
-  State<MajorSelector> createState() => _MajorSelectorState();
+  State<FacultySelector> createState() => _FacultySelectorState();
 }
 
-class _MajorSelectorState extends State<MajorSelector> {
-  List<String> _majors = [];
-  String? selectedMajor;
+class _FacultySelectorState extends State<FacultySelector> {
+  List<String> _faculties = [];
+  String? selectedFaculty;
+
+  
 
   @override
   void initState() {
@@ -21,19 +25,16 @@ class _MajorSelectorState extends State<MajorSelector> {
 
   Future<void> _loadItemsFromFile() async {
     final data = await rootBundle.loadString(
-      'assets/Faculties2025/מדעי המחשב.txt',
+      'assets/24-25.txt',
     );
     List<String> lines =
         data
             .split('\n')
             .map((line) => line.trim())
-            .toList();
-
-    List<String> majors = lines.sublist(lines.indexOf('מסלולים:')+1,lines.indexWhere((val){return val=="";},lines.indexOf('מסלולים:')));
-  
+            .toList();  
 
     setState(() {
-      _majors = majors;
+      _faculties = lines;
     });
   }
 
@@ -41,10 +42,10 @@ class _MajorSelectorState extends State<MajorSelector> {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
       iconEnabledColor: AppColorsDarkMode.secondaryColor,
-      value: selectedMajor,
+      value: selectedFaculty,
       style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
       decoration: InputDecoration(
-        labelText: 'Major',
+        labelText: 'Faculty',
         labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -59,20 +60,17 @@ class _MajorSelectorState extends State<MajorSelector> {
       ),
       dropdownColor: AppColorsDarkMode.surfaceColor,
       items:
-          _majors.map((item) {
+          _faculties.map((item) {
             return DropdownMenuItem<String>(value: item, child: Text(item));
           }).toList(),
       onChanged: (value) {
         if (value != null) {
           setState(() {
-            selectedMajor = value;
+            selectedFaculty = value;
+            context.read<SignUpProvider>().setSelectedFaculty(value);
           });
         }
       },
     );
-  }
-
-  Future<String> loadAsset() async {
-    return await rootBundle.loadString('assets/Faculties2025/מדעי המחשב.txt');
   }
 }
