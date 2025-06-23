@@ -1,0 +1,31 @@
+can you list the "מסלולים" and "מגמות" corresponding to them form the provided text ?
+list them in Hebrew
+
+list them in this format:
+מסלולים:
+מסלול 1 
+מסלול 2
+מסלול 3
+.
+.
+.
+.
+.
+מגמות:
+מסלול 1 -> מגמה 1
+מסלול 1 -> מגמה 2
+מסלול 2 -> מגמה 3
+.
+.
+.
+תוכניות מצוינות:
+תוכנית 1
+תוכנית 2
+
+תוכנית התחומת משנה:
+תוכנית 1
+תוכנית 2
+
+just print the format without any extra words
+the Hebrew text sometimes is written backwards, please fix it
+the titles are in the provided order such that data that comes after מגמות which comes after מסלולים is irrelevant to מסלולים as its section has already ended
