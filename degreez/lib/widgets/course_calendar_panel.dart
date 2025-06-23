@@ -973,10 +973,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       final courseColor = colorThemeProvider.getCourseColor(course.courseId);
       int eventsAdded = 0;
       // Create events from detailed schedule data only for selected times
-      final courseProvider = context.read<CourseProvider>();
-      final selectedEntries = courseProvider.getSelectedScheduleEntries(
+      final courseProvider = context.read<CourseProvider>();      final selectedEntries = courseProvider.getSelectedScheduleEntries(
         course.courseId,
         courseDetails,
+        semester: widget.selectedSemester,
       );
 
       final scheduleEntriesToShow = <dynamic>[];

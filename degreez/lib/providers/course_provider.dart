@@ -443,22 +443,54 @@ class CourseProvider with ChangeNotifier {
       notifyListeners();
       return false;
     }
-  }
-
-  // Helper method to get selected schedule entries for a course
+  }  // Helper method to get selected schedule entries for a course
   Map<String, List<ScheduleEntry>> getSelectedScheduleEntries(
     String courseId,
-    EnhancedCourseDetails? courseDetails,
-  ) {
+    EnhancedCourseDetails? courseDetails, {
+    String? semester,
+  }) {
+    debugPrint('  🔍 Getting selected schedule entries for course: $courseId${semester != null ? ' in semester: $semester' : ''}');
+    
     if (courseDetails == null) {
+      debugPrint('    ❌ No course details available');
       return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
     }
 
-    // Find the course in our data using the helper method
-    final course = _findCourseById(courseId);
-    if (course == null) {
-      return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
+    // Find the course in our data using semester-specific lookup if provided
+    StudentCourse? course;
+    if (semester != null) {
+      final semesterCourses = _coursesBySemester[semester];
+      if (semesterCourses != null) {
+        try {
+          course = semesterCourses.firstWhere((c) => c.courseId == courseId);
+          debugPrint('    ✅ Found course in specific semester: ${course.name}');
+        } catch (e) {
+          debugPrint('    ❌ Course not found in semester $semester');
+        }
+      }
     }
+    
+    // Fallback to global search if semester not provided or course not found
+    if (course == null) {
+      course = _findCourseById(courseId);
+      if (course == null) {
+        debugPrint('    ❌ Course not found in provider data');
+        return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
+      }
+      debugPrint('    ⚠️ Using course from global search: ${course.name}');
+    }debugPrint('    📚 Found course: ${course.name}');
+    debugPrint('    📋 Available schedule entries in course details: ${courseDetails.schedule.length}');
+    for (int i = 0; i < courseDetails.schedule.length; i++) {
+      final entry = courseDetails.schedule[i];
+      debugPrint('      [$i] ${entry.day} ${entry.time} - ${entry.type} (Group ${entry.group}) - ${entry.staff}');
+    }
+      debugPrint('    📋 Course schedule selection status:');
+    debugPrint('      Lecture time: "${course.lectureTime}"');
+    debugPrint('      Tutorial time: "${course.tutorialTime}"');
+    debugPrint('      Lab time: "${course.labTime}"');
+    debugPrint('      Workshop time: "${course.workshopTime}"');
+    debugPrint('      Has complete selection: ${course.hasCompleteScheduleSelection}');
+    debugPrint('      Course found via: ${semester != null ? 'semester-specific lookup' : 'global search'}');
 
     final selectedLectures = <ScheduleEntry>[];
     final selectedTutorials = <ScheduleEntry>[];
@@ -467,25 +499,29 @@ class CourseProvider with ChangeNotifier {
 
     // Match stored lecture time with schedule entries
     if (course.lectureTime.isNotEmpty) {
-      if (course.lectureTime.startsWith('GROUP_')) {
+      debugPrint('    🎓 Processing lecture selection: "${course.lectureTime}"');      if (course.lectureTime.startsWith('GROUP_')) {
         // New group format: find all entries with the same type and group
+        debugPrint('      Using GROUP format');
         final parts = course.lectureTime.split('_');
         if (parts.length >= 3) {
           final type = parts[1];
           final group = int.tryParse(parts[2]);
+          debugPrint('      Looking for type: "$type", group: $group');
           if (group != null) {
-            selectedLectures.addAll(
-              courseDetails.schedule
-                  .where(
-                    (schedule) =>
-                        schedule.type == type && schedule.group == group,
-                  )
-                  .toList(),
-            );
+            final matchingEntries = courseDetails.schedule
+                .where((schedule) => schedule.type == type && schedule.group == group)
+                .toList();
+            selectedLectures.addAll(matchingEntries);
+            debugPrint('      Found ${matchingEntries.length} matching lecture entries');
+            for (final entry in matchingEntries) {
+              debugPrint('        ${entry.day} ${entry.time} - ${entry.type} (Group ${entry.group})');
+            }
           }
         }
       } else {
         // Backward compatibility: old time format
+        debugPrint('      Using legacy time format');
+        var foundMatch = false;
         for (final schedule in courseDetails.schedule) {
           final scheduleString = StudentCourse.formatScheduleString(
             schedule.day,
@@ -493,33 +529,41 @@ class CourseProvider with ChangeNotifier {
           );
           if (course.lectureTime == scheduleString) {
             selectedLectures.add(schedule);
+            debugPrint('      Found matching lecture: ${schedule.day} ${schedule.time} - ${schedule.type}');
+            foundMatch = true;
             break;
           }
         }
+        if (!foundMatch) {
+          debugPrint('      ❌ No matching lecture found for: "${course.lectureTime}"');
+        }
       }
-    }
-
-    // Match stored tutorial time with schedule entries
+    }    // Match stored tutorial time with schedule entries
     if (course.tutorialTime.isNotEmpty) {
+      debugPrint('    📝 Processing tutorial selection: "${course.tutorialTime}"');
       if (course.tutorialTime.startsWith('GROUP_')) {
         // New group format: find all entries with the same type and group
+        debugPrint('      Using GROUP format');
         final parts = course.tutorialTime.split('_');
         if (parts.length >= 3) {
           final type = parts[1];
           final group = int.tryParse(parts[2]);
+          debugPrint('      Looking for type: "$type", group: $group');
           if (group != null) {
-            selectedTutorials.addAll(
-              courseDetails.schedule
-                  .where(
-                    (schedule) =>
-                        schedule.type == type && schedule.group == group,
-                  )
-                  .toList(),
-            );
+            final matchingEntries = courseDetails.schedule
+                .where((schedule) => schedule.type == type && schedule.group == group)
+                .toList();
+            selectedTutorials.addAll(matchingEntries);
+            debugPrint('      Found ${matchingEntries.length} matching tutorial entries');
+            for (final entry in matchingEntries) {
+              debugPrint('        ${entry.day} ${entry.time} - ${entry.type} (Group ${entry.group})');
+            }
           }
         }
       } else {
         // Backward compatibility: old time format
+        debugPrint('      Using legacy time format');
+        var foundMatch = false;
         for (final schedule in courseDetails.schedule) {
           final scheduleString = StudentCourse.formatScheduleString(
             schedule.day,
@@ -527,8 +571,13 @@ class CourseProvider with ChangeNotifier {
           );
           if (course.tutorialTime == scheduleString) {
             selectedTutorials.add(schedule);
+            debugPrint('      Found matching tutorial: ${schedule.day} ${schedule.time} - ${schedule.type}');
+            foundMatch = true;
             break;
           }
+        }
+        if (!foundMatch) {
+          debugPrint('      ❌ No matching tutorial found for: "${course.tutorialTime}"');
         }
       }
     }
@@ -598,8 +647,14 @@ class CourseProvider with ChangeNotifier {
             break;
           }
         }
-      }
-    }
+      }    }
+
+    debugPrint('    📊 Selection summary for ${course.name}:');
+    debugPrint('      Lectures: ${selectedLectures.length} entries');
+    debugPrint('      Tutorials: ${selectedTutorials.length} entries');
+    debugPrint('      Labs: ${selectedLabs.length} entries');
+    debugPrint('      Workshops: ${selectedWorkshops.length} entries');
+    debugPrint('      Total selected: ${selectedLectures.length + selectedTutorials.length + selectedLabs.length + selectedWorkshops.length} entries');
 
     return {
       'lecture': selectedLectures,

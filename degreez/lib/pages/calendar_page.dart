@@ -293,19 +293,23 @@ class _CalendarPageState extends State<CalendarPage>
   Future<void> _updateCalendarEvents(
     CourseProvider courseProvider,
     ColorThemeProvider colorThemeProvider, {
-    String? forceSemester,
-  }) async {
-    // debugPrint('=== Updating calendar events with schedule selection ===');    // Clear existing events
+    String? forceSemester,  }) async {
+    debugPrint('🔄 === STARTING CALENDAR UPDATE ===');
+    debugPrint('🔄 Force semester: $forceSemester');
+    
+    // Clear existing events
+    final existingEventCount = _eventController.allEvents.length;
     _eventController.removeWhere((event) => true);
+    debugPrint('🔄 Cleared $existingEventCount existing events');
     
     // Get current week start (Sunday)
     final now = DateTime.now();
     final currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
-    //  debugPrint('Current week start (Sunday): $currentWeekStart');
+    debugPrint('🔄 Current week start (Sunday): $currentWeekStart');
 
-    // debugPrint('Found ${courseProvider.coursesBySemester.length} semesters with courses');
-    
     final courseDataProvider = context.read<CourseDataProvider>();
+    
+    debugPrint('🔄 Found ${courseProvider.coursesBySemester.length} semesters with courses');
     
     // Collect all course detail requests to await them properly
     final List<Future<void>> courseDetailFutures = [];
@@ -316,77 +320,84 @@ class _CalendarPageState extends State<CalendarPage>
           forceSemester ?? courseDataProvider.currentSemester?.semesterName;
       if (selectedSemester != null && semesterEntry.key != selectedSemester) {
         continue;
-      }
-
-      final semester = semesterEntry.key;
+      }      final semester = semesterEntry.key;
       final courses = semesterEntry.value;
-      // debugPrint('Processing semester "$semester" with ${courses.length} courses', );
+      debugPrint('🔄 Processing semester "$semester" with ${courses.length} courses:');
       for (final course in courses) {
+        debugPrint('  📚 Course: ${course.name} (${course.courseId})');
+        debugPrint('    - Has selected lecture: ${course.hasSelectedLecture}');
+        debugPrint('    - Has selected tutorial: ${course.hasSelectedTutorial}');
+        debugPrint('    - Has selected lab: ${course.hasSelectedLab}');
+        debugPrint('    - Has selected workshop: ${course.hasSelectedWorkshop}');
+        debugPrint('    - Lecture time: "${course.lectureTime}"');
+        debugPrint('    - Tutorial time: "${course.tutorialTime}"');
+        debugPrint('    - Lab time: "${course.labTime}"');
+        debugPrint('    - Workshop time: "${course.workshopTime}"');
+        
         // NEW: Skip courses that are marked as removed from calendar
         if (_isCourseRemovedFromCalendar(course.courseId)) {
-          debugPrint(
-            'Skipping course ${course.name} as it was removed from calendar',
-          );
+          debugPrint('    ❌ SKIPPING: Course marked as removed from calendar');
           continue;
-        }
-
-        //    debugPrint('Processing course: ${course.name} (${course.courseId})');
-        // debugPrint('Has selected lecture: ${course.hasSelectedLecture}, Has selected tutorial: ${course.hasSelectedTutorial}',);
-
-        // Get course details to access schedule
+        }        // Get course details to access schedule
         final parsed = _parseSemesterCode(semester);
         if (parsed == null) {
-          debugPrint('❌ Invalid semester format: $semester');
+          debugPrint('    ❌ SKIPPING: Invalid semester format: $semester');
           continue;
         }
         final (year, semesterCode) = parsed;
+        debugPrint('    🔍 Fetching course details for year=$year, code=$semesterCode');
         
         // Add the course detail future to our list
         courseDetailFutures.add(
-          CourseService.getCourseDetails(
-            year,
-            semesterCode,
-            course.courseId,
-          ).then((courseDetails) {
+          CourseService.getCourseDetails(year, semesterCode, course.courseId)
+              .then((courseDetails) {
+            debugPrint('    📥 Course details received for ${course.name}:');
             if (courseDetails?.schedule.isNotEmpty == true) {
-              //   debugPrint( 'Using API schedule for ${course.name} with selection filtering', );
-              _createCalendarEventsFromSchedule(
+              debugPrint('      ✅ Has API schedule with ${courseDetails!.schedule.length} entries');
+              final eventsCreated = _createCalendarEventsFromSchedule(
                 course,
-                courseDetails!,
+                courseDetails,
                 semester,
                 currentWeekStart,
                 colorThemeProvider,
               );
+              debugPrint('      📅 Created $eventsCreated events from API schedule');
             } else {
-              debugPrint(
-                'Using basic schedule for ${course.name} (lecture: "${course.lectureTime}", tutorial: "${course.tutorialTime}", lab: "${course.labTime}", workshop: "${course.workshopTime}")',
-              );
-              // Create basic events from stored lecture/tutorial/lab/workshop times if no API schedule
-              _createBasicCalendarEvents(
+              debugPrint('      ⚠️ No API schedule, using basic times');
+              final eventsCreated = _createBasicCalendarEvents(
                 course,
                 semester,
                 currentWeekStart,
                 colorThemeProvider,
               );
+              debugPrint('      📅 Created $eventsCreated events from basic times');
             }
           }).catchError((error) {
-            debugPrint('Error getting course details for ${course.courseId}: $error');
+            debugPrint('    ❌ ERROR getting course details for ${course.courseId}: $error');
             // Fallback to basic events if API fails
-            _createBasicCalendarEvents(
+            final eventsCreated = _createBasicCalendarEvents(
               course,
               semester,
               currentWeekStart,
               colorThemeProvider,
             );
+            debugPrint('    📅 Created $eventsCreated fallback events from basic times');
           }),
         );
       }
     }
-    
-    // Wait for all course details to be processed
+      // Wait for all course details to be processed
+    debugPrint('🔄 Waiting for ${courseDetailFutures.length} course detail requests...');
     await Future.wait(courseDetailFutures);
     
-    debugPrint('All course details processed, total events: ${_eventController.allEvents.length}');
+    final finalEventCount = _eventController.allEvents.length;
+    debugPrint('🔄 === CALENDAR UPDATE COMPLETE ===');
+    debugPrint('🔄 Total events created: $finalEventCount');
+    debugPrint('🔄 Event titles:');
+    for (final event in _eventController.allEvents) {
+      debugPrint('  📅 ${event.title} (${event.startTime} - ${event.endTime})');
+    }
+    debugPrint('🔄 === END CALENDAR UPDATE ===');
 
     //    debugPrint('Total events added: $totalEventsAdded');
   }
@@ -430,7 +441,6 @@ class _CalendarPageState extends State<CalendarPage>
     }
     return conflictingEvents;
   }
-
   int _createCalendarEventsFromSchedule(
     StudentCourse course,
     EnhancedCourseDetails courseDetails,
@@ -438,96 +448,105 @@ class _CalendarPageState extends State<CalendarPage>
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
+    debugPrint('  🏗️ Creating events from schedule for ${course.name}');
+    
     // NEW: Skip courses that are marked as removed from calendar
     if (_isCourseRemovedFromCalendar(course.courseId)) {
-      debugPrint(
-        'Skipping events for course ${course.name} as it was removed from calendar',
-      );
+      debugPrint('    ❌ Course is marked as removed from calendar');
       return 0;
     }
 
-    // debugPrint( 'Creating calendar events for ${course.name} with schedule selection',);
-    int eventsAdded = 0;
-    // Get selected schedule entries only
+    debugPrint('    📋 Raw schedule has ${courseDetails.schedule.length} entries');
+    
+    int eventsAdded = 0;    // Get selected schedule entries only
     final selectedEntries = context
         .read<CourseProvider>()
-        .getSelectedScheduleEntries(course.courseId, courseDetails);
+        .getSelectedScheduleEntries(course.courseId, courseDetails, semester: semester);
 
     final selectedLectures = selectedEntries['lecture'] ?? <ScheduleEntry>[];
     final selectedTutorials = selectedEntries['tutorial'] ?? <ScheduleEntry>[];
     final selectedLabs = selectedEntries['lab'] ?? <ScheduleEntry>[];
     final selectedWorkshops = selectedEntries['workshop'] ?? <ScheduleEntry>[];
 
+    debugPrint('    🎯 Selected entries:');
+    debugPrint('      Lectures: ${selectedLectures.length}');
+    debugPrint('      Tutorials: ${selectedTutorials.length}');
+    debugPrint('      Labs: ${selectedLabs.length}');
+    debugPrint('      Workshops: ${selectedWorkshops.length}');
+
     // Create events only for selected schedule entries
     final scheduleEntriesToShow = <ScheduleEntry>[];    // Add all selected lectures
     scheduleEntriesToShow.addAll(selectedLectures);
     if (selectedLectures.isNotEmpty) {
-      //debugPrint('Adding ${selectedLectures.length} selected lectures');
+      debugPrint('      ✅ Adding ${selectedLectures.length} selected lectures');
     }
 
     // Add all selected tutorials
     scheduleEntriesToShow.addAll(selectedTutorials);
     if (selectedTutorials.isNotEmpty) {
-      //   debugPrint('Adding ${selectedTutorials.length} selected tutorials');
+      debugPrint('      ✅ Adding ${selectedTutorials.length} selected tutorials');
     }
 
     // Add all selected labs
     scheduleEntriesToShow.addAll(selectedLabs);
     if (selectedLabs.isNotEmpty) {
-      //   debugPrint('Adding ${selectedLabs.length} selected labs');
+      debugPrint('      ✅ Adding ${selectedLabs.length} selected labs');
     }
 
     // Add all selected workshops
     scheduleEntriesToShow.addAll(selectedWorkshops);
     if (selectedWorkshops.isNotEmpty) {
-      // debugPrint('Adding ${selectedWorkshops.length} selected workshops');
-    }// If no selections made, show all (backward compatibility)
+      debugPrint('      ✅ Adding ${selectedWorkshops.length} selected workshops');
+    }
+
+    // If no selections made, show all (backward compatibility)
     if (scheduleEntriesToShow.isEmpty && !course.hasCompleteScheduleSelection) {
       scheduleEntriesToShow.addAll(courseDetails.schedule);
-      //   debugPrint(
-      //     'No selections made, showing all ${courseDetails.schedule.length} schedule entries',
-      //   );
+      debugPrint('      ⚠️ No selections made, showing all ${courseDetails.schedule.length} schedule entries');
     }
+
+    debugPrint('    📝 Total entries to show: ${scheduleEntriesToShow.length}');
 
     // Deduplicate schedule entries by time and type to avoid multiple events for the same lecture
     final uniqueScheduleEntries = <ScheduleEntry>[];
-    final seenTimeSlots = <String>{};
-
-    for (final schedule in scheduleEntriesToShow) {
-      final timeSlotKey = '${schedule.day}_${schedule.time}_${schedule.type}';
+    final seenTimeSlots = <String>{};    for (final schedule in scheduleEntriesToShow) {
+      final timeSlotKey = '${schedule.day}_${schedule.time}_${schedule.type}_${schedule.group}';
       if (!seenTimeSlots.contains(timeSlotKey)) {
         uniqueScheduleEntries.add(schedule);
         seenTimeSlots.add(timeSlotKey);
-        //debugPrint('Added unique schedule: ${schedule.type} on ${schedule.day} at ${schedule.time}', );
+        debugPrint('      ✅ Unique schedule: ${schedule.type} on ${schedule.day} at ${schedule.time} (Group ${schedule.group}) - Key: $timeSlotKey');
       } else {
-        // debugPrint('Skipped duplicate schedule: ${schedule.type} on ${schedule.day} at ${schedule.time} (Group ${schedule.group})',);
+        debugPrint('      ⚠️ Skipped duplicate: ${schedule.type} on ${schedule.day} at ${schedule.time} (Group ${schedule.group}) - Key: $timeSlotKey');
       }
     }
 
-    // Create calendar events from unique schedule entries
+    debugPrint('    🔧 After deduplication: ${uniqueScheduleEntries.length} unique entries');    // Create calendar events from unique schedule entries
     for (final schedule in uniqueScheduleEntries) {
-      //  debugPrint('Processing schedule: day="${schedule.day}", time="${schedule.time}", type="${schedule.type}"',);
+      debugPrint('    🏗️ Processing schedule entry:');
+      debugPrint('      Day: "${schedule.day}", Time: "${schedule.time}", Type: "${schedule.type}", Group: ${schedule.group}');
 
       // Parse Hebrew day to weekday number
       final dayOfWeek = parseHebrewDay(schedule.day);
-      //    debugPrint('Parsed day "${schedule.day}" to weekday $dayOfWeek');
+      debugPrint('      Parsed day "${schedule.day}" to weekday $dayOfWeek');
 
       // Convert DateTime weekday to correct offset from Monday
       final dayOffset = getWeekdayOffset(dayOfWeek);
 
       final eventDate = weekStart.add(Duration(days: dayOffset));
-      //  debugPrint(
-      //  'Event date calculated: $eventDate (offset: $dayOffset from week start: $weekStart)',
-      //);
+      debugPrint('      Event date: $eventDate (offset: $dayOffset from week start: $weekStart)');
 
       // Parse time range
       final timeRange = parseTimeRange(schedule.time, eventDate);
       if (timeRange == null) {
-        debugPrint('Failed to parse time range: ${schedule.time}');
+        debugPrint('      ❌ Failed to parse time range: ${schedule.time}');
         continue;
       }
+      debugPrint('      Time range: ${timeRange['start']} - ${timeRange['end']}');
+      
       // Get event type and create appropriate event
       final eventType = parseCourseEventType(schedule.type);
+      debugPrint('      Event type: $eventType');
+      
       // Check for time conflicts before adding the event
       final hasConflict = _hasTimeConflict(
         timeRange['start']!,
@@ -541,14 +560,10 @@ class _CalendarPageState extends State<CalendarPage>
         final conflictingTitles = conflictingEvents
             .map((e) => e.title)
             .join(', ');
-        debugPrint(
-          'Time conflict detected for ${course.name} (${schedule.type}) with: $conflictingTitles',
-        );
-
-        // Allow SideEventArranger to handle conflicts by showing events side by side
-        // Don't remove conflicting events - let the calendar view arrange them properly
-        debugPrint('Allowing SideEventArranger to handle conflict display');
+        debugPrint('      ⚠️ Time conflict with: $conflictingTitles');
+        debugPrint('      Allowing SideEventArranger to handle conflict display');
       }
+      
       final event = CalendarEventData(
         date: eventDate,
         title: formatEventTitle(
@@ -562,25 +577,26 @@ class _CalendarPageState extends State<CalendarPage>
         endTime: timeRange['end']!,
         color: colorThemeProvider.getCourseColor(course.courseId),
       );
-      // debugPrint('Created calendar event: ${event.title} on ${event.date} from ${event.startTime} to ${event.endTime}',);
+      
+      debugPrint('      ✅ Created event: "${event.title}" on ${event.date} from ${event.startTime} to ${event.endTime}');
       _eventController.add(event);
       eventsAdded++;
     }
 
+    debugPrint('    🎯 Total events created for ${course.name}: $eventsAdded');
     return eventsAdded;
   }
-
   int _createBasicCalendarEvents(
     StudentCourse course,
     String semester,
     DateTime weekStart,
     ColorThemeProvider colorThemeProvider,
   ) {
+    debugPrint('  🔧 Creating basic events for ${course.name}');
+    
     // NEW: Skip courses that are marked as removed from calendar
     if (_isCourseRemovedFromCalendar(course.courseId)) {
-      debugPrint(
-        'Skipping basic events for course ${course.name} as it was removed from calendar',
-      );
+      debugPrint('    ❌ Course is marked as removed from calendar');
       return 0;
     }
 
@@ -589,6 +605,7 @@ class _CalendarPageState extends State<CalendarPage>
 
     // Create events from stored lecture time
     if (course.lectureTime.isNotEmpty) {
+      debugPrint('    🎓 Processing lecture time: "${course.lectureTime}"');
       final lectureEvent = _createEventFromTimeString(
         course,
         course.lectureTime,
@@ -604,17 +621,19 @@ class _CalendarPageState extends State<CalendarPage>
           lectureEvent.endTime!,
         );
         if (hasConflict) {
-          debugPrint(
-            'Time conflict detected for ${course.name} lecture - allowing SideEventArranger to handle display',
-          );
+          debugPrint('    ⚠️ Time conflict for lecture - allowing SideEventArranger to handle');
         }
         _eventController.add(lectureEvent);
         eventsAdded++;
+        debugPrint('    ✅ Created lecture event: "${lectureEvent.title}"');
+      } else {
+        debugPrint('    ❌ Failed to create lecture event from: "${course.lectureTime}"');
       }
     }
 
     // Create events from stored tutorial time
     if (course.tutorialTime.isNotEmpty) {
+      debugPrint('    📝 Processing tutorial time: "${course.tutorialTime}"');
       final tutorialEvent = _createEventFromTimeString(
         course,
         course.tutorialTime,
@@ -630,15 +649,71 @@ class _CalendarPageState extends State<CalendarPage>
           tutorialEvent.endTime!,
         );
         if (hasConflict) {
-          debugPrint(
-            'Time conflict detected for ${course.name} tutorial - allowing SideEventArranger to handle display',
-          );
+          debugPrint('    ⚠️ Time conflict for tutorial - allowing SideEventArranger to handle');
         }
         _eventController.add(tutorialEvent);
         eventsAdded++;
+        debugPrint('    ✅ Created tutorial event: "${tutorialEvent.title}"');
+      } else {
+        debugPrint('    ❌ Failed to create tutorial event from: "${course.tutorialTime}"');
       }
     }
 
+    // Create events from stored lab time
+    if (course.labTime.isNotEmpty) {
+      debugPrint('    🧪 Processing lab time: "${course.labTime}"');
+      final labEvent = _createEventFromTimeString(
+        course,
+        course.labTime,
+        'Lab',
+        semester,
+        weekStart,
+        courseColor,
+      );
+      if (labEvent != null) {
+        final hasConflict = _hasTimeConflict(
+          labEvent.startTime!,
+          labEvent.endTime!,
+        );
+        if (hasConflict) {
+          debugPrint('    ⚠️ Time conflict for lab - allowing SideEventArranger to handle');
+        }
+        _eventController.add(labEvent);
+        eventsAdded++;
+        debugPrint('    ✅ Created lab event: "${labEvent.title}"');
+      } else {
+        debugPrint('    ❌ Failed to create lab event from: "${course.labTime}"');
+      }
+    }
+
+    // Create events from stored workshop time
+    if (course.workshopTime.isNotEmpty) {
+      debugPrint('    🔨 Processing workshop time: "${course.workshopTime}"');
+      final workshopEvent = _createEventFromTimeString(
+        course,
+        course.workshopTime,
+        'Workshop',
+        semester,
+        weekStart,
+        courseColor,
+      );
+      if (workshopEvent != null) {
+        final hasConflict = _hasTimeConflict(
+          workshopEvent.startTime!,
+          workshopEvent.endTime!,
+        );
+        if (hasConflict) {
+          debugPrint('    ⚠️ Time conflict for workshop - allowing SideEventArranger to handle');
+        }
+        _eventController.add(workshopEvent);
+        eventsAdded++;
+        debugPrint('    ✅ Created workshop event: "${workshopEvent.title}"');
+      } else {
+        debugPrint('    ❌ Failed to create workshop event from: "${course.workshopTime}"');
+      }
+    }
+
+    debugPrint('    🎯 Total basic events created for ${course.name}: $eventsAdded');
     return eventsAdded;
   }
 
