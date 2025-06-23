@@ -25,6 +25,21 @@ class _CourseMapPageState extends State<CourseMapPage> {
   List<Marker> courseMarkers = [];
   bool isLoading = true;
   final _geoService = GeocodeCacheService();
+  final Map<String, Color> courseColors = {};
+  bool legendVisible = true;
+  int colorIndex = 0;
+  final List<Color> availableColors = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.brown,
+    Colors.pink,
+    Colors.teal,
+    Colors.indigo,
+    Colors.cyan,
+  ];
 
   (int, int)? _parseSemesterCode(String semesterName) {
     final match = RegExp(
@@ -74,7 +89,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
       debugPrint('❌ Cache miss for: $normalizedQuery');
     }
 
- // 3. Fallback to online geocoding
+    // 3. Fallback to online geocoding
     final query = Uri.encodeComponent(normalizedQuery);
 
     final url = Uri.parse(
@@ -154,17 +169,23 @@ class _CourseMapPageState extends State<CourseMapPage> {
         semester,
         course.courseId,
       );
-
       if (details == null) {
         debugPrint('❌ No details found for course ${course.courseId}');
         continue;
       }
 
+      // Assign a color if not already assigned
+      if (!courseColors.containsKey(course.name)) {
+        courseColors[course.name] =
+            availableColors[colorIndex % availableColors.length];
+        colorIndex++;
+      }
+      final courseColor = courseColors[course.name]!;
+
       final entries = courseProvider.getSelectedScheduleEntries(
         course.courseId,
         details,
       );
-
       for (final type in ['lecture', 'tutorial', 'lab', 'workshop']) {
         for (final entry in entries[type] ?? []) {
           final scheduleString = StudentCourse.formatScheduleString(
@@ -174,7 +195,9 @@ class _CourseMapPageState extends State<CourseMapPage> {
           debugPrint(
             '🔍 Checking entry: ${entry.type}, ${entry.day} ${entry.time} → $scheduleString',
           );
+
           if (entry.building.trim().isEmpty) continue;
+
           LatLng? loc = await fetchCoordinates(entry.building);
           debugPrint('🌍 Geocoded: ${entry.building} → $loc');
 
@@ -186,7 +209,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
                 height: 40,
                 child: Tooltip(
                   message: '${course.name} (${entry.type})',
-                  child: const Icon(Icons.location_on, color: Colors.red),
+                  child: Icon(Icons.location_on, color: courseColor),
                 ),
               ),
             );
@@ -210,37 +233,113 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Course Map')),
-      body: FlutterMap(
-        options: MapOptions(
-          initialCameraFit:
-              allPoints.length >= 2
-                  ? CameraFit.bounds(
-                    bounds: LatLngBounds.fromPoints(allPoints),
-                    padding: const EdgeInsets.all(40),
-                  )
-                  : CameraFit.bounds(
-                    bounds: LatLngBounds(
-                      LatLng(32.775, 35.021),
-                      LatLng(32.778, 35.025),
-                    ),
-                    padding: const EdgeInsets.all(40),
-                  ),
-        ),
+      body: Stack(
         children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.degreez',
-          ),
-          MarkerLayer(
-            markers: [
-              ...courseMarkers,
-              Marker(
-                point: userLocation!,
-                width: 40,
-                height: 40,
-                child: const Icon(Icons.person_pin_circle, color: Colors.blue),
+          FlutterMap(
+            options: MapOptions(
+              initialCameraFit:
+                  allPoints.length >= 2
+                      ? CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints(allPoints),
+                        padding: const EdgeInsets.all(40),
+                      )
+                      : CameraFit.bounds(
+                        bounds: LatLngBounds(
+                          LatLng(32.775, 35.021),
+                          LatLng(32.778, 35.025),
+                        ),
+                        padding: const EdgeInsets.all(40),
+                      ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.degreez',
+              ),
+              MarkerLayer(
+                markers: [
+                  ...courseMarkers,
+                  Marker(
+                    point: userLocation!,
+                    width: 40,
+                    height: 40,
+                    child: const Icon(
+                      Icons.person_pin_circle,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ],
               ),
             ],
+          ),
+          Positioned(
+            top: 20,
+            left: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      legendVisible = !legendVisible;
+                    });
+                  },
+                  child: Text(legendVisible ? 'Hide Legend' : 'Show Legend'),
+                ),
+                const SizedBox(height: 8),
+                if (legendVisible)
+                  Container(
+                    constraints: const BoxConstraints(
+                      maxHeight: 300,
+                      maxWidth: 200,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      border: Border.all(color: Colors.black12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children:
+                            courseColors.entries.map((entry) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 16,
+                                      height: 16,
+                                      color: entry.value,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        entry.key,
+                                        style: const TextStyle(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
