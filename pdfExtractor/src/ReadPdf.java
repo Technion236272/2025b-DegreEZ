@@ -34,7 +34,8 @@ public class ReadPdf {
         // }
 
         CreateFile createfile = new CreateFile();
-        createfile.createReader("24-25");
+        // createfile.createReader("../degreez/assets/2024-2025");
+        createfile.createReader("23-24");
         String line;
 
         do {
@@ -46,7 +47,7 @@ public class ReadPdf {
 
             try {
                 // open catalog
-                File file = new File("src/2025.pdf");
+                File file = new File("src/2024.pdf");
 
                 // read file
                 RandomAccessRead rar = new RandomAccessReadBufferedFile(file);
@@ -117,8 +118,8 @@ public class ReadPdf {
     public static void extractMajors(PDDocument document, int pageNum, String name) throws NotFound {
         try {
             BoldTextExtractor boldStripper = new BoldTextExtractor();
-            boldStripper.setStartPage(pageNum);
-            boldStripper.setEndPage(pageNum + 1);
+            boldStripper.setStartPage(pageNum-2);
+            boldStripper.setEndPage(pageNum+1);
             String boldText = boldStripper.getText(document);
             // Set the environment variable programmatically
             // The client gets the API key from the environment variable `GOOGLE_API_KEY`.
@@ -133,8 +134,8 @@ public class ReadPdf {
                     boldText + prompt,
                     null);
 
-            CreateFile.createFile("Faculties2025/" + name);
-            CreateFile.writeFile("Faculties2025/" + name, response.text());
+            CreateFile.createFile("../degreez/assets/Faculties2023-2024/" + name);
+            CreateFile.writeFile("../degreez/assets/Faculties2023-2024/" + name, response.text());
             client.close();
             return;
 
