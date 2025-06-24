@@ -21,7 +21,7 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
         selectedSemesterSeason = signUpProvider.selectedSemesterSeason;
         return DropdownButtonFormField<String>(
           iconEnabledColor: AppColorsDarkMode.secondaryColor,
-          value: selectedSemesterSeason,
+          value: ['Winter', 'Spring', 'Summer'].contains(selectedSemesterSeason) ? selectedSemesterSeason : null,
           style: const TextStyle(
             color: AppColorsDarkMode.secondaryColor,
           ),

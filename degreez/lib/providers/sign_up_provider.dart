@@ -46,6 +46,15 @@ class SignUpProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedSemester(String val) {
+    var temp = val.split(' ');
+    String season = temp[0];
+    String year = temp[1];
+    _selectedSemesterSeason = season;
+    _selectedSemesterYear = year;
+    notifyListeners();
+  }
+
   void resetSelected(){
     resetFaculty();
     resetMajor();

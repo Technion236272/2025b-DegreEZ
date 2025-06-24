@@ -182,13 +182,12 @@ class _MajorSelectorState extends State<MajorSelector> {
                   return DropdownMenuItem<String>(
                     value: item,
                     child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.7, // Constrain width
+                      width: MediaQuery.of(context).size.width * 0.58, // Constrain width
                       child: AutoSizeText(
                         item,
                         maxFontSize: 15,
                         minFontSize: 8,
-                        maxLines: 2, // Allow text to wrap to 2 lines if needed
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1, // Allow text to wrap to 2 lines if needed
                         style: const TextStyle(
                           color: AppColorsDarkMode.secondaryColor,
                         ),
