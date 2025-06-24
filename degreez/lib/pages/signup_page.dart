@@ -230,6 +230,8 @@ class _SignUpPageState extends State<SignUpPage> {
                               final success = await studentNotifier
                                   .createStudent(student);
 
+                              signUpProvider.resetSelected();
+                              
                               if (success && context.mounted) {
                                 Navigator.pushNamedAndRemoveUntil(
                                   context,
