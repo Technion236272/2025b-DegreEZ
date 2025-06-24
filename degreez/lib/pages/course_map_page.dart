@@ -10,6 +10,10 @@ import '../models/student_model.dart';
 import '../services/course_service.dart';
 import '../services/geocode_cache_service.dart';
 import '../services/building_geocode_map.dart';
+import 'dart:math' as Math;
+import 'dart:async';
+import 'package:latlong2/latlong.dart';
+
 
 class CourseMapPage extends StatefulWidget {
   final String selectedSemester;
@@ -28,7 +32,15 @@ class _CourseMapPageState extends State<CourseMapPage> {
   final Map<String, Color> courseColors = {};
   bool legendVisible = true;
   final Map<String, int> _buildingPinCounts = {};
-  final double _offsetStep = 0.00005; // About 5 meters
+  final Map<String, List<LatLng>> _courseLocations = {};
+  late final MapController _mapController = MapController();
+  final Set<String> visibleCourses = {}; // course names that are visible
+  String? _highlightedCourse;
+  final Map<String, bool> visibleEvents =
+      {}; // key: 'CourseName (Lecture 1)', value: isVisible
+  late final StreamSubscription<LocationData> _locationSubscription;
+  final Location location = Location(); // reuse this across the widget
+
   int colorIndex = 0;
   final List<Color> availableColors = [
     Colors.red,
@@ -73,6 +85,49 @@ class _CourseMapPageState extends State<CourseMapPage> {
     }
 
     return (apiYear, semesterCode);
+  }
+
+  void _focusOnCourse(String courseName) {
+    final locations = _courseLocations[courseName];
+    if (locations == null || locations.isEmpty) return;
+
+    // 🔒 Save user preferences before focus
+    final previousVisibility = Map<String, bool>.from(visibleEvents);
+
+    // 🟡 Show only the selected course
+    setState(() {
+      _highlightedCourse = courseName;
+      visibleEvents.updateAll((key, _) => key == courseName);
+      legendVisible = false; // 👈 close the legend
+    });
+
+    // 🔓 Restore user preferences after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
+      setState(() {
+        visibleEvents
+          ..clear()
+          ..addAll(previousVisibility); // ✅ Restore exact visibility
+        _highlightedCourse = null;
+      });
+    });
+
+    if (locations.length == 1) {
+      _mapController.move(locations.first, 16.0);
+      return;
+    }
+
+    final bounds = LatLngBounds.fromPoints(locations);
+    final latDelta = (bounds.north - bounds.south).abs();
+    final lonDelta = (bounds.east - bounds.west).abs();
+
+    if (latDelta < 0.0002 && lonDelta < 0.0002) {
+      _mapController.move(bounds.center, 18.0);
+    } else {
+      _mapController.fitCamera(
+        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(40)),
+      );
+    }
   }
 
   Future<LatLng?> fetchCoordinates(String buildingName) async {
@@ -132,19 +187,29 @@ class _CourseMapPageState extends State<CourseMapPage> {
     setState(() => isLoading = false);
   }
 
-  Future<void> _getUserLocation() async {
-    final location = Location();
-    if (!await location.serviceEnabled()) await location.requestService();
-    if (await location.hasPermission() == PermissionStatus.denied) {
-      if (await location.requestPermission() != PermissionStatus.granted)
-        return;
-    }
-
-    final loc = await location.getLocation();
-    if (loc.latitude != null && loc.longitude != null) {
-      userLocation = LatLng(loc.latitude!, loc.longitude!);
-    }
+Future<void> _getUserLocation() async {
+  if (!await location.serviceEnabled()) await location.requestService();
+  if (await location.hasPermission() == PermissionStatus.denied) {
+    if (await location.requestPermission() != PermissionStatus.granted) return;
   }
+
+  // Get initial location
+  final loc = await location.getLocation();
+  if (loc.latitude != null && loc.longitude != null) {
+    setState(() {
+      userLocation = LatLng(loc.latitude!, loc.longitude!);
+    });
+  }
+
+  // Start listening for updates
+  _locationSubscription = location.onLocationChanged.listen((newLoc) {
+    if (!mounted) return;
+    setState(() {
+      userLocation = LatLng(newLoc.latitude!, newLoc.longitude!);
+    });
+  });
+}
+
 
   Future<void> _loadCourseMarkers() async {
     final courseProvider = context.read<CourseProvider>();
@@ -163,6 +228,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
       return;
     }
     final (year, semester) = semCode;
+    final Map<String, Map<String, int>> courseSessionCounts = {};
 
     for (final course in selectedCourses) {
       debugPrint('➡️ Course: ${course.courseId} - ${course.name}');
@@ -176,7 +242,6 @@ class _CourseMapPageState extends State<CourseMapPage> {
         continue;
       }
 
-      // Assign a color if not already assigned
       if (!courseColors.containsKey(course.name)) {
         courseColors[course.name] =
             availableColors[colorIndex % availableColors.length];
@@ -188,8 +253,33 @@ class _CourseMapPageState extends State<CourseMapPage> {
         course.courseId,
         details,
       );
+
+      courseSessionCounts[course.name] = {};
+
       for (final type in ['lecture', 'tutorial', 'lab', 'workshop']) {
-        for (final entry in entries[type] ?? []) {
+        final typeEntries = entries[type] ?? [];
+        for (int i = 0; i < typeEntries.length; i++) {
+          final entry = typeEntries[i];
+
+          // Skip if building empty
+          if (entry.building.trim().isEmpty) continue;
+
+          // Label like L1, T2, etc
+          final prefix =
+              type == 'lecture'
+                  ? 'הרצאה'
+                  : type == 'tutorial'
+                  ? 'תרגול'
+                  : type == 'lab'
+                  ? 'מעבדה'
+                  : 'סדנה';
+
+          final count1 = courseSessionCounts[course.name]!.putIfAbsent(
+            prefix,
+            () => 0,
+          );
+          courseSessionCounts[course.name]![prefix] = count1 + 1;
+
           final scheduleString = StudentCourse.formatScheduleString(
             entry.day,
             entry.time,
@@ -198,38 +288,44 @@ class _CourseMapPageState extends State<CourseMapPage> {
             '🔍 Checking entry: ${entry.type}, ${entry.day} ${entry.time} → $scheduleString',
           );
 
-          if (entry.building.trim().isEmpty) continue;
-
           LatLng? baseLoc = await fetchCoordinates(entry.building);
           if (baseLoc == null) continue;
 
-          // Track how many pins already placed at this building
           final key = '${baseLoc.latitude},${baseLoc.longitude}';
           final count = _buildingPinCounts.putIfAbsent(key, () => 0);
-
-          // Offset slightly based on count
-          final offsetLat = baseLoc.latitude + (count * _offsetStep);
-          final offsetLon = baseLoc.longitude + (count * _offsetStep);
-          final loc = LatLng(offsetLat, offsetLon);
-
-          // Increment count for next pin at this building
           _buildingPinCounts[key] = count + 1;
+
+          // Spread pins in a circle around the building
+          const double radius = 0.00005; // ~5 meters
+          final angle = (count * 45) * (Math.pi / 180); // 45°, 90°, etc
+          final offsetLat = baseLoc.latitude + radius * Math.sin(angle);
+          final offsetLon = baseLoc.longitude + radius * Math.cos(angle);
+          final loc = LatLng(offsetLat, offsetLon);
 
           debugPrint('🌍 Geocoded: ${entry.building} → $loc');
 
-          if (loc != null) {
-            markers.add(
-              Marker(
-                point: loc,
-                width: 40,
-                height: 40,
-                child: Tooltip(
-                  message: '${course.name} (${entry.type})',
-                  child: Icon(Icons.location_on, color: courseColor),
-                ),
+          visibleCourses.addAll(courseColors.keys);
+          final labelCountKey = '${course.name} - ${entry.type}';
+          final eventsCount = _buildingPinCounts.putIfAbsent(
+            labelCountKey,
+            () => 1,
+          );
+          final label = '${course.name} (${entry.type} $eventsCount)';
+          _buildingPinCounts[labelCountKey] = eventsCount + 1;
+          _courseLocations.putIfAbsent(label, () => []).add(loc);
+
+          visibleEvents[label] = true;
+          markers.add(
+            Marker(
+              point: loc,
+              width: 40,
+              height: 40,
+              child: Tooltip(
+                message: label,
+                child: Icon(Icons.location_on, color: courseColor),
               ),
-            );
-          }
+            ),
+          );
         }
       }
     }
@@ -237,6 +333,87 @@ class _CourseMapPageState extends State<CourseMapPage> {
     courseMarkers = markers;
     debugPrint('📌 Total Markers: ${courseMarkers.length}');
     debugPrint('👤 User Location: $userLocation');
+  }
+
+  Widget _buildLegendContent() {
+    final grouped = <String, List<MapEntry<String, bool>>>{};
+
+    for (final entry in visibleEvents.entries) {
+      final match = RegExp(r'^(.*) \(([^)]+)\)$').firstMatch(entry.key);
+      if (match == null) continue;
+
+      final course = match.group(1)!.trim();
+      final session = match.group(2)!.trim();
+      grouped.putIfAbsent(course, () => []).add(MapEntry(session, entry.value));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          grouped.entries.map((group) {
+            final courseName = group.key;
+            final sessions = group.value;
+            final color = courseColors[courseName] ?? Colors.grey;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(width: 12, height: 12, color: color),
+                      const SizedBox(width: 6),
+                      Text(
+                        courseName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children:
+                        sessions.map((sessionEntry) {
+                          final label = sessionEntry.key;
+                          final isVisible = sessionEntry.value;
+                          final eventKey = '$courseName ($label)';
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: isVisible,
+                                onChanged: (val) {
+                                  setState(() {
+                                    visibleEvents[eventKey] = val ?? true;
+                                  });
+                                },
+                              ),
+                              GestureDetector(
+                                onTap: () => _focusOnCourse(eventKey),
+                                child: Text(
+                                  label,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    decoration: TextDecoration.underline,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
   }
 
   @override
@@ -248,25 +425,20 @@ class _CourseMapPageState extends State<CourseMapPage> {
     final allPoints = [...courseMarkers.map((m) => m.point), userLocation!];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Course Map')),
       body: Stack(
         children: [
           FlutterMap(
+            mapController: _mapController,
             options: MapOptions(
-              initialCameraFit:
-                  allPoints.length >= 2
-                      ? CameraFit.bounds(
-                        bounds: LatLngBounds.fromPoints(allPoints),
-                        padding: const EdgeInsets.all(40),
-                      )
-                      : CameraFit.bounds(
-                        bounds: LatLngBounds(
-                          LatLng(32.775, 35.021),
-                          LatLng(32.778, 35.025),
-                        ),
-                        padding: const EdgeInsets.all(40),
-                      ),
+              initialCameraFit: CameraFit.bounds(
+                bounds: LatLngBounds(
+                  LatLng(32.774, 35.020), // Southwest corner of Technion
+                  LatLng(32.779, 35.025), // Northeast corner of Technion
+                ),
+                padding: const EdgeInsets.all(40),
+              ),
             ),
+
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -274,7 +446,41 @@ class _CourseMapPageState extends State<CourseMapPage> {
               ),
               MarkerLayer(
                 markers: [
-                  ...courseMarkers,
+                  ...courseMarkers
+                      .where((m) {
+                        final tooltip = (m.child as Tooltip).message;
+                        final courseName = tooltip?.split('(').first.trim();
+                        return visibleEvents[tooltip] ?? true;
+                      })
+                      .map((m) {
+                        final tooltip = (m.child as Tooltip).message;
+                        final courseName = tooltip?.split('(').first.trim();
+                        final isHighlighted = courseName == _highlightedCourse;
+
+                        return Marker(
+                          point: m.point,
+                          width: isHighlighted ? 50 : 40,
+                          height: isHighlighted ? 50 : 40,
+                          child: Tooltip(
+                            message: tooltip,
+                            child: Icon(
+                              Icons.location_on,
+                              color: courseColors[courseName]!,
+                              size: isHighlighted ? 40 : 30,
+                              shadows:
+                                  isHighlighted
+                                      ? [
+                                        const Shadow(
+                                          color: Colors.black,
+                                          blurRadius: 10,
+                                        ),
+                                      ]
+                                      : [],
+                            ),
+                          ),
+                        );
+                      }),
+
                   Marker(
                     point: userLocation!,
                     width: 40,
@@ -291,74 +497,48 @@ class _CourseMapPageState extends State<CourseMapPage> {
           Positioned(
             top: 20,
             left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      legendVisible = !legendVisible;
-                    });
-                  },
-                  child: Text(legendVisible ? 'Hide Legend' : 'Show Legend'),
-                ),
-                const SizedBox(height: 8),
-                if (legendVisible)
-                  Container(
-                    constraints: const BoxConstraints(
-                      maxHeight: 300,
-                      maxWidth: 200,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      border: Border.all(color: Colors.black12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children:
-                            courseColors.entries.map((entry) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 16,
-                                      height: 16,
-                                      color: entry.value,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        entry.key,
-                                        style: const TextStyle(fontSize: 12),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+            child: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withOpacity(0.95),
+              child: Container(
+                width: 220,
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                      ),
+                      onPressed:
+                          () => setState(() => legendVisible = !legendVisible),
+                      child: Text(
+                        legendVisible ? 'Hide Legend' : 'Show Legend',
                       ),
                     ),
-                  ),
-              ],
+                    if (legendVisible)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 300),
+                        child: SingleChildScrollView(
+                          child: _buildLegendContent(),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  @override
+void dispose() {
+  _locationSubscription.cancel();
+  super.dispose();
+}
+
 }
