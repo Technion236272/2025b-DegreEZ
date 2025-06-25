@@ -285,6 +285,202 @@ class AppColorsDarkMode {
 }
 
 
+/// Light theme color palette - mirrors AppColorsDarkMode structure for consistency
+/// Based on clean whites, soft grays, and refined accent colors
+class AppColorsLightMode {
+  // =============================================================================
+  // MAIN BACKGROUND COLORS - Clean Light Theme
+  // =============================================================================
+  
+  /// Primary background - Clean white for bright foundation
+  static const Color mainColor = Color(0xFFFAFAFA);
+  
+  /// Secondary surface - Slightly darker for subtle layering
+  static const Color surfaceColor = Color(0xFFFFFFFF);
+  
+  /// Card background - Elevated elements with clear hierarchy
+  static const Color cardColor = Color(0xFFFFFFFF);
+  
+  // =============================================================================
+  // PRIMARY COLORS - Light Mode Green Accent System
+  // =============================================================================
+  
+  /// Main primary color - Forest Green for good contrast and natural feel
+  static const Color primaryColor = Color(0xFF059669);
+  
+  /// Semi-transparent primary for overlays
+  static const Color primaryColorDim = Color(0xAA059669);
+  
+  /// Light primary - Soft mint green for backgrounds
+  static const Color primaryColorLight = Color(0xFF86EFAC);
+  
+  // =============================================================================
+  // SECONDARY COLORS - Supporting the light theme
+  // =============================================================================
+  
+  /// Main secondary - Dark gray for text and UI elements
+  static const Color secondaryColor = Color(0xFF374151);
+  
+  /// Medium transparency secondary
+  static const Color secondaryColorDim = Color(0x99374151);
+  
+  /// High opacity secondary for prominent elements
+  static const Color secondaryColorDimDD = Color(0xDD374151);
+  
+  /// Very subtle secondary for background effects
+  static const Color secondaryColorExtremelyDim = Color(0x44374151);
+  
+  // =============================================================================
+  // ACCENT COLORS - Light mode green accents for highlights and emphasis
+  // =============================================================================
+  
+  /// Main accent - Emerald green for buttons and active states
+  static const Color accentColor = Color(0xFF059669);
+  
+  /// Darker accent variations
+  static const Color accentColorDark = Color(0xFF047857);
+  static const Color accentColorDarker = Color(0xFF064E3B);
+  
+  /// Semi-transparent accent
+  static const Color accentColorDim = Color(0xCC059669);
+  
+  /// Lighter accent variations
+  static const Color accentColorLight = Color(0xFF34D399);
+  static const Color accentColorExtremelyDim = Color(0x4434D399);
+  
+  // =============================================================================
+  // TEXT COLORS - Hierarchical text system for light mode
+  // =============================================================================
+  
+  /// Primary text - Very dark gray for main content (darker than before)
+  static const Color textPrimary = Color(0xFF0F172A);
+  
+  /// Secondary text - Dark gray for supporting content (darker than before)
+  static const Color textSecondary = Color(0xFF334155);
+  
+  /// Tertiary text - Medium gray for hints and labels (darker than before)
+  static const Color textTertiary = Color(0xFF64748B);
+  
+  // =============================================================================
+  // BORDER AND SHADE COLORS - Light mode borders
+  // =============================================================================
+  
+  /// Primary borders - Light sage green
+  static const Color borderPrimary = Color(0xFFD1FAE5);
+  
+  /// Secondary borders - Very light mint
+  static const Color borderSecondary = Color(0xFFECFDF5);
+  
+  /// Drawer background - Very light green tint
+  static const Color drawerColor = Color(0xFFF0FDF4);
+  
+  /// Drawer header - Soft green
+  static const Color drawerHeaderColor = Color(0xFF86EFAC);
+  
+  /// Error and warning borders (keep existing)
+  static const Color borderError = Color(0xFFFCA5A5);
+  static const Color borderWarning = Color(0xFFFDE68A);
+  static const Color borderSuccess = Color(0xFFA7F3D0);
+  
+  // =============================================================================
+  // SEMANTIC COLORS - Status indicators for light mode
+  // =============================================================================
+  
+  /// Success states - Green tones
+  static const Color successColor = Color(0xFF10B981);
+  static const Color successColorLight = Color(0xFFD1FAE5);
+  static const Color successColorDark = Color(0xFF047857);
+  
+  /// Warning states - Amber tones
+  static const Color warningColor = Color(0xFFF59E0B);
+  static const Color warningColorLight = Color(0xFFFEF3C7);
+  static const Color warningColorDark = Color(0xFFD97706);
+  
+  /// Error states - Red tones
+  static const Color errorColor = Color(0xFFEF4444);
+  static const Color errorColorLight = Color(0xFFFEE2E2);
+  static const Color errorColorDark = Color(0xFFDC2626);
+  
+  /// Info states - Green tones (to match theme)
+  static const Color infoColor = Color(0xFF10B981);
+  static const Color infoColorLight = Color(0xFFD1FAE5);
+  static const Color infoColorDark = Color(0xFF1D4ED8);
+  
+  // =============================================================================
+  // SHADOW AND OVERLAY COLORS - Light mode shadows
+  // =============================================================================
+  
+  /// Primary shadow color
+  static const Color shadowColor = Color(0x1A000000);
+  
+  /// Overlay colors for modals and dialogs
+  static const Color overlayColor = Color(0x80000000);
+  static const Color overlayColorLight = Color(0x40000000);
+  
+  // =============================================================================
+  // DECORATION METHODS - Light mode specific decorations
+  // =============================================================================
+  
+  /// Creates a standard card decoration for light mode
+  static BoxDecoration cardDecoration({
+    Color? backgroundColor,
+    double borderRadius = 12.0,
+    double elevation = 2.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsLightMode.cardColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: AppColorsLightMode.borderSecondary,
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsLightMode.shadowColor,
+          blurRadius: elevation * 2,
+          offset: Offset(0, elevation / 2),
+        ),
+      ],
+    );
+  }
+  
+  /// Creates an elevated surface decoration
+  static BoxDecoration elevatedDecoration({
+    Color? backgroundColor,
+    double borderRadius = 16.0,
+    double elevation = 4.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsLightMode.surfaceColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsLightMode.shadowColor,
+          blurRadius: elevation * 3,
+          offset: Offset(0, elevation),
+        ),
+      ],
+    );
+  }
+  
+  /// Creates a subtle border decoration
+  static BoxDecoration borderDecoration({
+    Color? backgroundColor,
+    Color? borderColor,
+    double borderRadius = 8.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsLightMode.surfaceColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: borderColor ?? AppColorsLightMode.borderPrimary,
+        width: 1.0,
+      ),
+    );
+  }
+}
+
+
 class CourseCardColorPalette{
   int? _id;
   final Color _topBarBG = Colors.black;
@@ -296,14 +492,16 @@ class CourseCardColorPalette{
   final Color _cardBG = Colors.black;
   
   get id => _id;
-  get topBarBG => _topBarBG;
-  get topBarText => _topBarText;
-  get topBarMarkBG => _topBarMarkBG;
-  get topBarMarkText => _topBarMarkText;
-  get cardFG => _cardFG;
-  get cardFGdim => _cardFGdim;
+  Color topBarBG([bool isDarkMode = false]) => _topBarBG;
+  Color topBarText([bool isDarkMode = false]) => _topBarText;
+  Color topBarMarkBG([bool isDarkMode = false]) => _topBarMarkBG;
+  Color topBarMarkText([bool isDarkMode = false]) => _topBarMarkText;
+  
+  // Make these theme-aware too
+  Color cardFG([bool isDarkMode = false]) => _cardFG;
+  Color cardFGdim([bool isDarkMode = false]) => _cardFGdim;
 
-  Color cardBG([String? courseId]){
+  Color cardBG([String? courseId, bool isDarkMode = false]){
     return _cardBG;
     }
 
@@ -318,26 +516,43 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
   CourseCardColorPalette1(){
     _id = 1;
   }
+  
   @override
-  get topBarBG => AppColorsDarkMode.accentColor;
+  Color topBarBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.primaryColor // Dark theme: Blue accent
+    : AppColorsLightMode.primaryColor; // Light theme: Green primary
 
   @override
-  get topBarText => AppColorsDarkMode.secondaryColor;
+  Color topBarText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.cardColor; // Light theme: White text
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
+  Color topBarMarkBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.accentColorLight // Dark theme: Light blue
+    : AppColorsLightMode.primaryColorLight; // Light theme: Light mint green
 
   @override
-  get topBarMarkText => AppColorsDarkMode.accentColor;
+  Color topBarMarkText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green
 
   @override
-  Color cardBG([String? courseId]){
-    return AppColorsDarkMode.secondaryColor;
+  Color cardBG([String? courseId, bool isDarkMode = false]){
+    return isDarkMode 
+      ? AppColorsDarkMode.secondaryColor // Dark theme: Same as drawer header background (powder blue)
+      : AppColorsLightMode.borderSuccess; // Light theme: Very light mint green background (current color)
     }
 
   @override
-  get cardFG => AppColorsDarkMode.accentColor;  @override
-  get cardFGdim => Color(0x44355F8C);
+  Color cardFG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text for contrast against powder blue
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green text
+
+  @override
+  Color cardFGdim([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textSecondary // Dark theme: Light gray text for dim contrast
+    : AppColorsLightMode.accentColorExtremelyDim; // Light theme: Semi-transparent dark green
   
 }
 
@@ -347,54 +562,74 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     _id = 2;
   }
   @override
-  get topBarBG => AppColorsDarkMode.accentColorDim;
+  Color topBarBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.accentColor // Dark theme: Blue accent
+    : AppColorsLightMode.accentColor; // Light theme: Emerald green
 
   @override
-  get topBarText => AppColorsDarkMode.secondaryColor;
+  Color topBarText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.cardColor; // Light theme: White text
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
+  Color topBarMarkBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.primaryColorLight // Dark theme: Powder blue
+    : AppColorsLightMode.primaryColorLight; // Light theme: Light mint green
 
   @override
-  get topBarMarkText => AppColorsDarkMode.accentColor;
+  Color topBarMarkText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green
 
   @override
-  Color cardBG([String? courseId]){
-    return _getCourseColor(courseId!);
+  Color cardBG([String? courseId, bool isDarkMode = false]){
+    return _getCourseColor(courseId!, isDarkMode);
     }
 
   @override
-  get cardFG => AppColorsDarkMode.secondaryColor;  @override
-  get cardFGdim => Color(0x44B8C7D6);  Color _getCourseColor(String courseId) {
+  Color cardFG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text for contrast against powder blue
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green text
+
+  @override
+  Color cardFGdim([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textSecondary // Dark theme: Light gray text for dim contrast
+    : AppColorsLightMode.accentColorExtremelyDim; // Light theme: Semi-transparent dark green
+
+  Color _getCourseColor(String courseId, bool isDarkMode) {
     final hash = courseId.hashCode;
-    final colors = [
-      // Vibrant colors for easy distinction, refined for sophistication
-      const Color(0xFF4CAF50), // Material Green
-      const Color(0xFFFF9800), // Material Orange
-      // const Color(0xFFF44336), // Material Red
-      const Color(0xFF2196F3), // Material Blue
-      const Color(0xFF9C27B0), // Material Purple
-      const Color(0xFFFFC107), // Material Amber
-      const Color(0xFF00BCD4), // Material Cyan
-      const Color(0xFFFF5722), // Material Deep Orange
-      const Color(0xFF795548), // Material Brown
-      const Color(0xFF607D8B), // Material Blue Grey
-      const Color(0xFF8BC34A), // Material Light Green
-      // const Color(0xFFE91E63), // Material Pink
-      const Color(0xFF673AB7), // Material Deep Purple
-      const Color(0xFF3F51B5), // Material Indigo
-      const Color(0xFF009688), // Material Teal
-      const Color(0xFFCDDC39), // Material Lime
-      // Additional sophisticated colors that complement the theme
-      const Color(0xFF5D7B8A), // Muted blue-gray (harmonizes with Payne's Gray)
-      const Color(0xFF8A6B5D), // Warm brown-gray
-      const Color(0xFF6B8A5D), // Sage green
-      const Color(0xFF8A5D6B), // Muted rose
-      const Color(0xFF7A5D8A), // Muted purple-gray
-      const Color(0xFF5D8A7A), // Teal-gray
-      const Color(0xFFB8860B), // Dark goldenrod
-      const Color(0xFF4682B4), // Steel blue
+    
+    // Light mode colors - using theme's light green tones
+    final lightColors = [
+      AppColorsLightMode.borderSuccess, // Very light mint
+      AppColorsLightMode.borderSecondary, // Light green border
+      AppColorsLightMode.successColorLight, // Light success color
+      AppColorsLightMode.primaryColorLight, // Light primary
+      // Additional light theme compatible colors
+      const Color(0xFFECFDF5), // Very Light Mint
+      const Color(0xFFD1FAE5), // Light Sage Green
+      const Color(0xFFBBF7D0), // Soft Mint
+      const Color(0xFFA7F3D0), // Light Green
+      const Color(0xFF86EFAC), // Mint Green
+      const Color(0xFFF0FDF4), // Extremely Light Green
     ];
+    
+    // Dark mode colors - using variations of the drawer header background color (powder blue)
+    final darkColors = [
+      AppColorsDarkMode.secondaryColor, // Same as drawer header background (powder blue)
+      AppColorsDarkMode.secondaryColorDim, // Semi-transparent powder blue
+      AppColorsDarkMode.secondaryColorDimDD, // High opacity powder blue
+      AppColorsDarkMode.primaryColorLight, // Light primary (also powder blue)
+      // Subtle variations of the powder blue color for visual distinction
+      const Color(0xFFADB9C6), // Slightly darker powder blue
+      const Color(0xFFC3CDD7), // Slightly lighter powder blue
+      const Color(0xFFB0C5D4), // With a hint more blue
+      const Color(0xFFBFC9D8), // Lighter variant
+      const Color(0xFFA8BDD0), // With more blue tone
+      const Color(0xFFB5C4D3), // Balanced variant
+    ];
+    
+    final colors = isDarkMode ? darkColors : lightColors;
     return colors[hash.abs() % colors.length];
   }
 }

@@ -1,6 +1,7 @@
-// New file: semester_timeline.dart
+// semester_timeline.dart
 import 'package:flutter/material.dart';
-import 'package:degreez/color/color_palette.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 enum SemesterStatus { completed, current, planned, empty }
 
@@ -36,29 +37,38 @@ class SemesterTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     if (semesters.isEmpty) return SizedBox.shrink();
     
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: AppColorsDarkMode.accentColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(50),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Container(
+          height: 70,
+          decoration: BoxDecoration(
+            color: themeProvider.isLightMode 
+                ? const Color(0xFFD1FAE5) // Light sage green for light mode
+                : themeProvider.primaryColor, // Keep existing color for dark mode
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.isDarkMode 
+                  ? Colors.black.withAlpha(50)
+                  : Colors.grey.withAlpha(30),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: semesters.length,
-        itemBuilder: (context, index) => _buildSemesterChip(
-          context,
-          semesters[index],
-          index,
-          index == currentSemesterIndex,
-        ),
-      ),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: semesters.length,
+            itemBuilder: (context, index) => _buildSemesterChip(
+              context,
+              semesters[index],
+              index,
+              index == currentSemesterIndex,
+              themeProvider,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -67,8 +77,9 @@ class SemesterTimeline extends StatelessWidget {
     SemesterTimelineData semester,
     int index,
     bool isSelected,
+    ThemeProvider themeProvider,
   ) {
-    final statusColor = _getStatusColor(semester.status);
+    final statusColor = _getStatusColor(semester.status, themeProvider);
     final completionPercentage = semester.totalCourses > 0 
         ? semester.completedCourses / semester.totalCourses 
         : 0.0;
@@ -81,12 +92,12 @@ class SemesterTimeline extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected 
-              ? AppColorsDarkMode.secondaryColor 
+              ? themeProvider.secondaryColor 
               : statusColor.withAlpha(50),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected 
-                ? AppColorsDarkMode.secondaryColor 
+                ? themeProvider.secondaryColor 
                 : statusColor,
             width: isSelected ? 2 : 1,
           ),
@@ -101,8 +112,8 @@ class SemesterTimeline extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 color: isSelected 
-                    ? AppColorsDarkMode.accentColor 
-                    : AppColorsDarkMode.secondaryColor,
+                    ? themeProvider.accentColor 
+                    : themeProvider.secondaryColor,
               ),
             ),
             
@@ -114,7 +125,9 @@ class SemesterTimeline extends StatelessWidget {
               height: 3,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(2),
-                color: Colors.grey.shade600,
+                color: themeProvider.isDarkMode 
+                  ? Colors.grey.shade600 
+                  : Colors.grey.shade300,
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
@@ -134,10 +147,9 @@ class SemesterTimeline extends StatelessWidget {
             Text(
               '${semester.completedCourses}/${semester.totalCourses}',
               style: TextStyle(
-                fontSize: 9,
-                color: isSelected 
-                    ? AppColorsDarkMode.accentColor 
-                    : AppColorsDarkMode.secondaryColorDim,
+                fontSize: 9,                color: isSelected 
+                    ? themeProvider.accentColor 
+                    : themeProvider.textSecondary,
               ),
             ),
           ],
@@ -146,55 +158,53 @@ class SemesterTimeline extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(SemesterStatus status) {
+  Color _getStatusColor(SemesterStatus status, ThemeProvider themeProvider) {
     switch (status) {
       case SemesterStatus.completed:
-        return Colors.green.shade400;
+        return themeProvider.isDarkMode ? Colors.green.shade400 : Colors.green.shade600;
       case SemesterStatus.current:
-        return Colors.blue.shade400;
+        return themeProvider.isDarkMode ? Colors.blue.shade400 : Colors.blue.shade600;
       case SemesterStatus.planned:
-        return Colors.orange.shade400;
+        return themeProvider.isDarkMode ? Colors.orange.shade400 : Colors.orange.shade600;
       case SemesterStatus.empty:
-        return Colors.grey.shade400;
+        return themeProvider.isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
     }
   }
 
-String _getShortSemesterName(String fullName) {
-  final parts = fullName.split(' ');
-  if (parts.length >= 2) {
-    final season = parts[0].toLowerCase();
-    final year = parts[1];
+  String _getShortSemesterName(String fullName) {
+    final parts = fullName.split(' ');
+    if (parts.length >= 2) {
+      final season = parts[0].toLowerCase();
+      final year = parts[1];
 
-    String seasonShort;
-    switch (season) {
-      case 'spring':
-        seasonShort = 'Sp';
-        break;
-      case 'summer':
-        seasonShort = 'Su';
-        break;
-      case 'winter':
-        seasonShort = 'W';
-        break;
-      default:
-        seasonShort = season.substring(0, 1).toUpperCase();
+      String seasonShort;
+      switch (season) {
+        case 'spring':
+          seasonShort = 'Sp';
+          break;
+        case 'summer':
+          seasonShort = 'Su';
+          break;
+        case 'winter':
+          seasonShort = 'W';
+          break;
+        default:
+          seasonShort = season.substring(0, 1).toUpperCase();
+      }
+
+      if (year.contains('-')) {
+        // Example: 2024-2025 → '24–25
+        final parts = year.split('-');
+        final y1 = parts[0].substring(2);
+        final y2 = parts[1].substring(2);
+        return "$seasonShort'$y1–$y2";
+      } else {
+        // Single year
+        final y = year.substring(2);
+        return "$seasonShort'$y";
+      }
     }
 
-    if (year.contains('-')) {
-      // Example: 2024-2025 → '24–25
-      final parts = year.split('-');
-      final y1 = parts[0].substring(2);
-      final y2 = parts[1].substring(2);
-      return "$seasonShort'$y1–$y2";
-    } else {
-      // Single year
-      final y = year.substring(2);
-      return "$seasonShort'$y";
-    }
+    return fullName.length > 6 ? fullName.substring(0, 6) : fullName;
   }
-
-  return fullName.length > 6 ? fullName.substring(0, 6) : fullName;
-}
-
-
 }

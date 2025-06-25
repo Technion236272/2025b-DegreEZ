@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
-import '../providers/color_theme_provider.dart';
+import '../providers/theme_provider.dart';
 import '../models/student_model.dart';
 
 class ExamDatesPanel extends StatefulWidget {
@@ -52,8 +52,8 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<CourseProvider, CourseDataProvider, ColorThemeProvider>(
-      builder: (context, courseProvider, courseDataProvider, colorThemeProvider, _) {
+    return Consumer3<CourseProvider, CourseDataProvider, ThemeProvider>(
+      builder: (context, courseProvider, courseDataProvider, themeProvider, _) {
         // Get current semester courses only
         final currentSemester = courseDataProvider.currentSemester?.semesterName;
         final currentCourses = currentSemester != null 
@@ -165,7 +165,7 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
                             itemCount: examData.length,
                             itemBuilder: (context, index) => _buildExamListTile(
                               examData[index], 
-                              colorThemeProvider,
+                              themeProvider,
                             ),
                           ),
                         ),
@@ -181,13 +181,13 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
     );
   }
 
-Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvider) {
+Widget _buildExamListTile(ExamInfo examInfo, ThemeProvider themeProvider) {
   return ListTile(
     leading: Container(
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: colorThemeProvider.getCourseColor(examInfo.courseId),
+        color: themeProvider.getCourseColor(examInfo.courseId),
         shape: BoxShape.circle,
       ),
     ),

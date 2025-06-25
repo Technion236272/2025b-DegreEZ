@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/add_course_dialog.dart';
 import '../mixins/ai_import_mixin.dart';
 import '../services/GlobalConfigService.dart';
@@ -284,7 +285,9 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
 
     return Drawer(
       child: Container(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).brightness == Brightness.light 
+            ? AppColorsLightMode.drawerColor 
+            : Theme.of(context).colorScheme.surface,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -293,14 +296,18 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               accountName: Text(
                 student?.name ?? user?.displayName ?? 'User',
                 style: TextStyle(
-                  color: AppColorsDarkMode.accentColor,
+                  color: Theme.of(context).brightness == Brightness.light 
+                      ? AppColorsLightMode.textPrimary 
+                      : AppColorsDarkMode.accentColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               accountEmail: Text(
                 user?.email ?? '',
                 style: TextStyle(
-                  color: AppColorsDarkMode.accentColor,
+                  color: Theme.of(context).brightness == Brightness.light 
+                      ? AppColorsLightMode.textSecondary 
+                      : AppColorsDarkMode.accentColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -308,7 +315,9 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColorsDarkMode.accentColor, // Border color
+                    color: Theme.of(context).brightness == Brightness.light 
+                        ? AppColorsLightMode.primaryColor 
+                        : AppColorsDarkMode.accentColor, // Border color
                     width: 3.0, // Border width
                   ),
                 ),
@@ -324,7 +333,9 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 ),
               ),
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.secondaryColor,
+                color: Theme.of(context).brightness == Brightness.light 
+                    ? AppColorsLightMode.drawerHeaderColor 
+                    : AppColorsDarkMode.secondaryColor,
               ),
             ),
 
@@ -435,13 +446,25 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected ? null : AppColorsDarkMode.secondaryColorDim,
+        color: isSelected 
+            ? (Theme.of(context).brightness == Brightness.light 
+                ? AppColorsLightMode.primaryColor 
+                : null) 
+            : (Theme.of(context).brightness == Brightness.light 
+                ? AppColorsLightMode.textSecondary 
+                : AppColorsDarkMode.secondaryColorDim),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? null : AppColorsDarkMode.secondaryColorDim,
+          color: isSelected 
+              ? (Theme.of(context).brightness == Brightness.light 
+                  ? AppColorsLightMode.primaryColor 
+                  : null) 
+              : (Theme.of(context).brightness == Brightness.light 
+                  ? AppColorsLightMode.textSecondary 
+                  : AppColorsDarkMode.secondaryColorDim),
         ),
       ),
       selected: isSelected,
@@ -464,44 +487,54 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     if (_allSemesters.isEmpty) {
       return const AutoSizeText('Calendar', minFontSize: 14, maxFontSize: 22);
     }
-
-    return DropdownButton<String>(
-      value: _selectedSemester,
-      hint: const Text("Select Semester", style: TextStyle(fontSize: 16)),
-      underline: Container(), // Remove the default underline
-      dropdownColor: Theme.of(context).appBarTheme.backgroundColor,
-      style: const TextStyle(
-        color: AppColorsDarkMode.secondaryColor,
-        fontSize: 18,
-        fontWeight: FontWeight.w500,
-      ),
-      onChanged: (String? value) async {
-        if (value != null && value != _selectedSemester) {
-          setState(() {
-            _selectedSemester = value;
-            _selectedCalendarSemester = value;
-          });
-
-          // Save preference
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('lastSelectedSemester', value);
-
-          // The CalendarPage will handle the course loading when it receives the new semester
-        }
-      },
-      items:
-          _allSemesters.map((sem) {
+    
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        final textColor = themeProvider.isLightMode 
+            ? AppColorsLightMode.textPrimary 
+            : AppColorsDarkMode.secondaryColor;
+        
+        return DropdownButton<String>(
+          value: _selectedSemester,
+          hint: Text(
+            "Select Semester", 
+            style: TextStyle(fontSize: 16, color: textColor),
+          ),
+          underline: Container(), // Remove the default underline
+          dropdownColor: Theme.of(context).appBarTheme.backgroundColor,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: (String? value) async {
+            if (value != null && value != _selectedSemester) {
+              setState(() {
+                _selectedSemester = value;
+                _selectedCalendarSemester = value;
+              });
+              
+              // Save preference
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('lastSelectedSemester', value);
+              
+              // The CalendarPage will handle the course loading when it receives the new semester
+            }
+          },
+          items: _allSemesters.map((sem) {
             return DropdownMenuItem<String>(
               value: sem,
               child: Text(
                 sem,
-                style: const TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
+                style: TextStyle(
+                  color: textColor,
                   fontSize: 16,
                 ),
               ),
             );
           }).toList(),
+        );
+      },
     );
   }
 }

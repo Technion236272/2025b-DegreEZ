@@ -1,5 +1,7 @@
-import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
+import '../color/color_palette.dart';
 
 
 Widget textFormFieldWithStyle({
@@ -9,41 +11,50 @@ Widget textFormFieldWithStyle({
   RegExp? validatorRegex,
   int? lineNum,
   String? errorMessage,
+  required BuildContext context, // Add context parameter to access provider
 }) {
-  return Padding(
-    padding: EdgeInsets.only(top: 10, bottom: 10),
-    child: TextFormField(
-      textAlign: TextAlign.start,
-      maxLines: lineNum ?? 1,
-      controller: controller,
-      cursorColor: AppColorsDarkMode.secondaryColor,
-      decoration: InputDecoration(
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-            color: AppColorsDarkMode.secondaryColor,
-            width: 2.0,
+  return Consumer<ThemeProvider>(
+    builder: (context, themeProvider, child) {
+      return Padding(
+        padding: EdgeInsets.only(top: 10, bottom: 10),
+        child: TextFormField(
+          textAlign: TextAlign.start,
+          maxLines: lineNum ?? 1,
+          controller: controller,
+          cursorColor: themeProvider.primaryColor,
+          decoration: InputDecoration(
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: themeProvider.borderPrimary,
+                width: 2.0,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: themeProvider.primaryColor),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: themeProvider.isDarkMode 
+                  ? AppColorsDarkMode.errorColor
+                  : AppColorsLightMode.errorColor,
+                width: 2.0,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: themeProvider.isDarkMode 
+                  ? AppColorsDarkMode.errorColorDim
+                  : AppColorsLightMode.errorColor.withOpacity(0.7),
+              ),
+            ),
+            alignLabelWithHint: true,
+            labelText: label,
+            labelStyle: TextStyle(color: themeProvider.textSecondary),
+            hoverColor: themeProvider.primaryColor,
+            hintText: example,
+            hintStyle: TextStyle(color: themeProvider.textSecondary.withOpacity(0.7)),
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-            color: AppColorsDarkMode.errorColor,
-            width: 2.0,
-          ),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
-        ),
-        alignLabelWithHint: true,
-        labelText: label,
-        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
-        hoverColor: AppColorsDarkMode.secondaryColor,
-        hintText: example,
-        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-      ),
-      style: TextStyle(color: AppColorsDarkMode.secondaryColor, fontSize: 15),
+          style: TextStyle(color: themeProvider.textPrimary, fontSize: 15),
       validator: (value) {
         if (value == null) {
           return 'This field is required.';
@@ -57,10 +68,10 @@ Widget textFormFieldWithStyle({
             return 'This field is required.';
           }
           return errorMessage ?? 'Invalid Input';
-        }
-
-        return null; // Input is valid
+        }        return null; // Input is valid
       },
     ),
+      );
+    },
   );
 }
