@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
-import '../providers/color_theme_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/course_calendar_panel.dart';
 import '../models/student_model.dart';
@@ -119,11 +118,10 @@ class _CalendarPageState extends State<CalendarPage>
   }
 
   @override
-  Widget build(BuildContext context) {    return Consumer5<
+  Widget build(BuildContext context) {    return Consumer4<
       LogInNotifier,
       StudentProvider,
       CourseProvider,
-      ColorThemeProvider,
       ThemeProvider
     >(
       builder: (
@@ -131,7 +129,6 @@ class _CalendarPageState extends State<CalendarPage>
         loginNotifier,
         studentProvider,
         courseProvider,
-        colorThemeProvider,
         themeProvider,
         _,
       ) {// Update calendar events when courses change
@@ -141,7 +138,7 @@ class _CalendarPageState extends State<CalendarPage>
           if (studentProvider.hasStudent && courseProvider.hasLoadedData) {
             await _updateCalendarEvents(
               courseProvider,
-              colorThemeProvider,
+              themeProvider,
               forceSemester: widget.selectedSemester, // ⬅️ use selected semester
             );
 
@@ -291,7 +288,7 @@ class _CalendarPageState extends State<CalendarPage>
   // Updated calendar event creation to preserve manually added events
   Future<void> _updateCalendarEvents(
     CourseProvider courseProvider,
-    ColorThemeProvider colorThemeProvider, {
+    ThemeProvider themeProvider, {
     String? forceSemester,  }) async {
     debugPrint('🔄 === STARTING CALENDAR UPDATE ===');
     debugPrint('🔄 Force semester: $forceSemester');
@@ -358,7 +355,7 @@ class _CalendarPageState extends State<CalendarPage>
                 courseDetails,
                 semester,
                 currentWeekStart,
-                colorThemeProvider,
+                themeProvider,
               );
               debugPrint('      📅 Created $eventsCreated events from API schedule');
             } else {
@@ -367,7 +364,7 @@ class _CalendarPageState extends State<CalendarPage>
                 course,
                 semester,
                 currentWeekStart,
-                colorThemeProvider,
+                themeProvider,
               );
               debugPrint('      📅 Created $eventsCreated events from basic times');
             }
@@ -378,7 +375,7 @@ class _CalendarPageState extends State<CalendarPage>
               course,
               semester,
               currentWeekStart,
-              colorThemeProvider,
+              themeProvider,
             );
             debugPrint('    📅 Created $eventsCreated fallback events from basic times');
           }),
@@ -445,7 +442,7 @@ class _CalendarPageState extends State<CalendarPage>
     EnhancedCourseDetails courseDetails,
     String semester,
     DateTime weekStart,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) {
     debugPrint('  🏗️ Creating events from schedule for ${course.name}');
     
@@ -574,7 +571,7 @@ class _CalendarPageState extends State<CalendarPage>
         description: _buildEventDescription(course, schedule, semester),
         startTime: timeRange['start']!,
         endTime: timeRange['end']!,
-        color: colorThemeProvider.getCourseColor(course.courseId),
+        color: themeProvider.getCourseColor(course.courseId),
       );
       
       debugPrint('      ✅ Created event: "${event.title}" on ${event.date} from ${event.startTime} to ${event.endTime}');
@@ -589,7 +586,7 @@ class _CalendarPageState extends State<CalendarPage>
     StudentCourse course,
     String semester,
     DateTime weekStart,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) {
     debugPrint('  🔧 Creating basic events for ${course.name}');
     
@@ -599,7 +596,7 @@ class _CalendarPageState extends State<CalendarPage>
       return 0;
     }
 
-    final courseColor = colorThemeProvider.getCourseColor(course.courseId);
+    final courseColor = themeProvider.getCourseColor(course.courseId);
     int eventsAdded = 0;
 
     // Create events from stored lecture time
@@ -1009,8 +1006,8 @@ class _CalendarPageState extends State<CalendarPage>
             
             // Then refresh the calendar events with proper error handling
             try {
-              final colorThemeProvider = context.read<ColorThemeProvider>();
-              await refreshCalendarEvents(context, courseProvider, colorThemeProvider);
+              final themeProvider = context.read<ThemeProvider>();
+              await refreshCalendarEvents(context, courseProvider, themeProvider);
               debugPrint('Calendar events refreshed successfully after event tap schedule selection');
             } catch (e) {
               debugPrint('Error refreshing calendar events from event tap: $e');
@@ -1072,7 +1069,7 @@ class _CalendarPageState extends State<CalendarPage>
   Future<void> refreshCalendarEvents(
     BuildContext context,
     CourseProvider courseProvider,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) async {
     debugPrint('Refreshing calendar events after schedule selection change');
     
@@ -1082,7 +1079,7 @@ class _CalendarPageState extends State<CalendarPage>
     // Force a complete calendar refresh with current semester
     await _updateCalendarEvents(
       courseProvider,
-      colorThemeProvider,
+      themeProvider,
       forceSemester: widget.selectedSemester,
     );
     

@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
-import '../providers/color_theme_provider.dart';
+import '../providers/theme_provider.dart';
 import '../models/student_model.dart';
 import '../mixins/course_event_mixin.dart';
 import '../mixins/schedule_selection_mixin.dart';
@@ -249,7 +249,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
 
   void _showExamDatesDialog(
     List<ExamInfo> examData,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) {
     showDialog(
       context: context,
@@ -294,7 +294,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                       itemBuilder:
                           (context, index) => _buildExamListTile(
                             examData[index],
-                            colorThemeProvider,
+                            themeProvider,
                           ),
                     ),
                   ),
@@ -307,14 +307,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
 
   Widget _buildExamListTile(
     ExamInfo examInfo,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) {
     return ListTile(
       leading: Container(
         width: 16,
         height: 16,
         decoration: BoxDecoration(
-          color: colorThemeProvider.getCourseColor(examInfo.courseId),
+          color: themeProvider.getCourseColor(examInfo.courseId),
           shape: BoxShape.circle,
         ),
       ),
@@ -367,14 +367,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       StudentProvider,
       CourseProvider,
       CourseDataProvider,
-      ColorThemeProvider
+      ThemeProvider
     >(
       builder: (
         context,
         studentProvider,
         courseProvider,
         courseDataProvider,
-        colorThemeProvider,
+        themeProvider,
         _,
       ) {
         // final allCourses = courseProvider.coursesBySemester.values
@@ -429,7 +429,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                               onTap:
                                   () => _showExamDatesDialog(
                                     examData,
-                                    colorThemeProvider,
+                                    themeProvider,
                                   ),
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
@@ -591,7 +591,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                     width: 16,
                                     height: 16,
                                     decoration: BoxDecoration(
-                                      color: colorThemeProvider.getCourseColor(
+                                      color: themeProvider.getCourseColor(
                                         course.courseId,
                                       ),
                                       shape: BoxShape.circle,
@@ -797,9 +797,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                                 // Also refresh the calendar events if possible
                                                 // This ensures both functionalities behave the same way
                                                 try {
-                                                  final colorThemeProvider = context.read<ColorThemeProvider>();
+                                                  final themeProvider = context.read<ThemeProvider>();
                                                   final courseProvider = context.read<CourseProvider>();
-                                                  await refreshCalendarEvents(context, courseProvider, colorThemeProvider);
+                                                  await refreshCalendarEvents(context, courseProvider, themeProvider);
                                                 } catch (e) {
                                                   debugPrint('Could not refresh calendar events from course panel: $e');
                                                 }
@@ -811,7 +811,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                           _addCourseToCalendar(
                                             course,
                                             courseDetails,
-                                            colorThemeProvider,
+                                            themeProvider,
                                           );
                                           break;
                                         case 'remove_from_calendar':
@@ -933,7 +933,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
   void _addCourseToCalendar(
     StudentCourse course,
     courseDetails,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) {
     if (courseDetails == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -970,7 +970,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       final now = DateTime.now();
       final sunday = now.subtract(Duration(days: now.weekday % 7));
 
-      final courseColor = colorThemeProvider.getCourseColor(course.courseId);
+      final courseColor = themeProvider.getCourseColor(course.courseId);
       int eventsAdded = 0;
       // Create events from detailed schedule data only for selected times
       final courseProvider = context.read<CourseProvider>();      final selectedEntries = courseProvider.getSelectedScheduleEntries(

@@ -1,5 +1,6 @@
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
 import 'package:degreez/widgets/course_actions_popup.dart';
 import 'package:flutter/material.dart';
@@ -384,7 +385,8 @@ class _CourseCardState extends State<CourseCard> {
     EnhancedCourseDetails? courseDetails,
   ) {
     final hasGrade = course.finalGrade.isNotEmpty;
-    final courseColor = _getCourseColor(course.courseId);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final courseColor = themeProvider.getCourseColor(course.courseId);
 
     return GestureDetector(
       // Enhanced: Add tap for quick actions in horizontal mode too
@@ -477,21 +479,6 @@ class _CourseCardState extends State<CourseCard> {
         ),
       ),
     );
-  }
-
-  Color _getCourseColor(String courseId) {
-    final hash = courseId.hashCode;
-    final colors = [
-      Colors.teal.shade900, // Dark greenish blue
-      Colors.indigo.shade900, // Deep bluish purple
-      Colors.cyan.shade900, // Rich green-blue — bright pop
-      Colors.deepPurple.shade900, // Bold, regal purple
-      Colors.blue.shade900, // Classic dark blue
-      Colors.orange.shade900, // Dark, warm orange — still different from brown
-      Colors.red.shade900, // Blood red — intense but clearly distinct
-      Colors.lime.shade900, // Sharp and vivid green-yellow
-    ];
-    return colors[hash.abs() % colors.length];
   }
 
   Color _getGradeColor(String grade) {

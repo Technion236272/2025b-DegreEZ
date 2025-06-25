@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/student_model.dart';
 import '../providers/course_provider.dart';
 import '../providers/student_provider.dart';
-import '../providers/color_theme_provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/course_service.dart';
 import '../widgets/schedule_selection_dialog.dart';
 
@@ -100,15 +100,15 @@ mixin ScheduleSelectionMixin {
       // Call the callback to refresh UI if provided
       onSelectionUpdated?.call();
       
-      // Refresh calendar events if ColorThemeProvider is available
+      // Refresh calendar events if ThemeProvider is available
       try {
-        final colorThemeProvider = context.read<ColorThemeProvider>();
+        final themeProvider = context.read<ThemeProvider>();
         if (context.mounted) {
-          await refreshCalendarEvents(context, courseProvider, colorThemeProvider);
+          await refreshCalendarEvents(context, courseProvider, themeProvider);
         }
       } catch (e) {
-        // ColorThemeProvider might not be available in all contexts
-        debugPrint('ColorThemeProvider not available for calendar refresh: $e');
+        // ThemeProvider might not be available in all contexts
+        debugPrint('ThemeProvider not available for calendar refresh: $e');
       }
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +122,7 @@ mixin ScheduleSelectionMixin {
   Future<void> refreshCalendarEvents(
     BuildContext context,
     CourseProvider courseProvider,
-    ColorThemeProvider colorThemeProvider,
+    ThemeProvider themeProvider,
   ) async {
     // Default implementation - can be overridden by classes that use this mixin
     debugPrint('Default calendar refresh - should be overridden by implementing class');

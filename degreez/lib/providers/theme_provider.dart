@@ -18,13 +18,11 @@ enum ColorThemeMode {
 class ThemeProvider with ChangeNotifier {
   AppThemeMode _currentThemeMode = AppThemeMode.dark;
   ColorThemeMode _currentColorMode = ColorThemeMode.colorful;
-  late CourseCardColorPalette _classicPalette;
   
   // Keep track of system brightness for system mode
   Brightness _systemBrightness = Brightness.dark;
 
   ThemeProvider() {
-    _classicPalette = CourseCardColorPalette2();
     _loadSavedTheme();
   }
 
@@ -165,49 +163,99 @@ class ThemeProvider with ChangeNotifier {
       case ColorThemeMode.colorful:
         return _getColorfulCourseColor(courseId);
       case ColorThemeMode.classic:
-        return _classicPalette.cardBG(courseId);
+        return _getClassicCourseColor(courseId);
     }
   }
 
-  // Colorful color system (works for both light and dark themes)
+  // Colorful color system - Bright, vibrant colors for modern look
   Color _getColorfulCourseColor(String courseId) {
     final hash = courseId.hashCode;
     
-    // Adjust colors based on theme for better visibility
+    // Bright, vibrant colors that work well in both themes
     final colors = isDarkMode ? [
-      // Dark theme - vibrant colors
-      const Color(0xFF4CAF50), // Material Green
-      const Color(0xFFFF9800), // Material Orange
-      const Color(0xFFF44336), // Material Red
-      const Color(0xFF2196F3), // Material Blue
-      const Color(0xFF9C27B0), // Material Purple
-      const Color(0xFFFFC107), // Material Amber
-      const Color(0xFF00BCD4), // Material Cyan
-      const Color(0xFFFF5722), // Material Deep Orange
+      // Dark theme - bright, saturated colors for contrast
+      const Color(0xFF00E676), // Bright Green
+      const Color(0xFFFF6D00), // Bright Orange
+      const Color(0xFFFF1744), // Bright Red
+      const Color(0xFF2979FF), // Bright Blue
+      const Color(0xFFD500F9), // Bright Purple
+      const Color(0xFFFFD600), // Bright Yellow
+      const Color(0xFF00E5FF), // Bright Cyan
+      const Color(0xFFFF3D00), // Bright Deep Orange
       const Color(0xFF795548), // Material Brown
       const Color(0xFF607D8B), // Material Blue Grey
-      const Color(0xFF8BC34A), // Material Light Green
-      const Color(0xFFE91E63), // Material Pink
-      const Color(0xFF3F51B5), // Material Indigo
-      const Color(0xFF009688), // Material Teal
-      const Color(0xFFCDDC39), // Material Lime
+      const Color(0xFF64DD17), // Bright Light Green
+      const Color(0xFFE91E63), // Bright Pink
+      const Color(0xFF3F51B5), // Indigo
+      const Color(0xFF1DE9B6), // Bright Teal
+      const Color(0xFFC6FF00), // Bright Lime
+      const Color(0xFFFF9100), // Bright Amber
+      const Color(0xFF651FFF), // Bright Deep Purple
+      const Color(0xFF00BCD4), // Cyan
     ] : [
-      // Light theme - slightly more subdued colors for better readability
-      const Color(0xFF388E3C), // Darker Green
-      const Color(0xFFEF6C00), // Darker Orange
-      const Color(0xFFD32F2F), // Darker Red
-      const Color(0xFF1976D2), // Darker Blue
-      const Color(0xFF7B1FA2), // Darker Purple
-      const Color(0xFFFF8F00), // Darker Amber
-      const Color(0xFF0097A7), // Darker Cyan
-      const Color(0xFFE64A19), // Darker Deep Orange
-      const Color(0xFF5D4037), // Darker Brown
-      const Color(0xFF455A64), // Darker Blue Grey
-      const Color(0xFF689F38), // Darker Light Green
-      const Color(0xFFC2185B), // Darker Pink
-      const Color(0xFF303F9F), // Darker Indigo
-      const Color(0xFF00796B), // Darker Teal
-      const Color(0xFFAFB42B), // Darker Lime
+      // Light theme - vibrant but slightly toned down for readability
+      const Color(0xFF00C853), // Vibrant Green
+      const Color(0xFFFF5722), // Vibrant Orange
+      const Color(0xFFE53935), // Vibrant Red
+      const Color(0xFF1E88E5), // Vibrant Blue
+      const Color(0xFF8E24AA), // Vibrant Purple
+      const Color(0xFFFBC02D), // Vibrant Yellow
+      const Color(0xFF00ACC1), // Vibrant Cyan
+      const Color(0xFFD84315), // Vibrant Deep Orange
+      const Color(0xFF6D4C41), // Brown
+      const Color(0xFF546E7A), // Blue Grey
+      const Color(0xFF43A047), // Light Green
+      const Color(0xFFAD1457), // Pink
+      const Color(0xFF3949AB), // Indigo
+      const Color(0xFF00897B), // Teal
+      const Color(0xFF827717), // Lime
+      const Color(0xFFFF8F00), // Amber
+      const Color(0xFF5E35B1), // Deep Purple
+      const Color(0xFF0097A7), // Cyan variant
+    ];
+    
+    return colors[hash.abs() % colors.length];
+  }
+
+  // Classic color system - Professional, muted colors inspired by traditional academia
+  Color _getClassicCourseColor(String courseId) {
+    final hash = courseId.hashCode;
+    
+    // Professional, muted colors that work well in academic contexts
+    final colors = isDarkMode ? [
+      // Dark theme - sophisticated, muted colors
+      const Color(0xFF5D7B8A), // Muted blue-gray
+      const Color(0xFF8A6B5D), // Warm brown-gray
+      const Color(0xFF6B8A5D), // Sage green
+      const Color(0xFF8A5D6B), // Muted rose
+      const Color(0xFF7A5D8A), // Muted purple-gray
+      const Color(0xFF5D8A7A), // Teal-gray
+      const Color(0xFF8A7A5D), // Olive-gray
+      const Color(0xFF6B5D8A), // Purple-gray
+      const Color(0xFF8A8A5D), // Yellow-gray
+      const Color(0xFF5D6B8A), // Blue-purple-gray
+      const Color(0xFF7A8A5D), // Green-yellow-gray
+      const Color(0xFF8A5D7A), // Pink-gray
+      const Color(0xFF5D8A8A), // Cyan-gray
+      const Color(0xFF8A6B7A), // Rose-brown
+      const Color(0xFF6B7A8A), // Steel blue-gray
+    ] : [
+      // Light theme - classic, professional colors
+      const Color(0xFF37474F), // Dark blue-gray
+      const Color(0xFF5D4037), // Dark brown
+      const Color(0xFF2E7D32), // Forest green
+      const Color(0xFF7B1FA2), // Deep purple
+      const Color(0xFF1565C0), // Deep blue
+      const Color(0xFFBF360C), // Deep orange
+      const Color(0xFF00695C), // Deep teal
+      const Color(0xFF4A148C), // Deep purple variant
+      const Color(0xFF827717), // Olive
+      const Color(0xFF01579B), // Light blue variant
+      const Color(0xFF33691E), // Light green variant
+      const Color(0xFF880E4F), // Deep pink
+      const Color(0xFF006064), // Cyan variant
+      const Color(0xFF3E2723), // Brown variant
+      const Color(0xFF263238), // Blue grey variant
     ];
     
     return colors[hash.abs() % colors.length];

@@ -17,7 +17,6 @@ import 'providers/student_provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/course_data_provider.dart';
 import 'providers/customized_diagram_notifier.dart';
-import 'providers/color_theme_provider.dart';
 import 'providers/theme_provider.dart';
 
 import 'pages/login_page.dart';
@@ -68,8 +67,7 @@ class MyApp extends StatelessWidget {
         
         // UI providers
         ChangeNotifierProvider(create: (_) => CustomizedDiagramNotifier()),
-        ChangeNotifierProvider(create: (_) => ColorThemeProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()), // New theme provider
+        ChangeNotifierProvider(create: (_) => ThemeProvider()), // Unified theme provider
       ],      child: CalendarControllerProvider(
         controller: EventController(),
         child: Consumer<ThemeProvider>(
