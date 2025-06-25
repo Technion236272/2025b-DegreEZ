@@ -12,7 +12,6 @@ import '../services/geocode_cache_service.dart';
 import '../services/building_geocode_map.dart';
 import 'dart:math' as Math;
 import 'dart:async';
-import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CourseMarkerData {
@@ -50,7 +49,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
   String? _highlightedCourse;
   final Map<String, bool> visibleEvents =
       {}; // key: 'CourseName (Lecture 1)', value: isVisible
-  late final StreamSubscription<LocationData> _locationSubscription;
+  StreamSubscription<LocationData>? _locationSubscription;
   final Location location = Location(); // reuse this across the widget
 
   int colorIndex = 0;
@@ -258,41 +257,68 @@ class _CourseMapPageState extends State<CourseMapPage> {
     return null;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _geoService.loadCache().then((_) => _initializeMapData());
-  }
+@override
+void initState() {
+  super.initState();
+  _geoService.loadCache().then((_) async {
+    await _getUserLocation();     // ask once
+    await _loadCourseMarkers();   // then load pins
+    if (!mounted) return;
+    setState(() => isLoading = false);
+  });
+}
 
-  Future<void> _initializeMapData() async {
-    await _getUserLocation();
+
+
+
+  Future<void> _initializeMapData({bool skipLocation = false}) async {
+    if (!skipLocation) {
+      await _getUserLocation();
+    }
+    debugPrint('📌 Loading course markers...');
     await _loadCourseMarkers();
+    if (!mounted) return;
     setState(() => isLoading = false);
   }
 
-  Future<void> _getUserLocation() async {
-    if (!await location.serviceEnabled()) await location.requestService();
-    if (await location.hasPermission() == PermissionStatus.denied) {
-      if (await location.requestPermission() != PermissionStatus.granted)
-        return;
-    }
+Future<void> _getUserLocation() async {
+  // 1. Make sure the service is on & we have permission
+  if (!await location.serviceEnabled())
+    if (!await location.requestService()) return;
+  if (await location.hasPermission() == PermissionStatus.denied)
+    if (await location.requestPermission() != PermissionStatus.granted)
+      return;
 
-    // Get initial location
-    final loc = await location.getLocation();
-    if (loc.latitude != null && loc.longitude != null) {
-      setState(() {
-        userLocation = LatLng(loc.latitude!, loc.longitude!);
-      });
+  // 2. Try to get the very next GPS update, but don’t wait forever.
+  try {
+    final loc = await location.onLocationChanged
+        .first
+        .timeout(const Duration(seconds: 5));
+    userLocation = LatLng(loc.latitude!, loc.longitude!);
+    debugPrint("✅ Got a location fix from the stream: $userLocation");
+  } on TimeoutException {
+    debugPrint("⚠️ Timeout waiting for onLocationChanged, trying getLocation()…");
+    // 3. Fallback: try getLocation(), but with a timeout
+    try {
+      final loc = await location
+          .getLocation()
+          .timeout(const Duration(seconds: 3));
+      userLocation = LatLng(loc.latitude!, loc.longitude!);
+      debugPrint("✅ Got a location from getLocation(): $userLocation");
+    } on Exception catch (e) {
+      debugPrint("❌ Gave up on getLocation(): $e");
     }
-
-    // Start listening for updates
-    _locationSubscription = location.onLocationChanged.listen((newLoc) {
-      if (!mounted) return;
-      setState(() {
-        userLocation = LatLng(newLoc.latitude!, newLoc.longitude!);
-      });
-    });
   }
+
+  // 4. Now subscribe for all future updates
+  _locationSubscription = location.onLocationChanged.listen((loc) {
+    if (!mounted) return;
+    setState(() {
+      userLocation = LatLng(loc.latitude!, loc.longitude!);
+    });
+  });
+}
+
 
   Future<void> _loadCourseMarkers() async {
     final courseProvider = context.read<CourseProvider>();
@@ -494,11 +520,9 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || userLocation == null) {
+    if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
-    final allPoints = [...courseMarkers.map((m) => m.point), userLocation!];
 
     return Scaffold(
       body: Stack(
@@ -521,41 +545,52 @@ class _CourseMapPageState extends State<CourseMapPage> {
                 userAgentPackageName: 'com.example.degreez',
               ),
               MarkerLayer(
-                markers:
-                    courseMarkers
-                        .where((cm) => visibleEvents[cm.label] ?? true)
-                        .map((cm) {
-                          final courseName = cm.label.split('(').first.trim();
-                          final isHighlighted =
-                              courseName == _highlightedCourse;
+                markers: [
+                  ...courseMarkers
+                      .where((cm) => visibleEvents[cm.label] ?? true)
+                      .map((cm) {
+                        final courseName = cm.label.split('(').first.trim();
+                        final isHighlighted = courseName == _highlightedCourse;
 
-                          return Marker(
-                            point: cm.point,
-                            width: isHighlighted ? 50 : 40,
-                            height: isHighlighted ? 50 : 40,
-                            child: Tooltip(
-                              message: cm.label,
-                              child: GestureDetector(
-                                onTap: () => _launchNavigation(cm.point),
-                                child: Icon(
-                                  Icons.location_on,
-                                  color: cm.color,
-                                  size: isHighlighted ? 40 : 30,
-                                  shadows:
-                                      isHighlighted
-                                          ? [
-                                            const Shadow(
-                                              color: Colors.black,
-                                              blurRadius: 10,
-                                            ),
-                                          ]
-                                          : [],
-                                ),
+                        return Marker(
+                          point: cm.point,
+                          width: isHighlighted ? 50 : 40,
+                          height: isHighlighted ? 50 : 40,
+                          child: Tooltip(
+                            message: cm.label,
+                            child: GestureDetector(
+                              onTap: () => _launchNavigation(cm.point),
+                              child: Icon(
+                                Icons.location_on,
+                                color: cm.color,
+                                size: isHighlighted ? 40 : 30,
+                                shadows:
+                                    isHighlighted
+                                        ? [
+                                          const Shadow(
+                                            color: Colors.black,
+                                            blurRadius: 10,
+                                          ),
+                                        ]
+                                        : [],
                               ),
                             ),
-                          );
-                        })
-                        .toList(),
+                          ),
+                        );
+                      }),
+                  // 👤 Add user location marker here
+                  if (userLocation != null)
+                    Marker(
+                      point: userLocation!,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(
+                        Icons.person_pin_circle,
+                        color: Colors.blue,
+                        size: 36,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
@@ -599,12 +634,51 @@ class _CourseMapPageState extends State<CourseMapPage> {
           ),
         ],
       ),
+       floatingActionButton: FloatingActionButton(
+      tooltip: 'Center on me',
+      child: const Icon(Icons.my_location),
+      onPressed: () {
+        if (userLocation != null) {
+          // move instantly to user, zoom level 16.0 (tweak as you like)
+          _mapController.move(userLocation!, 16.0);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location not available yet')),
+          );
+        }
+      },
+    ),
+    floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
+@override
+void didUpdateWidget(covariant CourseMapPage old) {
+  super.didUpdateWidget(old);
+  if (widget.selectedSemester != old.selectedSemester) {
+    debugPrint('🔄 Semester changed, reloading markers…');
+    setState(() {
+      isLoading = true;
+      courseMarkers.clear();
+      visibleEvents.clear();
+      _buildingPinCounts.clear();
+      _courseLocations.clear();
+    });
+    // Just reload your pins:
+    _loadCourseMarkers().then((_) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+    });
+  }
+}
+
+
+
+
+
   @override
   void dispose() {
-    _locationSubscription.cancel();
+    _locationSubscription?.cancel();
     super.dispose();
   }
 }
