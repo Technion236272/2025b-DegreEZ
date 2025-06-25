@@ -173,9 +173,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                 parsedDate != null
                     ? DateFormat('EEEE, dd-MM').format(parsedDate)
                     : 'Date TBD',
-            periodColor:
-                period == ExamPeriod.periodA ? Colors.red : Colors.blue,
-            periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
+            periodColor: periodColor,
+            periodText: periodText,
             sortOrder:
                 parsedDate != null
                     ? (parsedDate.month * 100 + parsedDate.day)
@@ -295,6 +294,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                           (context, index) => _buildExamListTile(
                             examData[index],
                             themeProvider,
+                            examData, // Pass the full list
+                            index, // Pass the current index
                           ),
                     ),
                   ),
@@ -308,7 +309,76 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
   Widget _buildExamListTile(
     ExamInfo examInfo,
     ThemeProvider themeProvider,
+    List<ExamInfo> allExams,
+    int currentIndex,
   ) {
+    // Calculate days until next exam
+    Widget? daysDifferenceWidget;
+    
+    if (currentIndex < allExams.length - 1) {
+      final currentExam = allExams[currentIndex];
+      final nextExam = allExams[currentIndex + 1];
+      
+      if (currentExam.examDate != null && nextExam.examDate != null) {
+        final daysDifference = nextExam.examDate!.difference(currentExam.examDate!).inDays;
+        
+        Color indicatorColor;
+        IconData indicatorIcon;
+        String indicatorText;
+        
+        if (daysDifference == 0) {
+          indicatorColor = Colors.red;
+          indicatorIcon = Icons.warning;
+          indicatorText = 'Same day';
+        } else if (daysDifference == 1) {
+          indicatorColor = Colors.orange;
+          indicatorIcon = Icons.schedule;
+          indicatorText = 'Next day';
+        } else if (daysDifference <= 3) {
+          indicatorColor = Colors.amber;
+          indicatorIcon = Icons.schedule;
+          indicatorText = '$daysDifference days';
+        } else if (daysDifference <= 7) {
+          indicatorColor = Colors.blue;
+          indicatorIcon = Icons.schedule;
+          indicatorText = '$daysDifference days';
+        } else {
+          indicatorColor = Colors.green;
+          indicatorIcon = Icons.schedule;
+          indicatorText = '$daysDifference days';
+        }
+        
+        daysDifferenceWidget = Container(
+          margin: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: indicatorColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: indicatorColor.withOpacity(0.3), width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                indicatorIcon,
+                size: 14,
+                color: indicatorColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$indicatorText until ${nextExam.courseId}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: indicatorColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
     return ListTile(
       leading: Container(
         width: 16,
@@ -356,6 +426,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
           Text('📝 ${examInfo.examType}', style: const TextStyle(fontSize: 12)),
+          if (daysDifferenceWidget != null) ...[
+            const SizedBox(height: 4),
+            daysDifferenceWidget,
+          ],
         ],
       ),
     );
@@ -1145,7 +1219,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
 
   // Method to show course removal confirmation dialog
   void _showRemoveCourseDialog(StudentCourse course) {
-    final courseDataProvider = context.read<CourseDataProvider>();
   final selectedSemester = widget.selectedSemester;
 
 
