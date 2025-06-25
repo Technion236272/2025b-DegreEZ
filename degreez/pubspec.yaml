@@ -28,6 +28,7 @@ dependencies:
   firebase_ai: ^2.1.0
   flutter_map: ^8.1.1
   location: ^8.0.1
+  geolocator: ^10.1.0
 
 
 dev_dependencies:
