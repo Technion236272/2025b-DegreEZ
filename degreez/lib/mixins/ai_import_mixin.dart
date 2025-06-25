@@ -24,56 +24,83 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
       // Process the import using the service
       final summary = await AiImportService.processAiImport(context);
       
+      // Debug: Print summary details
+      print('AI Import Summary: ${summary.toString()}');
+      print('Total courses: ${summary.totalCourses}');
+      print('Total success: ${summary.totalSuccess}');
+      print('Successfully added: ${summary.successfullyAdded}');
+      print('Successfully updated: ${summary.successfullyUpdated}');
+      print('Failed: ${summary.failed}');
+      print('Results count: ${summary.results.length}');
+      
       if (summary.totalCourses == 0) {
         // User cancelled or no courses found
         showSnackBar('Import cancelled by user.');
         return;
       }
       
-      if (summary.totalSuccess > 0) {
-        showSnackBar(
-          'Successfully processed ${summary.totalSuccess} courses!',
-          isSuccess: true,
-        );
+      // Always show the results dialog if we have any courses processed
+      if (summary.totalCourses > 0) {
+        if (summary.totalSuccess > 0) {
+          showSnackBar(
+            'Successfully processed ${summary.totalSuccess} courses!',
+            isSuccess: true,
+          );
           // Trigger UI update if callback is provided
-        onImportCompleted();
-        
-        // Show results dialog
-        if (mounted) {
-          AiImportDialogs.showResultsDialog(
-            context,
-            result: summary,
-            onConfirm: (confirmedSummary) {
-              // Handle confirmation - could save to database, etc.
-              showSnackBar('Import confirmed and saved!', isSuccess: true);
-            },
-            onRetry: () {
-              // Restart the import process
-              startAiImport();
-            },
-          );
+          onImportCompleted();
+        } else {
+          showSnackBar('No courses were successfully processed.', isError: true);
         }
-      } else {
-        showSnackBar('No courses were successfully processed.', isError: true);
         
-        // Still show results dialog for failed imports
+        // Show results dialog for any import attempt
         if (mounted) {
-          AiImportDialogs.showResultsDialog(
-            context,
-            result: summary,
-            onConfirm: (confirmedSummary) {
-              // Handle confirmation even for failed imports
-              showSnackBar('Results acknowledged.', isSuccess: true);
-            },
-            onRetry: () {
-              // Restart the import process
-              startAiImport();
-            },
-          );
+          print('Showing results dialog...');
+          print('Context valid: ${context.mounted}');
+          print('Widget mounted: $mounted');
+          
+          // Add a small delay to ensure the context is ready
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          if (mounted && context.mounted) {
+            try {
+              // Test with a simple dialog first
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Import Results'),
+                  content: Text('Total courses: ${summary.totalCourses}\n'
+                                'Successfully processed: ${summary.totalSuccess}\n'
+                                'Failed: ${summary.failed}'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        startAiImport();
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+              print('Simple dialog showed successfully');
+            } catch (e) {
+              print('Error showing dialog: $e');
+              showSnackBar('Error showing results dialog: $e', isError: true);
+            }
+          } else {
+            print('Context or widget no longer valid after delay');
+          }
+        } else {
+          print('Cannot show dialog: widget not mounted');
         }
       }
       
     } catch (e) {
+      print('Error during AI import: ${e.toString()}');
       showSnackBar('Error during AI import: ${e.toString()}', isError: true);
     }
   }

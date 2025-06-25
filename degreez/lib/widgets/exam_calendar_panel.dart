@@ -347,7 +347,7 @@ Future<List<ExamInfo>> _getExamInfo(
           displayDate: parsedDate != null
               ? DateFormat('EEEE, dd-MM').format(parsedDate)
               : 'Date TBD',
-          periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue
+          periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
           periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
           sortOrder: parsedDate != null
               ? (parsedDate.month * 100 + parsedDate.day)
