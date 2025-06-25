@@ -157,7 +157,7 @@ class _CourseCardState extends State<CourseCard> {
         color: context
             .watch<CustomizedDiagramNotifier>()
             .cardColorPalette!
-            .cardBG(course.courseId),
+            .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
         child: Column(
           children: [
             //Card Top Bar (Course number and points)
@@ -170,7 +170,7 @@ class _CourseCardState extends State<CourseCard> {
                       context
                           .watch<CustomizedDiagramNotifier>()
                           .cardColorPalette!
-                          .topBarBG,
+                          .topBarBG(Provider.of<ThemeProvider>(context).isDarkMode),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
@@ -191,7 +191,7 @@ class _CourseCardState extends State<CourseCard> {
                                 context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .topBarText,
+                                    .topBarText(Provider.of<ThemeProvider>(context).isDarkMode),
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -207,7 +207,7 @@ class _CourseCardState extends State<CourseCard> {
                                 context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .topBarMarkBG,
+                                    .topBarMarkBG(Provider.of<ThemeProvider>(context).isDarkMode),
                             borderRadius: BorderRadius.only(
                               topRight: Radius.circular(8),
                             ),
@@ -225,7 +225,7 @@ class _CourseCardState extends State<CourseCard> {
                                         context
                                             .watch<CustomizedDiagramNotifier>()
                                             .cardColorPalette!
-                                            .topBarMarkText,
+                                            .topBarMarkText(Provider.of<ThemeProvider>(context).isDarkMode),
                                   ),
                                 ),
                                 Expanded(
@@ -242,7 +242,7 @@ class _CourseCardState extends State<CourseCard> {
                                                 CustomizedDiagramNotifier
                                               >()
                                               .cardColorPalette!
-                                              .topBarMarkText,
+                                              .topBarMarkText(Provider.of<ThemeProvider>(context).isDarkMode),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -276,7 +276,7 @@ class _CourseCardState extends State<CourseCard> {
                               context
                                   .watch<CustomizedDiagramNotifier>()
                                   .cardColorPalette!
-                                  .cardFG,
+                                  .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                         ),
                       ),
                     ),
@@ -309,7 +309,7 @@ class _CourseCardState extends State<CourseCard> {
                         color: context
                             .watch<CustomizedDiagramNotifier>()
                             .cardColorPalette!
-                            .cardBG(course.courseId),
+                            .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
                         size: 18,
                       ),
 
@@ -320,16 +320,15 @@ class _CourseCardState extends State<CourseCard> {
                                 context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .cardFG,
+                                    .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                             size: 18,
                           )
                           : Icon(
                             Icons.edit_note_rounded,
-                            color:
-                                context
+                            color:                                    context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .cardFGdim,
+                                    .cardFGdim(Provider.of<ThemeProvider>(context).isDarkMode),
                             size: 18,
                           ),
                       // if hasGrade and grade is not a number then show the grade as a string
@@ -342,7 +341,7 @@ class _CourseCardState extends State<CourseCard> {
                                   context
                                       .watch<CustomizedDiagramNotifier>()
                                       .cardColorPalette!
-                                      .cardFG,
+                                      .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                               size: 18,
                             )
                             : Icon(
@@ -351,7 +350,7 @@ class _CourseCardState extends State<CourseCard> {
                                   context
                                       .watch<CustomizedDiagramNotifier>()
                                       .cardColorPalette!
-                                      .cardFG,
+                                      .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                               size: 18,
                             ),
                             
@@ -361,7 +360,7 @@ class _CourseCardState extends State<CourseCard> {
                           color: context
                               .watch<CustomizedDiagramNotifier>()
                               .cardColorPalette!
-                              .cardBG(course.courseId),
+                              .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
                           size: 18,
                         ),
 

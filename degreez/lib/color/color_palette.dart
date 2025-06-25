@@ -492,14 +492,16 @@ class CourseCardColorPalette{
   final Color _cardBG = Colors.black;
   
   get id => _id;
-  get topBarBG => _topBarBG;
-  get topBarText => _topBarText;
-  get topBarMarkBG => _topBarMarkBG;
-  get topBarMarkText => _topBarMarkText;
-  get cardFG => _cardFG;
-  get cardFGdim => _cardFGdim;
+  Color topBarBG([bool isDarkMode = false]) => _topBarBG;
+  Color topBarText([bool isDarkMode = false]) => _topBarText;
+  Color topBarMarkBG([bool isDarkMode = false]) => _topBarMarkBG;
+  Color topBarMarkText([bool isDarkMode = false]) => _topBarMarkText;
+  
+  // Make these theme-aware too
+  Color cardFG([bool isDarkMode = false]) => _cardFG;
+  Color cardFGdim([bool isDarkMode = false]) => _cardFGdim;
 
-  Color cardBG([String? courseId]){
+  Color cardBG([String? courseId, bool isDarkMode = false]){
     return _cardBG;
     }
 
@@ -514,28 +516,43 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
   CourseCardColorPalette1(){
     _id = 1;
   }
+  
   @override
-  get topBarBG => Color(0xFF059669); // Forest Green (matching light mode primary)
+  Color topBarBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.primaryColor // Dark theme: Blue accent
+    : AppColorsLightMode.primaryColor; // Light theme: Green primary
 
   @override
-  get topBarText => Color(0xFFFFFFFF); // White text for better contrast
+  Color topBarText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.cardColor; // Light theme: White text
 
   @override
-  get topBarMarkBG => Color(0xFF86EFAC); // Light mint green (matching light mode primary light)
+  Color topBarMarkBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.accentColorLight // Dark theme: Light blue
+    : AppColorsLightMode.primaryColorLight; // Light theme: Light mint green
 
   @override
-  get topBarMarkText => Color(0xFF047857); // Dark green for contrast
+  Color topBarMarkText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green
 
   @override
-  Color cardBG([String? courseId]){
-    return Color(0xFFECFDF5); // Very light mint green background (much lighter)
+  Color cardBG([String? courseId, bool isDarkMode = false]){
+    return isDarkMode 
+      ? AppColorsDarkMode.secondaryColor // Dark theme: Same as drawer header background (powder blue)
+      : AppColorsLightMode.borderSuccess; // Light theme: Very light mint green background (current color)
     }
 
   @override
-  get cardFG => Color(0xFF047857); // Dark green text for good contrast
+  Color cardFG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text for contrast against powder blue
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green text
 
   @override
-  get cardFGdim => Color(0x44047857); // Semi-transparent dark green
+  Color cardFGdim([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textSecondary // Dark theme: Light gray text for dim contrast
+    : AppColorsLightMode.accentColorExtremelyDim; // Light theme: Semi-transparent dark green
   
 }
 
@@ -545,58 +562,74 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     _id = 2;
   }
   @override
-  get topBarBG => Color(0xFF34D399); // Light emerald green (semi-transparent effect)
+  Color topBarBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.accentColor // Dark theme: Blue accent
+    : AppColorsLightMode.accentColor; // Light theme: Emerald green
 
   @override
-  get topBarText => Color(0xFF064E3B); // Very dark green for contrast
+  Color topBarText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.cardColor; // Light theme: White text
 
   @override
-  get topBarMarkBG => Color(0xFF86EFAC); // Light mint green
+  Color topBarMarkBG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.primaryColorLight // Dark theme: Powder blue
+    : AppColorsLightMode.primaryColorLight; // Light theme: Light mint green
 
   @override
-  get topBarMarkText => Color(0xFF047857); // Dark green
+  Color topBarMarkText([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green
 
   @override
-  Color cardBG([String? courseId]){
-    return _getCourseColor(courseId!);
+  Color cardBG([String? courseId, bool isDarkMode = false]){
+    return _getCourseColor(courseId!, isDarkMode);
     }
 
   @override
-  get cardFG => Color(0xFF064E3B); // Very dark green for text
+  Color cardFG([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textPrimary // Dark theme: White text for contrast against powder blue
+    : AppColorsLightMode.accentColorDark; // Light theme: Dark green text
 
   @override
-  get cardFGdim => Color(0x44064E3B); // Semi-transparent very dark green
+  Color cardFGdim([bool isDarkMode = false]) => isDarkMode 
+    ? AppColorsDarkMode.textSecondary // Dark theme: Light gray text for dim contrast
+    : AppColorsLightMode.accentColorExtremelyDim; // Light theme: Semi-transparent dark green
 
-  Color _getCourseColor(String courseId) {
+  Color _getCourseColor(String courseId, bool isDarkMode) {
     final hash = courseId.hashCode;
-    final colors = [
-      // Light green-focused colors for sophisticated course distinction
-      const Color(0xFFECFDF5), // Very Light Mint (almost white with green tint)
+    
+    // Light mode colors - using theme's light green tones
+    final lightColors = [
+      AppColorsLightMode.borderSuccess, // Very light mint
+      AppColorsLightMode.borderSecondary, // Light green border
+      AppColorsLightMode.successColorLight, // Light success color
+      AppColorsLightMode.primaryColorLight, // Light primary
+      // Additional light theme compatible colors
+      const Color(0xFFECFDF5), // Very Light Mint
       const Color(0xFFD1FAE5), // Light Sage Green
       const Color(0xFFBBF7D0), // Soft Mint
       const Color(0xFFA7F3D0), // Light Green
       const Color(0xFF86EFAC), // Mint Green
-      const Color(0xFF6EE7B7), // Soft Emerald
-      const Color(0xFFAFECE0), // Very Light Teal
-      const Color(0xFF99F6E4), // Light Teal
-      const Color(0xFF5EEAD4), // Soft Teal
-      const Color(0xFF2DD4BF), // Light Turquoise
-      const Color(0xFFCCFBF1), // Pale Teal
-      const Color(0xFFB2F5EA), // Very Light Cyan
-      const Color(0xFF81E6D9), // Light Cyan
-      const Color(0xFF4FD1C7), // Soft Cyan
-      const Color(0xFFE6FFFA), // Almost White Green
-      // Additional very light complementary colors
       const Color(0xFFF0FDF4), // Extremely Light Green
-      const Color(0xFFECFCCB), // Very Light Lime
-      const Color(0xFFBEF264), // Light Lime
-      const Color(0xFF84CC16), // Lime Green (slightly darker for contrast)
-      const Color(0xFFF3F4F6), // Very Light Gray
-      const Color(0xFFE5E7EB), // Light Gray
-      const Color(0xFFD1D5DB), // Medium Light Gray
-      const Color(0xFFE0F2FE), // Very Light Blue (minimal)
-      const Color(0xFFFEF3C7), // Very Light Yellow
     ];
+    
+    // Dark mode colors - using variations of the drawer header background color (powder blue)
+    final darkColors = [
+      AppColorsDarkMode.secondaryColor, // Same as drawer header background (powder blue)
+      AppColorsDarkMode.secondaryColorDim, // Semi-transparent powder blue
+      AppColorsDarkMode.secondaryColorDimDD, // High opacity powder blue
+      AppColorsDarkMode.primaryColorLight, // Light primary (also powder blue)
+      // Subtle variations of the powder blue color for visual distinction
+      const Color(0xFFADB9C6), // Slightly darker powder blue
+      const Color(0xFFC3CDD7), // Slightly lighter powder blue
+      const Color(0xFFB0C5D4), // With a hint more blue
+      const Color(0xFFBFC9D8), // Lighter variant
+      const Color(0xFFA8BDD0), // With more blue tone
+      const Color(0xFFB5C4D3), // Balanced variant
+    ];
+    
+    final colors = isDarkMode ? darkColors : lightColors;
     return colors[hash.abs() % colors.length];
   }
 }
