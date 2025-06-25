@@ -9,6 +9,7 @@ class StudentModel {
   final String preferences;
   final String semester;
   final String catalog; // selecting the catalog for the student
+  final String themeMode; // 'light', 'dark', or 'system' for theme preference
   
 
   StudentModel({
@@ -19,8 +20,8 @@ class StudentModel {
     required this.preferences,
     required this.semester,
     required this.catalog,
+    this.themeMode = 'dark', // Default to dark mode for existing users
   });
-
   // Factory constructor to create a StudentModel from Firestore data
   factory StudentModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> doc,
@@ -36,9 +37,9 @@ class StudentModel {
           data['Semester']?.toString() ??
           '1', // Convert to String and provide default
       catalog: data['Catalog'] ?? '',
+      themeMode: data['ThemeMode'] ?? 'dark', // Default to dark mode
     );
   }
-
   // Method to convert the StudentModel to a Map for Firestore
   Map<String, dynamic> toFirestore() {
     return {
@@ -49,9 +50,9 @@ class StudentModel {
       'Preferences': preferences,
       'Semester': semester, // Now stored as String
       'Catalog': catalog,
+      'ThemeMode': themeMode,
     };
   }
-
   StudentModel copyWith({
     String? name,
     String? major,
@@ -59,6 +60,7 @@ class StudentModel {
     String? catalog,
     String? faculty,
     String? semester,
+    String? themeMode,
   }) {
     return StudentModel(
       id: id,
@@ -68,6 +70,7 @@ class StudentModel {
       preferences: preferences ?? this.preferences,
       semester: semester ?? this.semester,
       catalog: catalog ?? this.catalog,
+      themeMode: themeMode ?? this.themeMode,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../color/color_palette.dart';
+import 'package:provider/provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../models/chat/chat_message.dart';
 
 class ChatMessageBubble extends StatelessWidget {
@@ -12,106 +13,119 @@ class ChatMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!message.isUser) ...[
-            Container(
-              margin: const EdgeInsets.only(right: 8, top: 4),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColorsDarkMode.surfaceColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColorsDarkMode.borderAccent,
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.smart_toy,
-                color: AppColorsDarkMode.primaryColor,
-                size: 16,
-              ),
-            ),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: AppColorsDarkMode.cardDecoration(
-                backgroundColor: message.isUser 
-                    ? AppColorsDarkMode.primaryColor 
-                    : AppColorsDarkMode.surfaceColor,
-                elevated: true,
-              ).copyWith(
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(message.isUser ? 20 : 4),
-                  bottomRight: Radius.circular(message.isUser ? 4 : 20),
-                ),
-              ),              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // PDF Attachment (show before text for user messages)
-                  if (message.isUser && message.pdfAttachment != null)
-                    _buildPdfAttachment(),
-                  
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: message.isUser 
-                          ? AppColorsDarkMode.textPrimary 
-                          : AppColorsDarkMode.textPrimary,
-                      fontSize: 16,
-                      height: 1.4,
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!message.isUser) ...[
+                Container(
+                  margin: const EdgeInsets.only(right: 8, top: 4),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: themeProvider.surfaceColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
-                  
-                  // PDF Attachment (show after text for AI messages, if any)
-                  if (!message.isUser && message.pdfAttachment != null)
-                    _buildPdfAttachment(),
-                  
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatTime(message.timestamp),
-                    style: TextStyle(
-                      color: message.isUser 
-                          ? AppColorsDarkMode.textSecondary 
-                          : AppColorsDarkMode.textSecondary,
-                      fontSize: 12,
+                  child: Icon(
+                    Icons.smart_toy,
+                    color: themeProvider.primaryColor,
+                    size: 16,
+                  ),
+                ),
+              ],
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: message.isUser 
+                        ? themeProvider.primaryColor 
+                        : themeProvider.surfaceColor,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(message.isUser ? 20 : 4),
+                      bottomRight: Radius.circular(message.isUser ? 4 : 20),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: themeProvider.isDarkMode 
+                            ? Colors.black.withOpacity(0.2)
+                            : Colors.grey.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // PDF Attachment (show before text for user messages)
+                      if (message.isUser && message.pdfAttachment != null)
+                        _buildPdfAttachment(themeProvider),
+                      
+                      Text(
+                        message.text,
+                        style: TextStyle(
+                          color: message.isUser 
+                              ? Colors.white 
+                              : themeProvider.textPrimary,
+                          fontSize: 16,
+                          height: 1.4,
+                        ),
+                      ),
+                      
+                      // PDF Attachment (show after text for AI messages, if any)
+                      if (!message.isUser && message.pdfAttachment != null)
+                        _buildPdfAttachment(themeProvider),
+                      
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatTime(message.timestamp),
+                        style: TextStyle(
+                          color: message.isUser 
+                              ? Colors.white.withOpacity(0.8) 
+                              : themeProvider.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (message.isUser) ...[
+                Container(
+                  margin: const EdgeInsets.only(left: 8, top: 4),
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
-                ],
-              ),
-            ),
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (message.isUser) ...[
-            Container(
-              margin: const EdgeInsets.only(left: 8, top: 4),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColorsDarkMode.primaryColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColorsDarkMode.borderAccent,
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.person,
-                color: AppColorsDarkMode.textPrimary,
-                size: 16,
-              ),
-            ),
-          ],
-        ],
-      ),    );
+        );
+      },
+    );
   }
 
-  Widget _buildPdfAttachment() {
+  Widget _buildPdfAttachment(ThemeProvider themeProvider) {
     if (message.pdfAttachment == null) return const SizedBox.shrink();
     
     final attachment = message.pdfAttachment!;
@@ -120,13 +134,13 @@ class ChatMessageBubble extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: message.isUser 
-            ? AppColorsDarkMode.primaryColorLight.withOpacity(0.3)
-            : AppColorsDarkMode.cardColor.withOpacity(0.7),
+            ? Colors.white.withOpacity(0.2)
+            : themeProvider.cardColor.withOpacity(0.7),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: message.isUser 
-              ? AppColorsDarkMode.textPrimary.withOpacity(0.3)
-              : AppColorsDarkMode.borderAccent,
+              ? Colors.white.withOpacity(0.3)
+              : themeProvider.primaryColor.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -136,8 +150,8 @@ class ChatMessageBubble extends StatelessWidget {
           Icon(
             Icons.picture_as_pdf,
             color: message.isUser 
-                ? AppColorsDarkMode.textPrimary
-                : AppColorsDarkMode.primaryColor,
+                ? Colors.white
+                : themeProvider.primaryColor,
             size: 20,
           ),
           const SizedBox(width: 8),
@@ -149,20 +163,21 @@ class ChatMessageBubble extends StatelessWidget {
                   attachment.fileName,
                   style: TextStyle(
                     color: message.isUser 
-                        ? AppColorsDarkMode.textPrimary
-                        : AppColorsDarkMode.textPrimary,
+                        ? Colors.white
+                        : themeProvider.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),                Text(
+                const SizedBox(height: 2),
+                Text(
                   _formatFileSize(attachment.fileSize),
                   style: TextStyle(
                     color: message.isUser 
-                        ? AppColorsDarkMode.textSecondary
-                        : AppColorsDarkMode.textSecondary,
+                        ? Colors.white.withOpacity(0.8)
+                        : themeProvider.textSecondary,
                     fontSize: 11,
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -147,22 +148,21 @@ class _SignUpPageState extends State<SignUpPage> {
                       key: _formKey,
                       child: ListView(
                         shrinkWrap: true,
-                        children: [
-                          Text(
+                        children: [                          Text(
                             'Complete your profile',
                             style: TextStyle(
-                              color: AppColorsDarkMode.secondaryColor,
+                              color: Provider.of<ThemeProvider>(context).secondaryColor,
                               fontSize: 20,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 16),
-                          textFormFieldWithStyle(
+                          const SizedBox(height: 16),                          textFormFieldWithStyle(
                             label: 'Name',
                             controller: _nameController,
                             example: 'e.g. Steve Harvey',
                             validatorRegex: _nameValidator,
                             errorMessage: "Really? an empty name ...",
+                            context: context,
                           ),
                           textFormFieldWithStyle(
                             label: 'Major',
@@ -171,6 +171,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             validatorRegex: _majorValidator,
                             errorMessage:
                                 "Invalid Input! remember to write the major in English",
+                            context: context,
                           ),
                           textFormFieldWithStyle(
                             label: 'Faculty',
@@ -179,6 +180,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             validatorRegex: _facultyValidator,
                             errorMessage:
                                 "Invalid Input! remember to write the faculty in English",
+                            context: context,
                           ),
                           textFormFieldWithStyle(
                             label: 'Semester',
@@ -187,6 +189,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             validatorRegex: _semesterValidator,
                             errorMessage:
                                 "should match this template 'Winter 2024-25'",
+                            context: context,
                           ),
                           textFormFieldWithStyle(
                             label: 'Preferences',
@@ -195,6 +198,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
                             validatorRegex: _preferencesValidator,
                             lineNum: 3,
+                            context: context,
                           ),
 
                           // Should be changed to Catalog Picker

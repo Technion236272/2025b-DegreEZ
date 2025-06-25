@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
-import '../color/color_palette.dart';
+import 'package:provider/provider.dart';
 import '../models/chat/chat_message.dart';
 import '../models/chat/pdf_attachment.dart';
 import '../services/chat/gemini_chat_service.dart';
@@ -10,6 +10,7 @@ import '../services/chat/chat_storage_service.dart';
 import '../services/chat/context_generator_service.dart';
 import '../services/firestore_service.dart';
 import '../services/pdf_service.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/chat/chat_message_bubble.dart';
 import '../widgets/chat/chat_header_widget.dart';
 import '../widgets/chat/chat_input_widget.dart';
@@ -280,32 +281,40 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
 
   void _showUserContextDialog() async {
     final userContext = await _getCombinedUserContext();
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     showDialog(
       context: context,      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
+        backgroundColor: themeProvider.mainColor, // Changed to use theme provider
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Icon(
               Icons.school,
-              color: AppColorsDarkMode.primaryColor,
+              color: themeProvider.primaryColor,
               size: 24,
             ),
             const SizedBox(width: 8),
             Text(
               'Your Academic Data',
-              style: TextStyle(color: AppColorsDarkMode.textPrimary),
+              style: TextStyle(color: themeProvider.textPrimary),
             ),
           ],
         ),        content: Container(
           constraints: const BoxConstraints(maxHeight: 600, maxWidth: 500),
-          decoration: AppColorsDarkMode.surfaceDecoration(),
+          decoration: BoxDecoration(
+            color: themeProvider.surfaceColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: themeProvider.borderPrimary,
+              width: 1,
+            ),
+          ),
           padding: const EdgeInsets.all(12),
           child: SingleChildScrollView(
             child: Text(
               userContext.isEmpty ? 'No academic data available to share.' : userContext,
               style: TextStyle(
-                color: AppColorsDarkMode.textSecondary,
+                color: themeProvider.textSecondary,
                 fontSize: 12,
                 fontFamily: 'monospace',
               ),
@@ -317,7 +326,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Close',
-              style: TextStyle(color: AppColorsDarkMode.primaryColor),
+              style: TextStyle(color: themeProvider.primaryColor),
             ),
           ),
         ],
@@ -326,13 +335,14 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   }
 
   void _showSnackBar(String message) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(color: AppColorsDarkMode.textPrimary),
+          style: TextStyle(color: themeProvider.textPrimary),
         ),
-        backgroundColor: AppColorsDarkMode.surfaceColor,
+        backgroundColor: themeProvider.surfaceColor,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -401,58 +411,62 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColorsDarkMode.mainColor,
-      body: Column(
-        children: [
-          // Chat header
-          ChatHeaderWidget(
-            includeUserContext: _includeUserContext,
-            isLoading: _isLoading,
-            onToggleContext: () {
-              setState(() {
-                _includeUserContext = !_includeUserContext;
-              });
-            },
-            onShowContextDialog: _showUserContextDialog,
-            onClearChat: _clearChatHistory,
-            typingAnimationController: _typingAnimationController,
-            parentContext: context,
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          backgroundColor: themeProvider.mainColor,
+          body: Column(
+            children: [
+              // Chat header
+              ChatHeaderWidget(
+                includeUserContext: _includeUserContext,
+                isLoading: _isLoading,
+                onToggleContext: () {
+                  setState(() {
+                    _includeUserContext = !_includeUserContext;
+                  });
+                },
+                onShowContextDialog: _showUserContextDialog,
+                onClearChat: _clearChatHistory,
+                typingAnimationController: _typingAnimationController,
+                parentContext: context,
+              ),
+              
+              // Chat messages
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length && _isLoading) {
+                      return TypingIndicatorWidget(
+                        animationController: _typingAnimationController,
+                      );
+                    }
+                    return ChatMessageBubble(message: _messages[index]);
+                  },
+                ),
+              ),
+                // Message input
+              ChatInputWidget(
+                messageController: _messageController,
+                includeUserContext: _includeUserContext,
+                isLoading: _isLoading,
+                onSendMessage: _sendMessage,
+                onToggleContext: () {
+                  setState(() {
+                    _includeUserContext = true;
+                  });
+                },
+                onAttachPdf: _attachPdf,
+                currentPdfAttachment: _currentPdfAttachment,
+                onRemovePdf: _removePdfAttachment,
+              ),
+            ],
           ),
-          
-          // Chat messages
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length && _isLoading) {
-                  return TypingIndicatorWidget(
-                    animationController: _typingAnimationController,
-                  );
-                }
-                return ChatMessageBubble(message: _messages[index]);
-              },
-            ),
-          ),
-            // Message input
-          ChatInputWidget(
-            messageController: _messageController,
-            includeUserContext: _includeUserContext,
-            isLoading: _isLoading,
-            onSendMessage: _sendMessage,
-            onToggleContext: () {
-              setState(() {
-                _includeUserContext = true;
-              });
-            },
-            onAttachPdf: _attachPdf,
-            currentPdfAttachment: _currentPdfAttachment,
-            onRemovePdf: _removePdfAttachment,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

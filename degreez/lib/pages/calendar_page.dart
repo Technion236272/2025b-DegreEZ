@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:calendar_view/calendar_view.dart';
-import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
 import '../providers/color_theme_provider.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/course_calendar_panel.dart';
 import '../models/student_model.dart';
 import '../mixins/calendar_theme_mixin.dart';
@@ -119,12 +119,12 @@ class _CalendarPageState extends State<CalendarPage>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer4<
+  Widget build(BuildContext context) {    return Consumer5<
       LogInNotifier,
       StudentProvider,
       CourseProvider,
-      ColorThemeProvider
+      ColorThemeProvider,
+      ThemeProvider
     >(
       builder: (
         context,
@@ -132,8 +132,9 @@ class _CalendarPageState extends State<CalendarPage>
         studentProvider,
         courseProvider,
         colorThemeProvider,
+        themeProvider,
         _,
-      ) {        // Update calendar events when courses change
+      ) {// Update calendar events when courses change
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (widget.selectedSemester == null) return;
 
@@ -152,11 +153,9 @@ class _CalendarPageState extends State<CalendarPage>
         });return Column(
           children: [
             // Course Panel with integrated Toggle Button
-            _buildCoursePanelWithIntegratedToggle(courseProvider),
-
-            // Calendar Views - Full Width
+            _buildCoursePanelWithIntegratedToggle(courseProvider),            // Calendar Views - Full Width
             Expanded(
-              child: _viewMode == 0 ? _buildWeekView() : _buildDayView(),
+              child: _viewMode == 0 ? _buildWeekView(themeProvider) : _buildDayView(themeProvider),
             ),
           ],
         );
@@ -164,7 +163,7 @@ class _CalendarPageState extends State<CalendarPage>
     );
   }
 
-  Widget _buildWeekView() {
+  Widget _buildWeekView(ThemeProvider themeProvider) {
     return ClipRect(
       child: WeekView(
         controller: _eventController,
@@ -194,7 +193,7 @@ class _CalendarPageState extends State<CalendarPage>
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
-                        color: AppColorsDarkMode.secondaryColorDim,
+                        color: themeProvider.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -255,7 +254,7 @@ class _CalendarPageState extends State<CalendarPage>
     );
   }
 
-  Widget _buildDayView() {
+  Widget _buildDayView(ThemeProvider themeProvider) {
     return DayView(
       controller: _eventController,
       backgroundColor: getCalendarBackgroundColor(context),
@@ -819,9 +818,10 @@ class _CalendarPageState extends State<CalendarPage>
 
     return parts.join('\n');
   }
-
   // Method to show course's details popup on long press on the event tile
   void _showCourseDetailsDialog(CalendarEventData event) {
+    final themeProvider = context.read<ThemeProvider>();
+    
     showDialog(
       context: context,
       builder:
@@ -834,9 +834,18 @@ class _CalendarPageState extends State<CalendarPage>
                 // const Text('You long pressed on a calendar event!'),
                 const SizedBox(height: 16),
                 Container(                  padding: const EdgeInsets.all(12),
-                  decoration: AppColorsDarkMode.seamlessDecoration(
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    elevation: 1.0,
+                  decoration: BoxDecoration(
+                    color: themeProvider.surfaceColor,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: themeProvider.isDarkMode 
+                          ? Colors.black.withOpacity(0.3)
+                          : Colors.grey.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

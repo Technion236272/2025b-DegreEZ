@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
+import '../providers/theme_provider.dart';
+import '../services/theme_sync_service.dart';
 import '../widgets/google_sign_in_button.dart';
-import '../color/color_palette.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,11 +18,12 @@ class _LoginPageState extends State<LoginPage> {
   bool _hasHandledPostLogin = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColorsDarkMode.mainColor,
-      body: Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
-        builder: (context, loginNotifier, studentProvider, courseProvider, _) {
+  Widget build(BuildContext context) {    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          backgroundColor: themeProvider.mainColor,
+          body: Consumer3<LogInNotifier, StudentProvider, CourseProvider>(
+            builder: (context, loginNotifier, studentProvider, courseProvider, _) {
           // Display error message if any
           if (loginNotifier.errorMessage != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -54,11 +56,12 @@ class _LoginPageState extends State<LoginPage> {
               // Try to fetch existing student data
               final studentExists = await studentProvider.fetchStudentData(user.uid);
               
-              if (!mounted) return;
-
-              if (studentExists && studentProvider.hasStudent) {
-                // Existing user - load courses and go to home
+              if (!mounted) return;              if (studentExists && studentProvider.hasStudent) {
+                // Existing user - load courses and sync theme preference
                 await courseProvider.loadStudentCourses(user.uid);
+                
+                // Sync the user's theme preference
+                await ThemeSyncService.syncStudentThemePreference(context);
                 
                 if (mounted) {
                   Navigator.pushNamedAndRemoveUntil(
@@ -75,17 +78,15 @@ class _LoginPageState extends State<LoginPage> {
                   (route) => false,
                 );
               }
-            });
-
-            // Show loading state while handling post-login
+            });            // Show loading state while handling post-login
             return Scaffold(
-              backgroundColor: AppColorsDarkMode.mainColor,
+              backgroundColor: themeProvider.mainColor,
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: themeProvider.primaryColor,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -93,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                           ? 'Welcome back! Loading your data...'
                           : 'Setting up your account...',
                       style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColor,
+                        color: themeProvider.textPrimary,
                         fontSize: 16,
                       ),
                     ),
@@ -115,12 +116,15 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       // Logo and App name
                       Column(
-                        children: [
-                          // App Logo
+                        children: [                          // App Logo
                           SizedBox(
                             width: 350,
                             height: 350,
-                            child: Image.asset('assets/Logo_DarkMode2.png'),
+                            child: Image.asset(
+                              themeProvider.isDarkMode 
+                                ? 'assets/Logo_DarkMode2.png'
+                                : 'assets/Logo.png', // Use light mode logo if available
+                            ),
                           ),
                           const SizedBox(height: 16),
                           // App Name
@@ -129,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
-                              color: AppColorsDarkMode.secondaryColor,
+                              color: themeProvider.textPrimary,
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -138,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                             'Your academic journey made easy',
                             style: TextStyle(
                               fontSize: 16,
-                              color: AppColorsDarkMode.secondaryColorDim,
+                              color: themeProvider.textSecondary,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -154,12 +158,10 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const SizedBox(height: 16),
-
-                              Text(
+                              const SizedBox(height: 16),                              Text(
                                 'Sign in with your Google account to continue',
                                 style: TextStyle(
-                                    color: AppColorsDarkMode.secondaryColorDim),
+                                    color: themeProvider.textSecondary),
                               ),
 
                               const SizedBox(height: 24),
@@ -175,15 +177,14 @@ class _LoginPageState extends State<LoginPage> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColorsDarkMode.secondaryColorDim,
+                                  color: themeProvider.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 24),
 
                               const SizedBox(height: 16),
                             ],
-                          ),
-                        ),
+                          ),                        ),
                       ),
                     ],
                   ),
@@ -193,6 +194,8 @@ class _LoginPageState extends State<LoginPage> {
           );
         },
       ),
+    );
+      },
     );
   }
 }

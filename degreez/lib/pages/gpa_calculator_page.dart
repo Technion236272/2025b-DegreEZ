@@ -1,9 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../color/color_palette.dart';
 import '../models/student_model.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
+import '../providers/theme_provider.dart';
+
+// Helper classes for GPA calculation
+class GpaCalculationItem {
+  final String name;
+  final String courseId;
+  final double grade;
+  final double credits;
+  final bool isWhatIf;
+  final String semesterKey;
+  final bool isExcluded;
+  final bool isModified;
+
+  GpaCalculationItem({
+    required this.name,
+    required this.courseId,
+    required this.grade,
+    required this.credits,
+    this.isWhatIf = false,
+    required this.semesterKey,
+    this.isExcluded = false,
+    this.isModified = false,
+  });
+}
+
+class WhatIfCourse {
+  final String name;
+  final double grade;
+  final double credits;
+  final bool isModified;
+  final String? originalCourseId;
+
+  WhatIfCourse({
+    required this.name,
+    required this.grade,
+    required this.credits,
+    this.isModified = false,
+    this.originalCourseId,
+  });
+}
+
+class GpaCalculationResult {
+  final double gpa;
+  final double totalCredits;
+
+  GpaCalculationResult({
+    required this.gpa,
+    required this.totalCredits,
+  });
+}
+
+class ModifiedCourse {
+  final String originalCourseId;
+  final String name;
+  final double originalGrade;
+  final double newGrade;
+  final double credits;
+  final String semesterKey;
+
+  ModifiedCourse({
+    required this.originalCourseId,
+    required this.name,
+    required this.originalGrade,
+    required this.newGrade,
+    required this.credits,
+    required this.semesterKey,
+  });
+}
 
 class GpaCalculatorPage extends StatefulWidget {
   const GpaCalculatorPage({super.key});
@@ -215,12 +282,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     setState(() {
       _whatIfCourses.removeAt(index);
     });
-  }
-  Color _getGradeColor(double grade) {
-    if (grade >= 80) return AppColorsDarkMode.successColor; // Green for 80+
-    if (grade >= 70) return AppColorsDarkMode.warningColor; // Orange for 60-69
-    if (grade >= 55) return AppColorsDarkMode.primaryColor; // Blue for 55-69
-    return AppColorsDarkMode.errorColor; // Red for below 55
+  }  Color _getGradeColor(double grade) {
+    final themeProvider = context.read<ThemeProvider>();
+    return themeProvider.getGradeColor(grade);
   }
 
   String _getGradeLabel(double grade) {
@@ -241,17 +305,18 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       }
     });
   }
-
   void _showModifyGradeDialog(GpaCalculationItem course) {
     final gradeController = TextEditingController(text: course.grade.toString());
+    final themeProvider = context.read<ThemeProvider>();
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: AppColorsDarkMode.mainColor, // Changed to night black
+          backgroundColor: themeProvider.mainColor, // Changed to night black
           title: Text(
             'Modify Grade',
-            style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+            style: TextStyle(color: themeProvider.secondaryColor),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -260,37 +325,37 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               Text(
                 course.name,
                 style: TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
+                  color: themeProvider.secondaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Current Grade: ${course.grade.toStringAsFixed(1)}',
-                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                style: TextStyle(color: themeProvider.textSecondary),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: gradeController,
                 keyboardType: TextInputType.number,
-                style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                style: TextStyle(color: themeProvider.secondaryColor),
                 decoration: InputDecoration(
                   labelText: 'New Grade (0-100)',
-                  labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                  labelStyle: TextStyle(color: themeProvider.textSecondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+                    borderSide: BorderSide(color: themeProvider.borderPrimary),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColorsDarkMode.borderPrimary),
+                    borderSide: BorderSide(color: themeProvider.borderPrimary),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColorsDarkMode.primaryColor),
+                    borderSide: BorderSide(color: themeProvider.primaryColor),
                   ),
                   filled: true,
-                  fillColor: AppColorsDarkMode.surfaceColor,
+                  fillColor: themeProvider.surfaceColor,
                 ),
               ),
             ],
@@ -300,7 +365,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                style: TextStyle(color: themeProvider.textSecondary),
               ),
             ),
             TextButton(
@@ -317,7 +382,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               },
               child: Text(
                 'Apply',
-                style: TextStyle(color: AppColorsDarkMode.primaryColor),
+                style: TextStyle(color: themeProvider.primaryColor),
               ),
             ),
           ],
@@ -388,20 +453,21 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         course.isModified && course.originalCourseId == courseId);
     });
   }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColorsDarkMode.mainColor,
-      body: Consumer2<StudentProvider, CourseProvider>(
-        builder: (context, studentProvider, courseProvider, _) {
-          if (studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return Scaffold(
+          backgroundColor: themeProvider.mainColor,
+          body: Consumer2<StudentProvider, CourseProvider>(
+            builder: (context, studentProvider, courseProvider, _) {
+              if (studentProvider.isLoading || courseProvider.loadingState.isLoadingCourses) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (studentProvider.error != null) {
-            return Center(
-              child: Column(
+              if (studentProvider.error != null) {
+                return Center(
+                  child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.error, size: 64, color: Colors.red),
@@ -443,9 +509,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Average Summary Cards
+                children: [                  // Average Summary Cards
                   _buildAverageSummaryCards(
+                    themeProvider,
                     currentAverage, 
                     projectedAverage, 
                     completedCourses.length,
@@ -456,46 +522,47 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   const SizedBox(height: 24),
                   
                   // Statistics Row
-                  _buildStatisticsRow(completedCourses, _whatIfCourses),
+                  _buildStatisticsRow(themeProvider, completedCourses, _whatIfCourses),
                   
                   const SizedBox(height: 24),
                   
                   // Current Courses Section
-                  _buildCurrentCoursesSection(completedCourses),
+                  _buildCurrentCoursesSection(themeProvider, completedCourses),
                   
                   const SizedBox(height: 24),
                   
                   // What-If Courses Section
-                  _buildWhatIfSection(),
+                  _buildWhatIfSection(themeProvider),
                   
                   const SizedBox(height: 24),
                   
                   // Add What-If Course Form
-                  _buildAddCourseForm(),
+                  _buildAddCourseForm(themeProvider),
                   
                   if (_isLoadingCourseDetails) ...[
-                    const SizedBox(height: 16),
-                    Container(
+                    const SizedBox(height: 16),                    Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: AppColorsDarkMode.cardDecoration(),
-                      child: const Row(
+                      decoration: BoxDecoration(
+                        color: themeProvider.cardColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Text(
                             'Loading course details...',
                             style: TextStyle(
-                              color: AppColorsDarkMode.textSecondary,
+                              color: themeProvider.textSecondary,
                               fontSize: 14,
                             ),
                           ),
                         ],
-                      ),
-                    ),
+                      ),),
                   ],
                 ],
               ),
@@ -504,8 +571,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         },
       ),
     );
-  }
+    }
+  );
+}
   Widget _buildAverageSummaryCards(
+    ThemeProvider themeProvider,
     double currentAverage, 
     double projectedAverage, 
     int completedCoursesCount,
@@ -513,15 +583,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     double totalProjectedCredits,
   ) {
     return Row(
-      children: [
-        Expanded(
+      children: [        Expanded(
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColorsDarkMode.mainColor,
-                  AppColorsDarkMode.accentColorDarker,
+                  themeProvider.mainColor,
+                  themeProvider.cardColor,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -540,7 +609,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Text(
                   'Current Average',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -563,18 +632,17 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),                Text(
                   '$completedCoursesCount courses',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 12,
                   ),
                 ),
                 Text(
                   '${totalCompletedCredits.toStringAsFixed(1)} credits',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 10,
                   ),
                 ),
@@ -585,12 +653,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         const SizedBox(width: 16),
         Expanded(
           child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.all(20),            decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColorsDarkMode.mainColor,
-                  AppColorsDarkMode.accentColorDarker,
+                  themeProvider.mainColor,
+                  themeProvider.cardColor,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -609,7 +676,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Text(
                   'Projected Average',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -636,18 +703,17 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),                Text(
                   '${completedCoursesCount + _whatIfCourses.length} courses',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 12,
                   ),
                 ),
                 Text(
                   '${totalProjectedCredits.toStringAsFixed(1)} credits',
-                  style: const TextStyle(
-                    color: AppColorsDarkMode.textTertiary,
+                  style: TextStyle(
+                    color: themeProvider.textSecondary,
                     fontSize: 10,
                   ),
                 ),
@@ -658,7 +724,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       ],
     );
   }
-  Widget _buildStatisticsRow(List<GpaCalculationItem> completedCourses, List<WhatIfCourse> whatIfCourses) {
+  Widget _buildStatisticsRow(ThemeProvider themeProvider, List<GpaCalculationItem> completedCourses, List<WhatIfCourse> whatIfCourses) {
     // Calculate grade distribution by ranges
     final gradeRanges = <String, int>{
       '90-100': 0,
@@ -680,15 +746,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       } else {
         gradeRanges['0-59'] = gradeRanges['0-59']! + 1;
       }
-    }
-
-    return Container(
+    }    return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColorsDarkMode.mainColor,
-            AppColorsDarkMode.accentColorDarker,
+            themeProvider.mainColor,
+            themeProvider.cardColor,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -708,7 +772,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           Text(
             'Grade Distribution',
             style: TextStyle(
-              color: AppColorsDarkMode.secondaryColor,
+              color: themeProvider.secondaryColor,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -718,7 +782,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Text(
               'No completed courses with grades',
               style: TextStyle(
-                color: AppColorsDarkMode.secondaryColorDim,
+                color: themeProvider.textSecondary,
                 fontSize: 14,
               ),
             )
@@ -727,10 +791,18 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               spacing: 8,
               runSpacing: 8,              children: gradeRanges.entries.where((entry) => entry.value > 0).map((entry) {
                 Color rangeColor;
-                if (entry.key == '90-100' || entry.key == '80-89') {rangeColor = AppColorsDarkMode.successColor;} // Green for 80+
-                else if (entry.key == '70-79') {rangeColor = AppColorsDarkMode.primaryColor;} // Blue for 70-79
-                else if (entry.key == '60-69') {rangeColor = AppColorsDarkMode.warningColor;} // Orange for 60-69
-                else {rangeColor = AppColorsDarkMode.errorColor;} // Red for below 60
+                if (entry.key == '90-100' || entry.key == '80-89') {
+                  rangeColor = themeProvider.successColor;
+                } // Green for 80+
+                else if (entry.key == '70-79') {
+                  rangeColor = themeProvider.primaryColor;
+                } // Blue for 70-79
+                else if (entry.key == '60-69') {
+                  rangeColor = themeProvider.warningColor;
+                } // Orange for 60-69
+                else {
+                  rangeColor = themeProvider.errorColor;
+                } // Red for below 60
 
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -749,14 +821,15 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
-                  ),
-                );
+                  ),                );
               }).toList(),
             ),
         ],
       ),
     );
-  }  Widget _buildCurrentCoursesSection(List<GpaCalculationItem> completedCourses) {
+  }
+  
+  Widget _buildCurrentCoursesSection(ThemeProvider themeProvider, List<GpaCalculationItem> completedCourses) {
     final hasModifications = _excludedCourseIds.isNotEmpty || _modifiedCourses.isNotEmpty;
     
     return Column(
@@ -767,11 +840,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+                children: [                  Text(
                     'Completed Courses',
                     style: TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: themeProvider.secondaryColor,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -779,7 +851,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   const SizedBox(height: 4),                  Text(
                     'Tap to exclude • Long press to modify • Click refresh icon to reset individual course',
                     style: TextStyle(
-                      color: AppColorsDarkMode.secondaryColorDim,
+                      color: themeProvider.textSecondary,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -790,12 +862,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               GestureDetector(
                 onTap: _resetAllModifications,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.2),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),                  decoration: BoxDecoration(
+                    color: themeProvider.textSecondary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColorsDarkMode.secondaryColorDim.withOpacity(0.5),
+                      color: themeProvider.textSecondary.withOpacity(0.5),
                       width: 1,
                     ),
                   ),
@@ -805,13 +876,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       Icon(
                         Icons.refresh,
                         size: 14,
-                        color: AppColorsDarkMode.secondaryColorDim,
+                        color: themeProvider.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Reset All',
                         style: TextStyle(
-                          color: AppColorsDarkMode.secondaryColorDim,
+                          color: themeProvider.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -823,14 +894,13 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           ],
         ),
         if (hasModifications) ...[
-          const SizedBox(height: 8),
-          Container(
+          const SizedBox(height: 8),          Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColorsDarkMode.primaryColor.withOpacity(0.1),
+              color: themeProvider.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColorsDarkMode.primaryColor.withOpacity(0.3),
+                color: themeProvider.primaryColor.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -839,14 +909,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Icon(
                   Icons.info_outline,
                   size: 16,
-                  color: AppColorsDarkMode.primaryColor,
+                  color: themeProvider.primaryColor,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '${_excludedCourseIds.length} excluded • ${_modifiedCourses.length} modified',
                     style: TextStyle(
-                      color: AppColorsDarkMode.primaryColor,
+                      color: themeProvider.primaryColor,
                       fontSize: 12,
                     ),
                   ),
@@ -856,15 +926,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           ),
         ],
         const SizedBox(height: 12),
-        if (completedCourses.isEmpty)
-          Container(
+        if (completedCourses.isEmpty)          Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColorsDarkMode.mainColor,
-                  AppColorsDarkMode.accentColorDarker,
+                  themeProvider.mainColor,
+                  themeProvider.cardColor,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -883,20 +952,21 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Icon(
                   Icons.school_outlined,
                   size: 48,
-                  color: AppColorsDarkMode.secondaryColorDim,
+                  color: themeProvider.textSecondary,
                 ),
                 SizedBox(height: 12),
                 Text(
                   'No completed courses found',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColor,                    fontSize: 16,
+                    color: themeProvider.secondaryColor,
+                    fontSize: 16,
                   ),
                 ),
                 SizedBox(height: 4),
                 Text(
                   'Add courses with numerical grades (0-100) to see your average',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -912,25 +982,23 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               acc.putIfAbsent(course.semesterKey, () => []).add(course);
               return acc;
             },
-          ).entries.map((semesterEntry) => _buildSemesterSection(semesterEntry.key, semesterEntry.value)),
+          ).entries.map((semesterEntry) => _buildSemesterSection(themeProvider, semesterEntry.key, semesterEntry.value)),
       ],
     );
-  }Widget _buildSemesterSection(String semesterKey, List<GpaCalculationItem> courses) {
+  }Widget _buildSemesterSection(ThemeProvider themeProvider, String semesterKey, List<GpaCalculationItem> courses) {
     // Filter out excluded courses for calculation
     final activeCourses = courses.where((course) => !_excludedCourseIds.contains(course.courseId)).toList();
     
     final semesterResult = _calculateAverage(activeCourses);
     final semesterAverage = semesterResult.gpa;
     final totalCredits = courses.fold<double>(0.0, (sum, course) => sum + course.credits);
-    final activeCredits = activeCourses.fold<double>(0.0, (sum, course) => sum + course.credits);
-
-    return Container(
+    final activeCredits = activeCourses.fold<double>(0.0, (sum, course) => sum + course.credits);    return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColorsDarkMode.mainColor,
-            AppColorsDarkMode.accentColorDarker,
+            themeProvider.mainColor,
+            themeProvider.cardColor,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -946,10 +1014,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),            decoration: BoxDecoration(
-              color: AppColorsDarkMode.accentColor,
+        children: [          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: themeProvider.accentColor,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -961,20 +1029,19 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   child: Text(
                     semesterKey,
                     style: TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: themeProvider.secondaryColor,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                if (activeCourses.isNotEmpty)
-                  Container(
+                if (activeCourses.isNotEmpty)                  Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.secondaryColorExtremelyDim,
+                      color: themeProvider.textSecondary.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColorsDarkMode.secondaryColorExtremelyDim,
+                        color: themeProvider.textSecondary.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -991,26 +1058,25 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (activeCredits != totalCredits) ...[
-                      Text(
+                    if (activeCredits != totalCredits) ...[                      Text(
                         '${activeCredits.toStringAsFixed(1)} / ${totalCredits.toStringAsFixed(1)} credits',
-                        style: const TextStyle(
-                          color: AppColorsDarkMode.secondaryColorDim,
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
                           fontSize: 12,
                         ),
                       ),
                       Text(
                         '${courses.length - activeCourses.length} excluded',
                         style: TextStyle(
-                          color: AppColorsDarkMode.errorColor,
+                          color: themeProvider.errorColor,
                           fontSize: 10,
                         ),
                       ),
                     ] else
                       Text(
                         '${totalCredits.toStringAsFixed(1)} credits',
-                        style: const TextStyle(
-                          color: AppColorsDarkMode.secondaryColorDim,
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
                           fontSize: 12,
                         ),
                       ),
@@ -1019,21 +1085,21 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               ],
             ),
           ),
-          ...courses.map((course) => _buildCourseCard(course)),
+          ...courses.map((course) => _buildCourseCard(themeProvider, course)),
         ],
       ),
     );
   }
 
-  Widget _buildWhatIfSection() {
+  Widget _buildWhatIfSection(ThemeProvider themeProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: [            const Text(
+          children: [            Text(
               'What-If Scenarios',
               style: TextStyle(
-                color: AppColorsDarkMode.secondaryColor,
+                color: themeProvider.secondaryColor,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -1042,17 +1108,17 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColorsDarkMode.secondaryColorDim,
+                color: themeProvider.textSecondary.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColorsDarkMode.secondaryColor,
+                  color: themeProvider.secondaryColor,
                   width: 1,
                 ),
               ),
               child: Text(
                 '${_whatIfCourses.length}',
-                style: const TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
+                style: TextStyle(
+                  color: themeProvider.secondaryColor,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1060,10 +1126,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             ),
           ],
         ),
-        const SizedBox(height: 8),        const Text(
+        const SizedBox(height: 8),        Text(
           'Add potential courses to see how they would affect your average',
           style: TextStyle(
-            color: AppColorsDarkMode.secondaryColorDim,
+            color: themeProvider.textSecondary,
             fontSize: 14,
           ),
         ),
@@ -1074,8 +1140,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColorsDarkMode.mainColor,
-                  AppColorsDarkMode.accentColorDarker,
+                  themeProvider.mainColor,
+                  themeProvider.cardColor,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1089,18 +1155,18 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ),
               ],
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Icon(
                   Icons.psychology_outlined,
                   size: 48,
-                  color: AppColorsDarkMode.secondaryColorDim,
+                  color: themeProvider.textSecondary,
                 ),
                 SizedBox(height: 12),
                 Text(
                   'No what-if courses added',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColor,
+                    color: themeProvider.secondaryColor,
                     fontSize: 16,
                   ),
                 ),
@@ -1108,7 +1174,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Text(
                   'Use the form below to explore scenarios',
                   style: TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                    color: themeProvider.textSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -1119,11 +1185,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           ..._whatIfCourses.asMap().entries.map((entry) {
             final index = entry.key;
             final course = entry.value;
-            return _buildWhatIfCourseCard(course, index);
+            return _buildWhatIfCourseCard(themeProvider, course, index);
           }),
       ],
     );
-  }  Widget _buildCourseCard(GpaCalculationItem course) {
+  }  Widget _buildCourseCard(ThemeProvider themeProvider, GpaCalculationItem course) {
     final isExcluded = _excludedCourseIds.contains(course.courseId);
     final isModified = _modifiedCourses.containsKey(course.courseId);
     
@@ -1131,11 +1197,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       onTap: () => _toggleCourseExclusion(course.courseId),
       onLongPress: () => _showModifyGradeDialog(course),
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
+        padding: const EdgeInsets.all(16),        decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: AppColorsDarkMode.borderPrimary,
+              color: themeProvider.borderPrimary,
               width: 0.5,
             ),
           ),
@@ -1161,7 +1226,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     decoration: isExcluded ? TextDecoration.lineThrough : null,
-                    decorationColor: AppColorsDarkMode.errorColor,
+                    decorationColor: themeProvider.errorColor,
                     decorationThickness: 2,
                   ),
                 ),
@@ -1171,15 +1236,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+                children: [                  Text(
                     course.name,
                     style: TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
+                      color: themeProvider.secondaryColor,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       decoration: isExcluded ? TextDecoration.lineThrough : null,
-                      decorationColor: AppColorsDarkMode.errorColor,
+                      decorationColor: themeProvider.errorColor,
                       decorationThickness: 2,
                     ),
                   ),
@@ -1189,29 +1253,28 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       Text(
                         '${course.credits.toStringAsFixed(1)} credits',
                         style: TextStyle(
-                          color: AppColorsDarkMode.secondaryColorDim,
+                          color: themeProvider.textSecondary,
                           fontSize: 12,
                           decoration: isExcluded ? TextDecoration.lineThrough : null,
-                          decorationColor: AppColorsDarkMode.errorColor,
+                          decorationColor: themeProvider.errorColor,
                           decorationThickness: 2,
                         ),
                       ),
-                      if (course.courseId.isNotEmpty) ...[
-                        const Text(
+                      if (course.courseId.isNotEmpty) ...[                        Text(
                           ' • ',
                           style: TextStyle(
-                            color: AppColorsDarkMode.secondaryColorDim,
+                            color: themeProvider.textSecondary,
                             fontSize: 12,
                           ),
                         ),
                         Text(
                           course.courseId,
                           style: TextStyle(
-                            color: AppColorsDarkMode.secondaryColorDim,
+                            color: themeProvider.textSecondary,
                             fontSize: 10,
                             fontFamily: 'monospace',
                             decoration: isExcluded ? TextDecoration.lineThrough : null,
-                            decorationColor: AppColorsDarkMode.errorColor,
+                            decorationColor: themeProvider.errorColor,
                             decorationThickness: 2,
                           ),
                         ),
@@ -1224,21 +1287,20 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isExcluded)
-                  Container(
+                if (isExcluded)                  Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.errorColor.withOpacity(0.2),
+                      color: themeProvider.errorColor.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColorsDarkMode.errorColor.withOpacity(0.5),
+                        color: themeProvider.errorColor.withOpacity(0.5),
                         width: 1,
                       ),
                     ),
                     child: Text(
                       'EXCLUDED',
                       style: TextStyle(
-                        color: AppColorsDarkMode.errorColor,
+                        color: themeProvider.errorColor,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1249,42 +1311,41 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     margin: EdgeInsets.only(left: isExcluded ? 8 : 0),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.primaryColor.withOpacity(0.2),
+                      color: themeProvider.primaryColor.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColorsDarkMode.primaryColor.withOpacity(0.5),
+                        color: themeProvider.primaryColor.withOpacity(0.5),
                         width: 1,
                       ),
                     ),
                     child: Text(
                       'MODIFIED',
                       style: TextStyle(
-                        color: AppColorsDarkMode.primaryColor,
+                        color: themeProvider.primaryColor,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),                if (isExcluded || isModified) ...[
+                  ),if (isExcluded || isModified) ...[
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () {
                       // Handle individual course reset
                       _resetIndividualCourse(course.courseId);
-                    },
-                    child: Container(
+                    },                    child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppColorsDarkMode.primaryColor.withOpacity(0.2),
+                        color: themeProvider.primaryColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppColorsDarkMode.primaryColor.withOpacity(0.5),
+                          color: themeProvider.primaryColor.withOpacity(0.5),
                           width: 1,
                         ),
                       ),
                       child: Icon(
                         Icons.refresh,
                         size: 16,
-                        color: AppColorsDarkMode.primaryColor,
+                        color: themeProvider.primaryColor,
                       ),
                     ),
                   ),
@@ -1295,7 +1356,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         ),
       ),
     );
-  }  Widget _buildWhatIfCourseCard(WhatIfCourse course, int index) {
+  }
+  Widget _buildWhatIfCourseCard(ThemeProvider themeProvider, WhatIfCourse course, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
@@ -1303,12 +1365,12 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         gradient: LinearGradient(
           colors: course.isModified 
             ? [
-                AppColorsDarkMode.primaryColor.withOpacity(0.1),
-                AppColorsDarkMode.primaryColor.withOpacity(0.05),
+                themeProvider.primaryColor.withOpacity(0.1),
+                themeProvider.primaryColor.withOpacity(0.05),
               ]
             : [
-                AppColorsDarkMode.mainColor,
-                AppColorsDarkMode.accentColorDarker,
+                themeProvider.mainColor,
+                themeProvider.cardColor,
               ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1316,15 +1378,15 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         borderRadius: BorderRadius.circular(16),
         border: course.isModified 
           ? Border.all(
-              color: AppColorsDarkMode.primaryColor.withOpacity(0.5),
+              color: themeProvider.primaryColor.withOpacity(0.5),
               width: 1,
             )
           : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black,
+            color: Colors.black.withOpacity(0.3),
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -1334,10 +1396,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             width: 50,
             height: 40,
             decoration: BoxDecoration(
-              color: _getGradeColor(course.grade).withAlpha(25),
+              color: themeProvider.getGradeColor(course.grade).withAlpha(25),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: _getGradeColor(course.grade),
+                color: themeProvider.getGradeColor(course.grade),
                 width: 1,
               ),
             ),
@@ -1345,7 +1407,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               child: Text(
                 course.grade.toStringAsFixed(0),
                 style: TextStyle(
-                  color: _getGradeColor(course.grade),
+                  color: themeProvider.getGradeColor(course.grade),
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1362,8 +1424,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     Expanded(
                       child: Text(
                         course.name,
-                        style: const TextStyle(
-                          color: AppColorsDarkMode.secondaryColor,
+                        style: TextStyle(
+                          color: themeProvider.secondaryColor,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1373,12 +1435,12 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: course.isModified 
-                          ? AppColorsDarkMode.primaryColor.withOpacity(0.2)
-                          : AppColorsDarkMode.secondaryColorDim,
+                          ? themeProvider.primaryColor.withOpacity(0.2)
+                          : themeProvider.textSecondary.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: course.isModified 
                           ? Border.all(
-                              color: AppColorsDarkMode.primaryColor.withOpacity(0.5),
+                              color: themeProvider.primaryColor.withOpacity(0.5),
                               width: 1,
                             )
                           : null,
@@ -1387,8 +1449,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                         course.isModified ? 'MODIFIED' : 'WHAT-IF',
                         style: TextStyle(
                           color: course.isModified 
-                            ? AppColorsDarkMode.primaryColor
-                            : AppColorsDarkMode.secondaryColor,
+                            ? themeProvider.primaryColor
+                            : themeProvider.textSecondary,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1399,14 +1461,15 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 const SizedBox(height: 2),
                 Text(
                   '${course.credits.toStringAsFixed(1)} credits',
-                  style: const TextStyle(
-                    color: AppColorsDarkMode.secondaryColorDim,
+                  style: TextStyle(
+                    color: themeProvider.textSecondary,
                     fontSize: 12,
                   ),
                 ),
               ],
             ),
-          ),          const SizedBox(width: 8),
+          ),
+          const SizedBox(width: 8),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1417,17 +1480,17 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     padding: const EdgeInsets.all(4),
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: AppColorsDarkMode.primaryColor.withOpacity(0.2),
+                      color: themeProvider.primaryColor.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColorsDarkMode.primaryColor.withOpacity(0.5),
+                        color: themeProvider.primaryColor.withOpacity(0.5),
                         width: 1,
                       ),
                     ),
                     child: Icon(
                       Icons.refresh,
                       size: 16,
-                      color: AppColorsDarkMode.primaryColor,
+                      color: themeProvider.primaryColor,
                     ),
                   ),
                 ),
@@ -1439,9 +1502,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     _removeWhatIfCourse(index);
                   }
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.close,
-                  color: AppColorsDarkMode.errorColor,
+                  color: themeProvider.errorColor,
                   size: 20,
                 ),
               ),
@@ -1452,13 +1515,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     );
   }
 
-  Widget _buildAddCourseForm() {    return Container(
+  Widget _buildAddCourseForm(ThemeProvider themeProvider) {
+    return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColorsDarkMode.mainColor,
-            AppColorsDarkMode.accentColorDarker,
+            themeProvider.mainColor,
+            themeProvider.cardColor,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1466,45 +1530,46 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black,
+            color: Colors.black.withOpacity(0.3),
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Add What-If Course',
             style: TextStyle(
-              color: AppColorsDarkMode.secondaryColor,
+              color: themeProvider.secondaryColor,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: _courseNameController,            style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+            controller: _courseNameController,
+            style: TextStyle(color: themeProvider.secondaryColor),
             decoration: InputDecoration(
               labelText: 'Course Name',
-              labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              labelStyle: TextStyle(color: themeProvider.textSecondary),
               hintText: 'e.g., Introduction to Computer Science',
-              hintStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+              hintStyle: TextStyle(color: themeProvider.textSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
+                borderSide: BorderSide(color: themeProvider.borderPrimary),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
+                borderSide: BorderSide(color: themeProvider.borderPrimary),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColorsDarkMode.primaryColor),
+                borderSide: BorderSide(color: themeProvider.primaryColor),
               ),
               filled: true,
-              fillColor: AppColorsDarkMode.surfaceColor,
+              fillColor: themeProvider.surfaceColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -1514,26 +1579,27 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 flex: 2,
                 child: TextField(
                   controller: _creditsController,
-                  keyboardType: TextInputType.number,                  style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(color: themeProvider.secondaryColor),
                   decoration: InputDecoration(
                     labelText: 'Credit Hours',
-                    labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                    labelStyle: TextStyle(color: themeProvider.textSecondary),
                     hintText: '3.0',
-                    hintStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                    hintStyle: TextStyle(color: themeProvider.textSecondary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
+                      borderSide: BorderSide(color: themeProvider.borderPrimary),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
+                      borderSide: BorderSide(color: themeProvider.borderPrimary),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColorsDarkMode.primaryColor),
+                      borderSide: BorderSide(color: themeProvider.primaryColor),
                     ),
                     filled: true,
-                    fillColor: AppColorsDarkMode.surfaceColor,
+                    fillColor: themeProvider.surfaceColor,
                   ),
                 ),
               ),
@@ -1542,38 +1608,40 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 flex: 2,
                 child: TextField(
                   controller: _gradeController,
-                  keyboardType: TextInputType.number,                  style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(color: themeProvider.secondaryColor),
                   decoration: InputDecoration(
                     labelText: 'Grade (0-100)',
-                    labelStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                    labelStyle: TextStyle(color: themeProvider.textSecondary),
                     hintText: '85',
-                    hintStyle: const TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+                    hintStyle: TextStyle(color: themeProvider.textSecondary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
+                      borderSide: BorderSide(color: themeProvider.borderPrimary),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColorsDarkMode.borderPrimary),
+                      borderSide: BorderSide(color: themeProvider.borderPrimary),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppColorsDarkMode.primaryColor),
+                      borderSide: BorderSide(color: themeProvider.primaryColor),
                     ),
                     filled: true,
-                    fillColor: AppColorsDarkMode.surfaceColor,
+                    fillColor: themeProvider.surfaceColor,
                   ),
                 ),
               ),
             ],
-          ),          const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _addWhatIfCourse,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColorsDarkMode.secondaryColor,
-                foregroundColor: AppColorsDarkMode.accentColor,
+                backgroundColor: themeProvider.secondaryColor,
+                foregroundColor: themeProvider.accentColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -1593,71 +1661,4 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       ),
     );
   }
-}
-
-// Helper classes for GPA calculation
-class GpaCalculationItem {
-  final String name;
-  final String courseId;
-  final double grade;
-  final double credits;
-  final bool isWhatIf;
-  final String semesterKey;
-  final bool isExcluded;
-  final bool isModified;
-
-  GpaCalculationItem({
-    required this.name,
-    required this.courseId,
-    required this.grade,
-    required this.credits,
-    this.isWhatIf = false,
-    required this.semesterKey,
-    this.isExcluded = false,
-    this.isModified = false,
-  });
-}
-
-class WhatIfCourse {
-  final String name;
-  final double grade;
-  final double credits;
-  final bool isModified;
-  final String? originalCourseId;
-
-  WhatIfCourse({
-    required this.name,
-    required this.grade,
-    required this.credits,
-    this.isModified = false,
-    this.originalCourseId,
-  });
-}
-
-class GpaCalculationResult {
-  final double gpa;
-  final double totalCredits;
-
-  GpaCalculationResult({
-    required this.gpa,
-    required this.totalCredits,
-  });
-}
-
-class ModifiedCourse {
-  final String originalCourseId;
-  final String name;
-  final double originalGrade;
-  final double newGrade;
-  final double credits;
-  final String semesterKey;
-
-  ModifiedCourse({
-    required this.originalCourseId,
-    required this.name,
-    required this.originalGrade,
-    required this.newGrade,
-    required this.credits,
-    required this.semesterKey,
-  });
 }

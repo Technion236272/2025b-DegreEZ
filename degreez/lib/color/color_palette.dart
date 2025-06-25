@@ -285,6 +285,196 @@ class AppColorsDarkMode {
 }
 
 
+/// Light theme color palette - mirrors AppColorsDarkMode structure for consistency
+/// Based on clean whites, soft grays, and refined accent colors
+class AppColorsLightMode {
+  // =============================================================================
+  // MAIN BACKGROUND COLORS - Clean Light Theme
+  // =============================================================================
+  
+  /// Primary background - Clean white for bright foundation
+  static const Color mainColor = Color(0xFFFAFAFA);
+  
+  /// Secondary surface - Slightly darker for subtle layering
+  static const Color surfaceColor = Color(0xFFFFFFFF);
+  
+  /// Card background - Elevated elements with clear hierarchy
+  static const Color cardColor = Color(0xFFFFFFFF);
+  
+  // =============================================================================
+  // PRIMARY COLORS - Light Mode Accent System
+  // =============================================================================
+  
+  /// Main primary color - Deeper blue for good contrast
+  static const Color primaryColor = Color(0xFF2563EB);
+  
+  /// Semi-transparent primary for overlays
+  static const Color primaryColorDim = Color(0xAA2563EB);
+  
+  /// Light primary - Softer blue for backgrounds
+  static const Color primaryColorLight = Color(0xFF93C5FD);
+  
+  // =============================================================================
+  // SECONDARY COLORS - Supporting the light theme
+  // =============================================================================
+  
+  /// Main secondary - Dark gray for text and UI elements
+  static const Color secondaryColor = Color(0xFF374151);
+  
+  /// Medium transparency secondary
+  static const Color secondaryColorDim = Color(0x99374151);
+  
+  /// High opacity secondary for prominent elements
+  static const Color secondaryColorDimDD = Color(0xDD374151);
+  
+  /// Very subtle secondary for background effects
+  static const Color secondaryColorExtremelyDim = Color(0x44374151);
+  
+  // =============================================================================
+  // ACCENT COLORS - Light mode accents for highlights and emphasis
+  // =============================================================================
+  
+  /// Main accent - Primary blue for buttons and active states
+  static const Color accentColor = Color(0xFF2563EB);
+  
+  /// Darker accent variations
+  static const Color accentColorDark = Color(0xFF1D4ED8);
+  static const Color accentColorDarker = Color(0xFF1E40AF);
+  
+  /// Semi-transparent accent
+  static const Color accentColorDim = Color(0xCC2563EB);
+  
+  /// Lighter accent variations
+  static const Color accentColorLight = Color(0xFF60A5FA);
+  static const Color accentColorExtremelyDim = Color(0x4460A5FA);
+  
+  // =============================================================================
+  // TEXT COLORS - Hierarchical text system for light mode
+  // =============================================================================
+  
+  /// Primary text - Dark gray for main content
+  static const Color textPrimary = Color(0xFF111827);
+  
+  /// Secondary text - Medium gray for supporting content
+  static const Color textSecondary = Color(0xFF6B7280);
+  
+  /// Tertiary text - Light gray for hints and labels
+  static const Color textTertiary = Color(0xFF9CA3AF);
+  
+  // =============================================================================
+  // BORDER AND SHADE COLORS - Light mode borders
+  // =============================================================================
+  
+  /// Primary borders - Light gray
+  static const Color borderPrimary = Color(0xFFE5E7EB);
+  
+  /// Secondary borders - Very light gray
+  static const Color borderSecondary = Color(0xFFF3F4F6);
+  
+  /// Error and warning borders
+  static const Color borderError = Color(0xFFFCA5A5);
+  static const Color borderWarning = Color(0xFFFDE68A);
+  static const Color borderSuccess = Color(0xFFA7F3D0);
+  
+  // =============================================================================
+  // SEMANTIC COLORS - Status indicators for light mode
+  // =============================================================================
+  
+  /// Success states - Green tones
+  static const Color successColor = Color(0xFF10B981);
+  static const Color successColorLight = Color(0xFFD1FAE5);
+  static const Color successColorDark = Color(0xFF047857);
+  
+  /// Warning states - Amber tones
+  static const Color warningColor = Color(0xFFF59E0B);
+  static const Color warningColorLight = Color(0xFFFEF3C7);
+  static const Color warningColorDark = Color(0xFFD97706);
+  
+  /// Error states - Red tones
+  static const Color errorColor = Color(0xFFEF4444);
+  static const Color errorColorLight = Color(0xFFFEE2E2);
+  static const Color errorColorDark = Color(0xFFDC2626);
+  
+  /// Info states - Blue tones
+  static const Color infoColor = Color(0xFF3B82F6);
+  static const Color infoColorLight = Color(0xFFDEDFE1);
+  static const Color infoColorDark = Color(0xFF1D4ED8);
+  
+  // =============================================================================
+  // SHADOW AND OVERLAY COLORS - Light mode shadows
+  // =============================================================================
+  
+  /// Primary shadow color
+  static const Color shadowColor = Color(0x1A000000);
+  
+  /// Overlay colors for modals and dialogs
+  static const Color overlayColor = Color(0x80000000);
+  static const Color overlayColorLight = Color(0x40000000);
+  
+  // =============================================================================
+  // DECORATION METHODS - Light mode specific decorations
+  // =============================================================================
+  
+  /// Creates a standard card decoration for light mode
+  static BoxDecoration cardDecoration({
+    Color? backgroundColor,
+    double borderRadius = 12.0,
+    double elevation = 2.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsLightMode.cardColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: AppColorsLightMode.borderSecondary,
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsLightMode.shadowColor,
+          blurRadius: elevation * 2,
+          offset: Offset(0, elevation / 2),
+        ),
+      ],
+    );
+  }
+  
+  /// Creates an elevated surface decoration
+  static BoxDecoration elevatedDecoration({
+    Color? backgroundColor,
+    double borderRadius = 16.0,
+    double elevation = 4.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsLightMode.surfaceColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      boxShadow: [
+        BoxShadow(
+          color: AppColorsLightMode.shadowColor,
+          blurRadius: elevation * 3,
+          offset: Offset(0, elevation),
+        ),
+      ],
+    );
+  }
+  
+  /// Creates a subtle border decoration
+  static BoxDecoration borderDecoration({
+    Color? backgroundColor,
+    Color? borderColor,
+    double borderRadius = 8.0,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? AppColorsLightMode.surfaceColor,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: borderColor ?? AppColorsLightMode.borderPrimary,
+        width: 1.0,
+      ),
+    );
+  }
+}
+
+
 class CourseCardColorPalette{
   int? _id;
   final Color _topBarBG = Colors.black;

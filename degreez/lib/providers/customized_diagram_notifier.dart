@@ -1,6 +1,8 @@
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:degreez/models/student_model.dart';
+import 'package:provider/provider.dart';
 
 /// A provider class that manages authentication state using Google Sign-In and Firebase Auth.
 class CustomizedDiagramNotifier extends ChangeNotifier {
