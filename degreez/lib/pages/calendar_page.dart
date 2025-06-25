@@ -82,8 +82,11 @@ class _CalendarPageState extends State<CalendarPage>
     return (apiYear, semesterCode);
   }
 
-  EventController get _eventController =>
-      CalendarControllerProvider.of(context).controller;
+  EventController? get _eventController {
+    if (!mounted) return null;
+    return CalendarControllerProvider.of(context).controller;
+  }
+  
   @override
   void dispose() {
     _searchController.dispose();
@@ -106,9 +109,14 @@ class _CalendarPageState extends State<CalendarPage>
   Widget _buildCoursePanelWithIntegratedToggle(CourseProvider courseProvider) {
     if (!courseProvider.hasAnyCourses) {
       return const SizedBox.shrink();
-    }    return CourseCalendarPanel(
+    }    final eventController = _eventController;
+    if (eventController == null) {
+      return const SizedBox.shrink();
+    }
+    
+    return CourseCalendarPanel(
       selectedSemester: widget.selectedSemester ?? '',
-      eventController: _eventController,
+      eventController: eventController,
       onCourseRemovedFromCalendar: _markCourseAsRemovedFromCalendar,
       onCourseRestoredToCalendar: _restoreCourseToCalendar,
       isCourseRemovedFromCalendar: _isCourseRemovedFromCalendar,
@@ -161,9 +169,14 @@ class _CalendarPageState extends State<CalendarPage>
   }
 
   Widget _buildWeekView(ThemeProvider themeProvider) {
+    final eventController = _eventController;
+    if (eventController == null) {
+      return const Center(child: Text('Calendar not available'));
+    }
+    
     return ClipRect(
       child: WeekView(
-        controller: _eventController,
+        controller: eventController,
         backgroundColor: getCalendarBackgroundColor(context),
         weekPageHeaderBuilder: WeekHeader.hidden,
         // add the month and year to the header but smaller to fit here in weekNumberBuilder
@@ -252,8 +265,13 @@ class _CalendarPageState extends State<CalendarPage>
   }
 
   Widget _buildDayView(ThemeProvider themeProvider) {
+    final eventController = _eventController;
+    if (eventController == null) {
+      return const Center(child: Text('Calendar not available'));
+    }
+    
     return DayView(
-      controller: _eventController,
+      controller: eventController,
       backgroundColor: getCalendarBackgroundColor(context),
       dayTitleBuilder: (date) => buildDayHeader(context, date),
       timeLineBuilder: (date) => buildTimeLine(context, date),
@@ -293,9 +311,15 @@ class _CalendarPageState extends State<CalendarPage>
     debugPrint('🔄 === STARTING CALENDAR UPDATE ===');
     debugPrint('🔄 Force semester: $forceSemester');
     
+    final eventController = _eventController;
+    if (eventController == null) {
+      debugPrint('🔄 Event controller is null, skipping calendar update');
+      return;
+    }
+    
     // Clear existing events
-    final existingEventCount = _eventController.allEvents.length;
-    _eventController.removeWhere((event) => true);
+    final existingEventCount = eventController.allEvents.length;
+    eventController.removeWhere((event) => true);
     debugPrint('🔄 Cleared $existingEventCount existing events');
     
     // Get current week start (Sunday)
@@ -356,6 +380,7 @@ class _CalendarPageState extends State<CalendarPage>
                 semester,
                 currentWeekStart,
                 themeProvider,
+                eventController,
               );
               debugPrint('      📅 Created $eventsCreated events from API schedule');
             } else {
@@ -365,6 +390,7 @@ class _CalendarPageState extends State<CalendarPage>
                 semester,
                 currentWeekStart,
                 themeProvider,
+                eventController,
               );
               debugPrint('      📅 Created $eventsCreated events from basic times');
             }
@@ -376,21 +402,22 @@ class _CalendarPageState extends State<CalendarPage>
               semester,
               currentWeekStart,
               themeProvider,
+              eventController,
             );
             debugPrint('    📅 Created $eventsCreated fallback events from basic times');
           }),
         );
       }
     }
-      // Wait for all course details to be processed
+    // Wait for all course details to be processed
     debugPrint('🔄 Waiting for ${courseDetailFutures.length} course detail requests...');
     await Future.wait(courseDetailFutures);
     
-    final finalEventCount = _eventController.allEvents.length;
+    final finalEventCount = eventController.allEvents.length;
     debugPrint('🔄 === CALENDAR UPDATE COMPLETE ===');
     debugPrint('🔄 Total events created: $finalEventCount');
     debugPrint('🔄 Event titles:');
-    for (final event in _eventController.allEvents) {
+    for (final event in eventController.allEvents) {
       debugPrint('  📅 ${event.title} (${event.startTime} - ${event.endTime})');
     }
     debugPrint('🔄 === END CALENDAR UPDATE ===');
@@ -400,7 +427,10 @@ class _CalendarPageState extends State<CalendarPage>
 
   // Helper method to check for time conflicts with existing events
   bool _hasTimeConflict(DateTime startTime, DateTime endTime) {
-    final existingEvents = _eventController.allEvents;
+    final eventController = _eventController;
+    if (eventController == null) return false;
+    
+    final existingEvents = eventController.allEvents;
 
     for (final event in existingEvents) {
       if (event.startTime != null && event.endTime != null) {
@@ -423,7 +453,10 @@ class _CalendarPageState extends State<CalendarPage>
     DateTime endTime,
   ) {
     final conflictingEvents = <CalendarEventData>[];
-    final existingEvents = _eventController.allEvents;
+    final eventController = _eventController;
+    if (eventController == null) return conflictingEvents;
+    
+    final existingEvents = eventController.allEvents;
 
     for (final event in existingEvents) {
       if (event.startTime != null && event.endTime != null) {
@@ -443,6 +476,7 @@ class _CalendarPageState extends State<CalendarPage>
     String semester,
     DateTime weekStart,
     ThemeProvider themeProvider,
+    EventController eventController,
   ) {
     debugPrint('  🏗️ Creating events from schedule for ${course.name}');
     
@@ -575,7 +609,7 @@ class _CalendarPageState extends State<CalendarPage>
       );
       
       debugPrint('      ✅ Created event: "${event.title}" on ${event.date} from ${event.startTime} to ${event.endTime}');
-      _eventController.add(event);
+      eventController.add(event);
       eventsAdded++;
     }
 
@@ -587,6 +621,7 @@ class _CalendarPageState extends State<CalendarPage>
     String semester,
     DateTime weekStart,
     ThemeProvider themeProvider,
+    EventController eventController,
   ) {
     debugPrint('  🔧 Creating basic events for ${course.name}');
     
@@ -619,7 +654,7 @@ class _CalendarPageState extends State<CalendarPage>
         if (hasConflict) {
           debugPrint('    ⚠️ Time conflict for lecture - allowing SideEventArranger to handle');
         }
-        _eventController.add(lectureEvent);
+        eventController.add(lectureEvent);
         eventsAdded++;
         debugPrint('    ✅ Created lecture event: "${lectureEvent.title}"');
       } else {
@@ -647,7 +682,7 @@ class _CalendarPageState extends State<CalendarPage>
         if (hasConflict) {
           debugPrint('    ⚠️ Time conflict for tutorial - allowing SideEventArranger to handle');
         }
-        _eventController.add(tutorialEvent);
+        eventController.add(tutorialEvent);
         eventsAdded++;
         debugPrint('    ✅ Created tutorial event: "${tutorialEvent.title}"');
       } else {
@@ -674,7 +709,7 @@ class _CalendarPageState extends State<CalendarPage>
         if (hasConflict) {
           debugPrint('    ⚠️ Time conflict for lab - allowing SideEventArranger to handle');
         }
-        _eventController.add(labEvent);
+        eventController.add(labEvent);
         eventsAdded++;
         debugPrint('    ✅ Created lab event: "${labEvent.title}"');
       } else {
@@ -701,7 +736,7 @@ class _CalendarPageState extends State<CalendarPage>
         if (hasConflict) {
           debugPrint('    ⚠️ Time conflict for workshop - allowing SideEventArranger to handle');
         }
-        _eventController.add(workshopEvent);
+        eventController.add(workshopEvent);
         eventsAdded++;
         debugPrint('    ✅ Created workshop event: "${workshopEvent.title}"');
       } else {
@@ -1073,8 +1108,14 @@ class _CalendarPageState extends State<CalendarPage>
   ) async {
     debugPrint('Refreshing calendar events after schedule selection change');
     
+    final eventController = _eventController;
+    if (eventController == null) {
+      debugPrint('Event controller is null, skipping calendar refresh');
+      return;
+    }
+    
     // Clear existing events first to ensure clean refresh
-    _eventController.removeWhere((event) => true);
+    eventController.removeWhere((event) => true);
     
     // Force a complete calendar refresh with current semester
     await _updateCalendarEvents(
