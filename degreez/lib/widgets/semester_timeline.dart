@@ -42,7 +42,9 @@ class SemesterTimeline extends StatelessWidget {
         return Container(
           height: 70,
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor,
+            color: themeProvider.isLightMode 
+                ? const Color(0xFFD1FAE5) // Light sage green for light mode
+                : themeProvider.primaryColor, // Keep existing color for dark mode
             boxShadow: [
               BoxShadow(
                 color: themeProvider.isDarkMode 

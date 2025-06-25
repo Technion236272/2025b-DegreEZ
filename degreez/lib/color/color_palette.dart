@@ -302,17 +302,17 @@ class AppColorsLightMode {
   static const Color cardColor = Color(0xFFFFFFFF);
   
   // =============================================================================
-  // PRIMARY COLORS - Light Mode Accent System
+  // PRIMARY COLORS - Light Mode Green Accent System
   // =============================================================================
   
-  /// Main primary color - Deeper blue for good contrast
-  static const Color primaryColor = Color(0xFF2563EB);
+  /// Main primary color - Forest Green for good contrast and natural feel
+  static const Color primaryColor = Color(0xFF059669);
   
   /// Semi-transparent primary for overlays
-  static const Color primaryColorDim = Color(0xAA2563EB);
+  static const Color primaryColorDim = Color(0xAA059669);
   
-  /// Light primary - Softer blue for backgrounds
-  static const Color primaryColorLight = Color(0xFF93C5FD);
+  /// Light primary - Soft mint green for backgrounds
+  static const Color primaryColorLight = Color(0xFF86EFAC);
   
   // =============================================================================
   // SECONDARY COLORS - Supporting the light theme
@@ -331,47 +331,53 @@ class AppColorsLightMode {
   static const Color secondaryColorExtremelyDim = Color(0x44374151);
   
   // =============================================================================
-  // ACCENT COLORS - Light mode accents for highlights and emphasis
+  // ACCENT COLORS - Light mode green accents for highlights and emphasis
   // =============================================================================
   
-  /// Main accent - Primary blue for buttons and active states
-  static const Color accentColor = Color(0xFF2563EB);
+  /// Main accent - Emerald green for buttons and active states
+  static const Color accentColor = Color(0xFF059669);
   
   /// Darker accent variations
-  static const Color accentColorDark = Color(0xFF1D4ED8);
-  static const Color accentColorDarker = Color(0xFF1E40AF);
+  static const Color accentColorDark = Color(0xFF047857);
+  static const Color accentColorDarker = Color(0xFF064E3B);
   
   /// Semi-transparent accent
-  static const Color accentColorDim = Color(0xCC2563EB);
+  static const Color accentColorDim = Color(0xCC059669);
   
   /// Lighter accent variations
-  static const Color accentColorLight = Color(0xFF60A5FA);
-  static const Color accentColorExtremelyDim = Color(0x4460A5FA);
+  static const Color accentColorLight = Color(0xFF34D399);
+  static const Color accentColorExtremelyDim = Color(0x4434D399);
   
   // =============================================================================
   // TEXT COLORS - Hierarchical text system for light mode
   // =============================================================================
   
-  /// Primary text - Dark gray for main content
-  static const Color textPrimary = Color(0xFF111827);
+  /// Primary text - Very dark gray for main content (darker than before)
+  static const Color textPrimary = Color(0xFF0F172A);
   
-  /// Secondary text - Medium gray for supporting content
-  static const Color textSecondary = Color(0xFF6B7280);
+  /// Secondary text - Dark gray for supporting content (darker than before)
+  static const Color textSecondary = Color(0xFF334155);
   
-  /// Tertiary text - Light gray for hints and labels
-  static const Color textTertiary = Color(0xFF9CA3AF);
+  /// Tertiary text - Medium gray for hints and labels (darker than before)
+  static const Color textTertiary = Color(0xFF64748B);
   
   // =============================================================================
   // BORDER AND SHADE COLORS - Light mode borders
   // =============================================================================
   
-  /// Primary borders - Light gray
-  static const Color borderPrimary = Color(0xFFE5E7EB);
+  /// Primary borders - Light sage green
+  static const Color borderPrimary = Color(0xFFD1FAE5);
   
-  /// Secondary borders - Very light gray
-  static const Color borderSecondary = Color(0xFFF3F4F6);
+  /// Secondary borders - Very light mint
+  static const Color borderSecondary = Color(0xFFECFDF5);
   
-  /// Error and warning borders
+  /// Drawer background - Very light green tint
+  static const Color drawerColor = Color(0xFFF0FDF4);
+  
+  /// Drawer header - Soft green
+  static const Color drawerHeaderColor = Color(0xFF86EFAC);
+  
+  /// Error and warning borders (keep existing)
   static const Color borderError = Color(0xFFFCA5A5);
   static const Color borderWarning = Color(0xFFFDE68A);
   static const Color borderSuccess = Color(0xFFA7F3D0);
@@ -395,9 +401,9 @@ class AppColorsLightMode {
   static const Color errorColorLight = Color(0xFFFEE2E2);
   static const Color errorColorDark = Color(0xFFDC2626);
   
-  /// Info states - Blue tones
-  static const Color infoColor = Color(0xFF3B82F6);
-  static const Color infoColorLight = Color(0xFFDEDFE1);
+  /// Info states - Green tones (to match theme)
+  static const Color infoColor = Color(0xFF10B981);
+  static const Color infoColorLight = Color(0xFFD1FAE5);
   static const Color infoColorDark = Color(0xFF1D4ED8);
   
   // =============================================================================
@@ -509,25 +515,27 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
     _id = 1;
   }
   @override
-  get topBarBG => AppColorsDarkMode.accentColor;
+  get topBarBG => Color(0xFF059669); // Forest Green (matching light mode primary)
 
   @override
-  get topBarText => AppColorsDarkMode.secondaryColor;
+  get topBarText => Color(0xFFFFFFFF); // White text for better contrast
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
+  get topBarMarkBG => Color(0xFF86EFAC); // Light mint green (matching light mode primary light)
 
   @override
-  get topBarMarkText => AppColorsDarkMode.accentColor;
+  get topBarMarkText => Color(0xFF047857); // Dark green for contrast
 
   @override
   Color cardBG([String? courseId]){
-    return AppColorsDarkMode.secondaryColor;
+    return Color(0xFFECFDF5); // Very light mint green background (much lighter)
     }
 
   @override
-  get cardFG => AppColorsDarkMode.accentColor;  @override
-  get cardFGdim => Color(0x44355F8C);
+  get cardFG => Color(0xFF047857); // Dark green text for good contrast
+
+  @override
+  get cardFGdim => Color(0x44047857); // Semi-transparent dark green
   
 }
 
@@ -537,16 +545,16 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     _id = 2;
   }
   @override
-  get topBarBG => AppColorsDarkMode.accentColorDim;
+  get topBarBG => Color(0xFF34D399); // Light emerald green (semi-transparent effect)
 
   @override
-  get topBarText => AppColorsDarkMode.secondaryColor;
+  get topBarText => Color(0xFF064E3B); // Very dark green for contrast
 
   @override
-  get topBarMarkBG => AppColorsDarkMode.secondaryColorDimDD;
+  get topBarMarkBG => Color(0xFF86EFAC); // Light mint green
 
   @override
-  get topBarMarkText => AppColorsDarkMode.accentColor;
+  get topBarMarkText => Color(0xFF047857); // Dark green
 
   @override
   Color cardBG([String? courseId]){
@@ -554,36 +562,40 @@ class CourseCardColorPalette2 extends CourseCardColorPalette
     }
 
   @override
-  get cardFG => AppColorsDarkMode.secondaryColor;  @override
-  get cardFGdim => Color(0x44B8C7D6);  Color _getCourseColor(String courseId) {
+  get cardFG => Color(0xFF064E3B); // Very dark green for text
+
+  @override
+  get cardFGdim => Color(0x44064E3B); // Semi-transparent very dark green
+
+  Color _getCourseColor(String courseId) {
     final hash = courseId.hashCode;
     final colors = [
-      // Vibrant colors for easy distinction, refined for sophistication
-      const Color(0xFF4CAF50), // Material Green
-      const Color(0xFFFF9800), // Material Orange
-      // const Color(0xFFF44336), // Material Red
-      const Color(0xFF2196F3), // Material Blue
-      const Color(0xFF9C27B0), // Material Purple
-      const Color(0xFFFFC107), // Material Amber
-      const Color(0xFF00BCD4), // Material Cyan
-      const Color(0xFFFF5722), // Material Deep Orange
-      const Color(0xFF795548), // Material Brown
-      const Color(0xFF607D8B), // Material Blue Grey
-      const Color(0xFF8BC34A), // Material Light Green
-      // const Color(0xFFE91E63), // Material Pink
-      const Color(0xFF673AB7), // Material Deep Purple
-      const Color(0xFF3F51B5), // Material Indigo
-      const Color(0xFF009688), // Material Teal
-      const Color(0xFFCDDC39), // Material Lime
-      // Additional sophisticated colors that complement the theme
-      const Color(0xFF5D7B8A), // Muted blue-gray (harmonizes with Payne's Gray)
-      const Color(0xFF8A6B5D), // Warm brown-gray
-      const Color(0xFF6B8A5D), // Sage green
-      const Color(0xFF8A5D6B), // Muted rose
-      const Color(0xFF7A5D8A), // Muted purple-gray
-      const Color(0xFF5D8A7A), // Teal-gray
-      const Color(0xFFB8860B), // Dark goldenrod
-      const Color(0xFF4682B4), // Steel blue
+      // Light green-focused colors for sophisticated course distinction
+      const Color(0xFFECFDF5), // Very Light Mint (almost white with green tint)
+      const Color(0xFFD1FAE5), // Light Sage Green
+      const Color(0xFFBBF7D0), // Soft Mint
+      const Color(0xFFA7F3D0), // Light Green
+      const Color(0xFF86EFAC), // Mint Green
+      const Color(0xFF6EE7B7), // Soft Emerald
+      const Color(0xFFAFECE0), // Very Light Teal
+      const Color(0xFF99F6E4), // Light Teal
+      const Color(0xFF5EEAD4), // Soft Teal
+      const Color(0xFF2DD4BF), // Light Turquoise
+      const Color(0xFFCCFBF1), // Pale Teal
+      const Color(0xFFB2F5EA), // Very Light Cyan
+      const Color(0xFF81E6D9), // Light Cyan
+      const Color(0xFF4FD1C7), // Soft Cyan
+      const Color(0xFFE6FFFA), // Almost White Green
+      // Additional very light complementary colors
+      const Color(0xFFF0FDF4), // Extremely Light Green
+      const Color(0xFFECFCCB), // Very Light Lime
+      const Color(0xFFBEF264), // Light Lime
+      const Color(0xFF84CC16), // Lime Green (slightly darker for contrast)
+      const Color(0xFFF3F4F6), // Very Light Gray
+      const Color(0xFFE5E7EB), // Light Gray
+      const Color(0xFFD1D5DB), // Medium Light Gray
+      const Color(0xFFE0F2FE), // Very Light Blue (minimal)
+      const Color(0xFFFEF3C7), // Very Light Yellow
     ];
     return colors[hash.abs() % colors.length];
   }

@@ -1509,25 +1509,40 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
   }
 
   Widget _buildViewToggleButton() {
-    return GestureDetector(
-      onTap: widget.onToggleView,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: AppColorsDarkMode.secondaryColor,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: AppColorsDarkMode.secondaryColorDim,
-            width: 1,
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        final isLightMode = themeProvider.isLightMode;
+        final backgroundColor = isLightMode 
+            ? AppColorsLightMode.primaryColorLight 
+            : AppColorsDarkMode.secondaryColor;
+        final borderColor = isLightMode 
+            ? AppColorsLightMode.primaryColor 
+            : AppColorsDarkMode.secondaryColorDim;
+        final iconColor = isLightMode 
+            ? AppColorsLightMode.primaryColor 
+            : AppColorsDarkMode.accentColor;
+        
+        return GestureDetector(
+          onTap: widget.onToggleView,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: borderColor,
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              widget.viewMode == 0 ? Icons.calendar_view_week : Icons.calendar_view_day,
+              size: 16,
+              color: iconColor,
+            ),
           ),
-        ),
-        child: Icon(
-          widget.viewMode == 0 ? Icons.view_week : Icons.view_day,
-          size: 16,
-          color: AppColorsDarkMode.accentColor,
-        ),
-      ),
+        );
+      },
     );
   }
 }
