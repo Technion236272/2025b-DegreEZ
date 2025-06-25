@@ -176,7 +176,11 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             body = const AiPage();
             break;
           case 'Map':
-            body = CourseMapPage(selectedSemester: _selectedSemester ?? '');
+            body = CourseMapPage(
+              key: ValueKey(_selectedSemester),
+              selectedSemester: _selectedSemester ?? '',
+            );
+
             break;
 
           default:
@@ -185,7 +189,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         return Scaffold(
           appBar: AppBar(
             title:
-                _currentPage == 'Calendar'
+                (_currentPage == 'Calendar' || _currentPage == 'Map')
                     ? _buildSemesterDropdown()
                     : AutoSizeText(
                       _currentPage,

@@ -13,7 +13,19 @@ import '../services/building_geocode_map.dart';
 import 'dart:math' as Math;
 import 'dart:async';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+class CourseMarkerData {
+  final LatLng point;
+  final String label;
+  final Color color;
+
+  CourseMarkerData({
+    required this.point,
+    required this.label,
+    required this.color,
+  });
+}
 
 class CourseMapPage extends StatefulWidget {
   final String selectedSemester;
@@ -26,7 +38,7 @@ class CourseMapPage extends StatefulWidget {
 
 class _CourseMapPageState extends State<CourseMapPage> {
   LatLng? userLocation;
-  List<Marker> courseMarkers = [];
+  List<CourseMarkerData> courseMarkers = [];
   bool isLoading = true;
   final _geoService = GeocodeCacheService();
   final Map<String, Color> courseColors = {};
@@ -85,6 +97,77 @@ class _CourseMapPageState extends State<CourseMapPage> {
     }
 
     return (apiYear, semesterCode);
+  }
+
+  Future<void> _launchNavigation(LatLng destination) async {
+    final lat = destination.latitude;
+    final lon = destination.longitude;
+
+    final googleMapsUrl = Uri.parse(
+      "https://www.google.com/maps/dir/?api=1&destination=$lat,$lon&travelmode=walking",
+    );
+    final wazeUrl = Uri.parse("https://waze.com/ul?ll=$lat,$lon&navigate=yes");
+
+    debugPrint("🧭 Google Maps URL: $googleMapsUrl");
+    debugPrint("🧭 Waze URL: $wazeUrl");
+
+    await showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Choose an app for navigation'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Image.asset(
+                    'assets/google_maps_logo.png',
+                    width: 30,
+                    height: 30,
+                  ),
+                  title: const Text('Google Maps'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await canLaunchUrl(googleMapsUrl)) {
+                      await launchUrl(
+                        googleMapsUrl,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      _showErrorSnack();
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: Image.asset(
+                    'assets/waze_logo.png',
+                    width: 30,
+                    height: 30,
+                  ),
+                  title: const Text('Waze'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (await canLaunchUrl(wazeUrl)) {
+                      await launchUrl(
+                        wazeUrl,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      _showErrorSnack();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  void _showErrorSnack() {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to launch navigation')),
+    );
   }
 
   void _focusOnCourse(String courseName) {
@@ -187,29 +270,29 @@ class _CourseMapPageState extends State<CourseMapPage> {
     setState(() => isLoading = false);
   }
 
-Future<void> _getUserLocation() async {
-  if (!await location.serviceEnabled()) await location.requestService();
-  if (await location.hasPermission() == PermissionStatus.denied) {
-    if (await location.requestPermission() != PermissionStatus.granted) return;
-  }
+  Future<void> _getUserLocation() async {
+    if (!await location.serviceEnabled()) await location.requestService();
+    if (await location.hasPermission() == PermissionStatus.denied) {
+      if (await location.requestPermission() != PermissionStatus.granted)
+        return;
+    }
 
-  // Get initial location
-  final loc = await location.getLocation();
-  if (loc.latitude != null && loc.longitude != null) {
-    setState(() {
-      userLocation = LatLng(loc.latitude!, loc.longitude!);
+    // Get initial location
+    final loc = await location.getLocation();
+    if (loc.latitude != null && loc.longitude != null) {
+      setState(() {
+        userLocation = LatLng(loc.latitude!, loc.longitude!);
+      });
+    }
+
+    // Start listening for updates
+    _locationSubscription = location.onLocationChanged.listen((newLoc) {
+      if (!mounted) return;
+      setState(() {
+        userLocation = LatLng(newLoc.latitude!, newLoc.longitude!);
+      });
     });
   }
-
-  // Start listening for updates
-  _locationSubscription = location.onLocationChanged.listen((newLoc) {
-    if (!mounted) return;
-    setState(() {
-      userLocation = LatLng(newLoc.latitude!, newLoc.longitude!);
-    });
-  });
-}
-
 
   Future<void> _loadCourseMarkers() async {
     final courseProvider = context.read<CourseProvider>();
@@ -220,7 +303,7 @@ Future<void> _getUserLocation() async {
     debugPrint('🗓️ Selected Semester: ${widget.selectedSemester}');
     debugPrint('📚 Courses in Semester: ${selectedCourses.length}');
 
-    final markers = <Marker>[];
+    final markers = <CourseMarkerData>[];
 
     final semCode = _parseSemesterCode(widget.selectedSemester);
     if (semCode == null) {
@@ -316,16 +399,9 @@ Future<void> _getUserLocation() async {
 
           visibleEvents[label] = true;
           markers.add(
-            Marker(
-              point: loc,
-              width: 40,
-              height: 40,
-              child: Tooltip(
-                message: label,
-                child: Icon(Icons.location_on, color: courseColor),
-              ),
-            ),
+            CourseMarkerData(point: loc, label: label, color: courseColor),
           );
+          debugPrint('📌 Added marker: $label at $loc (color: $courseColor)');
         }
       }
     }
@@ -445,89 +521,80 @@ Future<void> _getUserLocation() async {
                 userAgentPackageName: 'com.example.degreez',
               ),
               MarkerLayer(
-                markers: [
-                  ...courseMarkers
-                      .where((m) {
-                        final tooltip = (m.child as Tooltip).message;
-                        final courseName = tooltip?.split('(').first.trim();
-                        return visibleEvents[tooltip] ?? true;
-                      })
-                      .map((m) {
-                        final tooltip = (m.child as Tooltip).message;
-                        final courseName = tooltip?.split('(').first.trim();
-                        final isHighlighted = courseName == _highlightedCourse;
+                markers:
+                    courseMarkers
+                        .where((cm) => visibleEvents[cm.label] ?? true)
+                        .map((cm) {
+                          final courseName = cm.label.split('(').first.trim();
+                          final isHighlighted =
+                              courseName == _highlightedCourse;
 
-                        return Marker(
-                          point: m.point,
-                          width: isHighlighted ? 50 : 40,
-                          height: isHighlighted ? 50 : 40,
-                          child: Tooltip(
-                            message: tooltip,
-                            child: Icon(
-                              Icons.location_on,
-                              color: courseColors[courseName]!,
-                              size: isHighlighted ? 40 : 30,
-                              shadows:
-                                  isHighlighted
-                                      ? [
-                                        const Shadow(
-                                          color: Colors.black,
-                                          blurRadius: 10,
-                                        ),
-                                      ]
-                                      : [],
+                          return Marker(
+                            point: cm.point,
+                            width: isHighlighted ? 50 : 40,
+                            height: isHighlighted ? 50 : 40,
+                            child: Tooltip(
+                              message: cm.label,
+                              child: GestureDetector(
+                                onTap: () => _launchNavigation(cm.point),
+                                child: Icon(
+                                  Icons.location_on,
+                                  color: cm.color,
+                                  size: isHighlighted ? 40 : 30,
+                                  shadows:
+                                      isHighlighted
+                                          ? [
+                                            const Shadow(
+                                              color: Colors.black,
+                                              blurRadius: 10,
+                                            ),
+                                          ]
+                                          : [],
+                                ),
+                              ),
                             ),
-                          ),
-                        );
-                      }),
-
-                  Marker(
-                    point: userLocation!,
-                    width: 40,
-                    height: 40,
-                    child: const Icon(
-                      Icons.person_pin_circle,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ],
+                          );
+                        })
+                        .toList(),
               ),
             ],
           ),
           Positioned(
             top: 20,
             left: 20,
-            child: Material(
-              elevation: 6,
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white.withOpacity(0.95),
-              child: Container(
-                width: 220,
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                      ),
-                      onPressed:
-                          () => setState(() => legendVisible = !legendVisible),
-                      child: Text(
-                        legendVisible ? 'Hide Legend' : 'Show Legend',
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    if (legendVisible)
-                      ConstrainedBox(
+                  ),
+                  onPressed:
+                      () => setState(() => legendVisible = !legendVisible),
+                  child: Text(legendVisible ? 'Hide Legend' : 'Show Legend'),
+                ),
+                if (legendVisible)
+                  Material(
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withOpacity(0.95),
+                    child: Container(
+                      width: 220,
+                      padding: const EdgeInsets.all(8),
+                      child: ConstrainedBox(
                         constraints: const BoxConstraints(maxHeight: 300),
                         child: SingleChildScrollView(
                           child: _buildLegendContent(),
                         ),
                       ),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -536,9 +603,8 @@ Future<void> _getUserLocation() async {
   }
 
   @override
-void dispose() {
-  _locationSubscription.cancel();
-  super.dispose();
-}
-
+  void dispose() {
+    _locationSubscription.cancel();
+    super.dispose();
+  }
 }
