@@ -41,3 +41,4 @@ flutter:
   assets:
     - .env
     - assets/
+    - assets/Faculties2024-2025/

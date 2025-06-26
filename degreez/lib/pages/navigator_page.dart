@@ -5,6 +5,7 @@ import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
 import 'package:degreez/pages/chat_bot.dart';
+import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -385,6 +386,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               onTap: () async {
                 studentProvider.clear();
                 context.read<CourseProvider>().clear();
+                context.read<SignUpProvider>().resetSelected();
                 await loginNotifier.signOut();
                 if (context.mounted) {
                   Navigator.of(

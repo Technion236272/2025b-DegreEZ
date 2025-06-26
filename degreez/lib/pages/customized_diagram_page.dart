@@ -5,6 +5,8 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/widgets/selectors/semester_season_selector.dart';
+import 'package:degreez/widgets/selectors/semester_year_selector.dart';
 import 'package:degreez/providers/theme_provider.dart';
 import 'package:degreez/widgets/semester_timeline.dart';
 import 'package:flutter/material.dart';
@@ -321,163 +323,62 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, _) {
             return StatefulBuilder(
-              builder: (context, setState) {            return AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: themeProvider.secondaryColor,
-                      width: 2,
+          builder: (context, setState) {            
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: themeProvider.secondaryColor,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: themeProvider.mainColor, // Changed to night black
+              title: Text(
+                'Add New Semester',
+                style: TextStyle(
+                  color: themeProvider.secondaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+children: [
+  SemesterSeasonSelector(),
+  const SizedBox(height: 12),
+  SemesterYearSelector(),
+],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: themeProvider.secondaryColor.withAlpha(200),
                     ),
-                    borderRadius: BorderRadius.circular(16),
                   ),
-                  backgroundColor: themeProvider.mainColor,
-                  title: Text(
-                    'Add New Semester',
+                ),
+                TextButton(
+                  onPressed: () {
+                    final semesterName = '$selectedSeason $selectedYear';
+                    context.read<CourseProvider>().addSemester(
+                      context.read<StudentProvider>().student!.id,
+                      semesterName,
+                    );
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Add',
                     style: TextStyle(
                       color: themeProvider.secondaryColor,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ),                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Season Dropdown
-                      DropdownButtonFormField<String>(
-                        iconEnabledColor: themeProvider.secondaryColor,
-                        value: selectedSeason,
-                        style: TextStyle(
-                          color: themeProvider.secondaryColor,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Semester',
-                          labelStyle: TextStyle(
-                            color: themeProvider.textSecondary,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: themeProvider.borderPrimary,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: themeProvider.secondaryColor,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: themeProvider.surfaceColor,
-                        ),
-                        dropdownColor: themeProvider.surfaceColor,
-                        items:
-                            ['Winter', 'Spring', 'Summer'].map((season) {
-                              return DropdownMenuItem<String>(
-                                value: season,
-                                child: Text(
-                                  season,
-                                  style: TextStyle(
-                                    color: themeProvider.secondaryColor,
-                                  ),
-                                ),
-                              );
-                            }).toList(),                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedSeason = value;
-                              selectedYear =
-                                  value == 'Winter'
-                                      ? '${currentYear - 1}-$currentYear'
-                                      : '$currentYear';
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      // Year Dropdown
-                      DropdownButtonFormField<String>(
-                        iconEnabledColor: themeProvider.secondaryColor,
-                        value: selectedYear,
-                        style: TextStyle(
-                          color: themeProvider.secondaryColor,
-                        ),
-                        decoration: InputDecoration(
-                          labelText: 'Year',
-                          labelStyle: TextStyle(
-                            color: themeProvider.textSecondary,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: themeProvider.borderPrimary,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: themeProvider.secondaryColor,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: themeProvider.surfaceColor,
-                        ),
-                        dropdownColor: themeProvider.surfaceColor,
-                        items: List.generate(11, (index) {
-                          int baseYear = currentYear - 5 + index;
-                          final yearLabel =
-                              selectedSeason == 'Winter'
-                                  ? '${baseYear}-${baseYear + 1}'
-                                  : '$baseYear';
-                          return DropdownMenuItem<String>(
-                            value: yearLabel,
-                            child: Text(
-                              yearLabel,
-                              style: TextStyle(
-                                color: themeProvider.secondaryColor,
-                              ),
-                            ),
-                          );
-                        }),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              selectedYear = value;
-                            });
-                          }
-                        },
-                      ),
-                    ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: themeProvider.textSecondary,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        final semesterName = '$selectedSeason $selectedYear';
-                        context.read<CourseProvider>().addSemester(
-                          context.read<StudentProvider>().student!.id,
-                          semesterName,
-                        );
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
-                        'Add',
-                        style: TextStyle(
-                          color: themeProvider.secondaryColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                ),
+              ],
             );
           },
-        );
+        );});
       },
     );
   }

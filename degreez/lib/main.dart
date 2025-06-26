@@ -1,11 +1,11 @@
 // lib/main.dart - Updated to include CalendarControllerProvider
 import 'package:degreez/pages/navigator_page.dart';
+import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:calendar_view/calendar_view.dart';
-
 
 import 'services/firebase_options.dart';
 
@@ -26,7 +26,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,DeviceOrientation.portraitDown
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
   ]);
   // Initialize Firebase
   try {
@@ -41,7 +42,6 @@ Future<void> main() async {
   // final model =
   //     FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
-
   runApp(const MyApp());
 }
 
@@ -53,7 +53,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(      providers: [
         // Authentication
         ChangeNotifierProvider(create: (_) => LogInNotifier()),
-        
+
         // New improved providers
         ChangeNotifierProvider(create: (_) => StudentProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),
@@ -64,10 +64,13 @@ class MyApp extends StatelessWidget {
             return provider;
           },
         ),
-        
+
         // UI providers
         ChangeNotifierProvider(create: (_) => CustomizedDiagramNotifier()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()), // Unified theme provider
+
+        // Sign Up Values provider
+        ChangeNotifierProvider(create: (_) => SignUpProvider()),
       ],      child: CalendarControllerProvider(
         controller: EventController(),
         child: Consumer<ThemeProvider>(

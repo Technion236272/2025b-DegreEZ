@@ -26,7 +26,7 @@ showCreditsPage(context){
     applicationIcon:SizedBox(
                             width: 250,
                             height: 250,
-                            child: Image.asset('assets/Logo_DarkMode2.png'),
+                            child: Image.asset('assets/Logo_DarkMode3.png'),
                           ),
     applicationName: 'DegreEZ',
     applicationVersion: '1.0.0',

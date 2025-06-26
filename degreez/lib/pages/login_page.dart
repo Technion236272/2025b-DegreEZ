@@ -122,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
                             height: 350,
                             child: Image.asset(
                               themeProvider.isDarkMode 
-                                ? 'assets/Logo_DarkMode2.png'
+                                ? 'assets/Logo_DarkMode3.png'
                                 : 'assets/Logo.png', // Use light mode logo if available
                             ),
                           ),

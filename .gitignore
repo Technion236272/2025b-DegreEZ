@@ -4,3 +4,6 @@ degreez/.env
 degreez/android/Release_Key/encryption_public_key.pem
 degreez/android/Release_Key/upload_certificate.pem
 degreez/android/Release_Key/pepk.jar
+pdfExtractor/.env
+pdfExtractor/bin/.env
+pdfExtractor/src/.env
