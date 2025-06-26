@@ -1,5 +1,6 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,8 +30,8 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SignUpProvider>(
-      builder: (context, signUpProvider, _) {
+    return Consumer2<SignUpProvider,ThemeProvider>(
+      builder: (context, signUpProvider,themeProvider, _) {
         selectedYear = signUpProvider.selectedSemesterYear;
         final selectedSeason = signUpProvider.selectedSemesterSeason;
 
@@ -47,49 +48,51 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
         });
 
         return DropdownButtonFormField<String>(
-          iconEnabledColor: AppColorsDarkMode.secondaryColor,
+          iconEnabledColor: themeProvider.secondaryColor,
           value: yearValues.contains(selectedYear) ? selectedYear : null,
-          style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
+          style: TextStyle(color: themeProvider.secondaryColor),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: themeProvider.surfaceColor,
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColorsDarkMode.secondaryColor,
+                color: themeProvider.borderPrimary,
                 width: 2.0,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColorsDarkMode.secondaryColorDimDD,
+                color: themeProvider.secondaryColor.withAlpha(200),
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: AppColorsDarkMode.errorColor,
+                color: themeProvider.errorColor,
                 width: 2.0,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+              borderSide: BorderSide(color: themeProvider.errorColor.withAlpha(170)),
             ),
             alignLabelWithHint: true,
             labelText: "Enrollment Year",
             labelStyle: TextStyle(
-              color: AppColorsDarkMode.secondaryColor,
+              color: themeProvider.secondaryColor,
               fontSize: 15,
             ),
-            hoverColor: AppColorsDarkMode.secondaryColor,
+            hoverColor: themeProvider.secondaryColor,
             hintText: "Year",
             hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
           ),
-          dropdownColor: AppColorsDarkMode.surfaceColor,
+          dropdownColor: themeProvider.surfaceColor,
           items:
               yearValues.map((yearLabel) {
                 return DropdownMenuItem<String>(
                   value: yearLabel,
                   child: Text(
                     yearLabel,
-                    style: const TextStyle(
-                      color: AppColorsDarkMode.secondaryColor,
+                    style: TextStyle(
+                      color: themeProvider.secondaryColor,
                     ),
                   ),
                 );

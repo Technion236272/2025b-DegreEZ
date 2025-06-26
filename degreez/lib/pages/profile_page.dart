@@ -1,5 +1,4 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:degreez/pages/signup_page.dart';
 import 'package:degreez/providers/bug_report_notifier.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/feedback_notifier.dart';
@@ -116,15 +115,12 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (context) {
         final themeProvider = Provider.of<ThemeProvider>(context);
+
         return AlertDialog(
           backgroundColor: themeProvider.surfaceColor,
           title: Text(
             'Edit Profile',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: themeProvider.textPrimary,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: themeProvider.textPrimary,),
           ),
           content: Form(
             key: formKey,
@@ -138,6 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     example: 'e.g. Steve Harvey',
                     validatorRegex: nameValidator,
                     errorMessage: "Really? an empty name ...",
+                    context: context,
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 10, bottom: 10),
@@ -173,64 +170,18 @@ class _ProfilePageState extends State<ProfilePage> {
                         "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
                     validatorRegex: preferencesValidator,
                     lineNum: 3,
+                    context: context,
                   ),
                 ],
               ),
             ),
           ),
           actions: [
-                      key: formKey,
-                      child:SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [                textFormFieldWithStyle(
-                            label: 'Name',
-                            controller: nameController,
-                            example: 'e.g. Steve Harvey',
-                            validatorRegex: nameValidator,
-                            errorMessage: "Really? an empty name ...",
-                            context: context,
-                          ),                textFormFieldWithStyle(
-                            label: 'Major',
-                            controller: majorController,
-                            example: 'e.g. Data Analysis',
-                            validatorRegex: majorValidator,
-                            errorMessage:
-                                "Invalid Input! remember to write the major in English",
-                            context: context,
-                          ),                          textFormFieldWithStyle(
-                            label: 'Faculty',
-                            controller: facultyController,
-                            example: 'e.g. Computer Science',
-                            validatorRegex: facultyValidator,
-                            errorMessage:
-                                "Invalid Input! remember to write the faculty in English",
-                            context: context,
-                          ),                          textFormFieldWithStyle(
-                            label: 'Semester',
-                            controller: semesterController,
-                            example: 'e.g. Winter 2024-25 or Summer 2021',
-                            validatorRegex: semesterValidator,
-                            errorMessage:
-                                "should match this template 'Winter 2024-25'",
-                            context: context,
-                          ),                          textFormFieldWithStyle(
-                            label: 'Preferences',
-                            controller: preferencesController,
-                            example:
-                                "e.g. I like mathematics and coding related topics and I hate history lessons since I thinks they're boring",
-                            validatorRegex: preferencesValidator,
-                            lineNum: 3,
-                            context: context,
-                          ),
-              ],
-            ),),
-          ),          actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: Provider.of<ThemeProvider>(context).textSecondary),
+                style: TextStyle(color: Provider.of<ThemeProvider>(context).textSecondary.withAlpha(200)),
               ),
             ),
             TextButton(
@@ -252,17 +203,20 @@ class _ProfilePageState extends State<ProfilePage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Profile updated successfully'),
-                    backgroundColor: Provider.of<ThemeProvider>(context).isDarkMode 
+                    backgroundColor:  Provider.of<ThemeProvider>(context).isDarkMode 
                         ? AppColorsDarkMode.successColor 
                         : AppColorsLightMode.successColor,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
               },
-              child: Text('Save Changes',style: TextStyle(
-                    color: Provider.of<ThemeProvider>(context).secondaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),),
+              child: Text(
+                'Save Changes',
+                style: TextStyle(
+                  color: Provider.of<ThemeProvider>(context).secondaryColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ],
         );
@@ -273,22 +227,29 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-  providers: [
-    ChangeNotifierProvider(create: (_) => BugReportNotifier()),
-    ChangeNotifierProvider(create: (_) => FeedbackNotifier()),
-    // You can add more here if needed
-  ],
- builder: (context, child) { 
-    return Consumer3<StudentProvider, CourseProvider,LogInNotifier>(
-      builder: (context, studentNotifier, courseNotifier,logInNotifier, _) {
-        final student = studentNotifier.student;
-        if (student == null) {          return Center(
-            child: Text(
-              'No student profile found',
-              style: TextStyle(color: Provider.of<ThemeProvider>(context).textSecondary),
-            ),
-          );
-        }
+      providers: [
+        ChangeNotifierProvider(create: (_) => BugReportNotifier()),
+        ChangeNotifierProvider(create: (_) => FeedbackNotifier()),
+        // You can add more here if needed
+      ],
+      builder: (context, child) {
+        return Consumer3<StudentProvider, CourseProvider, LogInNotifier>(
+          builder: (
+            context,
+            studentNotifier,
+            courseNotifier,
+            logInNotifier,
+            _,
+          ) {
+            final student = studentNotifier.student;
+            if (student == null) {
+              return Center(
+                child: Text(
+                  'No student profile found',
+                  style: TextStyle(color: Provider.of<ThemeProvider>(context).textSecondary.withAlpha(200)),
+                ),
+              );
+            }
 
             final totalCredits = courseNotifier.coursesBySemester.keys
                 .map(
@@ -358,7 +319,13 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-  Widget _buildProfileHeader(BuildContext context, student, StudentProvider notifier,user) {
+
+  Widget _buildProfileHeader(
+    BuildContext context,
+    student,
+    StudentProvider notifier,
+    user,
+  ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(20),
@@ -368,7 +335,8 @@ class _ProfilePageState extends State<ProfilePage> {
             themeProvider.mainColor,
             themeProvider.accentColor,
           ],
-          begin: Alignment.topLeft,          end: Alignment.bottomRight,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -382,41 +350,43 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Row(
         children: [
           // Profile Avatar
-          user?.photoURL != null 
-          ?Container(
-  decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    border: Border.all(
-      color: themeProvider.borderPrimary, // Border color
-      width: 1.0,         // Border width
-    ),
-  ),
-  child: CircleAvatar(
-            radius: 39,
-                backgroundImage: NetworkImage(user!.photoURL!)
-              ),)          :Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  themeProvider.secondaryColor,
-                  themeProvider.borderPrimary,
-                ],
+          user?.photoURL != null
+              ? Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: themeProvider.borderPrimary, // Border color
+                    width: 1.0, // Border width
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 39,
+                  backgroundImage: NetworkImage(user!.photoURL!),
+                ),
+              )
+              : Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      themeProvider.secondaryColor,
+                      themeProvider.borderPrimary,
+                    ],
+                  ),
+                  border: Border.all(
+                    color: themeProvider.secondaryColor,
+                    width: 3,
+                  ),
+                ),
+                child: Icon(
+                  Icons.person,
+                  size: 40,
+                  color: themeProvider.accentColor,
+                ),
               ),
-              border: Border.all(
-                color: themeProvider.secondaryColor,
-                width: 3,
-              ),
-            ),
-            child: Icon(
-              Icons.person,
-              size: 40,
-              color: themeProvider.accentColor,
-            ),
-          ),
-          
+
           const SizedBox(width: 16),
 
           // Profile Info
@@ -441,7 +411,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   '${student.faculty}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: themeProvider.textSecondary,
+                    color: themeProvider.secondaryColor.withAlpha(200),
                   ),
                   maxFontSize: 14,
                   minFontSize: 9,
@@ -452,7 +422,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   '${student.major}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: themeProvider.textSecondary,
+                    color: AppColorsDarkMode.secondaryColor.withAlpha(200),
                   ),
                   maxFontSize: 14,
                   minFontSize: 9,
@@ -477,7 +447,13 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  Widget _buildAcademicProgress(BuildContext context, double gpa, double completionPercentage, Map<String, int> stats) {
+
+  Widget _buildAcademicProgress(
+    BuildContext context,
+    double gpa,
+    double completionPercentage,
+    Map<String, int> stats,
+  ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(20),
@@ -489,9 +465,10 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-        ),        borderRadius: BorderRadius.circular(16),
+        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
+                   BoxShadow(
             color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
             blurRadius: 8,
             offset: Offset(0, 4),
@@ -517,11 +494,12 @@ class _ProfilePageState extends State<ProfilePage> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [                    Text(
+                  children: [
+                    Text(
                       'Current GPA',
                       style: TextStyle(
                         fontSize: 14,
-                        color: themeProvider.textSecondary,
+                        color: themeProvider.secondaryColor.withAlpha(200),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -542,29 +520,30 @@ class _ProfilePageState extends State<ProfilePage> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [                    Text(
+                  children: [
+                    Text(
                       'Completion',
                       style: TextStyle(
                         fontSize: 14,
-                        color: themeProvider.textSecondary,
+                        color: AppColorsDarkMode.secondaryColorDim,
                       ),
                     ),
-                    const SizedBox(height: 8),                    LinearProgressIndicator(
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
                       value: completionPercentage,
-                      backgroundColor: themeProvider.surfaceColor,
-                      valueColor: AlwaysStoppedAnimation(themeProvider.isDarkMode 
-                          ? AppColorsDarkMode.successColor 
-                          : AppColorsLightMode.successColor),
+                      backgroundColor: AppColorsDarkMode.mainColor,
+                      valueColor: AlwaysStoppedAnimation(AppColorsDarkMode.successColor),
                       minHeight: 8,
                     ),
-                    const SizedBox(height: 4),                      Text(
-                        '${(completionPercentage * 100).toInt()}%',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: themeProvider.secondaryColor,
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(completionPercentage * 100).toInt()}%',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColorsDarkMode.secondaryColor,
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -599,6 +578,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   Widget _buildStatusChip(String label, int value, Color color) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
@@ -623,7 +603,13 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  Widget _buildEnhancedStatistics(BuildContext context, CourseProvider courseNotifier, double totalCredits, Map<String, int> stats) {
+
+  Widget _buildEnhancedStatistics(
+    BuildContext context,
+    CourseProvider courseNotifier,
+    double totalCredits,
+    Map<String, int> stats,
+  ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(20),
@@ -684,7 +670,13 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-  Widget _buildEnhancedStatCard(IconData icon, String label, String value, Color color) {
+
+  Widget _buildEnhancedStatCard(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -717,6 +709,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   Widget _buildAcademicDetails(BuildContext context, student) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
@@ -760,6 +753,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   Widget _buildDetailRow(String label, String value) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Padding(
@@ -773,22 +767,21 @@ class _ProfilePageState extends State<ProfilePage> {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: themeProvider.textSecondary,
+                color: themeProvider.secondaryColor.withAlpha(200),
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                color: themeProvider.secondaryColor,
-              ),
+              style: TextStyle(color: themeProvider.secondaryColor),
             ),
           ),
         ],
       ),
     );
   }
+
   Widget _buildActionsSection(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
@@ -1112,13 +1105,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Color _getGPAColor(double gpa) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     if (gpa >= 90) return const Color.fromARGB(255, 49, 200, 57);
-    if (gpa >= 80) return themeProvider.isDarkMode 
+    if (gpa >= 80) {return themeProvider.isDarkMode 
         ? AppColorsDarkMode.successColor 
-        : AppColorsLightMode.successColor;
+        : AppColorsLightMode.successColor;}
     if (gpa >= 70) return themeProvider.primaryColor;
-    if (gpa >= 60) return themeProvider.isDarkMode 
+    if (gpa >= 60) {return themeProvider.isDarkMode 
         ? AppColorsDarkMode.warningColor 
-        : AppColorsLightMode.warningColor;
+        : AppColorsLightMode.warningColor;}
     return themeProvider.isDarkMode 
         ? AppColorsDarkMode.errorColor 
         : AppColorsLightMode.errorColor;

@@ -1,5 +1,6 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,49 +17,52 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SignUpProvider>(
-      builder: (context, signUpProvider, _) {
+    return Consumer2<SignUpProvider,ThemeProvider>(
+      builder: (context, signUpProvider,themeProvider, _) {
         selectedSemesterSeason = signUpProvider.selectedSemesterSeason;
         return DropdownButtonFormField<String>(
-          iconEnabledColor: AppColorsDarkMode.secondaryColor,
+          iconEnabledColor: themeProvider.secondaryColor,
           value: ['Winter', 'Spring', 'Summer'].contains(selectedSemesterSeason) ? selectedSemesterSeason : null,
-          style: const TextStyle(
-            color: AppColorsDarkMode.secondaryColor,
+          style: TextStyle(
+            color: themeProvider.secondaryColor,
           ),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: themeProvider.surfaceColor,
+            labelText: "Enrollment Semester",
+            labelStyle: TextStyle(color: themeProvider.textSecondary,fontSize: 15),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: AppColorsDarkMode.secondaryColor,
+            color: themeProvider.borderPrimary,
             width: 2.0,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+          borderSide: BorderSide(color: themeProvider.secondaryColor.withAlpha(200),),
+          
         ),
         errorBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: AppColorsDarkMode.errorColor,
+            color: themeProvider.errorColor,
             width: 2.0,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+          borderSide: BorderSide(color: themeProvider.errorColor.withAlpha(170)),
         ),
         alignLabelWithHint: true,
-        labelText: "Enrollment Semester",
-        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor,fontSize: 15),
-        hoverColor: AppColorsDarkMode.secondaryColor,
+        hoverColor: themeProvider.secondaryColor,
         hintText: "Season",
-        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-      ),
-          dropdownColor: AppColorsDarkMode.surfaceColor,
+        hintStyle: TextStyle(color: themeProvider.secondaryColor.withAlpha(200),
+      ),),
+          dropdownColor: themeProvider.surfaceColor,
           items: ['Winter', 'Spring', 'Summer'].map((season) {
             return DropdownMenuItem<String>(
               value: season,
               child: Text(
                 season,
-                style: const TextStyle(
-                  color: AppColorsDarkMode.secondaryColor,
+                style: TextStyle(
+                  color: themeProvider.secondaryColor,
                 ),
               ),
             );
