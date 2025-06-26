@@ -220,11 +220,11 @@ class _SignUpPageState extends State<SignUpPage> {
                               final student = StudentModel(
                                 id: user.uid,
                                 name: _nameController.text.trim(),
-                                major: signUpProvider.selectedMajor!,
-                                faculty: signUpProvider.selectedFaculty!,
+                                major: signUpProvider.selectedMajor ?? '',
+                                faculty: signUpProvider.selectedFaculty ?? '',
                                 preferences: _preferencesController.text.trim(),
-                                semester: signUpProvider.selectedSemester!,
-                                catalog: signUpProvider.selectedCatalog!,
+                                semester: signUpProvider.selectedSemester ?? '',
+                                catalog: signUpProvider.selectedCatalog ?? '',
                               );
 
                               // Create student using StudentProvider

@@ -193,17 +193,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 var preference = preferencesController.text;
                 notifier.updateStudentProfile(
                   name: name,
-                  major: context.read<SignUpProvider>().selectedMajor!,
+                  major: context.read<SignUpProvider>().selectedMajor ?? '',
                   preferences: preference,
-                  faculty: context.read<SignUpProvider>().selectedFaculty!,
-                  catalog: context.read<SignUpProvider>().selectedCatalog!,
-                  semester: context.read<SignUpProvider>().selectedSemester!,
+                  faculty: context.read<SignUpProvider>().selectedFaculty ?? '',
+                  catalog: context.read<SignUpProvider>().selectedCatalog ?? '',
+                  semester: context.read<SignUpProvider>().selectedSemester ?? '',
                 );
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Profile updated successfully'),
-                    backgroundColor:  Provider.of<ThemeProvider>(context).isDarkMode 
+                    backgroundColor:  themeProvider.isDarkMode 
                         ? AppColorsDarkMode.successColor 
                         : AppColorsLightMode.successColor,
                     behavior: SnackBarBehavior.floating,
@@ -422,7 +422,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   '${student.major}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColorsDarkMode.secondaryColor.withAlpha(200),
+                    color: themeProvider.secondaryColor.withAlpha(200),
                   ),
                   maxFontSize: 14,
                   minFontSize: 9,
