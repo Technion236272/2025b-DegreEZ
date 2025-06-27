@@ -198,14 +198,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         if (exams.containsKey('בוחן מועד א') &&
             exams['בוחן מועד א']!.isNotEmpty) {
           examList.add(
-            createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm'),
+            createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm A'),
           );
         }
 
         if (exams.containsKey('בוחן מועד ב') &&
             exams['בוחן מועד ב']!.isNotEmpty) {
           examList.add(
-            createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm'),
+            createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm B'),
           );
         }
       }
