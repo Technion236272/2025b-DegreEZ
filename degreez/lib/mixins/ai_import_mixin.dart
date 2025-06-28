@@ -7,37 +7,36 @@ import '../widgets/ai_import_dialogs.dart';
 /// Mixin to provide AI import functionality to any StatefulWidget
 /// This separates the AI import logic from the main page logic
 mixin AiImportMixin<T extends StatefulWidget> on State<T> {
-  
   /// Shows the AI import dialog and handles the complete import process
   void showAiImportDialog() {
-    AiImportDialogs.showAiImportDialog(
-      context,
-      onStartImport: startAiImport,
-    );
+    AiImportDialogs.showAiImportDialog(context, onStartImport: startAiImport);
   }
 
   /// Starts the AI import process
   void startAiImport() async {
     try {
-      showSnackBar('Starting AI grade sheet import...', isLoading: true);
-      
+      // Show visual loading dialog
+      AiImportDialogs.showAnalysisDialog(context);
       // Process the import using the service
       final summary = await AiImportService.processAiImport(context);
       
+      // Close the loading dialog
+      if (mounted) Navigator.of(context).pop();
+
       if (summary.totalCourses == 0) {
         // User cancelled or no courses found
         showSnackBar('Import cancelled by user.');
         return;
       }
-      
+
       if (summary.totalSuccess > 0) {
         showSnackBar(
           'Successfully processed ${summary.totalSuccess} courses!',
           isSuccess: true,
         );
-          // Trigger UI update if callback is provided
+        // Trigger UI update if callback is provided
         onImportCompleted();
-        
+
         // Show results dialog
         if (mounted) {
           AiImportDialogs.showResultsDialog(
@@ -55,7 +54,7 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
         }
       } else {
         showSnackBar('No courses were successfully processed.', isError: true);
-        
+
         // Still show results dialog for failed imports
         if (mounted) {
           AiImportDialogs.showResultsDialog(
@@ -72,7 +71,6 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
           );
         }
       }
-      
     } catch (e) {
       showSnackBar('Error during AI import: ${e.toString()}', isError: true);
     }
@@ -123,12 +121,7 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
               Icon(icon, color: textColor, size: 20),
               const SizedBox(width: 8),
             ],
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: textColor),
-              ),
-            ),
+            Expanded(child: Text(message, style: TextStyle(color: textColor))),
           ],
         ),
         backgroundColor: backgroundColor,
