@@ -2,6 +2,7 @@ import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,14 +23,13 @@ Future<bool> notePopup(
     builder: (_) {
       //controller.text = startNote ?? '';
       return SimpleDialog(
-        backgroundColor: AppColorsDarkMode.secondaryColor,
+        backgroundColor: context.read<ThemeProvider>().accentColor,
         children: [
           Padding(
             padding: EdgeInsets.all(10),
             child: Center(
               child: Text(
                 "Note",
-                style: TextStyle(color: AppColorsDarkMode.accentColor),
               ),
             ),
           ),
@@ -39,15 +39,15 @@ Future<bool> notePopup(
               painter: LinePainter(lineHeight: 30, distanceToBaseline: 10),
               child: TextField(
                 controller: controller,
-                cursorColor: AppColorsDarkMode.accentColor,
+                cursorColor: context.read<ThemeProvider>().textPrimary,
                 decoration: InputDecoration(
-                  hoverColor: AppColorsDarkMode.accentColor,
+                  hoverColor: context.read<ThemeProvider>().textPrimary,
                   border: InputBorder.none,
                   hintText: 'type here to add a note ...',
-                  hintStyle: TextStyle(color: AppColorsDarkMode.accentColorDim),
+                  hintStyle: TextStyle(color: context.read<ThemeProvider>().textPrimary.withAlpha(200)),
                 ),
                 style: TextStyle(
-                  color: AppColorsDarkMode.accentColor,
+                  color: context.read<ThemeProvider>().textPrimary,
                   fontSize: 18,
                 ),
                 maxLines: 10,
@@ -63,13 +63,13 @@ Future<bool> notePopup(
                   onPressed: () => Navigator.pop(context, false),
                   child: Text(
                     "Cancel",
-                    style: TextStyle(color: AppColorsDarkMode.accentColor),
+                    style: TextStyle(color: context.read<ThemeProvider>().primaryColor),
                   ),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColorsDarkMode.accentColor,
+                    backgroundColor: context.read<ThemeProvider>().primaryColor,
                   ),
                   onPressed: () async {
                     final studentProvider = Provider.of<StudentProvider>(
@@ -94,7 +94,7 @@ Future<bool> notePopup(
                   },
                   child: Text(
                     "Save",
-                    style: TextStyle(color: AppColorsDarkMode.secondaryColor),
+                    style: TextStyle(color: context.read<ThemeProvider>().mainColor),
                   ),
                 ),
               ],

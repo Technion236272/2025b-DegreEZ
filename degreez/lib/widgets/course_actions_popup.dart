@@ -144,7 +144,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                   children: [
                     // Save Grade Button
                     SizedBox(
-                      width: double.infinity,                      child: ElevatedButton.icon(
+                      width: double.infinity,                      
+                      child: ElevatedButton.icon(
                         onPressed: _saveGrade,
                         icon: Icon(
                           Icons.save,
@@ -301,15 +302,15 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: themeProvider.mainColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: themeProvider.isDarkMode 
-              ? AppColorsDarkMode.errorColor 
-              : AppColorsLightMode.errorColor, 
-            width: 2,
-          ),
-        ),
+        // shape: RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.circular(12),
+        //   side: BorderSide(
+        //     color: themeProvider.isDarkMode 
+        //       ? AppColorsDarkMode.errorColor 
+        //       : AppColorsLightMode.errorColor, 
+        //     width: 2,
+        //   ),
+        // ),
         title: Text(
           'Delete Course',
           style: TextStyle(color: themeProvider.textPrimary),
@@ -327,6 +328,10 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
             ),
           ),
           TextButton(
+            style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
             onPressed: () async {
               Navigator.of(ctx).pop(); // Close confirmation dialog
               await _deleteCourse();
@@ -334,9 +339,6 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
             child: Text(
               'Delete',
               style: TextStyle(
-                color: themeProvider.isDarkMode 
-                  ? AppColorsDarkMode.errorColor 
-                  : AppColorsLightMode.errorColor,
                 fontWeight: FontWeight.bold,
               ),
             ),

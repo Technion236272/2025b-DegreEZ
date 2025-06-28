@@ -123,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: Image.asset(
                               themeProvider.isDarkMode 
                                 ? 'assets/Logo_DarkMode3.png'
-                                : 'assets/Logo.png', // Use light mode logo if available
+                                : 'assets/Logo3.png', // Use light mode logo if available
                             ),
                           ),
                           const SizedBox(height: 16),

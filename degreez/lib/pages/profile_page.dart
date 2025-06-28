@@ -181,10 +181,18 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: Provider.of<ThemeProvider>(context).textSecondary.withAlpha(200)),
+                style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),
               ),
             ),
             TextButton(
+              style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+      }
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+    }),
+                  ),
               onPressed: () {
                 if (formKey.currentState?.validate() != true) {
                   return;
@@ -213,7 +221,6 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Text(
                 'Save Changes',
                 style: TextStyle(
-                  color: Provider.of<ThemeProvider>(context).secondaryColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -246,7 +253,6 @@ class _ProfilePageState extends State<ProfilePage> {
               return Center(
                 child: Text(
                   'No student profile found',
-                  style: TextStyle(color: Provider.of<ThemeProvider>(context).textSecondary.withAlpha(200)),
                 ),
               );
             }
@@ -308,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   // Actions Section
                   _buildActionsSection(context),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 80),
 
                   DeleteUserButton(),
                 ],
@@ -332,8 +338,8 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            themeProvider.mainColor,
-            themeProvider.accentColor,
+            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
+            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -342,8 +348,8 @@ class _ProfilePageState extends State<ProfilePage> {
         boxShadow: [
           BoxShadow(
             color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -399,7 +405,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: themeProvider.secondaryColor,
                   ),
                   maxFontSize: 24,
                   minFontSize: 15,
@@ -411,7 +416,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   '${student.faculty}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: themeProvider.secondaryColor.withAlpha(200),
                   ),
                   maxFontSize: 14,
                   minFontSize: 9,
@@ -422,7 +426,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   '${student.major}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: themeProvider.secondaryColor.withAlpha(200),
                   ),
                   maxFontSize: 14,
                   minFontSize: 9,
@@ -435,9 +438,9 @@ class _ProfilePageState extends State<ProfilePage> {
           // Edit Button
           IconButton(
             onPressed: () => _showEditProfileDialog(context, notifier),
-            icon: Icon(Icons.edit, color: themeProvider.accentColor),
+            icon: Icon(Icons.edit, color: themeProvider.mainColor),
             style: IconButton.styleFrom(
-              backgroundColor: themeProvider.secondaryColor,
+              backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -460,8 +463,8 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            themeProvider.mainColor,
-            themeProvider.accentColor,
+            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
+            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -470,8 +473,8 @@ class _ProfilePageState extends State<ProfilePage> {
         boxShadow: [
                    BoxShadow(
             color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -483,7 +486,6 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: themeProvider.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -499,7 +501,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       'Current GPA',
                       style: TextStyle(
                         fontSize: 14,
-                        color: themeProvider.secondaryColor.withAlpha(200),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -616,8 +617,8 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            themeProvider.mainColor,
-            themeProvider.accentColor,
+            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
+            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -626,8 +627,8 @@ class _ProfilePageState extends State<ProfilePage> {
         boxShadow: [
           BoxShadow(
             color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -639,7 +640,6 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: themeProvider.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -701,7 +701,6 @@ class _ProfilePageState extends State<ProfilePage> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: themeProvider.secondaryColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -717,8 +716,8 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            themeProvider.mainColor,
-            themeProvider.accentColor,
+            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
+            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -727,8 +726,8 @@ class _ProfilePageState extends State<ProfilePage> {
         boxShadow: [
           BoxShadow(
             color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -740,7 +739,6 @@ class _ProfilePageState extends State<ProfilePage> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: themeProvider.secondaryColor,
             ),
           ),
           const SizedBox(height: 16),
@@ -767,14 +765,12 @@ class _ProfilePageState extends State<ProfilePage> {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: themeProvider.secondaryColor.withAlpha(200),
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(color: themeProvider.secondaryColor),
             ),
           ),
         ],
@@ -789,9 +785,9 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(            gradient: LinearGradient(
               colors: [
-                themeProvider.mainColor,
-                themeProvider.accentColor,
-              ],
+            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
+            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
+          ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -859,7 +855,7 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Icon(
                 themeProvider.currentThemeIcon,
-                color: themeProvider.primaryColor,
+                color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -930,7 +926,7 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Icon(
                 themeProvider.currentColorThemeIcon,
-                color: themeProvider.primaryColor,
+                color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -997,8 +993,8 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? themeProvider.primaryColor
-              : themeProvider.cardColor,
+              ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
+              : themeProvider.isLightMode ? themeProvider.cardColor : themeProvider.mainColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
@@ -1013,7 +1009,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Icon(
               icon,
               color: isSelected
-                  ? Colors.white
+                  ? themeProvider.mainColor
                   : themeProvider.textSecondary,
               size: 20,
             ),
@@ -1023,7 +1019,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(
                 fontSize: 12,
                 color: isSelected
-                    ? Colors.white
+                    ? themeProvider.mainColor
                     : themeProvider.textSecondary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -1049,7 +1045,7 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? themeProvider.primaryColor
+              ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
               : themeProvider.cardColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
@@ -1065,7 +1061,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Icon(
               icon,
               color: isSelected
-                  ? Colors.white
+                  ? themeProvider.mainColor
                   : themeProvider.textSecondary,
               size: 18,
             ),
@@ -1075,7 +1071,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(
                 fontSize: 14,
                 color: isSelected
-                    ? Colors.white
+                    ? themeProvider.mainColor
                     : themeProvider.textSecondary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),

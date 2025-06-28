@@ -268,8 +268,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                     child: ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      itemCount: semesters.length,
+                      itemCount: semesters.length + 1,
                       itemBuilder: (context, index) {
+                        if (index == semesters.length) {
+                          // This is the extra bottom space
+                          return const SizedBox(height: 100); // Adjust height as needed
+                        }
                         final semesterKey = semesters.keys.elementAt(index);
                         final semester = {
                           'semester': index + 1,
@@ -317,19 +321,18 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, _) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(
-                side: BorderSide(
-                  color: themeProvider.secondaryColor,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
+              // shape: RoundedRectangleBorder(
+              //   side: BorderSide(
+              //     color: themeProvider.secondaryColor,
+              //     width: 2,
+              //   ),
+              //   borderRadius: BorderRadius.circular(16),
+              // ),
               backgroundColor: themeProvider.mainColor, // Changed to night black
               title: Text(
                 'Add New Semester',
                 style: TextStyle(
-                  color: themeProvider.secondaryColor,
-                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textPrimary,
                 ),
               ),
               content: Column(
@@ -351,6 +354,14 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   ),
                 ),
                 TextButton(
+                  style:ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+      }
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+    }),
+                  ),
                   onPressed: () {
                     final signUpProvider = context.read<SignUpProvider>();
                     final selectedSeason = signUpProvider.selectedSemesterSeason;
@@ -365,7 +376,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   child: Text(
                     'Add',
                     style: TextStyle(
-                      color: themeProvider.secondaryColor,
+                      color: themeProvider.primaryColor,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -407,10 +418,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 ),            borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: themeProvider.isDarkMode ? AppColorsDarkMode.shadowColorStrong : AppColorsLightMode.shadowColor,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
+            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
                 ],
               ),
               child: Row(
@@ -424,7 +435,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: themeProvider.secondaryColor,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -442,7 +452,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: themeProvider.isDarkMode ? AppColorsDarkMode.accentColor : AppColorsLightMode.mainColor,
+                              color: themeProvider.isDarkMode ? AppColorsDarkMode.mainColor : AppColorsLightMode.mainColor,
                             ),
                           ),
                         ),
@@ -455,7 +465,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                       IconButton(
                         icon: Icon(
                           Icons.add,
-                          color: themeProvider.secondaryColor,
+                          color: themeProvider.textPrimary,
                         ),
                         tooltip: 'Add Course',
                         onPressed: () {
@@ -469,7 +479,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                       IconButton(
                         icon: Icon(
                           Icons.delete,
-                          color: themeProvider.secondaryColor,
+                          color: themeProvider.textPrimary,
                         ),
                         tooltip: 'Delete Semester',
                         onPressed: () {
@@ -560,30 +570,38 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
       context: context,
       builder:
           (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: themeProvider.textSecondary,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(16),            ),
+            // shape: RoundedRectangleBorder(
+            //   side: BorderSide(
+            //     color: themeProvider.textSecondary,
+            //     width: 2,
+            //   ),
+            //   borderRadius: BorderRadius.circular(16),            ),
             backgroundColor: themeProvider.mainColor,
             title: Text(
               'Delete Semester',
-              style: TextStyle(color: themeProvider.secondaryColor),
+              style: TextStyle(color: themeProvider.textPrimary),
             ),
             content: Text(
               'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
-              style: TextStyle(color: themeProvider.secondaryColor),
+              style: TextStyle(color: themeProvider.textPrimary),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(
                   'Cancel',
-                  style: TextStyle(color: themeProvider.textSecondary),
+                  style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+      }
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+    }),
+                  ),
                 onPressed: () async {
                   await Provider.of<CourseProvider>(
                     context,
@@ -597,7 +615,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 child: Text(
                   'Delete',
                   style: TextStyle(
-                    color: themeProvider.secondaryColor,
+                    color: themeProvider.primaryColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

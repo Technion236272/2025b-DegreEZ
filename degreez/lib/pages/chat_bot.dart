@@ -325,7 +325,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Close',
-              style: TextStyle(color: themeProvider.primaryColor),
+              style: TextStyle(color: themeProvider.secondaryColor),
             ),
           ),
         ],

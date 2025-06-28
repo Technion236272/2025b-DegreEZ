@@ -1458,7 +1458,7 @@ Future<void> _getUserLocation() async {
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: themeProvider.primaryColor,
-            foregroundColor: themeProvider.surfaceColor,
+            foregroundColor: themeProvider.isLightMode ? themeProvider.surfaceColor : themeProvider.secondaryColor,
             tooltip: 'Center on me',
             elevation: 6,
             child: const Icon(Icons.my_location),

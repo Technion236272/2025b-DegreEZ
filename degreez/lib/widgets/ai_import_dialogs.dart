@@ -96,10 +96,14 @@ class AiImportDialogs {
                 Navigator.of(context).pop();
                 onStartImport();
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: themeProvider.primaryColor,
-                foregroundColor: themeProvider.cardColor,
-              ),
+              style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+      }
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+    }),
+                  ),
               icon: const Icon(Icons.camera_alt, size: 18),
               label: const Text('Start Import'),
             ),

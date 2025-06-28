@@ -24,14 +24,17 @@ Widget textFormFieldWithStyle({
           cursorColor: themeProvider.primaryColor,
           decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: themeProvider.borderPrimary,
-                width: 2.0,
-              ),
-            ),
+          borderSide: BorderSide(
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
+          ),
+        ),
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: themeProvider.primaryColor),
-            ),
+        borderSide: BorderSide(
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
+                        width: 2.0,
+
+          ),          
+        ),
             errorBorder: OutlineInputBorder(
               borderSide: BorderSide(
                 color: themeProvider.isDarkMode 
@@ -49,7 +52,7 @@ Widget textFormFieldWithStyle({
             ),
             alignLabelWithHint: true,
             labelText: label,
-            labelStyle: TextStyle(color: themeProvider.textSecondary),
+            labelStyle: TextStyle(color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,),
             hoverColor: themeProvider.primaryColor,
             hintText: example,
             hintStyle: TextStyle(color: themeProvider.textSecondary.withOpacity(0.7)),

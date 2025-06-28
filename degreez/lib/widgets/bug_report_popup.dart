@@ -23,10 +23,10 @@ class _BugReportButtonState extends State<BugReportButton> {  @override
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.secondaryColor,
+                      backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                       foregroundColor: themeProvider.isDarkMode 
                         ? AppColorsDarkMode.bug 
-                        : Colors.red.shade600,
+                        : AppColorsLightMode.bug,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -37,7 +37,7 @@ class _BugReportButtonState extends State<BugReportButton> {  @override
                     },
                     icon: Icon(Icons.bug_report, color: themeProvider.isDarkMode 
                       ? AppColorsDarkMode.bug 
-                      : Colors.red.shade600),
+                      : AppColorsLightMode.bug),
                     label: Text('Report a Bug'),
                   ),
         );
@@ -66,6 +66,14 @@ Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
                 )),
               ),
               TextButton(
+                style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+      }
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+    }),
+                  ),
                 onPressed: () async {
                   if (titleController.text.trim().isEmpty) {                    ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -104,7 +112,7 @@ Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
                   }
                 },
                 child: Text('Submit', style: TextStyle(
-                  color: themeProvider.secondaryColor,
+                  color: themeProvider.primaryColor,
                   fontWeight: FontWeight.w700,
                 )),
               ),

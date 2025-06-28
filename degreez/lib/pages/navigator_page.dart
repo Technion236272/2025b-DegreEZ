@@ -300,7 +300,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.light 
                       ? AppColorsLightMode.textPrimary 
-                      : AppColorsDarkMode.accentColor,
+                      : AppColorsDarkMode.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -309,7 +309,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 style: TextStyle(
                   color: Theme.of(context).brightness == Brightness.light 
                       ? AppColorsLightMode.textSecondary 
-                      : AppColorsDarkMode.accentColor,
+                      : AppColorsDarkMode.textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -319,7 +319,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                   border: Border.all(
                     color: Theme.of(context).brightness == Brightness.light 
                         ? AppColorsLightMode.primaryColor 
-                        : AppColorsDarkMode.accentColor, // Border color
+                        : AppColorsDarkMode.secondaryColor, // Border color
                     width: 3.0, // Border width
                   ),
                 ),
@@ -335,6 +335,14 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 ),
               ),
               decoration: BoxDecoration(
+                gradient: LinearGradient(
+          colors: [
+            context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColorLight : context.read<ThemeProvider>().mainColor ,
+            context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().accentColorDark ,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
                 color: Theme.of(context).brightness == Brightness.light 
                     ? AppColorsLightMode.drawerHeaderColor 
                     : AppColorsDarkMode.secondaryColor,
@@ -465,8 +473,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         icon,
         color: isSelected 
             ? (Theme.of(context).brightness == Brightness.light 
-                ? AppColorsLightMode.primaryColor 
-                : null) 
+                ? AppColorsLightMode.secondaryColor 
+                : AppColorsDarkMode.secondaryColor) 
             : (Theme.of(context).brightness == Brightness.light 
                 ? AppColorsLightMode.textSecondary 
                 : AppColorsDarkMode.secondaryColorDim),
@@ -477,8 +485,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           color: isSelected 
               ? (Theme.of(context).brightness == Brightness.light 
-                  ? AppColorsLightMode.primaryColor 
-                  : null) 
+                  ? AppColorsLightMode.secondaryColor 
+                  : AppColorsDarkMode.secondaryColor) 
               : (Theme.of(context).brightness == Brightness.light 
                   ? AppColorsLightMode.textSecondary 
                   : AppColorsDarkMode.secondaryColorDim),

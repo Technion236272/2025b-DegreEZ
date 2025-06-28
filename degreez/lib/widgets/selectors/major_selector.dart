@@ -1,6 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
@@ -98,8 +99,8 @@ class _MajorSelectorState extends State<MajorSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SignUpProvider>(
-      builder: (context, signUpProvider, _) {
+    return Consumer2<SignUpProvider, ThemeProvider>(
+      builder: (context, signUpProvider, themeProvider, _) {
         selectedMajor = context.read<SignUpProvider>().selectedMajor;
         final currentFaculty = signUpProvider.selectedFaculty;
         final currentCatalog = signUpProvider.selectedCatalog;
@@ -121,33 +122,40 @@ class _MajorSelectorState extends State<MajorSelector> {
                         !isLoading;
 
         return DropdownButtonFormField<String>(
-          iconEnabledColor: AppColorsDarkMode.secondaryColor,
+          iconEnabledColor: themeProvider.secondaryColor,
           value: _majors.contains(selectedMajor) ? selectedMajor : null,
-          style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-          decoration: InputDecoration(
+          style: TextStyle(color: themeProvider.textPrimary),
+                    decoration: InputDecoration(
+            filled: true,
+            fillColor: themeProvider.surfaceColor,
+        labelText: "Major",
+            labelStyle: TextStyle(
+              color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,
+              fontSize: 15,
+            ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: AppColorsDarkMode.secondaryColor,
-            width: 2.0,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+        borderSide: BorderSide(
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
+            width: 2.0,
+          ),          
         ),
         errorBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: AppColorsDarkMode.errorColor,
+            color: themeProvider.errorColor,
             width: 2.0,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+          borderSide: BorderSide(color: themeProvider.errorColor.withAlpha(170)),
         ),
         alignLabelWithHint: true,
-        labelText: "Major",
-        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
-        hoverColor: AppColorsDarkMode.secondaryColor,
-        hintText: currentCatalog == null 
+        hoverColor: themeProvider.secondaryColor,
+      hintText: currentCatalog == null 
                           ? 'Please select catalog first'
                           : currentFaculty == null 
                               ? 'Please select faculty first'
@@ -155,10 +163,10 @@ class _MajorSelectorState extends State<MajorSelector> {
                                   ? 'Loading...'
                                   : _majors.isEmpty
                                       ? 'No majors available'
-                                      : 'Please Select Your Major',
-        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-      ),
-          dropdownColor: AppColorsDarkMode.surfaceColor,
+                                      : 'Please Select Your Major',        
+      hintStyle: TextStyle(color: themeProvider.secondaryColor.withAlpha(200),
+      ),),
+          dropdownColor: themeProvider.surfaceColor,
           items: _majors.isEmpty
               ? [
                   DropdownMenuItem<String>(
@@ -173,7 +181,7 @@ class _MajorSelectorState extends State<MajorSelector> {
                                   ? 'Loading...'
                                   : 'No majors available',
                       style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColorDim,
+                        color: themeProvider.secondaryColor.withAlpha(200),
                       ),
                     ),
                   ),
@@ -188,8 +196,8 @@ class _MajorSelectorState extends State<MajorSelector> {
                         maxFontSize: 15,
                         minFontSize: 8,
                         maxLines: 1, // Allow text to wrap to 2 lines if needed
-                        style: const TextStyle(
-                          color: AppColorsDarkMode.secondaryColor,
+                        style: TextStyle(
+                        color: themeProvider.textPrimary,
                         ),
                       ),
                     ),

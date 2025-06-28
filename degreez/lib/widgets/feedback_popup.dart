@@ -23,8 +23,8 @@ class _FeedbackButtonState extends State<FeedbackButton> {  @override
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.secondaryColor,
-                      foregroundColor: themeProvider.accentColor,
+                      backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
+                      foregroundColor: themeProvider.mainColor,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -33,7 +33,7 @@ class _FeedbackButtonState extends State<FeedbackButton> {  @override
                     onPressed: () async {
                       await feedbackPopup(context, feedbackNotifier);
                     },
-                    icon: Icon(Icons.feedback_rounded, color: themeProvider.accentColor),
+                    icon: Icon(Icons.feedback_rounded),
                     label: Text('Share Your Feedback'),
                   ),
         );
@@ -62,6 +62,14 @@ Future<void> feedbackPopup(BuildContext context, FeedbackNotifier notifier) {
                 )),
               ),
               TextButton(
+                style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+      }
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+    }),
+                  ),
                 onPressed: () async {
                   if (titleController.text.trim().isEmpty) {                    ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -100,7 +108,7 @@ Future<void> feedbackPopup(BuildContext context, FeedbackNotifier notifier) {
                   }
                 },
                 child: Text('Submit', style: TextStyle(
-                  color: themeProvider.secondaryColor,
+                  color: themeProvider.primaryColor,
                   fontWeight: FontWeight.w700,
                 )),
               ),
