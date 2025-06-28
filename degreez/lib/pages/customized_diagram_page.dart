@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/add_course_dialog.dart';
-import '../services/GlobalConfigService.dart';
 import '../mixins/ai_import_mixin.dart';
 
 class CustomizedDiagramPage extends StatefulWidget {
@@ -306,8 +305,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
               onPressed: () {
                 _showAddSemesterDialog(context);
               },
-              child: const Icon(Icons.add),
               tooltip: 'Add Semester',
+              child: const Icon(Icons.add),
             ),
           );
         },

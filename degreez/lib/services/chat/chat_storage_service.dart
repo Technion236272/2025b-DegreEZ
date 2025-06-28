@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../models/chat/chat_message.dart';
@@ -15,7 +16,7 @@ class ChatStorageService {
       }).toList();
       await prefs.setString(_chatHistoryKey, json.encode(messagesJson));
     } catch (e) {
-      print('Error saving chat history: $e');
+      debugPrint('Error saving chat history: $e');
     }
   }
 
@@ -32,7 +33,7 @@ class ChatStorageService {
         )).toList();
       }
     } catch (e) {
-      print('Error loading chat history: $e');
+      debugPrint('Error loading chat history: $e');
     }
     return [];
   }
@@ -42,7 +43,7 @@ class ChatStorageService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_chatHistoryKey);
     } catch (e) {
-      print('Error clearing chat history: $e');
+      debugPrint('Error clearing chat history: $e');
     }
   }
 }

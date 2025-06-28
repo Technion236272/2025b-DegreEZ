@@ -29,7 +29,7 @@ class ChatMessageBubble extends StatelessWidget {
                     color: themeProvider.surfaceColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.3) : themeProvider.secondaryColor.withOpacity(0.3),
+                      color: themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(76) : themeProvider.secondaryColor.withAlpha(76),
                       width: 1,
                     ),
                   ),
@@ -56,8 +56,8 @@ class ChatMessageBubble extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: themeProvider.isDarkMode 
-                            ? Colors.black.withOpacity(0.2)
-                            : Colors.grey.withOpacity(0.2),
+                            ? Colors.black.withAlpha(51)
+                            : Colors.grey.withAlpha(51),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -90,7 +90,7 @@ class ChatMessageBubble extends StatelessWidget {
                         _formatTime(message.timestamp),
                         style: TextStyle(
                           color: message.isUser 
-                              ? Colors.white.withOpacity(0.8) 
+                              ? Colors.white.withAlpha(204) 
                               : themeProvider.textSecondary,
                           fontSize: 12,
                         ),
@@ -107,7 +107,7 @@ class ChatMessageBubble extends StatelessWidget {
                     color: themeProvider.isLightMode ? themeProvider.secondaryColor : themeProvider.accentColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: themeProvider.isLightMode ? themeProvider.secondaryColor.withOpacity(0.3) : themeProvider.accentColor.withOpacity(0.3),
+                      color: themeProvider.isLightMode ? themeProvider.secondaryColor.withAlpha(76) : themeProvider.accentColor.withAlpha(76),
                       width: 1,
                     ),
                   ),
@@ -134,13 +134,13 @@ class ChatMessageBubble extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: message.isUser 
-            ? Colors.white.withOpacity(0.2)
-            : themeProvider.cardColor.withOpacity(0.7),
+            ? Colors.white.withAlpha(51)
+            : themeProvider.cardColor.withAlpha(178),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: message.isUser 
-              ? Colors.white.withOpacity(0.3)
-              : themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.3) : themeProvider.secondaryColor.withOpacity(0.3),
+              ? Colors.white.withAlpha(76)
+              : themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(76) : themeProvider.secondaryColor.withAlpha(76),
           width: 1,
         ),
       ),
@@ -176,7 +176,7 @@ class ChatMessageBubble extends StatelessWidget {
                   _formatFileSize(attachment.fileSize),
                   style: TextStyle(
                     color: message.isUser 
-                        ? Colors.white.withOpacity(0.8)
+                        ? Colors.white.withAlpha(204)
                         : themeProvider.textSecondary,
                     fontSize: 11,
                   ),

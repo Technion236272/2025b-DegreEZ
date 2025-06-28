@@ -114,115 +114,113 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: themeProvider.cardColor,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: themeProvider.borderPrimary,
-            width: 1,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: themeProvider.cardColor,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: themeProvider.borderPrimary, width: 1),
+            ),
+            title: Text(
+              'Choose an app for navigation',
+              style: TextStyle(color: themeProvider.textPrimary),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (await canLaunchUrl(googleMapsUrl)) {
+                        await launchUrl(
+                          googleMapsUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } else {
+                        _showErrorSnack();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: themeProvider.borderPrimary,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/google_maps_logo.png',
+                            width: 30,
+                            height: 30,
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Google Maps',
+                            style: TextStyle(
+                              color: themeProvider.textPrimary,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (await canLaunchUrl(wazeUrl)) {
+                        await launchUrl(
+                          wazeUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } else {
+                        _showErrorSnack();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: themeProvider.borderPrimary,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/waze_logo.png',
+                            width: 30,
+                            height: 30,
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            'Waze',
+                            style: TextStyle(
+                              color: themeProvider.textPrimary,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        title: Text(
-          'Choose an app for navigation',
-          style: TextStyle(color: themeProvider.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () async {
-                  Navigator.pop(context);
-                  if (await canLaunchUrl(googleMapsUrl)) {
-                    await launchUrl(
-                      googleMapsUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  } else {
-                    _showErrorSnack();
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: themeProvider.borderPrimary,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/google_maps_logo.png',
-                        width: 30,
-                        height: 30,
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'Google Maps',
-                        style: TextStyle(
-                          color: themeProvider.textPrimary,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () async {
-                  Navigator.pop(context);
-                  if (await canLaunchUrl(wazeUrl)) {
-                    await launchUrl(
-                      wazeUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-                  } else {
-                    _showErrorSnack();
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: themeProvider.borderPrimary,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/waze_logo.png',
-                        width: 30,
-                        height: 30,
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'Waze',
-                        style: TextStyle(
-                          color: themeProvider.textPrimary,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -316,66 +314,65 @@ class _CourseMapPageState extends State<CourseMapPage> {
         }
       }
     } catch (e) {
-      print('Geocoding error: $e');
+      debugPrint('Geocoding error: $e');
     }
 
     return null;
   }
 
-@override
-void initState() {
-  super.initState();
-  _geoService.loadCache().then((_) async {
-    await _getUserLocation();     // ask once
-    await _loadCourseMarkers();   // then load pins
-    if (!mounted) return;
-    setState(() => isLoading = false);
-  });
-}
-
-
-
-
-
-
-Future<void> _getUserLocation() async {
-  // 1. Make sure the service is on & we have permission
-  if (!await location.serviceEnabled())
-    if (!await location.requestService()) return;
-  if (await location.hasPermission() == PermissionStatus.denied)
-    if (await location.requestPermission() != PermissionStatus.granted)
-      return;
-
-  // 2. Try to get the very next GPS update, but don’t wait forever.
-  try {
-    final loc = await location.onLocationChanged
-        .first
-        .timeout(const Duration(seconds: 5));
-    userLocation = LatLng(loc.latitude!, loc.longitude!);
-    debugPrint("✅ Got a location fix from the stream: $userLocation");
-  } on TimeoutException {
-    debugPrint("⚠️ Timeout waiting for onLocationChanged, trying getLocation()…");
-    // 3. Fallback: try getLocation(), but with a timeout
-    try {
-      final loc = await location
-          .getLocation()
-          .timeout(const Duration(seconds: 3));
-      userLocation = LatLng(loc.latitude!, loc.longitude!);
-      debugPrint("✅ Got a location from getLocation(): $userLocation");
-    } on Exception catch (e) {
-      debugPrint("❌ Gave up on getLocation(): $e");
-    }
+  @override
+  void initState() {
+    super.initState();
+    _geoService.loadCache().then((_) async {
+      await _getUserLocation(); // ask once
+      await _loadCourseMarkers(); // then load pins
+      if (!mounted) return;
+      setState(() => isLoading = false);
+    });
   }
 
-  // 4. Now subscribe for all future updates
-  _locationSubscription = location.onLocationChanged.listen((loc) {
-    if (!mounted) return;
-    setState(() {
-      userLocation = LatLng(loc.latitude!, loc.longitude!);
-    });
-  });
-}
+  Future<void> _getUserLocation() async {
+    // 1. Make sure the service is on & we have permission
+    if (!await location.serviceEnabled()) {
+      if (!await location.requestService()) return;
+    }
+    if (await location.hasPermission() == PermissionStatus.denied) {
+      if (await location.requestPermission() != PermissionStatus.granted) {
+        return;
+      }
+    }
 
+    // 2. Try to get the very next GPS update, but don’t wait forever.
+    try {
+      final loc = await location.onLocationChanged.first.timeout(
+        const Duration(seconds: 5),
+      );
+      userLocation = LatLng(loc.latitude!, loc.longitude!);
+      debugPrint("✅ Got a location fix from the stream: $userLocation");
+    } on TimeoutException {
+      debugPrint(
+        "⚠️ Timeout waiting for onLocationChanged, trying getLocation()…",
+      );
+      // 3. Fallback: try getLocation(), but with a timeout
+      try {
+        final loc = await location.getLocation().timeout(
+          const Duration(seconds: 3),
+        );
+        userLocation = LatLng(loc.latitude!, loc.longitude!);
+        debugPrint("✅ Got a location from getLocation(): $userLocation");
+      } on Exception catch (e) {
+        debugPrint("❌ Gave up on getLocation(): $e");
+      }
+    }
+
+    // 4. Now subscribe for all future updates
+    _locationSubscription = location.onLocationChanged.listen((loc) {
+      if (!mounted) return;
+      setState(() {
+        userLocation = LatLng(loc.latitude!, loc.longitude!);
+      });
+    });
+  }
 
   Future<void> _loadCourseMarkers() async {
     final courseProvider = context.read<CourseProvider>();
@@ -412,7 +409,9 @@ Future<void> _getUserLocation() async {
 
       if (!courseColors.containsKey(course.name)) {
         final themeProvider = context.read<ThemeProvider>();
-        courseColors[course.name] = themeProvider.getCourseColor(course.courseId);
+        courseColors[course.name] = themeProvider.getCourseColor(
+          course.courseId,
+        );
         colorIndex++;
       }
       final courseColor = courseColors[course.name]!;
@@ -465,7 +464,9 @@ Future<void> _getUserLocation() async {
 
           // Spread pins in a circle around the building
           const double radius = 0.00015; // ~15 meters - increased from 0.0001
-          final angle = (count * 72) * (Math.pi / 180); // 72° between pins for better spacing
+          final angle =
+              (count * 72) *
+              (Math.pi / 180); // 72° between pins for better spacing
           final offsetLat = baseLoc.latitude + radius * Math.sin(angle);
           final offsetLon = baseLoc.longitude + radius * Math.cos(angle);
           final loc = LatLng(offsetLat, offsetLon);
@@ -485,8 +486,8 @@ Future<void> _getUserLocation() async {
           visibleEvents[label] = true;
           markers.add(
             CourseMarkerData(
-              point: loc, 
-              label: label, 
+              point: loc,
+              label: label,
               color: courseColor,
               buildingName: entry.building,
               roomNumber: entry.room.toString(),
@@ -519,11 +520,16 @@ Future<void> _getUserLocation() async {
     return '${(distanceInMeters / 1000).toStringAsFixed(1)}km';
   }
 
-  Widget _buildEnhancedMarker(CourseMarkerData markerData, bool isHighlighted, ThemeProvider themeProvider) {
-    final distance = userLocation != null 
-        ? _calculateDistance(userLocation!, markerData.point)
-        : null;
-    
+  Widget _buildEnhancedMarker(
+    CourseMarkerData markerData,
+    bool isHighlighted,
+    ThemeProvider themeProvider,
+  ) {
+    final distance =
+        userLocation != null
+            ? _calculateDistance(userLocation!, markerData.point)
+            : null;
+
     return Container(
       width: isHighlighted ? 60 : 50,
       height: isHighlighted ? 80 : 70,
@@ -536,18 +542,16 @@ Future<void> _getUserLocation() async {
             height: isHighlighted ? 40 : 30,
             decoration: BoxDecoration(
               gradient: RadialGradient(
-                colors: [
-                  markerData.color.withOpacity(0.8),
-                  markerData.color,
-                ],
+                colors: [markerData.color.withAlpha(204), markerData.color],
               ),
               shape: BoxShape.circle,
               border: Border.all(color: themeProvider.surfaceColor, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: themeProvider.isDarkMode 
-                      ? Colors.black.withOpacity(0.5)
-                      : Colors.black.withOpacity(0.3),
+                  color:
+                      themeProvider.isDarkMode
+                          ? Colors.black.withAlpha(128)
+                          : Colors.black.withAlpha(76),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -566,7 +570,7 @@ Future<void> _getUserLocation() async {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
-                  color: themeProvider.cardColor.withOpacity(0.9),
+                  color: themeProvider.cardColor.withAlpha(230),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: themeProvider.borderPrimary,
@@ -591,9 +595,10 @@ Future<void> _getUserLocation() async {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _isClassSoon(markerData.nextClassTime!) 
-                      ? themeProvider.warningColor 
-                      : themeProvider.successColor,
+                  color:
+                      _isClassSoon(markerData.nextClassTime!)
+                          ? themeProvider.warningColor
+                          : themeProvider.successColor,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: themeProvider.surfaceColor,
@@ -622,29 +627,31 @@ Future<void> _getUserLocation() async {
 
       final course = match.group(1)!.trim();
       final session = match.group(2)!.trim();
-      
+
       // Apply search filter to legend
       if (_searchQuery.isNotEmpty) {
         final searchLower = _searchQuery.toLowerCase();
         final courseMarker = courseMarkers.firstWhere(
           (marker) => marker.label == entry.key,
-          orElse: () => CourseMarkerData(
-            point: LatLng(0, 0),
-            label: '',
-            color: Colors.grey,
-            buildingName: '',
-            roomNumber: '',
-          ),
+          orElse:
+              () => CourseMarkerData(
+                point: LatLng(0, 0),
+                label: '',
+                color: Colors.grey,
+                buildingName: '',
+                roomNumber: '',
+              ),
         );
-        
+
         if (courseMarker.label.isNotEmpty) {
-          final matchesSearch = courseMarker.label.toLowerCase().contains(searchLower) ||
-                               courseMarker.buildingName.toLowerCase().contains(searchLower) ||
-                               courseMarker.roomNumber.toLowerCase().contains(searchLower);
+          final matchesSearch =
+              courseMarker.label.toLowerCase().contains(searchLower) ||
+              courseMarker.buildingName.toLowerCase().contains(searchLower) ||
+              courseMarker.roomNumber.toLowerCase().contains(searchLower);
           if (!matchesSearch) continue;
         }
       }
-      
+
       grouped.putIfAbsent(course, () => []).add(MapEntry(session, entry.value));
     }
 
@@ -660,7 +667,7 @@ Future<void> _getUserLocation() async {
             ),
             const SizedBox(height: 8),
             Text(
-              _searchQuery.isNotEmpty 
+              _searchQuery.isNotEmpty
                   ? 'No results found'
                   : 'No courses to display',
               style: TextStyle(
@@ -718,7 +725,7 @@ Future<void> _getUserLocation() async {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  _searchQuery.isNotEmpty 
+                  _searchQuery.isNotEmpty
                       ? 'Search Results'
                       : 'Course Locations',
                   style: TextStyle(
@@ -730,12 +737,15 @@ Future<void> _getUserLocation() async {
               ),
               if (_searchQuery.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
-                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    color: themeProvider.primaryColor.withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      color: themeProvider.primaryColor.withAlpha(76),
                       width: 1,
                     ),
                   ),
@@ -753,11 +763,7 @@ Future<void> _getUserLocation() async {
             ],
           ),
         ),
-        Divider(
-          color: themeProvider.borderPrimary,
-          height: 1,
-          thickness: 0.5,
-        ),
+        Divider(color: themeProvider.borderPrimary, height: 1, thickness: 0.5),
         // Quick actions at the top
         Padding(
           padding: const EdgeInsets.all(12),
@@ -785,7 +791,10 @@ Future<void> _getUserLocation() async {
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: const Size(0, 32),
                   ),
                 ),
@@ -813,7 +822,10 @@ Future<void> _getUserLocation() async {
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: const Size(0, 32),
                   ),
                 ),
@@ -821,11 +833,7 @@ Future<void> _getUserLocation() async {
             ],
           ),
         ),
-        Divider(
-          color: themeProvider.borderPrimary,
-          height: 1,
-          thickness: 0.5,
-        ),
+        Divider(color: themeProvider.borderPrimary, height: 1, thickness: 0.5),
         const SizedBox(height: 8),
         // Course list
         ...grouped.entries.map((group) {
@@ -837,12 +845,9 @@ Future<void> _getUserLocation() async {
           return Container(
             margin: const EdgeInsets.only(bottom: 8, left: 8, right: 8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.05),
+              color: color.withAlpha(13),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: color.withOpacity(0.2),
-                width: 1,
-              ),
+              border: Border.all(color: color.withAlpha(51), width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -860,7 +865,7 @@ Future<void> _getUserLocation() async {
                           borderRadius: BorderRadius.circular(3),
                           boxShadow: [
                             BoxShadow(
-                              color: color.withOpacity(0.3),
+                              color: color.withAlpha(76),
                               blurRadius: 2,
                               offset: const Offset(0, 1),
                             ),
@@ -905,88 +910,98 @@ Future<void> _getUserLocation() async {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                   child: Column(
-                    children: sessions.map((sessionEntry) {
-                      final label = sessionEntry.key;
-                      final isVisible = sessionEntry.value;
-                      final eventKey = '$courseName ($label)';
+                    children:
+                        sessions.map((sessionEntry) {
+                          final label = sessionEntry.key;
+                          final isVisible = sessionEntry.value;
+                          final eventKey = '$courseName ($label)';
 
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 4),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(6),
-                            onTap: () => _focusOnCourse(eventKey),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isVisible 
-                                    ? themeProvider.surfaceColor.withOpacity(0.05)
-                                    : Colors.transparent,
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 4),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: isVisible 
-                                      ? color.withOpacity(0.3)
-                                      : themeProvider.borderPrimary.withOpacity(0.3),
-                                  width: 0.5,
+                                onTap: () => _focusOnCourse(eventKey),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isVisible
+                                            ? themeProvider.surfaceColor
+                                                .withAlpha(13)
+                                            : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color:
+                                          isVisible
+                                              ? color.withAlpha(76)
+                                              : themeProvider.borderPrimary
+                                                  .withAlpha(76),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Transform.scale(
+                                        scale: 0.8,
+                                        child: Checkbox(
+                                          value: isVisible,
+                                          onChanged: (val) {
+                                            setState(() {
+                                              visibleEvents[eventKey] =
+                                                  val ?? true;
+                                            });
+                                          },
+                                          activeColor: color,
+                                          checkColor:
+                                              themeProvider.surfaceColor,
+                                          side: BorderSide(
+                                            color: color.withAlpha(153),
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color:
+                                                isVisible
+                                                    ? themeProvider.textPrimary
+                                                    : themeProvider
+                                                        .textSecondary,
+                                            fontWeight:
+                                                isVisible
+                                                    ? FontWeight.w500
+                                                    : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                      if (isVisible)
+                                        Icon(
+                                          Icons.visibility,
+                                          size: 14,
+                                          color: color,
+                                        )
+                                      else
+                                        Icon(
+                                          Icons.visibility_off,
+                                          size: 14,
+                                          color: themeProvider.textSecondary,
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Transform.scale(
-                                    scale: 0.8,
-                                    child: Checkbox(
-                                      value: isVisible,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          visibleEvents[eventKey] = val ?? true;
-                                        });
-                                      },
-                                      activeColor: color,
-                                      checkColor: themeProvider.surfaceColor,
-                                      side: BorderSide(
-                                        color: color.withOpacity(0.6),
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      label,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isVisible 
-                                            ? themeProvider.textPrimary
-                                            : themeProvider.textSecondary,
-                                        fontWeight: isVisible 
-                                            ? FontWeight.w500 
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-                                  if (isVisible)
-                                    Icon(
-                                      Icons.visibility,
-                                      size: 14,
-                                      color: color,
-                                    )
-                                  else
-                                    Icon(
-                                      Icons.visibility_off,
-                                      size: 14,
-                                      color: themeProvider.textSecondary,
-                                    ),
-                                ],
-                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                          );
+                        }).toList(),
                   ),
                 ),
               ],
@@ -1019,7 +1034,7 @@ Future<void> _getUserLocation() async {
               onTap: () => _showNextClassDialog(nextClass, themeProvider),
             ),
           ),
-        
+
         // Nearby classes - positioned at bottom right
         if (nearbyClasses.isNotEmpty)
           Positioned(
@@ -1028,9 +1043,13 @@ Future<void> _getUserLocation() async {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: nearbyClasses
-                    .map((marker) => _buildNearbyClassChip(marker, themeProvider))
-                    .toList(),
+                children:
+                    nearbyClasses
+                        .map(
+                          (marker) =>
+                              _buildNearbyClassChip(marker, themeProvider),
+                        )
+                        .toList(),
               ),
             ),
           ),
@@ -1042,25 +1061,28 @@ Future<void> _getUserLocation() async {
     // This would integrate with your calendar/schedule data
     // For now, return the closest visible marker
     if (userLocation == null) return null;
-    
-    final visibleMarkers = courseMarkers
-        .where((marker) => visibleEvents[marker.label] ?? false)
-        .toList();
-    
+
+    final visibleMarkers =
+        courseMarkers
+            .where((marker) => visibleEvents[marker.label] ?? false)
+            .toList();
+
     if (visibleMarkers.isEmpty) return null;
-    
+
     visibleMarkers.sort((a, b) {
-      final distA = _calculateDistance(userLocation!, a.point) ?? double.infinity;
-      final distB = _calculateDistance(userLocation!, b.point) ?? double.infinity;
+      final distA =
+          _calculateDistance(userLocation!, a.point) ?? double.infinity;
+      final distB =
+          _calculateDistance(userLocation!, b.point) ?? double.infinity;
       return distA.compareTo(distB);
     });
-    
+
     return visibleMarkers.first;
   }
 
   List<CourseMarkerData> _getNearbyClasses() {
     if (userLocation == null) return [];
-    
+
     return courseMarkers
         .where((marker) {
           final distance = _calculateDistance(userLocation!, marker.point);
@@ -1070,121 +1092,124 @@ Future<void> _getUserLocation() async {
         .toList();
   }
 
-
-
-  void _showNextClassDialog(CourseMarkerData nextClass, ThemeProvider themeProvider) {
+  void _showNextClassDialog(
+    CourseMarkerData nextClass,
+    ThemeProvider themeProvider,
+  ) {
     final distance = _calculateDistance(userLocation!, nextClass.point);
     final walkingTime = distance != null ? (distance * 12).round() : 0;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: themeProvider.cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.schedule,
-              color: nextClass.color,
-              size: 24,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: themeProvider.cardColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(width: 12),
-            Text(
-              'Next Class',
-              style: TextStyle(
-                color: themeProvider.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: nextClass.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: nextClass.color.withOpacity(0.3),
-                  width: 1,
+            title: Row(
+              children: [
+                Icon(Icons.schedule, color: nextClass.color, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Next Class',
+                  style: TextStyle(
+                    color: themeProvider.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nextClass.label.split('(').first.trim(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: themeProvider.textPrimary,
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: nextClass.color.withAlpha(26),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: nextClass.color.withAlpha(76),
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  if (nextClass.label.contains('(')) ...[
-                    Text(
-                      nextClass.label.split('(')[1].replaceAll(')', ''),
-                      style: TextStyle(
-                        color: themeProvider.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.directions_walk,
-                        color: nextClass.color,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        '${_formatDistance(distance)} • ${walkingTime} min walk',
+                        nextClass.label.split('(').first.trim(),
                         style: TextStyle(
-                          color: themeProvider.textSecondary,
-                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: themeProvider.textPrimary,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (nextClass.label.contains('(')) ...[
+                        Text(
+                          nextClass.label.split('(')[1].replaceAll(')', ''),
+                          style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.directions_walk,
+                            color: nextClass.color,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_formatDistance(distance)} • $walkingTime min walk',
+                            style: TextStyle(
+                              color: themeProvider.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'Close',
+                  style: TextStyle(color: themeProvider.textSecondary),
+                ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: TextStyle(color: themeProvider.textSecondary),
-            ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: nextClass.color,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _launchNavigation(nextClass.point);
+                },
+                icon: const Icon(Icons.directions, size: 18),
+                label: const Text('Navigate'),
+              ),
+            ],
           ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: nextClass.color,
-              foregroundColor: Colors.white,
-              elevation: 2,
-            ),
-            onPressed: () {
-              Navigator.of(context).pop();
-              _launchNavigation(nextClass.point);
-            },
-            icon: const Icon(Icons.directions, size: 18),
-            label: const Text('Navigate'),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildNearbyClassChip(CourseMarkerData marker, ThemeProvider themeProvider) {
+  Widget _buildNearbyClassChip(
+    CourseMarkerData marker,
+    ThemeProvider themeProvider,
+  ) {
     final distance = _calculateDistance(userLocation!, marker.point);
-    
+
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: GestureDetector(
@@ -1192,7 +1217,7 @@ Future<void> _getUserLocation() async {
         child: Material(
           elevation: 2,
           borderRadius: BorderRadius.circular(20),
-          color: marker.color.withOpacity(0.1),
+          color: marker.color.withAlpha(26),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -1213,7 +1238,7 @@ Future<void> _getUserLocation() async {
                 Text(
                   _formatDistance(distance),
                   style: TextStyle(
-                    fontSize: 8, 
+                    fontSize: 8,
                     color: themeProvider.textSecondary,
                   ),
                 ),
@@ -1224,7 +1249,7 @@ Future<void> _getUserLocation() async {
       ),
     );
   }
-  
+
   Widget _buildSearchAndFilters(ThemeProvider themeProvider) {
     return Positioned(
       top: 20,
@@ -1234,15 +1259,13 @@ Future<void> _getUserLocation() async {
         decoration: BoxDecoration(
           color: themeProvider.cardColor,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: themeProvider.borderPrimary,
-            width: 1,
-          ),
+          border: Border.all(color: themeProvider.borderPrimary, width: 1),
           boxShadow: [
             BoxShadow(
-              color: themeProvider.isDarkMode 
-                  ? Colors.black.withOpacity(0.3)
-                  : Colors.black.withOpacity(0.1),
+              color:
+                  themeProvider.isDarkMode
+                      ? Colors.black.withAlpha(76)
+                      : Colors.black.withAlpha(26),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1254,26 +1277,24 @@ Future<void> _getUserLocation() async {
           decoration: InputDecoration(
             hintText: 'Search courses, buildings, or rooms...',
             hintStyle: TextStyle(color: themeProvider.textSecondary),
-            prefixIcon: Icon(
-              Icons.search, 
-              color: themeProvider.textSecondary,
-            ),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(
-                      Icons.clear,
-                      color: themeProvider.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _searchQuery = '';
-                        _searchController.clear();
-                        // Optional: close legend when search is cleared
-                        // legendVisible = false;
-                      });
-                    },
-                  )
-                : null,
+            prefixIcon: Icon(Icons.search, color: themeProvider.textSecondary),
+            suffixIcon:
+                _searchQuery.isNotEmpty
+                    ? IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        color: themeProvider.textSecondary,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _searchQuery = '';
+                          _searchController.clear();
+                          // Optional: close legend when search is cleared
+                          // legendVisible = false;
+                        });
+                      },
+                    )
+                    : null,
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
@@ -1283,7 +1304,7 @@ Future<void> _getUserLocation() async {
           onChanged: (value) {
             setState(() {
               _searchQuery = value.toLowerCase();
-              
+
               // Auto-open legend when user starts searching
               if (_searchQuery.isNotEmpty && !legendVisible) {
                 legendVisible = true;
@@ -1332,7 +1353,8 @@ Future<void> _getUserLocation() async {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.degreez',
                   ),
                   MarkerLayer(
@@ -1342,30 +1364,42 @@ Future<void> _getUserLocation() async {
                             // Check visibility
                             final isVisible = visibleEvents[cm.label] ?? true;
                             if (!isVisible) return false;
-                            
+
                             // Apply search filter
                             if (_searchQuery.isNotEmpty) {
                               final searchLower = _searchQuery.toLowerCase();
-                              return cm.label.toLowerCase().contains(searchLower) ||
-                                     cm.buildingName.toLowerCase().contains(searchLower) ||
-                                     cm.roomNumber.toLowerCase().contains(searchLower);
+                              return cm.label.toLowerCase().contains(
+                                    searchLower,
+                                  ) ||
+                                  cm.buildingName.toLowerCase().contains(
+                                    searchLower,
+                                  ) ||
+                                  cm.roomNumber.toLowerCase().contains(
+                                    searchLower,
+                                  );
                             }
-                            
+
                             return true;
                           })
                           .map((cm) {
                             final courseName = cm.label.split('(').first.trim();
-                            final isHighlighted = courseName == _highlightedCourse;
+                            final isHighlighted =
+                                courseName == _highlightedCourse;
 
                             return Marker(
                               point: cm.point,
                               width: isHighlighted ? 50 : 40,
                               height: isHighlighted ? 50 : 40,
                               child: Tooltip(
-                                message: '${cm.label}\n${cm.buildingName} - Room ${cm.roomNumber}',
+                                message:
+                                    '${cm.label}\n${cm.buildingName} - Room ${cm.roomNumber}',
                                 child: GestureDetector(
                                   onTap: () => _launchNavigation(cm.point),
-                                  child: _buildEnhancedMarker(cm, isHighlighted, themeProvider),
+                                  child: _buildEnhancedMarker(
+                                    cm,
+                                    isHighlighted,
+                                    themeProvider,
+                                  ),
                                 ),
                               ),
                             );
@@ -1386,7 +1420,9 @@ Future<void> _getUserLocation() async {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: themeProvider.primaryColor.withOpacity(0.3),
+                                  color: themeProvider.primaryColor.withAlpha(
+                                    75,
+                                  ),
                                   blurRadius: 8,
                                   spreadRadius: 2,
                                 ),
@@ -1425,7 +1461,9 @@ Future<void> _getUserLocation() async {
                       ),
                       onPressed:
                           () => setState(() => legendVisible = !legendVisible),
-                      child: Text(legendVisible ? 'Hide Legend' : 'Show Legend'),
+                      child: Text(
+                        legendVisible ? 'Hide Legend' : 'Show Legend',
+                      ),
                     ),
                     if (legendVisible)
                       Material(
@@ -1458,7 +1496,10 @@ Future<void> _getUserLocation() async {
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: themeProvider.primaryColor,
-            foregroundColor: themeProvider.isLightMode ? themeProvider.surfaceColor : themeProvider.secondaryColor,
+            foregroundColor:
+                themeProvider.isLightMode
+                    ? themeProvider.surfaceColor
+                    : themeProvider.secondaryColor,
             tooltip: 'Center on me',
             elevation: 6,
             child: const Icon(Icons.my_location),
@@ -1485,29 +1526,25 @@ Future<void> _getUserLocation() async {
     );
   }
 
-@override
-void didUpdateWidget(covariant CourseMapPage old) {
-  super.didUpdateWidget(old);
-  if (widget.selectedSemester != old.selectedSemester) {
-    debugPrint('🔄 Semester changed, reloading markers…');
-    setState(() {
-      isLoading = true;
-      courseMarkers.clear();
-      visibleEvents.clear();
-      _buildingPinCounts.clear();
-      _courseLocations.clear();
-    });
-    // Just reload your pins:
-    _loadCourseMarkers().then((_) {
-      if (!mounted) return;
-      setState(() => isLoading = false);
-    });
+  @override
+  void didUpdateWidget(covariant CourseMapPage old) {
+    super.didUpdateWidget(old);
+    if (widget.selectedSemester != old.selectedSemester) {
+      debugPrint('🔄 Semester changed, reloading markers…');
+      setState(() {
+        isLoading = true;
+        courseMarkers.clear();
+        visibleEvents.clear();
+        _buildingPinCounts.clear();
+        _courseLocations.clear();
+      });
+      // Just reload your pins:
+      _loadCourseMarkers().then((_) {
+        if (!mounted) return;
+        setState(() => isLoading = false);
+      });
+    }
   }
-}
-
-
-
-
 
   @override
   void dispose() {

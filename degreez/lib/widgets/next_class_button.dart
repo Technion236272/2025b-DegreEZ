@@ -37,13 +37,13 @@ class NextClassButton extends StatelessWidget {
             gradient: LinearGradient(
               colors: [
                 courseColor,
-                courseColor.withOpacity(0.8),
+                courseColor.withAlpha(204),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: themeProvider.surfaceColor.withOpacity(0.2),
+              color: themeProvider.surfaceColor.withAlpha(51),
               width: 1,
             ),
           ),
@@ -53,7 +53,7 @@ class NextClassButton extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: themeProvider.surfaceColor.withOpacity(0.2),
+                  color: themeProvider.surfaceColor.withAlpha(51),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -70,7 +70,7 @@ class NextClassButton extends StatelessWidget {
                   Text(
                     'Next Class',
                     style: TextStyle(
-                      color: themeProvider.surfaceColor.withOpacity(0.9),
+                      color: themeProvider.surfaceColor.withAlpha(230),
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
@@ -91,7 +91,7 @@ class NextClassButton extends StatelessWidget {
               const SizedBox(width: 8),
               Icon(
                 Icons.chevron_right,
-                color: themeProvider.surfaceColor.withOpacity(0.8),
+                color: themeProvider.surfaceColor.withAlpha(204),
                 size: 18,
               ),
             ],

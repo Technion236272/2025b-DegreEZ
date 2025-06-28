@@ -37,8 +37,8 @@ class ChatHeaderWidget extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: themeProvider.isDarkMode 
-                    ? Colors.black.withOpacity(0.3) 
-                    : Colors.grey.withOpacity(0.2),
+                    ? Colors.black.withAlpha(76) 
+                    : Colors.grey.withAlpha(51),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -51,10 +51,10 @@ class ChatHeaderWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.1) : themeProvider.secondaryColor.withOpacity(0.1),
+                    color: themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(26) : themeProvider.secondaryColor.withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.3) : themeProvider.secondaryColor.withOpacity(0.3),
+                      color: themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(76) : themeProvider.secondaryColor.withAlpha(76),
                       width: 1,
                     ),
                   ),
@@ -96,7 +96,7 @@ class ChatHeaderWidget extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: includeUserContext 
-                          ? themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.1) : themeProvider.secondaryColor.withOpacity(0.1)
+                          ? themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(26) : themeProvider.secondaryColor.withAlpha(26)
                           : themeProvider.cardColor,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(

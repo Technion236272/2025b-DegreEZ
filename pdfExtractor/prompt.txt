@@ -26,6 +26,6 @@ list them in this format:
 תוכנית 1
 תוכנית 2
 
-just print the format without any extra words
+just debugPrint the format without any extra words
 the Hebrew text sometimes is written backwards, please fix it
 the titles are in the provided order such that data that comes after מגמות which comes after מסלולים is irrelevant to מסלולים as its section has already ended

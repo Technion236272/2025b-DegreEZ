@@ -185,7 +185,7 @@ class _GradeSheetImportWidgetState extends State<GradeSheetImportWidget> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '${entry.key}',
+                            entry.key,
                             style: TextStyle(
                               color: AppColorsDarkMode.textPrimary,
                               fontSize: 13,
@@ -196,7 +196,7 @@ class _GradeSheetImportWidgetState extends State<GradeSheetImportWidget> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColorsDarkMode.primaryColor.withOpacity(0.2),
+                              color: AppColorsDarkMode.primaryColor.withAlpha(51),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(

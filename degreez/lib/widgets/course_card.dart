@@ -96,10 +96,10 @@ class _CourseCardState extends State<CourseCard> {
                       studentProvider.student!.id,
                     ); // ✅ Required
 
-                    final refreshed = courseProvider.getCourseById(
-                      widget.semester,
-                      widget.course.courseId,
-                    );
+                    // final refreshed = courseProvider.getCourseById(
+                    //   widget.semester,
+                    //   widget.course.courseId,
+                    // );
 
                     // setState(() {
                     //   _hasNote =

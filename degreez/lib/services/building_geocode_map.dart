@@ -13,11 +13,11 @@ String getHebrewBuildingQuery(String building) {
   if (building.contains('אמדו')) return 'בנין אמאדו הטכניון';
   if (building.contains('דייוס')) return 'ליידי דייויס הטכניון';
   if (building.contains('ליידי דייוס - מכונות'))
-    return 'ליידי דייויס מכונות הטכניון';
+    {return 'ליידי דייויס מכונות הטכניון';}
   if (building.contains("הנ' אוירונאוטית") ||
       building.contains("ליידי דייוס - אוירונוטיקה"))
-    return 'בניין הנדסת אווירונוטיקה וחלל הטכניון ';
-  if (building.contains('בורוביץ')) return 'בורוביץ הטכניון';
+    {return 'בניין הנדסת אווירונוטיקה וחלל הטכניון ';
+}  if (building.contains('בורוביץ')) return 'בורוביץ הטכניון';
   if (building.contains('בריכת הטכניון')) return 'בריכת שחיה הטכניון';
   if (building.contains("מכון להנ' ביו רפואה")) return 'הנדסה ביו-רפואית הטכניון';
   if (building.contains('בלומפילד')) return 'בנין בלומפילד הטכניון';
@@ -27,7 +27,7 @@ String getHebrewBuildingQuery(String building) {
   if (building.contains('אולם חורב')||building.contains("חדר כושר")||building.contains("מרכז סקווש")) return 'מרכז הספורט הטכניון';
   if (building.contains('בית צ')) return 'Churchill Auditorium';
   if (building.contains('בלומפילד - מדעי הנתונים'))
-    return 'בלומפילד - מדעי הנתונים הטכניון';
+    {return 'בלומפילד - מדעי הנתונים הטכניון';}
   if (building.contains('דן קאהן- מכונות')) return 'הנדסת מכונות - בניין קאהן';
   if (building.contains("הנ' מזון וביוטכנולוג")) return 'הנדסת ביוטכנולוגיה ומזון הטכניון';
   if (building.contains('הנדסה אזרחית רבין')) return 'הנדסה אזרחית רבין הטכניון';

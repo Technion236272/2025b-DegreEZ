@@ -224,12 +224,13 @@ class AppColorsDarkMode {
     Color? backgroundColor,
     double opacity = 0.8,
   }) {
+    int opacityInt = (opacity*255).floor(); 
     return BoxDecoration(
-      color: (backgroundColor ?? AppColorsDarkMode.cardColor).withOpacity(opacity),
+      color: (backgroundColor ?? AppColorsDarkMode.cardColor).withAlpha(opacityInt),
       // No borders, no radius - completely seamless
       boxShadow: [
         BoxShadow(
-          color: AppColorsDarkMode.shadowColor.withOpacity(0.5),
+          color: AppColorsDarkMode.shadowColor.withAlpha(128),
           blurRadius: 6,
           offset: const Offset(0, 1),
         ),
@@ -246,7 +247,7 @@ class AppColorsDarkMode {
       // Minimal shadow for subtle depth
       boxShadow: [
         BoxShadow(
-          color: AppColorsDarkMode.shadowColor.withOpacity(0.3),
+          color: AppColorsDarkMode.shadowColor.withAlpha(76),
           blurRadius: 8,
           offset: const Offset(0, 2),
         ),

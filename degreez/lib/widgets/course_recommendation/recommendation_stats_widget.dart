@@ -1,7 +1,9 @@
 
 // lib/widgets/course_recommendation/recommendation_stats_widget.dart
 
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RecommendationStatsWidget extends StatelessWidget {
   final Map<String, dynamic> stats;
@@ -25,7 +27,7 @@ class RecommendationStatsWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.analytics, color: Theme.of(context).primaryColor),
+                Icon(Icons.analytics, color: context.read<ThemeProvider>().primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   'Recommendation Statistics',
@@ -119,18 +121,18 @@ class RecommendationStatsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: context.read<ThemeProvider>().primaryColor.withAlpha(26),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
+          Icon(icon, color: context.read<ThemeProvider>().primaryColor),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).primaryColor,
+              color: context.read<ThemeProvider>().primaryColor,
             ),
           ),
           Text(

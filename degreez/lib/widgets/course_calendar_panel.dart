@@ -352,9 +352,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
           margin: const EdgeInsets.only(top: 4),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: indicatorColor.withOpacity(0.1),
+            color: indicatorColor.withAlpha(26),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: indicatorColor.withOpacity(0.3), width: 1),
+            border: Border.all(color: indicatorColor.withAlpha(76), width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

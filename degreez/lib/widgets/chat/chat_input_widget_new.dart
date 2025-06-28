@@ -113,7 +113,7 @@ class ChatInputWidget extends StatelessWidget {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: currentPdfAttachment != null 
-                                  ? themeProvider.primaryColor.withOpacity(0.2)
+                                  ? themeProvider.primaryColor.withAlpha(51)
                                   : themeProvider.mainColor,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
@@ -152,7 +152,7 @@ class ChatInputWidget extends StatelessWidget {
                                     : 'Ask me anything... :)',
                             hintStyle: TextStyle(
                               color: isLoading 
-                                  ? themeProvider.textSecondary.withOpacity(0.5)
+                                  ? themeProvider.textSecondary.withAlpha(128)
                                   : themeProvider.textSecondary,
                             ),
                             border: InputBorder.none,
@@ -230,14 +230,14 @@ class ChatInputWidget extends StatelessWidget {
             gradient: isLoading 
                 ? LinearGradient(
                     colors: [
-                      themeProvider.textSecondary.withOpacity(0.4),
-                      themeProvider.textSecondary.withOpacity(0.3),
+                      themeProvider.textSecondary.withAlpha(102),
+                      themeProvider.textSecondary.withAlpha(76),
                     ],
                   )
                 : LinearGradient(
                     colors: [
                       themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.accentColor,
-                      themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.8) :themeProvider.accentColor.withOpacity(0.8),
+                      themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(204) :themeProvider.accentColor.withAlpha(204),
                     ],
                   ),
             borderRadius: BorderRadius.circular(25),
@@ -246,8 +246,8 @@ class ChatInputWidget extends StatelessWidget {
                 : [
                     BoxShadow(
                       color: themeProvider.isDarkMode 
-                          ? Colors.black.withOpacity(0.3)
-                          : Colors.grey.withOpacity(0.3),
+                          ? Colors.black.withAlpha(76)
+                          : Colors.grey.withAlpha(76),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

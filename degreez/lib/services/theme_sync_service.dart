@@ -42,7 +42,7 @@ class ThemeSyncService {
       }
     } catch (e) {
       debugPrint('Error updating student theme preference: $e');
-      throw e; // Re-throw to let caller handle the error
+      rethrow; // Re-throw to let caller handle the error
     }
   }
 }
