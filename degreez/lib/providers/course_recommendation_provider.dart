@@ -200,4 +200,10 @@ class CourseRecommendationProvider extends ChangeNotifier {
       'stats': getRecommendationStats(),
     };
   }
+
+  /// Set a previous recommendation as the current one
+  void setCurrentRecommendation(CourseRecommendationResponse recommendation) {
+    _currentRecommendation = recommendation;
+    notifyListeners();
+  }
 }

@@ -5,6 +5,7 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/widgets/selectors/semester_season_selector.dart';
 import 'package:degreez/widgets/selectors/semester_year_selector.dart';
 import 'package:degreez/providers/theme_provider.dart';
@@ -310,20 +311,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     );
   }
   void _showAddSemesterDialog(BuildContext context) async {
-    String? selectedSeason = await GlobalConfigService.getCurrentSemester();
-    int currentYear = DateTime.now().year;
-    String selectedYear =
-        selectedSeason == 'Winter'
-            ? '${currentYear - 1}-$currentYear'
-            : '$currentYear';
-
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) {
         return Consumer<ThemeProvider>(
           builder: (context, themeProvider, _) {
-            return StatefulBuilder(
-          builder: (context, setState) {            
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 side: BorderSide(
@@ -342,11 +334,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
-children: [
-  SemesterSeasonSelector(),
-  const SizedBox(height: 12),
-  SemesterYearSelector(),
-],
+                children: const [
+                  SemesterSeasonSelector(),
+                  SizedBox(height: 12),
+                  SemesterYearSelector(),
+                ],
               ),
               actions: [
                 TextButton(
@@ -360,7 +352,10 @@ children: [
                 ),
                 TextButton(
                   onPressed: () {
-                    final semesterName = '$selectedSeason $selectedYear';
+                    final signUpProvider = context.read<SignUpProvider>();
+                    final selectedSeason = signUpProvider.selectedSemesterSeason;
+                    final selectedYear = signUpProvider.selectedSemesterYear;
+                    final semesterName = '${selectedSeason ?? ''} ${selectedYear ?? ''}';
                     context.read<CourseProvider>().addSemester(
                       context.read<StudentProvider>().student!.id,
                       semesterName,
@@ -378,7 +373,7 @@ children: [
               ],
             );
           },
-        );});
+        );
       },
     );
   }
