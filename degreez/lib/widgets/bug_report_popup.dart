@@ -23,10 +23,10 @@ class _BugReportButtonState extends State<BugReportButton> {  @override
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.secondaryColor,
+                      backgroundColor: themeProvider.primaryColor,
                       foregroundColor: themeProvider.isDarkMode 
                         ? AppColorsDarkMode.bug 
-                        : Colors.red.shade600,
+                        : AppColorsLightMode.bug,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -37,7 +37,7 @@ class _BugReportButtonState extends State<BugReportButton> {  @override
                     },
                     icon: Icon(Icons.bug_report, color: themeProvider.isDarkMode 
                       ? AppColorsDarkMode.bug 
-                      : Colors.red.shade600),
+                      : AppColorsLightMode.bug),
                     label: Text('Report a Bug'),
                   ),
         );

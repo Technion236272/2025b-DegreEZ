@@ -316,7 +316,6 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           backgroundColor: themeProvider.mainColor, // Changed to night black
           title: Text(
             'Modify Grade',
-            style: TextStyle(color: themeProvider.secondaryColor),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -325,23 +324,19 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               Text(
                 course.name,
                 style: TextStyle(
-                  color: themeProvider.secondaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Current Grade: ${course.grade.toStringAsFixed(1)}',
-                style: TextStyle(color: themeProvider.textSecondary),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: gradeController,
                 keyboardType: TextInputType.number,
-                style: TextStyle(color: themeProvider.secondaryColor),
                 decoration: InputDecoration(
                   labelText: 'New Grade (0-100)',
-                  labelStyle: TextStyle(color: themeProvider.textSecondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: themeProvider.borderPrimary),
@@ -365,7 +360,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: themeProvider.textSecondary),
+                
               ),
             ),
             TextButton(
@@ -597,11 +592,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
+                          BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
+          ),
               ],
             ),
             child: Column(
@@ -664,11 +659,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
+                          BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
+          ),
               ],
             ),
             child: Column(
@@ -759,10 +754,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+                    BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -772,7 +767,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           Text(
             'Grade Distribution',
             style: TextStyle(
-              color: themeProvider.secondaryColor,
+              
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -843,7 +838,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 children: [                  Text(
                     'Completed Courses',
                     style: TextStyle(
-                      color: themeProvider.secondaryColor,
+                      
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -862,7 +857,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               GestureDetector(
                 onTap: _resetAllModifications,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),                  decoration: BoxDecoration(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),                  
+                  decoration: BoxDecoration(
                     color: themeProvider.textSecondary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
@@ -940,11 +936,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
+                          BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
+          ),
               ],
             ),
             child: Column(
@@ -958,7 +954,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Text(
                   'No completed courses found',
                   style: TextStyle(
-                    color: themeProvider.secondaryColor,
+                    
                     fontSize: 16,
                   ),
                 ),
@@ -1005,10 +1001,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black,
-            blurRadius: 8,
-            offset: Offset(0, 4),
+                    BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -1029,7 +1025,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   child: Text(
                     semesterKey,
                     style: TextStyle(
-                      color: themeProvider.secondaryColor,
+                      
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1099,7 +1095,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           children: [            Text(
               'What-If Scenarios',
               style: TextStyle(
-                color: themeProvider.secondaryColor,
+                
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -1118,7 +1114,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               child: Text(
                 '${_whatIfCourses.length}',
                 style: TextStyle(
-                  color: themeProvider.secondaryColor,
+                  
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1148,11 +1144,11 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
+                          BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
+          ),
               ],
             ),
             child: Column(
@@ -1166,7 +1162,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 Text(
                   'No what-if courses added',
                   style: TextStyle(
-                    color: themeProvider.secondaryColor,
+                    
                     fontSize: 16,
                   ),
                 ),
@@ -1239,7 +1235,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 children: [                  Text(
                     course.name,
                     style: TextStyle(
-                      color: themeProvider.secondaryColor,
+                      
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       decoration: isExcluded ? TextDecoration.lineThrough : null,
@@ -1383,10 +1379,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             )
           : null,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+                    BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -1425,7 +1421,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       child: Text(
                         course.name,
                         style: TextStyle(
-                          color: themeProvider.secondaryColor,
+                          
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1529,10 +1525,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+                    BoxShadow(
+            color: Color(0xAA000000),
+            blurRadius: 3,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -1542,7 +1538,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           Text(
             'Add What-If Course',
             style: TextStyle(
-              color: themeProvider.secondaryColor,
+              
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -1640,8 +1636,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             child: ElevatedButton.icon(
               onPressed: _addWhatIfCourse,
               style: ElevatedButton.styleFrom(
-                backgroundColor: themeProvider.secondaryColor,
-                foregroundColor: themeProvider.accentColor,
+                backgroundColor: themeProvider.primaryColor,
+                foregroundColor: themeProvider.mainColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),

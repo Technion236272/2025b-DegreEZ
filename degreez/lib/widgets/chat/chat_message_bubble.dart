@@ -45,7 +45,7 @@ class ChatMessageBubble extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: message.isUser 
-                        ? themeProvider.primaryColor 
+                        ? themeProvider.secondaryColor 
                         : themeProvider.surfaceColor,
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
@@ -104,10 +104,10 @@ class ChatMessageBubble extends StatelessWidget {
                   margin: const EdgeInsets.only(left: 8, top: 4),
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: themeProvider.primaryColor,
+                    color: themeProvider.secondaryColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      color: themeProvider.secondaryColor.withOpacity(0.3),
                       width: 1,
                     ),
                   ),

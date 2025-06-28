@@ -23,8 +23,8 @@ class _FeedbackButtonState extends State<FeedbackButton> {  @override
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.secondaryColor,
-                      foregroundColor: themeProvider.accentColor,
+                      backgroundColor: themeProvider.primaryColor,
+                      foregroundColor: themeProvider.mainColor,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -33,7 +33,7 @@ class _FeedbackButtonState extends State<FeedbackButton> {  @override
                     onPressed: () async {
                       await feedbackPopup(context, feedbackNotifier);
                     },
-                    icon: Icon(Icons.feedback_rounded, color: themeProvider.accentColor),
+                    icon: Icon(Icons.feedback_rounded),
                     label: Text('Share Your Feedback'),
                   ),
         );

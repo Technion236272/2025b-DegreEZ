@@ -141,6 +141,8 @@ class ThemeProvider with ChangeNotifier {
   Color get primaryColor => isDarkMode ? AppColorsDarkMode.primaryColor : AppColorsLightMode.primaryColor;
   Color get secondaryColor => isDarkMode ? AppColorsDarkMode.secondaryColor : AppColorsLightMode.secondaryColor;
   Color get accentColor => isDarkMode ? AppColorsDarkMode.accentColor : AppColorsLightMode.accentColor;
+  Color get accentColorDark => isDarkMode ? AppColorsDarkMode.accentColorDark : AppColorsLightMode.accentColorDark;
+  Color get accentColorLight => isDarkMode ? AppColorsDarkMode.accentColorLight : AppColorsLightMode.accentColorLight;
   Color get textPrimary => isDarkMode ? AppColorsDarkMode.textPrimary : AppColorsLightMode.textPrimary;
   Color get textSecondary => isDarkMode ? AppColorsDarkMode.textSecondary : AppColorsLightMode.textSecondary;
   Color get borderPrimary => isDarkMode ? AppColorsDarkMode.borderPrimary : AppColorsLightMode.borderPrimary;
@@ -327,8 +329,8 @@ class ThemeProvider with ChangeNotifier {
           onSurface: AppColorsLightMode.textPrimary,
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: AppColorsLightMode.primaryColor,
-          foregroundColor: AppColorsLightMode.surfaceColor,
+          backgroundColor: AppColorsLightMode.secondaryColor,
+          foregroundColor: AppColorsLightMode.mainColor,
           elevation: 8,
         ),
         iconTheme: const IconThemeData(

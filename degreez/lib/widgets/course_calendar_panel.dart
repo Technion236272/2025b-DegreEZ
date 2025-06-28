@@ -1586,13 +1586,13 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       builder: (context, themeProvider, child) {
         final isLightMode = themeProvider.isLightMode;
         final backgroundColor = isLightMode 
-            ? AppColorsLightMode.primaryColorLight 
+            ? AppColorsLightMode.primaryColor 
             : AppColorsDarkMode.secondaryColor;
         final borderColor = isLightMode 
-            ? AppColorsLightMode.primaryColor 
+            ? AppColorsLightMode.secondaryColorDim 
             : AppColorsDarkMode.secondaryColorDim;
         final iconColor = isLightMode 
-            ? AppColorsLightMode.primaryColor 
+            ? AppColorsLightMode.mainColor 
             : AppColorsDarkMode.accentColor;
         
         return GestureDetector(

@@ -267,8 +267,12 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                     child: ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      itemCount: semesters.length,
+                      itemCount: semesters.length + 1,
                       itemBuilder: (context, index) {
+                        if (index == semesters.length) {
+                          // This is the extra bottom space
+                          return const SizedBox(height: 100); // Adjust height as needed
+                        }
                         final semesterKey = semesters.keys.elementAt(index);
                         final semester = {
                           'semester': index + 1,
@@ -412,10 +416,10 @@ children: [
                 ),            borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: themeProvider.isDarkMode ? AppColorsDarkMode.shadowColorStrong : AppColorsLightMode.shadowColor,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
+            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
                 ],
               ),
               child: Row(
@@ -429,7 +433,6 @@ children: [
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: themeProvider.secondaryColor,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -460,7 +463,7 @@ children: [
                       IconButton(
                         icon: Icon(
                           Icons.add,
-                          color: themeProvider.secondaryColor,
+                          color: themeProvider.textPrimary,
                         ),
                         tooltip: 'Add Course',
                         onPressed: () {
@@ -474,7 +477,7 @@ children: [
                       IconButton(
                         icon: Icon(
                           Icons.delete,
-                          color: themeProvider.secondaryColor,
+                          color: themeProvider.textPrimary,
                         ),
                         tooltip: 'Delete Semester',
                         onPressed: () {

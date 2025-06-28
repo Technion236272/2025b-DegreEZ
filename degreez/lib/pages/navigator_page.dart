@@ -334,6 +334,14 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 ),
               ),
               decoration: BoxDecoration(
+                gradient: LinearGradient(
+          colors: [
+            context.read<ThemeProvider>().mainColor,
+            context.read<ThemeProvider>().accentColor,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
                 color: Theme.of(context).brightness == Brightness.light 
                     ? AppColorsLightMode.drawerHeaderColor 
                     : AppColorsDarkMode.secondaryColor,

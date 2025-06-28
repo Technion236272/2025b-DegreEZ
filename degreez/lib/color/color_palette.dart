@@ -306,10 +306,10 @@ class AppColorsLightMode {
   // =============================================================================
   
   /// Main primary color - Forest Green for good contrast and natural feel
-  static const Color primaryColor = Color(0xFF059669);
+  static const Color primaryColor = Color(0xFF2E5F41);
   
   /// Semi-transparent primary for overlays
-  static const Color primaryColorDim = Color(0xAA059669);
+  static const Color primaryColorDim = Color(0xAA2E5F41);
   
   /// Light primary - Soft mint green for backgrounds
   static const Color primaryColorLight = Color(0xFF86EFAC);
@@ -319,35 +319,37 @@ class AppColorsLightMode {
   // =============================================================================
   
   /// Main secondary - Dark gray for text and UI elements
-  static const Color secondaryColor = Color(0xFF374151);
+  static const Color secondaryColor = Color(0xFF51A768);
   
   /// Medium transparency secondary
-  static const Color secondaryColorDim = Color(0x99374151);
+  static const Color secondaryColorDim = Color(0x9951A768);
   
   /// High opacity secondary for prominent elements
-  static const Color secondaryColorDimDD = Color(0xDD374151);
+  static const Color secondaryColorDimDD = Color(0xDD51A768);
   
   /// Very subtle secondary for background effects
-  static const Color secondaryColorExtremelyDim = Color(0x44374151);
+  static const Color secondaryColorExtremelyDim = Color(0x4451A768);
   
   // =============================================================================
   // ACCENT COLORS - Light mode green accents for highlights and emphasis
   // =============================================================================
   
   /// Main accent - Emerald green for buttons and active states
-  static const Color accentColor = Color(0xFF059669);
-  
-  /// Darker accent variations
-  static const Color accentColorDark = Color(0xFF047857);
-  static const Color accentColorDarker = Color(0xFF064E3B);
-  
-  /// Semi-transparent accent
-  static const Color accentColorDim = Color(0xCC059669);
-  
-  /// Lighter accent variations
-  static const Color accentColorLight = Color(0xFF34D399);
-  static const Color accentColorExtremelyDim = Color(0x4434D399);
-  
+// Base color (used as the seed for the tonal palette)
+static const Color accentColor = Color(0xFFE1FADA); // Base - very light green
+
+// Darker variations (darker tones from same palette)
+static const Color accentColorDark = Color(0xFFB6E2B1);   // Tone ~60
+static const Color accentColorDarker = Color(0xFF74C57A); // Tone ~40
+
+// Lighter variant (closer to white)
+static const Color accentColorLight = Color(0xFFF4FFF1);  // Tone ~98
+
+// Transparent / dimmed versions
+static const Color accentColorDim = Color(0xCCE1FADA);    // 80% opacity
+static const Color accentColorExtremelyDim = Color(0x44E1FADA); // 27% opacity
+
+
   // =============================================================================
   // TEXT COLORS - Hierarchical text system for light mode
   // =============================================================================
@@ -372,7 +374,7 @@ class AppColorsLightMode {
   static const Color borderSecondary = Color(0xFFECFDF5);
   
   /// Drawer background - Very light green tint
-  static const Color drawerColor = Color(0xFFF0FDF4);
+  static const Color drawerColor = Color(0xFFFAFAFA);
   
   /// Drawer header - Soft green
   static const Color drawerHeaderColor = Color(0xFF86EFAC);
@@ -411,11 +413,14 @@ class AppColorsLightMode {
   // =============================================================================
   
   /// Primary shadow color
-  static const Color shadowColor = Color(0x1A000000);
+  static const Color shadowColor = Color(0xAA000000);
   
   /// Overlay colors for modals and dialogs
   static const Color overlayColor = Color(0x80000000);
   static const Color overlayColorLight = Color(0x40000000);
+
+    static const Color bug = mainColor;  
+
   
   // =============================================================================
   // DECORATION METHODS - Light mode specific decorations
@@ -520,39 +525,39 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
   @override
   Color topBarBG([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.primaryColor // Dark theme: Blue accent
-    : AppColorsLightMode.primaryColor; // Light theme: Green primary
+    : AppColorsLightMode.accentColorDarker; // Light theme: Green primary
 
   @override
   Color topBarText([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.textPrimary // Dark theme: White text
-    : AppColorsLightMode.cardColor; // Light theme: White text
+    : AppColorsLightMode.textPrimary; // Light theme: White text
 
   @override
   Color topBarMarkBG([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.accentColorLight // Dark theme: Light blue
-    : AppColorsLightMode.primaryColorLight; // Light theme: Light mint green
+    : AppColorsLightMode.accentColorLight; // Light theme: Light mint green
 
   @override
   Color topBarMarkText([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.textPrimary // Dark theme: White text
-    : AppColorsLightMode.accentColorDark; // Light theme: Dark green
+    : AppColorsLightMode.textPrimary; // Light theme: Dark green
 
   @override
   Color cardBG([String? courseId, bool isDarkMode = false]){
     return isDarkMode 
       ? AppColorsDarkMode.secondaryColor // Dark theme: Same as drawer header background (powder blue)
-      : AppColorsLightMode.borderSuccess; // Light theme: Very light mint green background (current color)
+      : AppColorsLightMode.accentColor; // Light theme: Very light mint green background (current color)
     }
 
   @override
   Color cardFG([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.textPrimary // Dark theme: White text for contrast against powder blue
-    : AppColorsLightMode.accentColorDark; // Light theme: Dark green text
+    : AppColorsLightMode.textPrimary; // Light theme: Dark green text
 
   @override
   Color cardFGdim([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.textSecondary // Dark theme: Light gray text for dim contrast
-    : AppColorsLightMode.accentColorExtremelyDim; // Light theme: Semi-transparent dark green
+    : AppColorsLightMode.textSecondary; // Light theme: Semi-transparent dark green
   
 }
 
