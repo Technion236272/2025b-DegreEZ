@@ -1,5 +1,4 @@
 import 'package:degreez/services/course_service.dart';
-import 'package:degreez/models/student_model.dart';
 
 class EligibilityService {
   /// Fetches all courses for a given semester and year.

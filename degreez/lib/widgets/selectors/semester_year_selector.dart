@@ -1,4 +1,3 @@
-import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +42,7 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
         List<String> yearValues = List.generate(11, (index) {
           int baseYear = currentYear - 5 + index;
           return selectedSeason == 'Winter'
-              ? '${baseYear}-${baseYear + 1}'
+              ? '$baseYear-${baseYear + 1}'
               : '$baseYear';
         });
 

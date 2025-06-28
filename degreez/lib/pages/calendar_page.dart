@@ -872,8 +872,8 @@ class _CalendarPageState extends State<CalendarPage>
                     boxShadow: [
                       BoxShadow(
                         color: themeProvider.isDarkMode 
-                          ? Colors.black.withOpacity(0.3)
-                          : Colors.grey.withOpacity(0.2),
+                          ? Colors.black.withAlpha(76)
+                          : Colors.grey.withAlpha(51),
                         blurRadius: 4,
                         offset: Offset(0, 1),
                       ),

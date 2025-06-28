@@ -25,7 +25,7 @@ class TypingIndicatorWidget extends StatelessWidget {
                   color: themeProvider.surfaceColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: themeProvider.primaryColor.withOpacity(0.3),
+                    color: themeProvider.primaryColor.withAlpha(76),
                     width: 1,
                   ),
                 ),
@@ -48,8 +48,8 @@ class TypingIndicatorWidget extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                       color: themeProvider.isDarkMode 
-                          ? Colors.black.withOpacity(0.2)
-                          : Colors.grey.withOpacity(0.2),
+                          ? Colors.black.withAlpha(51)
+                          : Colors.grey.withAlpha(51),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

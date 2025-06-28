@@ -914,10 +914,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: themeProvider.textSecondary.withOpacity(0.2),
+                    color: themeProvider.textSecondary.withAlpha(51),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: themeProvider.textSecondary.withOpacity(0.5),
+                      color: themeProvider.textSecondary.withAlpha(128),
                       width: 1,
                     ),
                   ),
@@ -949,10 +949,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withOpacity(0.1),
+              color: themeProvider.primaryColor.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: themeProvider.primaryColor.withOpacity(0.3),
+                color: themeProvider.primaryColor.withAlpha(76),
                 width: 1,
               ),
             ),
@@ -1105,10 +1105,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: themeProvider.textSecondary.withOpacity(0.2),
+                      color: themeProvider.textSecondary.withAlpha(51),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: themeProvider.textSecondary.withOpacity(0.3),
+                        color: themeProvider.textSecondary.withAlpha(76),
                         width: 1,
                       ),
                     ),
@@ -1173,7 +1173,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: themeProvider.textSecondary.withOpacity(0.2),
+                color: themeProvider.textSecondary.withAlpha(51),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: themeProvider.secondaryColor,
@@ -1355,10 +1355,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: themeProvider.errorColor.withOpacity(0.2),
+                      color: themeProvider.errorColor.withAlpha(51),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: themeProvider.errorColor.withOpacity(0.5),
+                        color: themeProvider.errorColor.withAlpha(128),
                         width: 1,
                       ),
                     ),
@@ -1379,10 +1379,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withOpacity(0.2),
+                      color: themeProvider.primaryColor.withAlpha(51),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        color: themeProvider.primaryColor.withAlpha(128),
                         width: 1,
                       ),
                     ),
@@ -1405,10 +1405,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: themeProvider.primaryColor.withOpacity(0.2),
+                        color: themeProvider.primaryColor.withAlpha(51),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: themeProvider.primaryColor.withOpacity(0.5),
+                          color: themeProvider.primaryColor.withAlpha(128),
                           width: 1,
                         ),
                       ),
@@ -1441,8 +1441,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
           colors:
               course.isModified
                   ? [
-                    themeProvider.primaryColor.withOpacity(0.1),
-                    themeProvider.primaryColor.withOpacity(0.05),
+                    themeProvider.primaryColor.withAlpha(26),
+                    themeProvider.primaryColor.withAlpha(13),
                   ]
                   : [themeProvider.mainColor, themeProvider.cardColor],
           begin: Alignment.topLeft,
@@ -1452,7 +1452,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         border:
             course.isModified
                 ? Border.all(
-                  color: themeProvider.primaryColor.withOpacity(0.5),
+                  color: themeProvider.primaryColor.withAlpha(128),
                   width: 1,
                 )
                 : null,
@@ -1512,14 +1512,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       decoration: BoxDecoration(
                         color:
                             course.isModified
-                                ? themeProvider.primaryColor.withOpacity(0.2)
-                                : themeProvider.textSecondary.withOpacity(0.2),
+                                ? themeProvider.primaryColor.withAlpha(51)
+                                : themeProvider.textSecondary.withAlpha(51),
                         borderRadius: BorderRadius.circular(8),
                         border:
                             course.isModified
                                 ? Border.all(
-                                  color: themeProvider.primaryColor.withOpacity(
-                                    0.5,
+                                  color: themeProvider.primaryColor.withAlpha(
+                                    125,
                                   ),
                                   width: 1,
                                 )
@@ -1561,10 +1561,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                     padding: const EdgeInsets.all(4),
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withOpacity(0.2),
+                      color: themeProvider.primaryColor.withAlpha(51),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        color: themeProvider.primaryColor.withAlpha(128),
                         width: 1,
                       ),
                     ),

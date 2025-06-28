@@ -1,7 +1,9 @@
 
 // lib/widgets/course_recommendation/recommendation_results_widget.dart
 
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/course_recommendation_models.dart';
 
 class RecommendationResultsWidget extends StatelessWidget {
@@ -26,7 +28,7 @@ class RecommendationResultsWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.summarize, color: Theme.of(context).primaryColor),
+                    Icon(Icons.summarize, color: context.read<ThemeProvider>().primaryColor),
                     const SizedBox(width: 8),
                     Text(
                       'Recommendation Summary',
@@ -45,13 +47,13 @@ class RecommendationResultsWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: context.read<ThemeProvider>().secondaryColor.withAlpha(75),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     recommendation.reasoning,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.blue[800],
+                      color: context.read<ThemeProvider>().primaryColor,
                     ),
                   ),
                 ),
@@ -124,13 +126,13 @@ class RecommendationResultsWidget extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                    color: context.read<ThemeProvider>().primaryColor.withAlpha(26),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     course.category,
                                     style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
+                                      color: context.read<ThemeProvider>().primaryColor,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -159,7 +161,7 @@ class RecommendationResultsWidget extends StatelessWidget {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

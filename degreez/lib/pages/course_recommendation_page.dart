@@ -2,10 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
 import '../providers/course_recommendation_provider.dart';
 import '../providers/theme_provider.dart';
-import '../models/course_recommendation_models.dart';
 import '../widgets/course_recommendation/semester_selector_widget.dart';
 import '../widgets/course_recommendation/catalog_upload_widget.dart';
 import '../widgets/course_recommendation/recommendation_results_widget.dart';
@@ -42,13 +40,13 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Recommendations'),
-        backgroundColor: themeProvider.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: themeProvider.mainColor,
+        foregroundColor: themeProvider.textPrimary,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
+          labelColor: themeProvider.secondaryColor,
+          unselectedLabelColor: themeProvider.textPrimary,
+          indicatorColor: themeProvider.secondaryColor,
           tabs: const [
             Tab(icon: Icon(Icons.search), text: 'Generate'),
             Tab(icon: Icon(Icons.list), text: 'Results'),
@@ -85,7 +83,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                       Row(
                         children: [
                           Icon(Icons.auto_awesome, 
-                              color: Theme.of(context).primaryColor),
+                              color: context.read<ThemeProvider>().primaryColor),
                           const SizedBox(width: 8),
                           Text(
                             'AI Course Recommendations',
@@ -147,8 +145,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                     style: const TextStyle(fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: context.read<ThemeProvider>().primaryColor,
+                    foregroundColor: context.read<ThemeProvider>().secondaryColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -269,7 +267,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: context.read<ThemeProvider>().primaryColor,
                   child: Text('${recommendation.recommendations.length}'),
                 ),
                 title: Text(
@@ -307,7 +305,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   child: Column(
                     children: [
                       Icon(Icons.psychology, 
-                          color: Theme.of(context).primaryColor, size: 32),
+                          color: context.read<ThemeProvider>().primaryColor, size: 32),
                       const SizedBox(height: 8),
                       const Text('AI-Powered', 
                           style: TextStyle(fontWeight: FontWeight.bold)),
@@ -330,7 +328,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   child: Column(
                     children: [
                       Icon(Icons.person, 
-                          color: Theme.of(context).primaryColor, size: 32),
+                          color: context.read<ThemeProvider>().primaryColor, size: 32),
                       const SizedBox(height: 8),
                       const Text('Personalized', 
                           style: TextStyle(fontWeight: FontWeight.bold)),
@@ -357,7 +355,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   child: Column(
                     children: [
                       Icon(Icons.schedule, 
-                          color: Theme.of(context).primaryColor, size: 32),
+                          color: context.read<ThemeProvider>().primaryColor, size: 32),
                       const SizedBox(height: 8),
                       const Text('Optimized', 
                           style: TextStyle(fontWeight: FontWeight.bold)),
@@ -380,7 +378,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   child: Column(
                     children: [
                       Icon(Icons.track_changes, 
-                          color: Theme.of(context).primaryColor, size: 32),
+                          color: context.read<ThemeProvider>().primaryColor, size: 32),
                       const SizedBox(height: 8),
                       const Text('Progressive', 
                           style: TextStyle(fontWeight: FontWeight.bold)),

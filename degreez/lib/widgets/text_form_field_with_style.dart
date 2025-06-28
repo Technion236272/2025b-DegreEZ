@@ -47,7 +47,7 @@ Widget textFormFieldWithStyle({
               borderSide: BorderSide(
                 color: themeProvider.isDarkMode 
                   ? AppColorsDarkMode.errorColorDim
-                  : AppColorsLightMode.errorColor.withOpacity(0.7),
+                  : AppColorsLightMode.errorColor.withAlpha(178),
               ),
             ),
             alignLabelWithHint: true,
@@ -55,7 +55,7 @@ Widget textFormFieldWithStyle({
             labelStyle: TextStyle(color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,),
             hoverColor: themeProvider.primaryColor,
             hintText: example,
-            hintStyle: TextStyle(color: themeProvider.textSecondary.withOpacity(0.7)),
+            hintStyle: TextStyle(color: themeProvider.textSecondary.withAlpha(178)),
           ),
           style: TextStyle(color: themeProvider.textPrimary, fontSize: 15),
       validator: (value) {

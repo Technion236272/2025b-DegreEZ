@@ -62,7 +62,7 @@ class SemesterSelectorWidget extends StatelessWidget {
                         onSemesterSelected(year, semesterCode);
                       }
                     },
-                    selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                    selectedColor: Theme.of(context).primaryColor.withAlpha(51),
                     labelStyle: TextStyle(
                       color: isSelected ? Theme.of(context).primaryColor : null,
                       fontWeight: isSelected ? FontWeight.bold : null,

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -54,7 +55,7 @@ class FirestoreService {
       return studentData;
     } catch (e) {
       // ignore: avoid_print
-      print("Error fetching full student data: $e");
+      debugPrint("Error fetching full student data: $e");
       return {};
     }
   }
@@ -115,7 +116,7 @@ class FirestoreService {
       return globalData;
     } catch (e) {
       // ignore: avoid_print
-      print("Error fetching global data: $e");
+      debugPrint("Error fetching global data: $e");
       return {};
     }
   }

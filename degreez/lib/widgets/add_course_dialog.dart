@@ -1,4 +1,3 @@
-import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -247,10 +246,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       return;
     }
 
-    final rawPrereqs = courseDetails.prerequisites;
+    String rawPrereqs = courseDetails.prerequisites;
     List<List<String>> parsedPrereqs = [];
 
-    if (rawPrereqs is String) {
       final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
 
       for (final group in orGroups) {
@@ -264,7 +262,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
 
         if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
       }
-    }
 
     final missing = context.read<CourseProvider>().getMissingPrerequisites(
       widget.semesterName,

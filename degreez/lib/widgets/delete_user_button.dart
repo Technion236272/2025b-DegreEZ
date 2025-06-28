@@ -1,4 +1,3 @@
-import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/deleting_account_page.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/login_notifier.dart';

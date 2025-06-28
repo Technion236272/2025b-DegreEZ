@@ -1,5 +1,4 @@
 // services/course_service.dart
-import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CourseService {

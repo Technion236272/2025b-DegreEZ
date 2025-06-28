@@ -753,7 +753,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(

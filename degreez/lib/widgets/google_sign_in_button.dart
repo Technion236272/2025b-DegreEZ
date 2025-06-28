@@ -3,7 +3,6 @@ import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
-import '../color/color_palette.dart';
 
 /// A reusable Google Sign-In button widget
 class GoogleSignInButton extends StatefulWidget {
@@ -30,7 +29,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
               )
               : TextButton(
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: context.read<ThemeProvider>().primaryColor,
+                  backgroundColor: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().primaryColor : context.read<ThemeProvider>().secondaryColor,
                 ),
                 onPressed: () async {
                   try {
@@ -67,7 +66,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         height: 24.0,
                         width: 24.0,
                         decoration: BoxDecoration(
-                          color: context.read<ThemeProvider>().mainColor,
+                          color: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().mainColor : context.read<ThemeProvider>().primaryColor,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -83,7 +82,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         'Sign in with Google',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: context.read<ThemeProvider>().mainColor,
+                          color: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().mainColor : context.read<ThemeProvider>().primaryColor,
                         ),
                       ),
                     ],
