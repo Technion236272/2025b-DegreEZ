@@ -303,6 +303,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
     try {
       final response = await http.get(url, headers: headers);
+      if (!mounted) return null;
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data is List && data.isNotEmpty) {
@@ -396,14 +397,16 @@ Future<void> _getUserLocation() async {
     final Map<String, Map<String, int>> courseSessionCounts = {};
 
     for (final course in selectedCourses) {
-      debugPrint('➡️ Course: ${course.courseId} - ${course.name}');
+      if (!mounted) return;
+      debugPrint('➡️ Course: \\${course.courseId} - \\${course.name}');
       final details = await CourseService.getCourseDetails(
         year,
         semester,
         course.courseId,
       );
+      if (!mounted) return;
       if (details == null) {
-        debugPrint('❌ No details found for course ${course.courseId}');
+        debugPrint('❌ No details found for course \\${course.courseId}');
         continue;
       }
 

@@ -1,7 +1,6 @@
 // services/course_service.dart
 import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CourseService {
   static const String baseUrl = 'https://michael-maltsev.github.io/technion-sap-info-fetcher';
@@ -10,46 +9,50 @@ class CourseService {
   static final Map<String, List<dynamic>> _coursesCache = {};
   static final Map<String, List<SemesterInfo>> _semestersCache = {};
 
-  /// Get available semesters
+  /// Get available semesters from Firestore
   static Future<List<SemesterInfo>> getAvailableSemesters() async {
     if (_semestersCache.isNotEmpty) {
       return _semestersCache.values.first;
     }
-
     try {
-      final response = await http.get(Uri.parse('$baseUrl/last_semesters.json'));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+      // Fetch semesters from Firestore: Technion/data/metadata/semesters (or similar)
+      final doc = await FirebaseFirestore.instance
+          .collection('Technion')
+          .doc('data')
+          .collection('metadata')
+          .doc('semesters')
+          .get();
+      if (doc.exists && doc.data() != null) {
+        final List<dynamic> data = doc.data()!['semesters'] ?? [];
         final semesters = data.map((item) => SemesterInfo.fromJson(item)).toList();
         _semestersCache['semesters'] = semesters;
         return semesters;
       }
     } catch (e) {
-      throw Exception('Error fetching semesters: $e');
+      throw Exception('Error fetching semesters from Firestore: $e');
     }
     return [];
   }
 
-  /// Get all courses for a specific semester
+  /// Get all courses for a specific semester from Firestore
   static Future<List<dynamic>> getAllCourses(int year, int semester) async {
     final key = '${year}_$semester';
     if (_coursesCache.containsKey(key)) {
       return _coursesCache[key]!;
     }
-
     try {
-      final url = '$baseUrl/courses_${year}_$semester.json';
-      final response = await http.get(Uri.parse(url));
-      
-      if (response.statusCode == 200) {
-        final List<dynamic> courses = json.decode(response.body);
-        _coursesCache[key] = courses;
-        return courses;
-      }
+      // Fetch all course documents from the subcollection: Technion/data/courses_{year}_{semester}
+      final collection = FirebaseFirestore.instance
+          .collection('Technion')
+          .doc('data')
+          .collection('courses_${year}_$semester');
+      final snapshot = await collection.get();
+      final List<dynamic> courses = snapshot.docs.map((doc) => doc.data()).toList();
+      _coursesCache[key] = courses;
+      return courses;
     } catch (e) {
-      throw Exception('Error fetching courses for $year-$semester: $e');
+      throw Exception('Error fetching courses for $year-$semester from Firestore: $e');
     }
-    return [];
   }
 
   /// Search for courses by various criteria
