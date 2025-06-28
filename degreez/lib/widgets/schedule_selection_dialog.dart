@@ -300,9 +300,9 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                   style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
                   onPressed: () {

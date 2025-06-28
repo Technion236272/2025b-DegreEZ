@@ -23,7 +23,7 @@ class _BugReportButtonState extends State<BugReportButton> {  @override
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.primaryColor,
+                      backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                       foregroundColor: themeProvider.isDarkMode 
                         ? AppColorsDarkMode.bug 
                         : AppColorsLightMode.bug,
@@ -69,9 +69,9 @@ Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
                 style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
                 onPressed: () async {

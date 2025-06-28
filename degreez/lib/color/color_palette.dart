@@ -33,7 +33,7 @@ class AppColorsDarkMode {
   // =============================================================================
   
   /// Main primary color - Payne's Gray, sophisticated blue accent
-  static const Color primaryColor = Color(0xFF306780);
+  static const Color primaryColor = Color(0xFF1F3D56);
   
   /// Semi-transparent primary for overlays and hover states
   static const Color primaryColorDim = Color(0xAA306780);
@@ -539,7 +539,7 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
 
   @override
   Color topBarMarkText([bool isDarkMode = false]) => isDarkMode 
-    ? AppColorsDarkMode.textPrimary // Dark theme: White text
+    ? AppColorsDarkMode.mainColor // Dark theme: White text
     : AppColorsLightMode.textPrimary; // Light theme: Dark green
 
   @override
@@ -551,7 +551,7 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
 
   @override
   Color cardFG([bool isDarkMode = false]) => isDarkMode 
-    ? AppColorsDarkMode.textPrimary // Dark theme: White text for contrast against powder blue
+    ? AppColorsDarkMode.mainColor // Dark theme: White text for contrast against powder blue
     : AppColorsLightMode.textPrimary; // Light theme: Dark green text
 
   @override

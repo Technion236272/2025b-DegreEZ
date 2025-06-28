@@ -56,12 +56,12 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
             fillColor: themeProvider.surfaceColor,
             enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: themeProvider.borderPrimary,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
           ),
         ),
         focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(
-            color: themeProvider.borderPrimary,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
                         width: 2.0,
           ),          
         ),
@@ -77,7 +77,7 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
             alignLabelWithHint: true,
             labelText: "Enrollment Year",
             labelStyle: TextStyle(
-              color: themeProvider.primaryColor,
+              color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,
               fontSize: 15,
             ),
             hoverColor: themeProvider.secondaryColor,

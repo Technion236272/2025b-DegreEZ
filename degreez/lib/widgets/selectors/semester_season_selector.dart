@@ -31,17 +31,17 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
             fillColor: themeProvider.surfaceColor,
             labelText: "Enrollment Semester",
             labelStyle: TextStyle(
-              color: themeProvider.primaryColor,
+              color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,
               fontSize: 13,
             ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: themeProvider.borderPrimary,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
           ),
         ),
         focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(
-            color: themeProvider.borderPrimary,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
                         width: 2.0,
           ),          
         ),
@@ -66,7 +66,7 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
               child: Text(
                 season,
                 style: TextStyle(
-                  color: themeProvider.primaryColor,
+                  color: themeProvider.textPrimary,
                 ),
               ),
             );

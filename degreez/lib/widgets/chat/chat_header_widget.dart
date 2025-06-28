@@ -51,16 +51,16 @@ class ChatHeaderWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    color: themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.1) : themeProvider.secondaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      color: themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.3) : themeProvider.secondaryColor.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
                   child: Icon(
                     Icons.smart_toy,
-                    color: themeProvider.primaryColor,
+                    color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                     size: 24,
                   ),
                 ),
@@ -96,12 +96,12 @@ class ChatHeaderWidget extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: includeUserContext 
-                          ? themeProvider.primaryColor.withOpacity(0.1)
+                          ? themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.1) : themeProvider.secondaryColor.withOpacity(0.1)
                           : themeProvider.cardColor,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: includeUserContext 
-                            ? themeProvider.primaryColor
+                            ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
                             : themeProvider.borderPrimary,
                         width: 1,
                       ),
@@ -116,7 +116,7 @@ class ChatHeaderWidget extends StatelessWidget {
                           child: Icon(
                             includeUserContext ? Icons.school : Icons.school_outlined,
                             color: includeUserContext 
-                                ? themeProvider.primaryColor
+                                ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
                                 : themeProvider.textSecondary,
                             size: 20,
                           ),
@@ -147,7 +147,7 @@ class ChatHeaderWidget extends StatelessWidget {
                           padding: const EdgeInsets.all(8.0),
                           child: Icon(
                             Icons.preview,
-                            color: themeProvider.primaryColor,
+                            color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                             size: 20,
                           ),
                         ),
@@ -175,7 +175,7 @@ class ChatHeaderWidget extends StatelessWidget {
                         padding: const EdgeInsets.all(8.0),
                         child: Icon(
                           Icons.refresh,
-                          color: themeProvider.primaryColor,
+                          color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                           size: 20,
                         ),
                       ),
@@ -209,25 +209,17 @@ class ChatHeaderWidget extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
-              style: TextStyle(color: themeProvider.secondaryColor),
+              style: TextStyle(color: themeProvider.textSecondary),
             ),
           ),
           TextButton(
-                          style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-      if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
-      }
-      return context.read<ThemeProvider>().accentColor;
-    }),
-                  ),
             onPressed: () {
               Navigator.pop(dialogContext);
               onClearChat();
             },
             child: Text(
               'Clear',
-              style: TextStyle(color: themeProvider.primaryColor),
+              style: TextStyle(color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor),
             ),
           ),
         ],

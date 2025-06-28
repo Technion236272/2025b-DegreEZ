@@ -362,12 +362,12 @@ children: [
                   ),
                 ),
                 TextButton(
-                  style: ButtonStyle(
+                  style:ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
                   onPressed: () {
@@ -457,7 +457,7 @@ children: [
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: themeProvider.isDarkMode ? AppColorsDarkMode.accentColor : AppColorsLightMode.mainColor,
+                              color: themeProvider.isDarkMode ? AppColorsDarkMode.mainColor : AppColorsLightMode.mainColor,
                             ),
                           ),
                         ),
@@ -602,9 +602,9 @@ children: [
                 style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
                 onPressed: () async {

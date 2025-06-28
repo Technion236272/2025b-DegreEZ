@@ -99,9 +99,9 @@ class AiImportDialogs {
               style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
               icon: const Icon(Icons.camera_alt, size: 18),

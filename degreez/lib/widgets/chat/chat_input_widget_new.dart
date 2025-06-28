@@ -236,8 +236,8 @@ class ChatInputWidget extends StatelessWidget {
                   )
                 : LinearGradient(
                     colors: [
-                      themeProvider.primaryColor,
-                      themeProvider.primaryColor.withOpacity(0.8),
+                      themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.accentColor,
+                      themeProvider.isLightMode ? themeProvider.primaryColor.withOpacity(0.8) :themeProvider.accentColor.withOpacity(0.8),
                     ],
                   ),
             borderRadius: BorderRadius.circular(25),
@@ -270,7 +270,7 @@ class ChatInputWidget extends StatelessWidget {
                         key: ValueKey(isLoading),
                         color: isLoading 
                             ? themeProvider.textSecondary
-                            : Colors.white,
+                            : themeProvider.mainColor,
                         size: 20,
                       ),
                     ),

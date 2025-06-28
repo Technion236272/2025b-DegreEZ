@@ -23,7 +23,7 @@ class _FeedbackButtonState extends State<FeedbackButton> {  @override
                   ? LinearProgressIndicator()
                   : ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.primaryColor,
+                      backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                       foregroundColor: themeProvider.mainColor,
                       padding: EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -65,9 +65,9 @@ Future<void> feedbackPopup(BuildContext context, FeedbackNotifier notifier) {
                 style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
                 onPressed: () async {

@@ -45,17 +45,17 @@ class _CatalogSelectorState extends State<CatalogSelector> {
             fillColor: themeProvider.surfaceColor,
             labelText: "Catalog",
             labelStyle: TextStyle(
-              color: themeProvider.primaryColor,
+              color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,
               fontSize: 15,
             ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: themeProvider.borderPrimary,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
           ),
         ),
         focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(
-            color: themeProvider.borderPrimary,
+            color: themeProvider.isLightMode ? themeProvider.borderPrimary : themeProvider.accentColor,
                         width: 2.0,
 
           ),          

@@ -371,9 +371,9 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                             style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
       if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
       }
-      return context.read<ThemeProvider>().accentColor;
+        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
     }),
                   ),
               onPressed: () {
@@ -1647,7 +1647,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
             child: ElevatedButton.icon(
               onPressed: _addWhatIfCourse,
               style: ElevatedButton.styleFrom(
-                backgroundColor: themeProvider.primaryColor,
+                backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
                 foregroundColor: themeProvider.mainColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
