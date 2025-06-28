@@ -209,10 +209,18 @@ class ChatHeaderWidget extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
-              style: TextStyle(color: themeProvider.textSecondary),
+              style: TextStyle(color: themeProvider.secondaryColor),
             ),
           ),
           TextButton(
+                          style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().accentColor;
+      }
+      return context.read<ThemeProvider>().accentColor;
+    }),
+                  ),
             onPressed: () {
               Navigator.pop(dialogContext);
               onClearChat();

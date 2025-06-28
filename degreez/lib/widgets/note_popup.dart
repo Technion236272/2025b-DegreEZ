@@ -69,7 +69,7 @@ Future<bool> notePopup(
                 const SizedBox(width: 10),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: context.read<ThemeProvider>().secondaryColor,
+                    backgroundColor: context.read<ThemeProvider>().primaryColor,
                   ),
                   onPressed: () async {
                     final studentProvider = Provider.of<StudentProvider>(
