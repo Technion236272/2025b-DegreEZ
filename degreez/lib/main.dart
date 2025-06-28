@@ -1,5 +1,6 @@
 // lib/main.dart - Updated to include CalendarControllerProvider
 import 'package:degreez/pages/navigator_page.dart';
+import 'package:degreez/providers/course_recommendation_provider.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -57,6 +58,10 @@ class MyApp extends StatelessWidget {
         // New improved providers
         ChangeNotifierProvider(create: (_) => StudentProvider()),
         ChangeNotifierProvider(create: (_) => CourseProvider()),
+
+        // Course Recommendation Provider - now simple instantiation
+        ChangeNotifierProvider(create: (_) => CourseRecommendationProvider()),
+
         ChangeNotifierProvider(
           create: (_) {
             final provider = CourseDataProvider();

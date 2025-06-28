@@ -1,6 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
+import 'package:degreez/pages/course_recommendation_page.dart';
 import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
@@ -376,6 +377,20 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               title: 'Map',
               isSelected: _currentPage == 'Map',
               onTap: () => _changePage('Map'),
+            ),
+
+            // Course Recommendations
+            ListTile(
+              leading: const Icon(Icons.auto_awesome),
+              title: const Text('Course Recommendations'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CourseRecommendationPage(),
+                  ),
+                );
+              },
             ),
 
             const Divider(),
