@@ -62,6 +62,14 @@ Future<void> feedbackPopup(BuildContext context, FeedbackNotifier notifier) {
                 )),
               ),
               TextButton(
+                style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().accentColor;
+      }
+      return context.read<ThemeProvider>().accentColor;
+    }),
+                  ),
                 onPressed: () async {
                   if (titleController.text.trim().isEmpty) {                    ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -100,7 +108,7 @@ Future<void> feedbackPopup(BuildContext context, FeedbackNotifier notifier) {
                   }
                 },
                 child: Text('Submit', style: TextStyle(
-                  color: themeProvider.secondaryColor,
+                  color: themeProvider.primaryColor,
                   fontWeight: FontWeight.w700,
                 )),
               ),

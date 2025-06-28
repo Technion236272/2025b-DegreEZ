@@ -262,7 +262,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withAlpha(25),
+                      color: context.read<ThemeProvider>().accentColor,
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(8),
                       ),
@@ -460,7 +460,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         );
 
         return Card(
-          elevation: 5,
+          elevation: 3,
           margin: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,

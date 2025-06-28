@@ -368,7 +368,7 @@ static const Color accentColorExtremelyDim = Color(0x44E1FADA); // 27% opacity
   // =============================================================================
   
   /// Primary borders - Light sage green
-  static const Color borderPrimary = Color(0xFFD1FAE5);
+  static const Color borderPrimary = primaryColor;
   
   /// Secondary borders - Very light mint
   static const Color borderSecondary = Color(0xFFECFDF5);
@@ -557,7 +557,7 @@ class CourseCardColorPalette1 extends CourseCardColorPalette
   @override
   Color cardFGdim([bool isDarkMode = false]) => isDarkMode 
     ? AppColorsDarkMode.textSecondary // Dark theme: Light gray text for dim contrast
-    : AppColorsLightMode.textSecondary; // Light theme: Semi-transparent dark green
+    : AppColorsLightMode.textSecondary.withAlpha(50); // Light theme: Semi-transparent dark green
   
 }
 

@@ -458,7 +458,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         icon,
         color: isSelected 
             ? (Theme.of(context).brightness == Brightness.light 
-                ? AppColorsLightMode.primaryColor 
+                ? AppColorsLightMode.secondaryColor 
                 : null) 
             : (Theme.of(context).brightness == Brightness.light 
                 ? AppColorsLightMode.textSecondary 
@@ -470,7 +470,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           color: isSelected 
               ? (Theme.of(context).brightness == Brightness.light 
-                  ? AppColorsLightMode.primaryColor 
+                  ? AppColorsLightMode.secondaryColor 
                   : null) 
               : (Theme.of(context).brightness == Brightness.light 
                   ? AppColorsLightMode.textSecondary 

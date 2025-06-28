@@ -1,4 +1,5 @@
 import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -107,7 +108,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      contentTextStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
       title: Text('Add Course to ${widget.semesterName}'),
       content: SizedBox(
         height: MediaQuery.of(context).size.height * 0.5,
@@ -116,10 +116,10 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
           children: [
             TextField(
               controller: searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(
-                    color: AppColorsDarkMode.secondaryColor,
+                    color: context.read<ThemeProvider>().secondaryColor,
                   ),
                 ),
                 labelText: 'Course ID or Name',
@@ -161,7 +161,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                           color:
                               hasMissing
                                   ? Colors.redAccent
-                                  : AppColorsDarkMode.secondaryColor,
+                                  : null,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -183,7 +183,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel',style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),),
         ),
       ],
     );

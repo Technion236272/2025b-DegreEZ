@@ -50,21 +50,21 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
         return DropdownButtonFormField<String>(
           iconEnabledColor: themeProvider.secondaryColor,
           value: yearValues.contains(selectedYear) ? selectedYear : null,
-          style: TextStyle(color: themeProvider.secondaryColor),
+          style: TextStyle(color: themeProvider.textPrimary),
           decoration: InputDecoration(
             filled: true,
             fillColor: themeProvider.surfaceColor,
             enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: themeProvider.borderPrimary,
-                width: 2.0,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: themeProvider.secondaryColor.withAlpha(200),
-              ),
-            ),
+          borderSide: BorderSide(
+            color: themeProvider.borderPrimary,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+            color: themeProvider.borderPrimary,
+                        width: 2.0,
+          ),          
+        ),
             errorBorder: OutlineInputBorder(
               borderSide: BorderSide(
                 color: themeProvider.errorColor,
@@ -77,12 +77,12 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
             alignLabelWithHint: true,
             labelText: "Enrollment Year",
             labelStyle: TextStyle(
-              color: themeProvider.secondaryColor,
+              color: themeProvider.primaryColor,
               fontSize: 15,
             ),
             hoverColor: themeProvider.secondaryColor,
             hintText: "Year",
-            hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
+            hintStyle: TextStyle(color: themeProvider.secondaryColor.withAlpha(200)),
           ),
           dropdownColor: themeProvider.surfaceColor,
           items:
@@ -92,7 +92,7 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
                   child: Text(
                     yearLabel,
                     style: TextStyle(
-                      color: themeProvider.secondaryColor,
+                      color: themeProvider.textPrimary,
                     ),
                   ),
                 );

@@ -329,19 +329,18 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
             return StatefulBuilder(
           builder: (context, setState) {            
             return AlertDialog(
-              shape: RoundedRectangleBorder(
-                side: BorderSide(
-                  color: themeProvider.secondaryColor,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
+              // shape: RoundedRectangleBorder(
+              //   side: BorderSide(
+              //     color: themeProvider.secondaryColor,
+              //     width: 2,
+              //   ),
+              //   borderRadius: BorderRadius.circular(16),
+              // ),
               backgroundColor: themeProvider.mainColor, // Changed to night black
               title: Text(
                 'Add New Semester',
                 style: TextStyle(
-                  color: themeProvider.secondaryColor,
-                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textPrimary,
                 ),
               ),
               content: Column(
@@ -363,6 +362,14 @@ children: [
                   ),
                 ),
                 TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().accentColor;
+      }
+      return context.read<ThemeProvider>().accentColor;
+    }),
+                  ),
                   onPressed: () {
                     final semesterName = '$selectedSeason $selectedYear';
                     context.read<CourseProvider>().addSemester(
@@ -374,7 +381,7 @@ children: [
                   child: Text(
                     'Add',
                     style: TextStyle(
-                      color: themeProvider.secondaryColor,
+                      color: themeProvider.primaryColor,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -568,30 +575,38 @@ children: [
       context: context,
       builder:
           (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: themeProvider.textSecondary,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(16),            ),
+            // shape: RoundedRectangleBorder(
+            //   side: BorderSide(
+            //     color: themeProvider.textSecondary,
+            //     width: 2,
+            //   ),
+            //   borderRadius: BorderRadius.circular(16),            ),
             backgroundColor: themeProvider.mainColor,
             title: Text(
               'Delete Semester',
-              style: TextStyle(color: themeProvider.secondaryColor),
+              style: TextStyle(color: themeProvider.textPrimary),
             ),
             content: Text(
               'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
-              style: TextStyle(color: themeProvider.secondaryColor),
+              style: TextStyle(color: themeProvider.textPrimary),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(
                   'Cancel',
-                  style: TextStyle(color: themeProvider.textSecondary),
+                  style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().accentColor;
+      }
+      return context.read<ThemeProvider>().accentColor;
+    }),
+                  ),
                 onPressed: () async {
                   await Provider.of<CourseProvider>(
                     context,
@@ -605,7 +620,7 @@ children: [
                 child: Text(
                   'Delete',
                   style: TextStyle(
-                    color: themeProvider.secondaryColor,
+                    color: themeProvider.primaryColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

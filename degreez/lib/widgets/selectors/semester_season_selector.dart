@@ -24,22 +24,26 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
           iconEnabledColor: themeProvider.secondaryColor,
           value: ['Winter', 'Spring', 'Summer'].contains(selectedSemesterSeason) ? selectedSemesterSeason : null,
           style: TextStyle(
-            color: themeProvider.secondaryColor,
+            color: themeProvider.textPrimary,
           ),
           decoration: InputDecoration(
             filled: true,
             fillColor: themeProvider.surfaceColor,
             labelText: "Enrollment Semester",
-            labelStyle: TextStyle(color: themeProvider.textSecondary,fontSize: 15),
+            labelStyle: TextStyle(
+              color: themeProvider.primaryColor,
+              fontSize: 13,
+            ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
             color: themeProvider.borderPrimary,
-            width: 2.0,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: themeProvider.secondaryColor.withAlpha(200),),
-          
+        borderSide: BorderSide(
+            color: themeProvider.borderPrimary,
+                        width: 2.0,
+          ),          
         ),
         errorBorder: OutlineInputBorder(
           borderSide: BorderSide(
@@ -62,7 +66,7 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
               child: Text(
                 season,
                 style: TextStyle(
-                  color: themeProvider.secondaryColor,
+                  color: themeProvider.primaryColor,
                 ),
               ),
             );

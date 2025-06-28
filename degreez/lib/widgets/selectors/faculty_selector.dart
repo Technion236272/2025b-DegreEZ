@@ -1,5 +1,6 @@
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
@@ -64,9 +65,9 @@ class _FacultySelectorState extends State<FacultySelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SignUpProvider>(
-      builder: (context, signUpProvider, _) {
-        selectedFaculty = context.read<SignUpProvider>().selectedFaculty;
+    return Consumer2<SignUpProvider, ThemeProvider>(
+      builder: (context, signUpProvider, themeProvider, _) {
+        selectedFaculty = signUpProvider.selectedFaculty;
         final currentCatalog = signUpProvider.selectedCatalog;
         
         // Load faculties if catalog has changed
@@ -80,42 +81,48 @@ class _FacultySelectorState extends State<FacultySelector> {
         bool isEnabled = currentCatalog != null && _faculties.isNotEmpty && !isLoading;
 
         return DropdownButtonFormField<String>(
-          iconEnabledColor: AppColorsDarkMode.secondaryColor,
+          iconEnabledColor: themeProvider.secondaryColor,
           value: _faculties.contains(selectedFaculty) ? selectedFaculty : null,
-          style: const TextStyle(color: AppColorsDarkMode.secondaryColor),
-          decoration: InputDecoration(
+          style: TextStyle(color: themeProvider.textPrimary),
+                    decoration: InputDecoration(
+            filled: true,
+            fillColor: themeProvider.surfaceColor,
+        labelText: "Faculty",
+            labelStyle: TextStyle(
+              color: themeProvider.primaryColor,
+              fontSize: 15,
+            ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: AppColorsDarkMode.secondaryColor,
-            width: 2.0,
+            color: themeProvider.borderPrimary,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.secondaryColorDimDD),
+          borderSide: BorderSide(color: themeProvider.primaryColor,            width: 2.0,
+),
+          
         ),
         errorBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: AppColorsDarkMode.errorColor,
+            color: themeProvider.errorColor,
             width: 2.0,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColorsDarkMode.errorColorDim),
+          borderSide: BorderSide(color: themeProvider.errorColor.withAlpha(170)),
         ),
         alignLabelWithHint: true,
-        labelText: "Faculty",
-        labelStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
-        hoverColor: AppColorsDarkMode.secondaryColor,
+        hoverColor: themeProvider.secondaryColor,
         hintText: currentCatalog == null 
                           ? 'Please select catalog first'
                           : isLoading 
                               ? 'Loading...'
                               : _faculties.isEmpty
                                 ?'No faculties available'
-                                :"Please Select Your Faculty",
-        hintStyle: TextStyle(color: AppColorsDarkMode.secondaryColorDim),
-      ),
-          dropdownColor: AppColorsDarkMode.surfaceColor,
+                                :"Please Select Your Faculty",        
+        hintStyle: TextStyle(color: themeProvider.secondaryColor.withAlpha(200),
+      ),),
+          dropdownColor: themeProvider.surfaceColor,
           items: _faculties.isEmpty
               ? [
                   DropdownMenuItem<String>(
@@ -128,7 +135,7 @@ class _FacultySelectorState extends State<FacultySelector> {
                               ? 'Loading...'
                               : 'No faculties available',
                       style: TextStyle(
-                        color: AppColorsDarkMode.secondaryColorDim,
+                        color: themeProvider.secondaryColor.withAlpha(200),
                       ),
                     ),
                   ),

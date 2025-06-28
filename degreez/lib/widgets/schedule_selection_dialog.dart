@@ -1,6 +1,8 @@
 // lib/widgets/schedule_selection_dialog.dart - Fixed grouping of duplicate times
 
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/course_service.dart';
 import '../models/student_model.dart';
 import '../mixins/course_event_mixin.dart';
@@ -295,6 +297,14 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
                 ),
                 const Spacer(),
                 ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().accentColor;
+      }
+      return context.read<ThemeProvider>().accentColor;
+    }),
+                  ),
                   onPressed: () {
                     widget.onSelectionChanged(selectedLectureTime, selectedTutorialTime, selectedLabTime, selectedWorkshopTime);
                     Navigator.pop(context);
@@ -367,7 +377,7 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Theme.of(context).primaryColor),
+          Icon(icon, size: 20, color: context.read<ThemeProvider>().primaryColor),
           const SizedBox(width: 8),
           Text(
             '$title ($count time slots)',
@@ -403,8 +413,8 @@ class _ScheduleSelectionDialogState extends State<ScheduleSelectionDialog>
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: isSelected ? 4 : 1,
+      margin: const EdgeInsets.symmetric(vertical: 4,horizontal: 3),
+      elevation: isSelected ? 4 : 2,
       child: CheckboxListTile(
         value: isSelected,
         onChanged: (value) => onChanged(value ?? false),

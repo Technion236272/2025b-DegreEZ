@@ -144,7 +144,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                   children: [
                     // Save Grade Button
                     SizedBox(
-                      width: double.infinity,                      child: ElevatedButton.icon(
+                      width: double.infinity,                      
+                      child: ElevatedButton.icon(
                         onPressed: _saveGrade,
                         icon: Icon(
                           Icons.save,

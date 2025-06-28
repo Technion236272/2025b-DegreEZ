@@ -181,9 +181,18 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
+                style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),
               ),
             ),
             TextButton(
+              style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
+        return context.read<ThemeProvider>().accentColor;
+      }
+      return context.read<ThemeProvider>().accentColor;
+    }),
+                  ),
               onPressed: () {
                 if (formKey.currentState?.validate() != true) {
                   return;
