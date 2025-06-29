@@ -7,6 +7,7 @@ import '../models/student_model.dart';
 import '../providers/course_provider.dart';
 import '../providers/student_provider.dart';
 import '../services/course_service.dart';
+import '../constants/introductory_courses.dart';
 import 'diagram_ai_agent.dart';
 
 /// Service class to handle AI-powered course import functionality
@@ -367,13 +368,43 @@ class AiImportService {
         errorMessage: success ? null : 'Failed to add course to semester',
       );
     } else {
-      return CourseAdditionResult(
-        semesterName: semesterName,
-        courseId: courseId,
-        courseName: courseName,
-        isSuccess: false,
-        errorMessage: 'Course not found in course catalog',
-      );
+      // Check if this is an introductory course (prerequisite before Technion)
+      if (IntroductoryCourses.isIntroductoryCourse(courseId)) {
+        final introData = IntroductoryCourses.getIntroductoryCourseData(courseId)!;
+        
+        // Create StudentCourse from introductory course data
+        final course = StudentCourse(
+          courseId: introData.courseId,
+          name: introData.name,
+          finalGrade: grade.isNotEmpty ? grade : 'Exemption without points',
+          lectureTime: '',
+          tutorialTime: '',
+          labTime: '',
+          workshopTime: '',
+          creditPoints: introData.creditPoints,
+        );
+
+        // Add introductory course to the semester using hardcoded data
+        final success = await courseProvider.addCourseToSemester(
+          studentId, semesterName, course, fallbackSemester
+        );
+        
+        return CourseAdditionResult(
+          semesterName: semesterName,
+          courseId: courseId,
+          courseName: courseName,
+          isSuccess: success,
+          errorMessage: success ? null : 'Failed to add introductory course to semester',
+        );
+      } else {
+        return CourseAdditionResult(
+          semesterName: semesterName,
+          courseId: courseId,
+          courseName: courseName,
+          isSuccess: false,
+          errorMessage: 'Course not found in course catalog',
+        );
+      }
     }
   }
 }

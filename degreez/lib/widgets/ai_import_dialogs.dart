@@ -454,4 +454,194 @@ class AiImportDialogs {
       ),
     );
   }
+
+  /// Shows a modern, scrollable import results dialog matching the provided UI
+  static void showModernResultsDialog(
+    BuildContext context, {
+    required ImportSummary result,
+    required VoidCallback onOk,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          final summaryStyle = TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: themeProvider.textPrimary);
+          final labelStyle = TextStyle(fontSize: 13, color: themeProvider.textSecondary);
+          final addedColor = Colors.green.shade600;
+          final updatedColor = Colors.orange.shade700;
+          final failedColor = Colors.red.shade600;
+          final totalColor = Colors.blue.shade700;
+
+          // Group courses by semester
+          final Map<String, List<CourseAdditionResult>> grouped = {};
+          for (final c in result.results) {
+            grouped.putIfAbsent(c.semesterName, () => []).add(c);
+          }
+
+          return Dialog(
+            backgroundColor: themeProvider.mainColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420, maxHeight: 600),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.check_circle, color: addedColor, size: 28),
+                        const SizedBox(width: 10),
+                        Text('Import Results', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: themeProvider.textPrimary)),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    // Summary Card
+                    Container(
+                      decoration: BoxDecoration(
+                        color: themeProvider.cardColor,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: themeProvider.primaryColor.withOpacity(0.15)),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _summaryStat('Total', result.totalCourses, totalColor, themeProvider, Icons.list_alt),
+                          _summaryStat('Added', result.successfullyAdded, addedColor, themeProvider, Icons.add_circle),
+                          _summaryStat('Updated', result.successfullyUpdated, updatedColor, themeProvider, Icons.update),
+                          _summaryStat('Failed', result.failed, failedColor, themeProvider, Icons.cancel),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text('Detailed Results:', style: summaryStyle),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        child: ListView(
+                          children: grouped.entries.map((entry) {
+                            final semester = entry.key;
+                            final courses = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.folder, color: themeProvider.primaryColor, size: 18),
+                                      const SizedBox(width: 6),
+                                      Text(semester, style: TextStyle(fontWeight: FontWeight.w600, color: themeProvider.textPrimary)),
+                                      const SizedBox(width: 8),
+                                      Text('${courses.length} courses', style: labelStyle),
+                                      const Spacer(),
+                                      Icon(Icons.check_circle, color: addedColor, size: 16),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...courses.map((course) => _detailedCourseCard(course, themeProvider)).toList(),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onOk();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeProvider.primaryColor,
+                          foregroundColor: themeProvider.cardColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static Widget _summaryStat(String label, int value, Color color, ThemeProvider themeProvider, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(height: 4),
+        Text('$value', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: color)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 12, color: themeProvider.textSecondary)),
+      ],
+    );
+  }
+
+  static Widget _detailedCourseCard(CourseAdditionResult course, ThemeProvider themeProvider) {
+    final addedColor = Colors.green.shade600;
+    final updatedColor = Colors.orange.shade700;
+    final failedColor = Colors.red.shade600;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: course.isSuccess ? addedColor.withOpacity(0.08) : failedColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: course.isSuccess ? addedColor.withOpacity(0.18) : failedColor.withOpacity(0.18),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            course.isSuccess ? Icons.check_circle : Icons.cancel,
+            color: course.isSuccess ? addedColor : failedColor,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(course.courseId, style: TextStyle(fontWeight: FontWeight.bold, color: themeProvider.textPrimary)),
+                    const SizedBox(width: 8),
+                    if (course.wasUpdated)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: updatedColor.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text('Updated', style: TextStyle(color: updatedColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                  ],
+                ),
+                Text(course.courseName, style: TextStyle(color: themeProvider.textPrimary)),
+                if (!course.isSuccess && course.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text('Error: ${course.errorMessage}', style: TextStyle(color: failedColor, fontSize: 11)),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
