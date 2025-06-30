@@ -983,6 +983,7 @@ class _ProfilePageState extends State<ProfilePage> {
       onTap: () async {
         await themeProvider.setThemeMode(mode);
         // Update student preference if logged in
+        if (!mounted) return;
         final studentProvider = context.read<StudentProvider>();
         if (studentProvider.hasStudent) {
           await _updateStudentThemePreference(mode.name);

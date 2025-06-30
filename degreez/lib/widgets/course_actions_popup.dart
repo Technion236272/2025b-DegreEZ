@@ -276,7 +276,7 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
         grade,
       );
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       if (success) {
         widget.onCourseUpdated?.call();
@@ -361,7 +361,7 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
             widget.course.courseId,
           );
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       if (success) {
         widget.onCourseUpdated?.call();

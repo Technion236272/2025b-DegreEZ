@@ -1,7 +1,10 @@
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 
 showCreditsPage(context){
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
   String credit ='''
   2025
   
@@ -20,13 +23,15 @@ showCreditsPage(context){
   This program was developed under the provision of Technion's Android course
 
   ''';
+
+  var image =  themeProvider.isDarkMode ? Image.asset('assets/Logo_DarkMode3.png') : Image.asset('assets/Logo3.png');
   
   showLicensePage(
     context: context,
     applicationIcon:SizedBox(
                             width: 250,
                             height: 250,
-                            child: Image.asset('assets/Logo_DarkMode3.png'),
+                            child:image, 
                           ),
     applicationName: 'DegreEZ',
     applicationVersion: '1.0.0',

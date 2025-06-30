@@ -405,7 +405,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     if (provider.currentRecommendation != null) {
       // Switch to results tab
       _tabController.animateTo(1);
-      
+      if (!mounted) return;
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

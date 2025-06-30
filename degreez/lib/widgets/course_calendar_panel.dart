@@ -871,6 +871,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                                 // Also refresh the calendar events if possible
                                                 // This ensures both functionalities behave the same way
                                                 try {
+                                                  if (!context.mounted) return;
                                                   final themeProvider = context.read<ThemeProvider>();
                                                   final courseProvider = context.read<CourseProvider>();
                                                   await refreshCalendarEvents(context, courseProvider, themeProvider);

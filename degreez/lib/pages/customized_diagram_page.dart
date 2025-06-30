@@ -606,7 +606,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                     context,
                     listen: false,
                   ).deleteSemester(studentId, semesterName);
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   Navigator.of(ctx).pop();
                   // Enhanced: Trigger UI refresh
                   _onCourseUpdated();

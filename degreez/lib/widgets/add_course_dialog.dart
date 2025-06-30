@@ -204,6 +204,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
         .getClosestAvailableSemester(requestedSemester);
         
  debugPrint('✅ Actual semester used for search: $fallbackSemester');
+if (!mounted) return;
 
     final fetched = await context.read<CourseProvider>().searchCourses(
       courseId: courseId,
@@ -287,7 +288,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
           }
         }
       }
-
+      if (!mounted) return;
       final proceedAnyway = await showDialog<bool>(
         context: context,
         builder:
@@ -341,11 +342,11 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       workshopTime: '',
       creditPoints: courseDetails.creditPoints, // Store credit points from API
     );
-
+if (!mounted) return;
 final fallbackSemester = await context
     .read<CourseProvider>()
     .getClosestAvailableSemester(widget.semesterName);
-
+if (!mounted) return;
 final success = await context.read<CourseProvider>().addCourseToSemester(
   context.read<StudentProvider>().student!.id,
   widget.semesterName, // ⬅️ This is still where it will be saved

@@ -280,6 +280,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
 
   void _showUserContextDialog() async {
     final userContext = await _getCombinedUserContext();
+    if (!mounted) return;
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     showDialog(
       context: context,      builder: (dialogContext) => AlertDialog(
