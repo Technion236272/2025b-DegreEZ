@@ -90,6 +90,7 @@ Future<bool> notePopup(
                     if (onCourseUpdated != null) {
                       onCourseUpdated(); // ✅ refresh immediately before closing
                     }
+                    if (!context.mounted) return;
                     Navigator.pop(context, true);
                   },
                   child: Text(

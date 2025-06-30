@@ -27,13 +27,13 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
       final summary = await AiImportService.processAiImport(context);
       
       // Debug: Print summary details
-      print('AI Import Summary: \u001b[38;5;10m${summary.toString()}\u001b[0m');
-      print('Total courses: ${summary.totalCourses}');
-      print('Total success: ${summary.totalSuccess}');
-      print('Successfully added: ${summary.successfullyAdded}');
-      print('Successfully updated: ${summary.successfullyUpdated}');
-      print('Failed: ${summary.failed}');
-      print('Results count: ${summary.results.length}');
+      debugPrint('AI Import Summary: \u001b[38;5;10m${summary.toString()}\u001b[0m');
+      debugPrint('Total courses: ${summary.totalCourses}');
+      debugPrint('Total success: ${summary.totalSuccess}');
+      debugPrint('Successfully added: ${summary.successfullyAdded}');
+      debugPrint('Successfully updated: ${summary.successfullyUpdated}');
+      debugPrint('Failed: ${summary.failed}');
+      debugPrint('Results count: ${summary.results.length}');
       
       // Close the loading dialog if still mounted
       if (mounted) Navigator.of(context).pop();
@@ -59,9 +59,9 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
         
         // Show results dialog for any import attempt
         if (mounted) {
-          print('Showing results dialog...');
-          print('Context valid: \u001b[38;5;10m${context.mounted}\u001b[0m');
-          print('Widget mounted: $mounted');
+          debugPrint('Showing results dialog...');
+          debugPrint('Context valid: \u001b[38;5;10m${context.mounted}\u001b[0m');
+          debugPrint('Widget mounted: $mounted');
           
           // Add a small delay to ensure the context is ready
           await Future.delayed(const Duration(milliseconds: 500));
@@ -76,21 +76,21 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
                   showSnackBar('Results acknowledged.', isSuccess: true);
                 },
               );
-              print('Modern dialog showed successfully');
+              debugPrint('Modern dialog showed successfully');
             } catch (e) {
-              print('Error showing dialog: $e');
+              debugPrint('Error showing dialog: $e');
               showSnackBar('Error showing results dialog: $e', isError: true);
             }
           } else {
-            print('Context or widget no longer valid after delay');
+            debugPrint('Context or widget no longer valid after delay');
           }
         } else {
-          print('Cannot show dialog: widget not mounted');
+          debugPrint('Cannot show dialog: widget not mounted');
         }
       }
       
     } catch (e) {
-      print('Error during AI import: ${e.toString()}');
+      debugPrint('Error during AI import: ${e.toString()}');
       showSnackBar('Error during AI import: ${e.toString()}', isError: true);
     }
   }

@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
-import '../services/GlobalConfigService.dart';
+import '../services/global_config_service.dart';
 
 class CourseLoadingState {
   final bool isLoadingCourses;
@@ -55,7 +55,7 @@ class CourseProvider with ChangeNotifier {
   Map<String, List<StudentCourse>> _coursesBySemester = {};
   CourseLoadingState _loadingState = const CourseLoadingState();
   String? _error;
-  final Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
+  // final Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
   SemesterInfo? _currentSemester;
 
   SemesterInfo? get currentSemester => _currentSemester;

@@ -134,6 +134,7 @@ class _CourseCardState extends State<CourseCard> {
                 );
 
                 if (refreshed != null) {*/
+                if (!context.mounted) return;
                   final notifier = Provider.of<CustomizedDiagramNotifier>(
                     context,
                     listen: false,

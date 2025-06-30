@@ -502,7 +502,7 @@ class AiImportDialogs {
                       decoration: BoxDecoration(
                         color: themeProvider.cardColor,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: themeProvider.primaryColor.withOpacity(0.15)),
+                        border: Border.all(color: themeProvider.primaryColor.withAlpha(38)),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                       child: Row(
@@ -542,7 +542,7 @@ class AiImportDialogs {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  ...courses.map((course) => _detailedCourseCard(course, themeProvider)).toList(),
+                                  ...courses.map((course) => _detailedCourseCard(course, themeProvider)),
                                 ],
                               ),
                             );
@@ -596,10 +596,10 @@ class AiImportDialogs {
       margin: const EdgeInsets.symmetric(vertical: 3),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: course.isSuccess ? addedColor.withOpacity(0.08) : failedColor.withOpacity(0.08),
+        color: course.isSuccess ? addedColor.withAlpha(20) : failedColor.withAlpha(20),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: course.isSuccess ? addedColor.withOpacity(0.18) : failedColor.withOpacity(0.18),
+          color: course.isSuccess ? addedColor.withAlpha(46) : failedColor.withAlpha(46),
           width: 1,
         ),
       ),
@@ -624,7 +624,7 @@ class AiImportDialogs {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: updatedColor.withOpacity(0.18),
+                          color: updatedColor.withAlpha(46),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text('Updated', style: TextStyle(color: updatedColor, fontSize: 10, fontWeight: FontWeight.bold)),

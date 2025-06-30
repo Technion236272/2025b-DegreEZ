@@ -39,7 +39,7 @@ class EligibilityService {
     final eligibleCourses = <dynamic>[];
 
     for (final courseData in courses) {
-      final courseId = courseData['general']?['מספר מקצוע'] ?? courseData['courseNumber'];
+      // final courseId = courseData['general']?['מספר מקצוע'] ?? courseData['courseNumber'];
       final rawPrereqs = courseData['general']?['מקצועות קדם'] ?? '';
       final prereqGroups = parseRawPrerequisites(rawPrereqs);
       // If no prereqs, or any group is fully satisfied, keep the course

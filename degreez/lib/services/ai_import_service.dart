@@ -135,7 +135,7 @@ class AiImportService {
           }
           continue;
         }
-        
+        if (!context.mounted) break;
         // Process courses in this semester
         final semesterResults = await _processSemesterCourses(
           context, courseProvider, studentId, semesterName, semesterCourses

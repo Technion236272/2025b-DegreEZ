@@ -87,9 +87,10 @@ class _DeleteUserButtonState extends State<DeleteUserButton> {
               final rootNavigator = Navigator.of(context, rootNavigator: true);
 
               await context.read<CourseProvider>().deleteStudentAndCourses(context.read<StudentProvider>().student!.id);
-
+              if (!context.mounted) return;
               await context.read<LogInNotifier>().deleteUser();
-
+              if (!context.mounted) return;
+              await context.read<LogInNotifier>().signOut();
               rootNavigator.pushNamedAndRemoveUntil('/', (route) => false);
             },
             child: Text(

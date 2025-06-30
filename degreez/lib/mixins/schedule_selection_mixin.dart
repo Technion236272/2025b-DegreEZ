@@ -99,7 +99,7 @@ mixin ScheduleSelectionMixin {
       
       // Call the callback to refresh UI if provided
       onSelectionUpdated?.call();
-      
+      if (!context.mounted) return;
       // Refresh calendar events if ThemeProvider is available
       try {
         final themeProvider = context.read<ThemeProvider>();

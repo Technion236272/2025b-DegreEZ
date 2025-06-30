@@ -1015,6 +1015,7 @@ class _CalendarPageState extends State<CalendarPage>
     }
 
     if (courseDetails == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Course details not available for "$courseId"'),

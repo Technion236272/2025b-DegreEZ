@@ -1,7 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
-import 'package:degreez/pages/course_recommendation_page.dart';
+// import 'package:degreez/pages/course_recommendation_page.dart';
 import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
@@ -16,7 +16,7 @@ import '../providers/course_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/add_course_dialog.dart';
 import '../mixins/ai_import_mixin.dart';
-import '../services/GlobalConfigService.dart';
+import '../services/global_config_service.dart';
 import 'package:degreez/pages/course_map_page.dart';
 import 'customized_diagram_page.dart';
 
@@ -357,12 +357,6 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               onTap: () => _changePage('Calendar'),
             ),
             _buildDrawerItem(
-              icon: Icons.person,
-              title: 'Profile',
-              isSelected: _currentPage == 'Profile',
-              onTap: () => _changePage('Profile'),
-            ),
-            _buildDrawerItem(
               icon: Icons.trending_up,
               title: 'Customized Diagram',
               isSelected: _currentPage == 'Customized Diagram',
@@ -386,20 +380,26 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               isSelected: _currentPage == 'Map',
               onTap: () => _changePage('Map'),
             ),
+            _buildDrawerItem(
+              icon: Icons.person,
+              title: 'Profile',
+              isSelected: _currentPage == 'Profile',
+              onTap: () => _changePage('Profile'),
+            ),
 
             // Course Recommendations
-            ListTile(
-              leading: const Icon(Icons.auto_awesome),
-              title: const Text('Course Recommendations'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CourseRecommendationPage(),
-                  ),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.auto_awesome),
+            //   title: const Text('Course Recommendations'),
+            //   onTap: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) => const CourseRecommendationPage(),
+            //       ),
+            //     );
+            //   },
+            // ),
 
             const Divider(),
             _buildDrawerItem(

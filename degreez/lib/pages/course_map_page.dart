@@ -11,7 +11,7 @@ import '../models/student_model.dart';
 import '../services/course_service.dart';
 import '../services/geocode_cache_service.dart';
 import '../services/building_geocode_map.dart';
-import 'dart:math' as Math;
+import 'dart:math' as math;
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
@@ -466,9 +466,9 @@ class _CourseMapPageState extends State<CourseMapPage> {
           const double radius = 0.00015; // ~15 meters - increased from 0.0001
           final angle =
               (count * 72) *
-              (Math.pi / 180); // 72° between pins for better spacing
-          final offsetLat = baseLoc.latitude + radius * Math.sin(angle);
-          final offsetLon = baseLoc.longitude + radius * Math.cos(angle);
+              (math.pi / 180); // 72° between pins for better spacing
+          final offsetLat = baseLoc.latitude + radius * math.sin(angle);
+          final offsetLon = baseLoc.longitude + radius * math.cos(angle);
           final loc = LatLng(offsetLat, offsetLon);
 
           debugPrint('🌍 Geocoded: ${entry.building} → $loc');
@@ -530,7 +530,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
             ? _calculateDistance(userLocation!, markerData.point)
             : null;
 
-    return Container(
+    return SizedBox(
       width: isHighlighted ? 60 : 50,
       height: isHighlighted ? 80 : 70,
       child: Stack(
@@ -1007,7 +1007,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

@@ -56,13 +56,13 @@ class _LoginPageState extends State<LoginPage> {
               // Try to fetch existing student data
               final studentExists = await studentProvider.fetchStudentData(user.uid);
               
-              if (!mounted) return;              if (studentExists && studentProvider.hasStudent) {
+                if (studentExists && studentProvider.hasStudent) {
                 // Existing user - load courses and sync theme preference
                 await courseProvider.loadStudentCourses(user.uid);
-                
+                if (!context.mounted) return;
                 // Sync the user's theme preference
                 await ThemeSyncService.syncStudentThemePreference(context);
-                
+                if (!context.mounted) return;
                 if (mounted) {
                   Navigator.pushNamedAndRemoveUntil(
                     context,
@@ -71,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                   );
                 }
               } else {
+                if (!context.mounted) return;
                 // New user - go to signup page
                 Navigator.pushNamedAndRemoveUntil(
                   context,
