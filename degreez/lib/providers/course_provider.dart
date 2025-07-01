@@ -60,7 +60,7 @@ class CourseProvider with ChangeNotifier {
 
   SemesterInfo? get currentSemester => _currentSemester;
 
-  (int, int)? _parseSemesterCode(String semesterName) {
+  (int, int)? parseSemesterCode(String semesterName) {
     final match = RegExp(
       r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
     ).firstMatch(semesterName);
@@ -212,7 +212,7 @@ class CourseProvider with ChangeNotifier {
 
       // 🔍 Fetch prerequisites (as string or list from API)
       final usedSemester = fallbackSemesterForFetch ?? semesterKey;
-      final parsed = _parseSemesterCode(usedSemester);
+      final parsed = parseSemesterCode(usedSemester);
       if (parsed == null) {
         debugPrint('❌ Invalid semester format: $semesterKey');
         return false;
@@ -994,7 +994,7 @@ class CourseProvider with ChangeNotifier {
   }) async {
 
      if (selectedSemester != null) {
-    final parsed = _parseSemesterCode(selectedSemester);
+    final parsed = parseSemesterCode(selectedSemester);
     if (parsed == null) {
       debugPrint('❌ Invalid selectedSemester format: $selectedSemester');
       return [];
@@ -1057,7 +1057,7 @@ class CourseProvider with ChangeNotifier {
 
       // ✅ Find the current semester index
       final currentIndex = allSemesters.indexWhere((s) {
-        final parsed = _parseSemesterCode(s);
+        final parsed = parseSemesterCode(s);
         if (parsed == null) return false;
         final (year, code) = parsed;
         debugPrint(
@@ -1091,7 +1091,7 @@ class CourseProvider with ChangeNotifier {
       final Map<String, CourseSearchResult> resultMap = {};
 
       for (final sem in selectedSemesters) {
-        final parsed = _parseSemesterCode(sem);
+        final parsed = parseSemesterCode(sem);
         if (parsed == null) {
           debugPrint('❌ Invalid semester format: $sem');
           continue;

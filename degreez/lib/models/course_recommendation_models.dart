@@ -7,6 +7,7 @@ class CourseRecommendationRequest {
   final String? catalogFilePath;
   final String userContext;
   final DateTime requestTime;
+   final String semesterDisplayName;
 
   CourseRecommendationRequest({
     required this.year,
@@ -14,6 +15,7 @@ class CourseRecommendationRequest {
     this.catalogFilePath,
     required this.userContext,
     required this.requestTime,
+    required this.semesterDisplayName,
   });
 
   Map<String, dynamic> toJson() {
@@ -23,6 +25,7 @@ class CourseRecommendationRequest {
       'catalogFilePath': catalogFilePath,
       'userContext': userContext,
       'requestTime': requestTime.toIso8601String(),
+      'semesterDisplayName': semesterDisplayName,
     };
   }
 }

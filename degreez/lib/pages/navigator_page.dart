@@ -1,7 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
-// import 'package:degreez/pages/course_recommendation_page.dart';
+import 'package:degreez/pages/course_recommendation_page.dart';
 import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
@@ -287,9 +287,10 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
 
     return Drawer(
       child: Container(
-        color: Theme.of(context).brightness == Brightness.light 
-            ? AppColorsLightMode.drawerColor 
-            : Theme.of(context).colorScheme.surface,
+        color:
+            Theme.of(context).brightness == Brightness.light
+                ? AppColorsLightMode.drawerColor
+                : Theme.of(context).colorScheme.surface,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -298,18 +299,20 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               accountName: Text(
                 student?.name ?? user?.displayName ?? 'User',
                 style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.light 
-                      ? AppColorsLightMode.textPrimary 
-                      : AppColorsDarkMode.textPrimary,
+                  color:
+                      Theme.of(context).brightness == Brightness.light
+                          ? AppColorsLightMode.textPrimary
+                          : AppColorsDarkMode.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               accountEmail: Text(
                 user?.email ?? '',
                 style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.light 
-                      ? AppColorsLightMode.textSecondary 
-                      : AppColorsDarkMode.textSecondary,
+                  color:
+                      Theme.of(context).brightness == Brightness.light
+                          ? AppColorsLightMode.textSecondary
+                          : AppColorsDarkMode.textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -317,9 +320,10 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Theme.of(context).brightness == Brightness.light 
-                        ? AppColorsLightMode.primaryColor 
-                        : AppColorsDarkMode.secondaryColor, // Border color
+                    color:
+                        Theme.of(context).brightness == Brightness.light
+                            ? AppColorsLightMode.primaryColor
+                            : AppColorsDarkMode.secondaryColor, // Border color
                     width: 3.0, // Border width
                   ),
                 ),
@@ -336,16 +340,21 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-          colors: [
-            context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColorLight : context.read<ThemeProvider>().mainColor ,
-            context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().accentColorDark ,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-                color: Theme.of(context).brightness == Brightness.light 
-                    ? AppColorsLightMode.drawerHeaderColor 
-                    : AppColorsDarkMode.secondaryColor,
+                  colors: [
+                    context.read<ThemeProvider>().isLightMode
+                        ? context.read<ThemeProvider>().accentColorLight
+                        : context.read<ThemeProvider>().mainColor,
+                    context.read<ThemeProvider>().isLightMode
+                        ? context.read<ThemeProvider>().accentColor
+                        : context.read<ThemeProvider>().accentColorDark,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                color:
+                    Theme.of(context).brightness == Brightness.light
+                        ? AppColorsLightMode.drawerHeaderColor
+                        : AppColorsDarkMode.secondaryColor,
               ),
             ),
 
@@ -387,19 +396,19 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               onTap: () => _changePage('Profile'),
             ),
 
-            // Course Recommendations
-            // ListTile(
-            //   leading: const Icon(Icons.auto_awesome),
-            //   title: const Text('Course Recommendations'),
-            //   onTap: () {
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => const CourseRecommendationPage(),
-            //       ),
-            //     );
-            //   },
-            // ),
+            //  Course Recommendations
+            ListTile(
+              leading: const Icon(Icons.auto_awesome),
+              title: const Text('Course Recommendations'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CourseRecommendationPage(),
+                  ),
+                );
+              },
+            ),
 
             const Divider(),
             _buildDrawerItem(
@@ -471,25 +480,27 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected 
-            ? (Theme.of(context).brightness == Brightness.light 
-                ? AppColorsLightMode.secondaryColor 
-                : AppColorsDarkMode.secondaryColor) 
-            : (Theme.of(context).brightness == Brightness.light 
-                ? AppColorsLightMode.textSecondary 
-                : AppColorsDarkMode.secondaryColorDim),
+        color:
+            isSelected
+                ? (Theme.of(context).brightness == Brightness.light
+                    ? AppColorsLightMode.secondaryColor
+                    : AppColorsDarkMode.secondaryColor)
+                : (Theme.of(context).brightness == Brightness.light
+                    ? AppColorsLightMode.textSecondary
+                    : AppColorsDarkMode.secondaryColorDim),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected 
-              ? (Theme.of(context).brightness == Brightness.light 
-                  ? AppColorsLightMode.secondaryColor 
-                  : AppColorsDarkMode.secondaryColor) 
-              : (Theme.of(context).brightness == Brightness.light 
-                  ? AppColorsLightMode.textSecondary 
-                  : AppColorsDarkMode.secondaryColorDim),
+          color:
+              isSelected
+                  ? (Theme.of(context).brightness == Brightness.light
+                      ? AppColorsLightMode.secondaryColor
+                      : AppColorsDarkMode.secondaryColor)
+                  : (Theme.of(context).brightness == Brightness.light
+                      ? AppColorsLightMode.textSecondary
+                      : AppColorsDarkMode.secondaryColorDim),
         ),
       ),
       selected: isSelected,
@@ -512,17 +523,18 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     if (_allSemesters.isEmpty) {
       return const AutoSizeText('Calendar', minFontSize: 14, maxFontSize: 22);
     }
-    
+
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        final textColor = themeProvider.isLightMode 
-            ? AppColorsLightMode.textPrimary 
-            : AppColorsDarkMode.secondaryColor;
-        
+        final textColor =
+            themeProvider.isLightMode
+                ? AppColorsLightMode.textPrimary
+                : AppColorsDarkMode.secondaryColor;
+
         return DropdownButton<String>(
           value: _selectedSemester,
           hint: Text(
-            "Select Semester", 
+            "Select Semester",
             style: TextStyle(fontSize: 16, color: textColor),
           ),
           underline: Container(), // Remove the default underline
@@ -538,26 +550,24 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 _selectedSemester = value;
                 _selectedCalendarSemester = value;
               });
-              
+
               // Save preference
               final prefs = await SharedPreferences.getInstance();
               await prefs.setString('lastSelectedSemester', value);
-              
+
               // The CalendarPage will handle the course loading when it receives the new semester
             }
           },
-          items: _allSemesters.map((sem) {
-            return DropdownMenuItem<String>(
-              value: sem,
-              child: Text(
-                sem,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
-                ),
-              ),
-            );
-          }).toList(),
+          items:
+              _allSemesters.map((sem) {
+                return DropdownMenuItem<String>(
+                  value: sem,
+                  child: Text(
+                    sem,
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
+                );
+              }).toList(),
         );
       },
     );

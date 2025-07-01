@@ -1,4 +1,3 @@
-
 // lib/widgets/course_recommendation/recommendation_results_widget.dart
 
 import 'package:degreez/providers/theme_provider.dart';
@@ -8,10 +7,13 @@ import '../../models/course_recommendation_models.dart';
 
 class RecommendationResultsWidget extends StatelessWidget {
   final CourseRecommendationResponse recommendation;
+ final void Function(String courseId, String courseName)? onAddCourse;
+
 
   const RecommendationResultsWidget({
     super.key,
     required this.recommendation,
+    this.onAddCourse,
   });
 
   @override
@@ -28,7 +30,10 @@ class RecommendationResultsWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.summarize, color: context.read<ThemeProvider>().primaryColor),
+                    Icon(
+                      Icons.summarize,
+                      color: context.read<ThemeProvider>().primaryColor,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Recommendation Summary',
@@ -47,7 +52,10 @@ class RecommendationResultsWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: context.read<ThemeProvider>().secondaryColor.withAlpha(75),
+                    color: context
+                        .read<ThemeProvider>()
+                        .secondaryColor
+                        .withAlpha(75),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -61,18 +69,18 @@ class RecommendationResultsWidget extends StatelessWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Courses List
         Text(
           'Recommended Courses',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        
+
         ...recommendation.recommendations.map((course) {
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
@@ -104,7 +112,7 @@ class RecommendationResultsWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      
+
                       // Course Info
                       Expanded(
                         child: Column(
@@ -115,24 +123,41 @@ class RecommendationResultsWidget extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     course.courseName,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  tooltip: 'add to semester',
+                                  onPressed: () {
+                                    if (onAddCourse != null) {
+                                      onAddCourse!(course.courseId,course.courseName);
+                                    }
+                                  },
+                                ),
+
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: context.read<ThemeProvider>().primaryColor.withAlpha(26),
+                                    color: context
+                                        .read<ThemeProvider>()
+                                        .primaryColor
+                                        .withAlpha(26),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     course.category,
                                     style: TextStyle(
-                                      color: context.read<ThemeProvider>().primaryColor,
+                                      color:
+                                          context
+                                              .read<ThemeProvider>()
+                                              .primaryColor,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -143,9 +168,8 @@ class RecommendationResultsWidget extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               '${course.courseId} • ${course.creditPoints} credits',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey[600]),
                             ),
                             const SizedBox(height: 8),
                             Text(

@@ -1,7 +1,7 @@
 // lib/widgets/course_recommendation/semester_selector_widget.dart
 
 import 'package:flutter/material.dart';
-
+import 'package:degreez/providers/course_provider.dart';
 class SemesterSelectorWidget extends StatelessWidget {
   final List<Map<String, dynamic>> availableSemesters;
   final int? selectedYear;
@@ -26,7 +26,10 @@ class SemesterSelectorWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
+                Icon(
+                  Icons.calendar_today,
+                  color: Theme.of(context).primaryColor,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Select Target Semester',
@@ -37,38 +40,50 @@ class SemesterSelectorWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (availableSemesters.isEmpty)
-              const Center(
-                child: Text('No semesters available'),
-              )
+              const Center(child: Text('No semesters available'))
             else
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: availableSemesters.map((semester) {
-                  final year = semester['year'] as int;
-                  final semesterCode = semester['semester'] as int;
-                  final display = semester['display'] as String;
-                  
-                  final isSelected = selectedYear == year && 
-                                   selectedSemester == semesterCode;
-                  
-                  return ChoiceChip(
-                    label: Text(display),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        onSemesterSelected(year, semesterCode);
-                      }
-                    },
-                    selectedColor: Theme.of(context).primaryColor.withAlpha(51),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Theme.of(context).primaryColor : null,
-                      fontWeight: isSelected ? FontWeight.bold : null,
-                    ),
-                  );
-                }).toList(),
+                children:
+                    availableSemesters.map((semester) {
+                      final year = semester['year'] as int;
+                      final semesterCode = semester['semester'] as int;
+                      final display = semester['display'] as String;
+
+                      final isSelected =
+                          selectedYear == year &&
+                          selectedSemester == semesterCode;
+
+                      return ChoiceChip(
+                        label: Text(display),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            final parsed = CourseProvider().parseSemesterCode(
+                              display,
+                            );
+                            if (parsed != null) {
+                              final (year, semesterCode) = parsed;
+                              onSemesterSelected(year, semesterCode);
+                            }
+                          }
+                        },
+
+                        selectedColor: Theme.of(
+                          context,
+                        ).primaryColor.withAlpha(51),
+                        labelStyle: TextStyle(
+                          color:
+                              isSelected
+                                  ? Theme.of(context).primaryColor
+                                  : null,
+                          fontWeight: isSelected ? FontWeight.bold : null,
+                        ),
+                      );
+                    }).toList(),
               ),
           ],
         ),

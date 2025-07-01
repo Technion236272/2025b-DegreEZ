@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:degreez/providers/course_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import '../models/course_recommendation_models.dart';
@@ -9,6 +10,7 @@ import '../services/ai/base_ai_service.dart';
 import '../services/ai/ai_config.dart';
 import '../services/ai/ai_utils.dart';
 import '../services/course_service.dart';
+import 'package:string_similarity/string_similarity.dart';
 
 class CourseRecommendationService extends BaseAiService {
   static const String _systemInstruction = '''
@@ -31,36 +33,53 @@ Consider these factors:
 - Student's stated preferences and career goals
 
 Respond with valid JSON only, following the exact schema provided.
+the course name must be in hebrew.
 ''';
 
-  CourseRecommendationService() : super(
-    modelName: AiConfig.defaultModel,
-    systemInstruction: _systemInstruction,
-    generationConfig: AiUtils.createJsonConfig(_createRecommendationSchema()),
-  );
+  CourseRecommendationService()
+    : super(
+        modelName: AiConfig.defaultModel,
+        systemInstruction: _systemInstruction,
+        generationConfig: AiUtils.createJsonConfig(
+          _createRecommendationSchema(),
+        ),
+      );
 
   /// Main method to generate course recommendations
   Future<CourseRecommendationResponse> generateRecommendations(
     CourseRecommendationRequest request,
   ) async {
     try {
+
+       // Parse actual year/semester based on display label like "Winter 2024-2025"
+    final fallbackSemester = await CourseProvider().getClosestAvailableSemester(
+  request.semesterDisplayName,
+);
+    final parsed =CourseProvider().parseSemesterCode(fallbackSemester);
+    debugPrint('🟢 Selected semester from UI: ${request.semesterDisplayName}');
+    debugPrint('🔵 Using fallback semester for course data: $fallbackSemester');
+    debugPrint('Parsed semester: $parsed for display name: $fallbackSemester');
+    if (parsed == null) {
+      throw Exception('Invalid semester display name: ${request.semesterDisplayName}');
+    }
+    final (apiYear, semesterCode) = parsed;
       // Step 1: Get candidate courses from AI
       final candidateCourses = await _identifyCandidateCourses(request);
-      
+
       // Step 2: Fetch detailed course information
-      final courseDetails = await _fetchCourseDetails(
-        candidateCourses.courses.keys.toList(),
-        request.year,
-        request.semester,
+      final courseDetails = await fetchCourseDetailsByNames(
+        candidateCourses.courses,
+        apiYear,
+        semesterCode,
       );
-      
+
       // Step 3: Generate final recommendations
       final finalRecommendations = await _generateFinalRecommendations(
         request,
         candidateCourses,
         courseDetails,
       );
-      
+
       return finalRecommendations;
     } catch (e) {
       debugPrint('Course recommendation error: $e');
@@ -85,7 +104,7 @@ Please identify 15 candidate courses for the following student:
 
 ${request.userContext}
 
-Target Semester: ${request.semester} ${request.year}
+Target Semester: ${request.semesterDisplayName}
 
 Requirements:
 - Select exactly 15 courses that would be appropriate for this student
@@ -99,19 +118,23 @@ Each course should have both an id and name.
 ''';
 
     // Generate response with or without catalog PDF
-    final response = await _generateWithOptionalPdf(candidateModel, prompt, request.catalogFilePath);
-    
+    final response = await _generateWithOptionalPdf(
+      candidateModel,
+      prompt,
+      request.catalogFilePath,
+    );
+
     try {
       final jsonData = jsonDecode(response.text ?? '{}');
-      
+
       // Convert array format to map format for CandidateCourses
       final coursesArray = jsonData['courses'] as List;
       final coursesMap = <String, String>{};
-      
+
       for (final course in coursesArray) {
         coursesMap[course['id']] = course['name'];
       }
-      
+
       return CandidateCourses(
         courses: coursesMap,
         reasoning: jsonData['reasoning'] ?? '',
@@ -128,18 +151,57 @@ Each course should have both an id and name.
     int semester,
   ) async {
     final courseDetails = <CourseRecommendationDetails>[];
-    
+
     for (final courseId in courseIds) {
       try {
-        final courseInfo = await CourseService.getCourseDetails(year, semester, courseId);
+        final courseInfo = await CourseService.getCourseDetails(
+          year,
+          semester,
+          courseId,
+        );
         if (courseInfo != null) {
-          courseDetails.add(CourseRecommendationDetails.fromCourseService(courseInfo));
+          courseDetails.add(
+            CourseRecommendationDetails.fromCourseService(courseInfo),
+          );
         }
       } catch (e) {
         debugPrint('Failed to fetch details for course $courseId: $e');
       }
     }
-    
+
+    return courseDetails;
+  }
+
+  Future<List<CourseRecommendationDetails>> fetchCourseDetailsByNames(
+    Map<String, String> aiCoursesByName,
+    int year,
+    int semester,
+  ) async {
+    final allCourses = await CourseService.getAllCourses(year, semester);
+    debugPrint('📦 Fetched ${allCourses.length} courses from Firestore for $year-$semester');
+    final courseDetails = <CourseRecommendationDetails>[];
+
+    for (final entry in aiCoursesByName.entries) {
+      final aiCourseName = entry.value.toLowerCase().trim();
+      final matched = allCourses.firstWhere((course) {
+        final realName =
+            (course['general']['שם מקצוע'] ?? '').toString().toLowerCase();
+        final similarity = realName.similarityTo(aiCourseName.toLowerCase());
+        debugPrint('🔍 Matching "$aiCourseName" → "$realName" [score=$similarity]');
+        return similarity > 0.7; // Allow close matches
+      }, orElse: () => <String, dynamic>{});
+      
+
+      if (matched.isNotEmpty) {
+        final details = EnhancedCourseDetails.fromSapJson(matched);
+        courseDetails.add(
+          CourseRecommendationDetails.fromCourseService(details),
+        );
+      } else {
+        debugPrint('⚠️ No match found for course name "${entry.value}"');
+      }
+    }
+
     return courseDetails;
   }
 
@@ -157,15 +219,16 @@ Each course should have both an id and name.
     );
 
     // Prepare detailed course information for the AI
-    final courseDetailsJson = courseDetails.map((course) => course.toJson()).toList();
-    
+    final courseDetailsJson =
+        courseDetails.map((course) => course.toJson()).toList();
+
     final prompt = '''
 Based on the detailed course information below, please generate final course recommendations for this student:
 
 STUDENT CONTEXT:
 ${request.userContext}
 
-TARGET SEMESTER: ${request.semester} ${request.year}
+TARGET SEMESTER: ${request.semesterDisplayName}
 
 CANDIDATE COURSES ANALYSIS:
 ${candidateCourses.reasoning}
@@ -183,15 +246,18 @@ REQUIREMENTS:
 Return your response as valid JSON with the required schema.
 ''';
 
-    final response = await recommendationModel.generateContent([Content.text(prompt)]);
-    
+    final response = await recommendationModel.generateContent([
+      Content.text(prompt),
+    ]);
+
     try {
       final jsonData = jsonDecode(response.text ?? '{}');
-      
-      final recommendations = (jsonData['recommendations'] as List)
-          .map((r) => CourseRecommendation.fromJson(r))
-          .toList();
-      
+
+      final recommendations =
+          (jsonData['recommendations'] as List)
+              .map((r) => CourseRecommendation.fromJson(r))
+              .toList();
+
       return CourseRecommendationResponse(
         recommendations: recommendations,
         totalCreditPoints: (jsonData['totalCreditPoints'] as num).toDouble(),
@@ -213,19 +279,19 @@ Return your response as valid JSON with the required schema.
   ) async {
     if (catalogFilePath != null && catalogFilePath.isNotEmpty) {
       final catalogFile = File(catalogFilePath);
-      
+
       // Validate file before processing
       if (!await AiUtils.validateFileSize(catalogFile)) {
         throw Exception(AiUtils.getFileSizeErrorMessage());
       }
-      
+
       if (!await AiUtils.validatePdfFormat(catalogFile)) {
         throw Exception('Invalid PDF file format');
       }
-      
+
       final catalogBytes = await catalogFile.readAsBytes();
       return await model.generateContent([
-        AiUtils.createPdfContent(prompt, catalogBytes)
+        AiUtils.createPdfContent(prompt, catalogBytes),
       ]);
     } else {
       return await model.generateContent([Content.text(prompt)]);
@@ -262,16 +328,27 @@ Return your response as valid JSON with the required schema.
               'courseId': Schema.string(),
               'courseName': Schema.string(),
               'creditPoints': Schema.number(),
-              'reason': Schema.string(description: 'Why this course is recommended'),
-              'priority': Schema.integer(description: 'Priority 1-5 (1=highest)'),
-              'category': Schema.string(description: 'e.g., Core, Elective, Prerequisites'),
+              'reason': Schema.string(
+                description: 'Why this course is recommended',
+              ),
+              'priority': Schema.integer(
+                description: 'Priority 1-5 (1=highest)',
+              ),
+              'category': Schema.string(
+                description: 'e.g., Core, Elective, Prerequisites',
+              ),
             },
           ),
-          description: 'List of recommended courses (target 15-18 total credit points)',
+          description:
+              'List of recommended courses (target 15-18 total credit points)',
         ),
         'totalCreditPoints': Schema.number(),
-        'summary': Schema.string(description: 'Brief summary of the recommendation set'),
-        'reasoning': Schema.string(description: 'Overall reasoning for the recommendation strategy'),
+        'summary': Schema.string(
+          description: 'Brief summary of the recommendation set',
+        ),
+        'reasoning': Schema.string(
+          description: 'Overall reasoning for the recommendation strategy',
+        ),
       },
     );
   }

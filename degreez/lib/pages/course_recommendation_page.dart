@@ -8,24 +8,35 @@ import '../widgets/course_recommendation/semester_selector_widget.dart';
 import '../widgets/course_recommendation/catalog_upload_widget.dart';
 import '../widgets/course_recommendation/recommendation_results_widget.dart';
 import '../widgets/course_recommendation/recommendation_stats_widget.dart';
+import '../providers/course_provider.dart';
+import '../providers/student_provider.dart';
+import '../services/course_service.dart';
+import '../models/student_model.dart';
+import '../services/course_recommendation_service.dart';
 
 class CourseRecommendationPage extends StatefulWidget {
   const CourseRecommendationPage({super.key});
 
   @override
-  State<CourseRecommendationPage> createState() => _CourseRecommendationPageState();
+  State<CourseRecommendationPage> createState() =>
+      _CourseRecommendationPageState();
 }
 
-class _CourseRecommendationPageState extends State<CourseRecommendationPage> 
+class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    // No need to initialize provider since it's now synchronous
-  }
+
+@override
+void initState() {
+  super.initState();
+  _tabController = TabController(length: 3, vsync: this);
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final studentId = context.read<StudentProvider>().student!.id;
+    context.read<CourseRecommendationProvider>().loadAvailableSemesters(studentId);
+  });
+}
+
 
   @override
   void dispose() {
@@ -36,7 +47,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Recommendations'),
@@ -56,11 +67,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildGenerateTab(),
-          _buildResultsTab(),
-          _buildHistoryTab(),
-        ],
+        children: [_buildGenerateTab(), _buildResultsTab(), _buildHistoryTab()],
       ),
     );
   }
@@ -82,8 +89,10 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.auto_awesome, 
-                              color: context.read<ThemeProvider>().primaryColor),
+                          Icon(
+                            Icons.auto_awesome,
+                            color: context.read<ThemeProvider>().primaryColor,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'AI Course Recommendations',
@@ -102,9 +111,9 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Semester Selection
               SemesterSelectorWidget(
                 availableSemesters: provider.availableSemesters,
@@ -112,48 +121,51 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 selectedSemester: provider.selectedSemester,
                 onSemesterSelected: provider.setSelectedSemester,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Catalog Upload
               CatalogUploadWidget(
                 catalogFilePath: provider.catalogFilePath,
                 onFileSelected: provider.setCatalogFilePath,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Generate Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: provider.canGenerateRecommendations && !provider.isLoading
-                      ? () => _generateRecommendations(provider)
-                      : null,
-                  icon: provider.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.auto_awesome),
+                  onPressed:
+                      provider.canGenerateRecommendations && !provider.isLoading
+                          ? () => _generateRecommendations(provider)
+                          : null,
+                  icon:
+                      provider.isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.auto_awesome),
                   label: Text(
-                    provider.isLoading 
-                        ? 'Generating Recommendations...' 
+                    provider.isLoading
+                        ? 'Generating Recommendations...'
                         : 'Generate Recommendations',
                     style: const TextStyle(fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.read<ThemeProvider>().primaryColor,
-                    foregroundColor: context.read<ThemeProvider>().secondaryColor,
+                    foregroundColor:
+                        context.read<ThemeProvider>().secondaryColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
               ),
-              
+
               // Error Display
               if (provider.error != null) ...[
                 const SizedBox(height: 16),
@@ -181,7 +193,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   ),
                 ),
               ],
-              
+
               // Information Cards
               const SizedBox(height: 32),
               _buildInfoCards(),
@@ -225,12 +237,19 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 stats: provider.getRecommendationStats(),
                 semester: provider.selectedSemesterDisplay ?? 'Unknown',
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Recommendations List
               RecommendationResultsWidget(
                 recommendation: provider.currentRecommendation!,
+                onAddCourse:
+                    (courseId, courseName) =>
+                        _handleAddCourseToSelectedSemester(
+                          context,
+                          courseId,
+                          courseName,
+                        ),
               ),
             ],
           ),
@@ -304,11 +323,16 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Icon(Icons.psychology, 
-                          color: context.read<ThemeProvider>().primaryColor, size: 32),
+                      Icon(
+                        Icons.psychology,
+                        color: context.read<ThemeProvider>().primaryColor,
+                        size: 32,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('AI-Powered', 
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'AI-Powered',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 4),
                       const Text(
                         'Advanced algorithms analyze your academic progress',
@@ -327,11 +351,16 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Icon(Icons.person, 
-                          color: context.read<ThemeProvider>().primaryColor, size: 32),
+                      Icon(
+                        Icons.person,
+                        color: context.read<ThemeProvider>().primaryColor,
+                        size: 32,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('Personalized', 
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Personalized',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 4),
                       const Text(
                         'Recommendations tailored to your major and preferences',
@@ -354,11 +383,16 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Icon(Icons.schedule, 
-                          color: context.read<ThemeProvider>().primaryColor, size: 32),
+                      Icon(
+                        Icons.schedule,
+                        color: context.read<ThemeProvider>().primaryColor,
+                        size: 32,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('Optimized', 
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Optimized',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 4),
                       const Text(
                         'Balanced workload and optimal credit distribution',
@@ -377,11 +411,16 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Icon(Icons.track_changes, 
-                          color: context.read<ThemeProvider>().primaryColor, size: 32),
+                      Icon(
+                        Icons.track_changes,
+                        color: context.read<ThemeProvider>().primaryColor,
+                        size: 32,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('Progressive', 
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Progressive',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 4),
                       const Text(
                         'Considers prerequisites and degree progression',
@@ -401,7 +440,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
   void _generateRecommendations(CourseRecommendationProvider provider) async {
     await provider.generateRecommendations(context);
-    
+
     if (provider.currentRecommendation != null) {
       // Switch to results tab
       _tabController.animateTo(1);
@@ -414,5 +453,103 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
         ),
       );
     }
+  }
+
+  void _handleAddCourseToSelectedSemester(
+    BuildContext context,
+    String aiCourseId,
+    String aiCourseName,
+  ) async {
+    final courseProvider = context.read<CourseProvider>();
+    final studentProvider = context.read<StudentProvider>();
+    final recommendationProvider = context.read<CourseRecommendationProvider>();
+
+    final selectedSemester = recommendationProvider.selectedSemesterDisplay;
+    final studentId = studentProvider.student!.id;
+
+    if (selectedSemester == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No semester selected.')));
+      return;
+    }
+
+    final parsed =courseProvider.parseSemesterCode(
+      recommendationProvider.selectedSemesterDisplay!,
+    );
+    if (parsed == null) {
+      debugPrint(
+        '❌ Failed to parse semester string: ${recommendationProvider.selectedSemesterDisplay}',
+      );
+      return;
+    }
+    final (apiYear, semesterCode) = parsed;
+
+    // Check if already exists
+    final alreadyExists = courseProvider
+        .getCoursesForSemester(selectedSemester)
+        .any((c) => c.name == aiCourseName || c.courseId == aiCourseId);
+
+    if (alreadyExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Course already exists in this semester.'),
+        ),
+      );
+      return;
+    }
+
+    // Match course by name
+    final matchedList = await CourseRecommendationService()
+        .fetchCourseDetailsByNames(
+          {aiCourseId: aiCourseName},
+          apiYear,
+          semesterCode,
+        );
+
+    if (matchedList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Course details not found for "$aiCourseName".'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final details = matchedList.first;
+
+    final fallbackSemester = await courseProvider.getClosestAvailableSemester(
+      selectedSemester,
+    );
+
+    final course = StudentCourse(
+      courseId: details.courseId,
+      name: details.courseName,
+      finalGrade: '',
+      lectureTime: '',
+      tutorialTime: '',
+      labTime: '',
+      workshopTime: '',
+      creditPoints: details.creditPoints,
+    );
+
+    final success = await courseProvider.addCourseToSemester(
+      studentId,
+      selectedSemester,
+      course,
+      fallbackSemester,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? '${details.courseName} added to $selectedSemester.'
+              : 'Failed to add ${details.courseName}.',
+        ),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
   }
 }
