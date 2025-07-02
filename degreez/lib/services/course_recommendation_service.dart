@@ -50,25 +50,31 @@ the course name must be in hebrew.
     CourseRecommendationRequest request,
   ) async {
     try {
-
-       // Parse actual year/semester based on display label like "Winter 2024-2025"
-    final fallbackSemester = await CourseProvider().getClosestAvailableSemester(
-  request.semesterDisplayName,
-);
-    final parsed =CourseProvider().parseSemesterCode(fallbackSemester);
-    debugPrint('🟢 Selected semester from UI: ${request.semesterDisplayName}');
-    debugPrint('🔵 Using fallback semester for course data: $fallbackSemester');
-    debugPrint('Parsed semester: $parsed for display name: $fallbackSemester');
-    if (parsed == null) {
-      throw Exception('Invalid semester display name: ${request.semesterDisplayName}');
-    }
-    final (apiYear, semesterCode) = parsed;
+      // Parse actual year/semester based on display label like "Winter 2024-2025"
+      final fallbackSemester = await CourseProvider()
+          .getClosestAvailableSemester(request.semesterDisplayName);
+      final parsed = CourseProvider().parseSemesterCode(fallbackSemester);
+      debugPrint(
+        '🟢 Selected semester from UI: ${request.semesterDisplayName}',
+      );
+      debugPrint(
+        '🔵 Using fallback semester for course data: $fallbackSemester',
+      );
+      debugPrint(
+        'Parsed semester: $parsed for display name: $fallbackSemester',
+      );
+      if (parsed == null) {
+        throw Exception(
+          'Invalid semester display name: ${request.semesterDisplayName}',
+        );
+      }
+      final (apiYear, semesterCode) = parsed;
       // Step 1: Get candidate courses from AI
       final candidateCourses = await _identifyCandidateCourses(request);
 
       // Step 2: Fetch detailed course information
-      final courseDetails = await fetchCourseDetailsByNames(
-        candidateCourses.courses,
+      final courseDetails = await fetchCourseDetails(
+        candidateCourses.courses.keys.toList(),
         apiYear,
         semesterCode,
       );
@@ -145,7 +151,7 @@ Each course should have both an id and name.
   }
 
   /// Step 2: Fetch detailed course information using CourseService
-  Future<List<CourseRecommendationDetails>> _fetchCourseDetails(
+  Future<List<CourseRecommendationDetails>> fetchCourseDetails(
     List<String> courseIds,
     int year,
     int semester,
@@ -178,7 +184,9 @@ Each course should have both an id and name.
     int semester,
   ) async {
     final allCourses = await CourseService.getAllCourses(year, semester);
-    debugPrint('📦 Fetched ${allCourses.length} courses from Firestore for $year-$semester');
+    debugPrint(
+      '📦 Fetched ${allCourses.length} courses from Firestore for $year-$semester',
+    );
     final courseDetails = <CourseRecommendationDetails>[];
 
     for (final entry in aiCoursesByName.entries) {
@@ -187,10 +195,11 @@ Each course should have both an id and name.
         final realName =
             (course['general']['שם מקצוע'] ?? '').toString().toLowerCase();
         final similarity = realName.similarityTo(aiCourseName.toLowerCase());
-        debugPrint('🔍 Matching "$aiCourseName" → "$realName" [score=$similarity]');
+        debugPrint(
+          '🔍 Matching "$aiCourseName" → "$realName" [score=$similarity]',
+        );
         return similarity > 0.7; // Allow close matches
       }, orElse: () => <String, dynamic>{});
-      
 
       if (matched.isNotEmpty) {
         final details = EnhancedCourseDetails.fromSapJson(matched);

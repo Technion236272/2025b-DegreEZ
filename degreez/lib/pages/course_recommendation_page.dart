@@ -507,8 +507,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     // Match course by name
     final matchedList = await CourseRecommendationService()
-        .fetchCourseDetailsByNames(
-          {aiCourseId: aiCourseName},
+        .fetchCourseDetails(
+          [aiCourseId],
           apiYear,
           semesterCode,
         );
