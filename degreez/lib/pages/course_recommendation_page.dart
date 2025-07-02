@@ -26,17 +26,18 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
 
-@override
-void initState() {
-  super.initState();
-  _tabController = TabController(length: 3, vsync: this);
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final studentId = context.read<StudentProvider>().student!.id;
-    context.read<CourseRecommendationProvider>().loadAvailableSemesters(studentId);
-  });
-}
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final studentId = context.read<StudentProvider>().student!.id;
+      context.read<CourseRecommendationProvider>().loadAvailableSemesters(
+        studentId,
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -473,9 +474,14 @@ void initState() {
       ).showSnackBar(const SnackBar(content: Text('No semester selected.')));
       return;
     }
-
-    final parsed =courseProvider.parseSemesterCode(
-      recommendationProvider.selectedSemesterDisplay!,
+    final fallbackSemester = await courseProvider.getClosestAvailableSemester(
+      selectedSemester,
+    );
+    debugPrint(
+      'Using fallback semester: $fallbackSemester for selected semester: $selectedSemester',
+    );
+    final parsed = courseProvider.parseSemesterCode(
+      fallbackSemester
     );
     if (parsed == null) {
       debugPrint(
@@ -518,10 +524,6 @@ void initState() {
     }
 
     final details = matchedList.first;
-
-    final fallbackSemester = await courseProvider.getClosestAvailableSemester(
-      selectedSemester,
-    );
 
     final course = StudentCourse(
       courseId: details.courseId,
