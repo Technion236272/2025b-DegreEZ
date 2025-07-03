@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/course_provider.dart';
 import '../providers/course_data_provider.dart';
-import '../providers/color_theme_provider.dart';
+import '../providers/theme_provider.dart';
 import '../models/student_model.dart';
 
 class ExamDatesPanel extends StatefulWidget {
@@ -17,10 +17,43 @@ class ExamDatesPanel extends StatefulWidget {
 class _ExamDatesPanelState extends State<ExamDatesPanel> {
   bool _isExpanded = false;
 
+
+    (int, int)? _parseSemesterCode(String semesterName) {
+    final match = RegExp(
+      r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
+    ).firstMatch(semesterName);
+    if (match == null) return null;
+
+    final season = match.group(1)!;
+    final firstYear = int.parse(match.group(2)!);
+
+    int apiYear;
+    int semesterCode;
+
+    switch (season) {
+      case 'Winter':
+        apiYear = firstYear; // Use the first year for Winter
+        semesterCode = 200;
+        break;
+      case 'Spring':
+        apiYear = firstYear - 1;
+        semesterCode = 201;
+        break;
+      case 'Summer':
+        apiYear = firstYear - 1;
+        semesterCode = 202;
+        break;
+      default:
+        return null;
+    }
+
+    return (apiYear, semesterCode);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer3<CourseProvider, CourseDataProvider, ColorThemeProvider>(
-      builder: (context, courseProvider, courseDataProvider, colorThemeProvider, _) {
+    return Consumer3<CourseProvider, CourseDataProvider, ThemeProvider>(
+      builder: (context, courseProvider, courseDataProvider, themeProvider, _) {
         // Get current semester courses only
         final currentSemester = courseDataProvider.currentSemester?.semesterName;
         final currentCourses = currentSemester != null 
@@ -32,7 +65,8 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
         }
 
         return FutureBuilder<List<ExamInfo>>(
-          future: _getExamInfo(currentCourses, courseDataProvider),
+          future: _getExamInfo(currentCourses, courseDataProvider, currentSemester!),
+
           builder: (context, snapshot) {
             final examData = snapshot.data ?? [];
             
@@ -131,7 +165,9 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
                             itemCount: examData.length,
                             itemBuilder: (context, index) => _buildExamListTile(
                               examData[index], 
-                              colorThemeProvider,
+                              themeProvider,
+                              examData, // Pass the full list
+                              index, // Pass the current index
                             ),
                           ),
                         ),
@@ -147,13 +183,80 @@ class _ExamDatesPanelState extends State<ExamDatesPanel> {
     );
   }
 
-Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvider) {
+Widget _buildExamListTile(ExamInfo examInfo, ThemeProvider themeProvider, List<ExamInfo> allExams, int currentIndex) {
+  // Calculate days until next exam
+  Widget? daysDifferenceWidget;
+  
+  if (currentIndex < allExams.length - 1) {
+    final currentExam = allExams[currentIndex];
+    final nextExam = allExams[currentIndex + 1];
+    
+    if (currentExam.examDate != null && nextExam.examDate != null) {
+      final daysDifference = nextExam.examDate!.difference(currentExam.examDate!).inDays;
+      
+      Color indicatorColor;
+      IconData indicatorIcon;
+      String indicatorText;
+      
+      if (daysDifference == 0) {
+        indicatorColor = Colors.red;
+        indicatorIcon = Icons.warning;
+        indicatorText = 'Same day';
+      } else if (daysDifference == 1) {
+        indicatorColor = Colors.orange;
+        indicatorIcon = Icons.schedule;
+        indicatorText = 'Next day';
+      } else if (daysDifference <= 3) {
+        indicatorColor = Colors.amber;
+        indicatorIcon = Icons.schedule;
+        indicatorText = '$daysDifference days';
+      } else if (daysDifference <= 7) {
+        indicatorColor = Colors.blue;
+        indicatorIcon = Icons.schedule;
+        indicatorText = '$daysDifference days';
+      } else {
+        indicatorColor = Colors.green;
+        indicatorIcon = Icons.schedule;
+        indicatorText = '$daysDifference days';
+      }
+      
+      daysDifferenceWidget = Container(
+        margin: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: indicatorColor.withAlpha(26),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: indicatorColor.withAlpha(76), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              indicatorIcon,
+              size: 14,
+              color: indicatorColor,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$indicatorText until ${nextExam.courseName}',
+              style: TextStyle(
+                fontSize: 11,
+                color: indicatorColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   return ListTile(
     leading: Container(
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: colorThemeProvider.getCourseColor(examInfo.courseId),
+        color: themeProvider.getCourseColor(examInfo.courseId),
         shape: BoxShape.circle,
       ),
     ),
@@ -198,62 +301,83 @@ Widget _buildExamListTile(ExamInfo examInfo, ColorThemeProvider colorThemeProvid
           '📝 ${examInfo.examType}',
           style: const TextStyle(fontSize: 12),
         ),
+        if (daysDifferenceWidget != null) ...[
+          const SizedBox(height: 4),
+          daysDifferenceWidget,
+        ],
       ],
     ),
   );
 }
-Future<List<ExamInfo>> _getExamInfo(List<StudentCourse> courses, CourseDataProvider courseDataProvider) async {
+Future<List<ExamInfo>> _getExamInfo(
+  List<StudentCourse> courses,
+  CourseDataProvider courseDataProvider,
+  String semesterName,
+) async {
+  final parsed = _parseSemesterCode(semesterName);
+  if (parsed == null) return [];
+
+  final year = parsed.$1;
+  final semesterCode = parsed.$2;
+
   final examList = <ExamInfo>[];
-  
+
   for (final course in courses) {
-    final courseDetails = await courseDataProvider.getCourseDetails(course.courseId);
+    final courseDetails = await courseDataProvider.getCourseDetails(
+      year,
+      semesterCode,
+      course.courseId,
+    );
     if (courseDetails?.hasExams == true) {
       final exams = courseDetails!.exams;
-      
-      // Helper function to create exam info with prepared data
+
       ExamInfo createExamInfo(String examKey, ExamPeriod period, String examType) {
         final rawDate = exams[examKey]!;
         final parsedDate = _parseExamDate(rawDate);
-          return ExamInfo(
+        return ExamInfo(
           courseId: course.courseId,
           courseName: course.name,
           period: period,
           examType: examType,
           rawDateString: rawDate,
           examDate: parsedDate,
-          // Prepared display data
-          formattedDate: parsedDate != null ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate) : 'Date TBD',
-          displayDate: parsedDate != null ? DateFormat('EEEE, dd-MM').format(parsedDate) : 'Date TBD',
+          formattedDate: parsedDate != null
+              ? DateFormat('dd-MM-yyyy HH:mm').format(parsedDate)
+              : 'Date TBD',
+          displayDate: parsedDate != null
+              ? DateFormat('EEEE, dd-MM').format(parsedDate)
+              : 'Date TBD',
           periodColor: period == ExamPeriod.periodA ? Colors.red : Colors.blue,
           periodText: period == ExamPeriod.periodA ? 'Period A' : 'Period B',
-          sortOrder: parsedDate != null ? (parsedDate.month * 100 + parsedDate.day) : 999999, // Sort by month first, then day
+          sortOrder: parsedDate != null
+              ? (parsedDate.month * 100 + parsedDate.day)
+              : 999999,
         );
       }
-      
-      // Process all exam types
+
       if (exams.containsKey('מועד א') && exams['מועד א']!.isNotEmpty) {
         examList.add(createExamInfo('מועד א', ExamPeriod.periodA, 'Final Exam'));
       }
-      
+
       if (exams.containsKey('מועד ב') && exams['מועד ב']!.isNotEmpty) {
         examList.add(createExamInfo('מועד ב', ExamPeriod.periodB, 'Final Exam'));
       }
-      
+
       if (exams.containsKey('בוחן מועד א') && exams['בוחן מועד א']!.isNotEmpty) {
-        examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'midterm'));
+        examList.add(createExamInfo('בוחן מועד א', ExamPeriod.periodA, 'Midterm'));
       }
-      
+
       if (exams.containsKey('בוחן מועד ב') && exams['בוחן מועד ב']!.isNotEmpty) {
-        examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'midterm'));
+        examList.add(createExamInfo('בוחן מועד ב', ExamPeriod.periodB, 'Midterm'));
       }
     }
   }
-  
-  // Sort by prepared sort order
+
   examList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-  
   return examList;
-}  DateTime? _parseExamDate(String dateString) {
+}
+  
+ DateTime? _parseExamDate(String dateString) {
     try {
       // Try different date formats that might be in the API
       final formats = [

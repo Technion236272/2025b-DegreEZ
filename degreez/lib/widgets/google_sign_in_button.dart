@@ -1,8 +1,8 @@
 import 'package:degreez/providers/student_provider.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/login_notifier.dart';
-import '../color/color_palette.dart';
 
 /// A reusable Google Sign-In button widget
 class GoogleSignInButton extends StatefulWidget {
@@ -23,13 +23,13 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child:
           loginNotifier.isLoading || context.watch<StudentProvider>().isLoading
-              ? const LinearProgressIndicator(
-                color: AppColorsDarkMode.secondaryColor,
-                backgroundColor: AppColorsDarkMode.accentColor,
+              ? LinearProgressIndicator(
+                color: context.read<ThemeProvider>().secondaryColor,
+                backgroundColor: context.read<ThemeProvider>().accentColor,
               )
               : TextButton(
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: AppColorsDarkMode.accentColor,
+                  backgroundColor: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().primaryColor : context.read<ThemeProvider>().secondaryColor,
                 ),
                 onPressed: () async {
                   try {
@@ -65,8 +65,8 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                       Container(
                         height: 24.0,
                         width: 24.0,
-                        decoration: const BoxDecoration(
-                          color: AppColorsDarkMode.secondaryColor,
+                        decoration: BoxDecoration(
+                          color: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().mainColor : context.read<ThemeProvider>().primaryColor,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -78,11 +78,11 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                         ),
                       ),
                       const SizedBox(width: 12.0),
-                      const Text(
+                      Text(
                         'Sign in with Google',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppColorsDarkMode.secondaryColor,
+                          color: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().mainColor : context.read<ThemeProvider>().primaryColor,
                         ),
                       ),
                     ],

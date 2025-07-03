@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/student_model.dart';
+import 'theme_provider.dart';
 
 class StudentProvider with ChangeNotifier {
   StudentModel? _student;
@@ -64,7 +65,6 @@ class StudentProvider with ChangeNotifier {
       return false;
     }
   }
-
   // Update student profile with optimistic update
   Future<bool> updateStudentProfile({
     required String name,
@@ -73,6 +73,7 @@ class StudentProvider with ChangeNotifier {
     required String faculty,
     required String catalog,
     required String semester, // Changed from int to String
+    String? themeMode, // Optional theme mode parameter
   }) async {
     if (_student == null) return false;
 
@@ -87,21 +88,29 @@ class StudentProvider with ChangeNotifier {
       faculty: faculty,
       catalog: catalog,
       semester: semester,
+      themeMode: themeMode ?? _student!.themeMode, // Preserve existing if not provided
     );
     _notifyListeners();
 
     try {
+      final updateData = {
+        'Name': name,
+        'Major': major,
+        'Preferences': preferences,
+        'Faculty': faculty,
+        'Catalog': catalog,
+        'Semester': semester, // Now stored as String
+      };
+      
+      // Only update theme mode if provided
+      if (themeMode != null) {
+        updateData['ThemeMode'] = themeMode;
+      }
+      
       await FirebaseFirestore.instance
           .collection('Students')
           .doc(_student!.id)
-          .update({
-            'Name': name,
-            'Major': major,
-            'Preferences': preferences,
-            'Faculty': faculty,
-            'Catalog': catalog,
-            'Semester': semester, // Now stored as String
-          });
+          .update(updateData);
       
       _error = null;
       return true;
@@ -110,6 +119,21 @@ class StudentProvider with ChangeNotifier {
       _student = oldStudent;
       _setError('Failed to update profile: $e');
       return false;
+    }
+  }
+
+  // Load student's theme preference and apply it to theme provider
+  Future<void> loadAndApplyThemePreference(ThemeProvider themeProvider) async {
+    if (_student?.themeMode != null) {
+      try {
+        final themeMode = AppThemeMode.values.firstWhere(
+          (mode) => mode.name == _student!.themeMode,
+          orElse: () => AppThemeMode.dark, // Default fallback
+        );
+        await themeProvider.setThemeMode(themeMode);
+      } catch (e) {
+        debugPrint('Error applying student theme preference: $e');
+      }
     }
   }
 

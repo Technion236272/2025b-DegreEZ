@@ -1,4 +1,4 @@
-import 'package:degreez/color/color_palette.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -107,7 +107,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      contentTextStyle: TextStyle(color: AppColorsDarkMode.secondaryColor),
       title: Text('Add Course to ${widget.semesterName}'),
       content: SizedBox(
         height: MediaQuery.of(context).size.height * 0.5,
@@ -116,10 +115,10 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
           children: [
             TextField(
               controller: searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(
-                    color: AppColorsDarkMode.secondaryColor,
+                    color: context.read<ThemeProvider>().secondaryColor,
                   ),
                 ),
                 labelText: 'Course ID or Name',
@@ -161,7 +160,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                           color:
                               hasMissing
                                   ? Colors.redAccent
-                                  : AppColorsDarkMode.secondaryColor,
+                                  : null,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -183,7 +182,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text('Cancel',style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),),
         ),
       ],
     );
@@ -196,10 +195,21 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     final courseId = isId ? query : null;
     final courseName = isId ? null : query;
 
+    
+  final requestedSemester = widget.semesterName;
+  debugPrint('🔍 Requested search in semester: $requestedSemester');
+
+    final fallbackSemester = await context
+        .read<CourseProvider>()
+        .getClosestAvailableSemester(requestedSemester);
+        
+ debugPrint('✅ Actual semester used for search: $fallbackSemester');
+if (!mounted) return;
+
     final fetched = await context.read<CourseProvider>().searchCourses(
       courseId: courseId,
       courseName: courseName,
-      pastSemestersToInclude: 4,
+      selectedSemester: fallbackSemester,
     );
 
     if (mounted) {
@@ -237,10 +247,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       return;
     }
 
-    final rawPrereqs = courseDetails.prerequisites;
+    String rawPrereqs = courseDetails.prerequisites;
     List<List<String>> parsedPrereqs = [];
 
-    if (rawPrereqs is String) {
       final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
 
       for (final group in orGroups) {
@@ -254,7 +263,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
 
         if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
       }
-    }
 
     final missing = context.read<CourseProvider>().getMissingPrerequisites(
       widget.semesterName,
@@ -280,31 +288,32 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
           }
         }
       }
-
+      if (!mounted) return;
       final proceedAnyway = await showDialog<bool>(
         context: context,
         builder:
             (ctx) => AlertDialog(
               title: const Text('Missing Prerequisites'),
-              content: SingleChildScrollView( // ✅ Fix overflow when keyboard is open
+              content: SingleChildScrollView(
+                // ✅ Fix overflow when keyboard is open
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'To register for this course, you must have completed one of the following prerequisite groups. '
-                    'Courses in red were not found in your previous semesters.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, height: 1.4),
-                  ),
-                  const SizedBox(height: 10),
-                  buildFormattedPrereqWarning(
-                    parsedPrereqs,
-                    missing,
-                    courseIdToName,
-                  ),
-                  const SizedBox(height: 10),
-                  const Text('Do you want to add this course anyway?'),
-                ],
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'To register for this course, you must have completed one of the following prerequisite groups. '
+                      'Courses in red were not found in your previous semesters.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, height: 1.4),
+                    ),
+                    const SizedBox(height: 10),
+                    buildFormattedPrereqWarning(
+                      parsedPrereqs,
+                      missing,
+                      courseIdToName,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text('Do you want to add this course anyway?'),
+                  ],
                 ),
               ),
               actions: [
@@ -333,12 +342,18 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       workshopTime: '',
       creditPoints: courseDetails.creditPoints, // Store credit points from API
     );
+if (!mounted) return;
+final fallbackSemester = await context
+    .read<CourseProvider>()
+    .getClosestAvailableSemester(widget.semesterName);
+if (!mounted) return;
+final success = await context.read<CourseProvider>().addCourseToSemester(
+  context.read<StudentProvider>().student!.id,
+  widget.semesterName, // ⬅️ This is still where it will be saved
+  course,
+  fallbackSemester, // NEW
+);
 
-    final success = await context.read<CourseProvider>().addCourseToSemester(
-      context.read<StudentProvider>().student!.id,
-      widget.semesterName,
-      course,
-    );
 
     if (!mounted) return;
 

@@ -1,5 +1,6 @@
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
+import 'package:degreez/providers/theme_provider.dart';
 import 'package:degreez/widgets/grade_sticker.dart';
 import 'package:degreez/widgets/course_actions_popup.dart';
 import 'package:flutter/material.dart';
@@ -57,10 +58,10 @@ class _CourseCardState extends State<CourseCard> {
         _hasNote = true;
       });
     }
-
+    // Check if the course has a grade that is int or double
+    // Enhanced: Use a more robust check for grade presence
     final hasGrade = course.finalGrade.isNotEmpty;
-    //debugPrint('Note: fetchedStartNote:${course.note}');
-
+    
     return Consumer<CustomizedDiagramNotifier>(
       builder: (context, notifier, child) {
         final isFocused =
@@ -95,10 +96,10 @@ class _CourseCardState extends State<CourseCard> {
                       studentProvider.student!.id,
                     ); // ✅ Required
 
-                    final refreshed = courseProvider.getCourseById(
-                      widget.semester,
-                      widget.course.courseId,
-                    );
+                    // final refreshed = courseProvider.getCourseById(
+                    //   widget.semester,
+                    //   widget.course.courseId,
+                    // );
 
                     // setState(() {
                     //   _hasNote =
@@ -133,6 +134,7 @@ class _CourseCardState extends State<CourseCard> {
                 );
 
                 if (refreshed != null) {*/
+                if (!context.mounted) return;
                   final notifier = Provider.of<CustomizedDiagramNotifier>(
                     context,
                     listen: false,
@@ -156,7 +158,7 @@ class _CourseCardState extends State<CourseCard> {
         color: context
             .watch<CustomizedDiagramNotifier>()
             .cardColorPalette!
-            .cardBG(course.courseId),
+            .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
         child: Column(
           children: [
             //Card Top Bar (Course number and points)
@@ -169,7 +171,7 @@ class _CourseCardState extends State<CourseCard> {
                       context
                           .watch<CustomizedDiagramNotifier>()
                           .cardColorPalette!
-                          .topBarBG,
+                          .topBarBG(Provider.of<ThemeProvider>(context).isDarkMode),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
@@ -190,7 +192,7 @@ class _CourseCardState extends State<CourseCard> {
                                 context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .topBarText,
+                                    .topBarText(Provider.of<ThemeProvider>(context).isDarkMode),
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -206,7 +208,7 @@ class _CourseCardState extends State<CourseCard> {
                                 context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .topBarMarkBG,
+                                    .topBarMarkBG(Provider.of<ThemeProvider>(context).isDarkMode),
                             borderRadius: BorderRadius.only(
                               topRight: Radius.circular(8),
                             ),
@@ -224,7 +226,7 @@ class _CourseCardState extends State<CourseCard> {
                                         context
                                             .watch<CustomizedDiagramNotifier>()
                                             .cardColorPalette!
-                                            .topBarMarkText,
+                                            .topBarMarkText(Provider.of<ThemeProvider>(context).isDarkMode),
                                   ),
                                 ),
                                 Expanded(
@@ -241,7 +243,7 @@ class _CourseCardState extends State<CourseCard> {
                                                 CustomizedDiagramNotifier
                                               >()
                                               .cardColorPalette!
-                                              .topBarMarkText,
+                                              .topBarMarkText(Provider.of<ThemeProvider>(context).isDarkMode),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -254,27 +256,37 @@ class _CourseCardState extends State<CourseCard> {
                   ],
                 ),
               ),
-            ),
-            //Card Middle (Course name)
+            ),            //Card Middle (Course name and grade)
             Expanded(
               flex: 6,
               child: Container(
                 padding: EdgeInsets.only(right: 3, left: 1, top: 3, bottom: 2),
                 width: double.infinity,
-                child: AutoSizeText(
-                  maxLines: 3,
-                  minFontSize: 7,
-                  textDirection: TextDirection.rtl,
-                  course.name,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color:
-                        context
-                            .watch<CustomizedDiagramNotifier>()
-                            .cardColorPalette!
-                            .cardFG,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: AutoSizeText(
+                        maxLines: 2,
+                        minFontSize: 7,
+                        textDirection: TextDirection.rtl,
+                        course.name,                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color:
+                              context
+                                  .watch<CustomizedDiagramNotifier>()
+                                  .cardColorPalette!
+                                  .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
+                        ),
+                      ),
+                    ),
+                    if (hasGrade)
+                      Padding(
+                        padding: EdgeInsets.only(top: 2),
+                        child: GradeSticker(grade: course.finalGrade),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -292,18 +304,15 @@ class _CourseCardState extends State<CourseCard> {
                 child: Padding(
                   padding: EdgeInsets.only(right: 1, left: 1),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      hasGrade
-                          ? GradeSticker(grade: course.finalGrade)
-                          : Icon(
-                            Icons.work_off_outlined,
-                            color: context
-                                .watch<CustomizedDiagramNotifier>()
-                                .cardColorPalette!
-                                .cardBG(course.courseId),
-                            size: 18,
-                          ),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,                    children: [
+                      Icon(
+                        Icons.work_off_outlined,
+                        color: context
+                            .watch<CustomizedDiagramNotifier>()
+                            .cardColorPalette!
+                            .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
+                        size: 18,
+                      ),
 
                       _hasNote
                           ? Icon(
@@ -312,20 +321,20 @@ class _CourseCardState extends State<CourseCard> {
                                 context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .cardFG,
+                                    .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                             size: 18,
                           )
                           : Icon(
                             Icons.edit_note_rounded,
-                            color:
-                                context
+                            color:                                    context
                                     .watch<CustomizedDiagramNotifier>()
                                     .cardColorPalette!
-                                    .cardFGdim,
+                                    .cardFGdim(Provider.of<ThemeProvider>(context).isDarkMode),
                             size: 18,
                           ),
-
-                      if (hasGrade) ...[
+                      // if hasGrade and grade is not a number then show the grade as a string
+                      if (hasGrade && double.tryParse(course.finalGrade) != null) ...[
+                          // Show check or clear icon based on grade
                         (double.tryParse(course.finalGrade)! > 55)
                             ? Icon(
                               Icons.check_rounded,
@@ -333,7 +342,7 @@ class _CourseCardState extends State<CourseCard> {
                                   context
                                       .watch<CustomizedDiagramNotifier>()
                                       .cardColorPalette!
-                                      .cardFG,
+                                      .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                               size: 18,
                             )
                             : Icon(
@@ -342,16 +351,17 @@ class _CourseCardState extends State<CourseCard> {
                                   context
                                       .watch<CustomizedDiagramNotifier>()
                                       .cardColorPalette!
-                                      .cardFG,
+                                      .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
                               size: 18,
                             ),
+                            
                       ] else
                         Icon(
                           Icons.work_off_outlined,
                           color: context
                               .watch<CustomizedDiagramNotifier>()
                               .cardColorPalette!
-                              .cardBG(course.courseId),
+                              .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
                           size: 18,
                         ),
 
@@ -375,7 +385,8 @@ class _CourseCardState extends State<CourseCard> {
     EnhancedCourseDetails? courseDetails,
   ) {
     final hasGrade = course.finalGrade.isNotEmpty;
-    final courseColor = _getCourseColor(course.courseId);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final courseColor = themeProvider.getCourseColor(course.courseId);
 
     return GestureDetector(
       // Enhanced: Add tap for quick actions in horizontal mode too
@@ -454,24 +465,13 @@ class _CourseCardState extends State<CourseCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-              if (hasGrade)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
+              ),              if (hasGrade)
+                Text(
+                  course.finalGrade,
+                  style: TextStyle(
+                    fontSize: 12,
                     color: _getGradeColor(course.finalGrade),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    course.finalGrade,
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
             ],
@@ -479,21 +479,6 @@ class _CourseCardState extends State<CourseCard> {
         ),
       ),
     );
-  }
-
-  Color _getCourseColor(String courseId) {
-    final hash = courseId.hashCode;
-    final colors = [
-      Colors.teal.shade900, // Dark greenish blue
-      Colors.indigo.shade900, // Deep bluish purple
-      Colors.cyan.shade900, // Rich green-blue — bright pop
-      Colors.deepPurple.shade900, // Bold, regal purple
-      Colors.blue.shade900, // Classic dark blue
-      Colors.orange.shade900, // Dark, warm orange — still different from brown
-      Colors.red.shade900, // Blood red — intense but clearly distinct
-      Colors.lime.shade900, // Sharp and vivid green-yellow
-    ];
-    return colors[hash.abs() % colors.length];
   }
 
   Color _getGradeColor(String grade) {

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
+import '../services/global_config_service.dart';
 
 class CourseLoadingState {
   final bool isLoadingCourses;
@@ -54,10 +55,42 @@ class CourseProvider with ChangeNotifier {
   Map<String, List<StudentCourse>> _coursesBySemester = {};
   CourseLoadingState _loadingState = const CourseLoadingState();
   String? _error;
-  final Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
+  // final Map<String, EnhancedCourseDetails> _courseDetailsCache = {};
   SemesterInfo? _currentSemester;
 
   SemesterInfo? get currentSemester => _currentSemester;
+
+  (int, int)? _parseSemesterCode(String semesterName) {
+    final match = RegExp(
+      r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
+    ).firstMatch(semesterName);
+    if (match == null) return null;
+
+    final season = match.group(1)!;
+    final firstYear = int.parse(match.group(2)!);
+
+    int apiYear;
+    int semesterCode;
+
+    switch (season) {
+      case 'Winter':
+        apiYear = firstYear; // Use the first year for Winter
+        semesterCode = 200;
+        break;
+      case 'Spring':
+        apiYear = firstYear - 1;
+        semesterCode = 201;
+        break;
+      case 'Summer':
+        apiYear = firstYear - 1;
+        semesterCode = 202;
+        break;
+      default:
+        return null;
+    }
+
+    return (apiYear, semesterCode);
+  }
 
   // Getters
   List<StudentCourse> getCoursesForSemester(String semesterKey) {
@@ -115,6 +148,7 @@ class CourseProvider with ChangeNotifier {
 
       for (final semesterDoc in semestersSnapshot.docs) {
         final semesterKey = semesterDoc.id;
+        debugPrint('📘 Found semester: $semesterKey');
         final coursesSnapshot =
             await semesterDoc.reference.collection('Courses').get();
 
@@ -124,19 +158,23 @@ class CourseProvider with ChangeNotifier {
                 .toList();
 
         newCoursesBySemester[semesterKey] = courses;
-      }      _coursesBySemester = newCoursesBySemester;
+      }
+      _coursesBySemester = newCoursesBySemester;
       _error = null;
-      
+
       // Check if we need to migrate any courses that don't have credit points
-      final needsMigration = _coursesBySemester.values
-          .any((courses) => courses.any((course) => course.creditPoints <= 0));
-      
+      final needsMigration = _coursesBySemester.values.any(
+        (courses) => courses.any((course) => course.creditPoints <= 0),
+      );
+
       if (needsMigration) {
-        debugPrint('🔄 Detected courses without credit points, starting migration...');
+        debugPrint(
+          '🔄 Detected courses without credit points, starting migration...',
+        );
         // Run migration in background without blocking the UI
         migrateCreditPointsForExistingCourses(studentId);
       }
-      
+
       return true;
     } catch (e) {
       _error = 'Failed to load courses: $e';
@@ -151,6 +189,7 @@ class CourseProvider with ChangeNotifier {
     String studentId,
     String semesterKey,
     StudentCourse course,
+    String? fallbackSemesterForFetch,
   ) async {
     _setLoadingState(_loadingState.copyWith(isAddingCourse: true));
 
@@ -172,10 +211,17 @@ class CourseProvider with ChangeNotifier {
       }
 
       // 🔍 Fetch prerequisites (as string or list from API)
+      final usedSemester = fallbackSemesterForFetch ?? semesterKey;
+      final parsed = _parseSemesterCode(usedSemester);
+      if (parsed == null) {
+        debugPrint('❌ Invalid semester format: $semesterKey');
+        return false;
+      }
+      final (year, semesterCode) = parsed;
       final rawPrereqs =
           (await CourseService.getCourseDetails(
-            _currentSemester!.year,
-            _currentSemester!.semester,
+            year,
+            semesterCode,
             course.courseId,
           ))?.prerequisites;
       debugPrint('📦 Raw prerequisites from API: $rawPrereqs');
@@ -397,21 +443,54 @@ class CourseProvider with ChangeNotifier {
       notifyListeners();
       return false;
     }
-  }
-  // Helper method to get selected schedule entries for a course
+  }  // Helper method to get selected schedule entries for a course
   Map<String, List<ScheduleEntry>> getSelectedScheduleEntries(
-    String courseId, 
-    EnhancedCourseDetails? courseDetails,
-  ) {
+    String courseId,
+    EnhancedCourseDetails? courseDetails, {
+    String? semester,
+  }) {
+    debugPrint('  🔍 Getting selected schedule entries for course: $courseId${semester != null ? ' in semester: $semester' : ''}');
+    
     if (courseDetails == null) {
+      debugPrint('    ❌ No course details available');
       return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
     }
 
-    // Find the course in our data using the helper method
-    final course = _findCourseById(courseId);
-    if (course == null) {
-      return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
+    // Find the course in our data using semester-specific lookup if provided
+    StudentCourse? course;
+    if (semester != null) {
+      final semesterCourses = _coursesBySemester[semester];
+      if (semesterCourses != null) {
+        try {
+          course = semesterCourses.firstWhere((c) => c.courseId == courseId);
+          debugPrint('    ✅ Found course in specific semester: ${course.name}');
+        } catch (e) {
+          debugPrint('    ❌ Course not found in semester $semester');
+        }
+      }
     }
+    
+    // Fallback to global search if semester not provided or course not found
+    if (course == null) {
+      course = _findCourseById(courseId);
+      if (course == null) {
+        debugPrint('    ❌ Course not found in provider data');
+        return {'lecture': [], 'tutorial': [], 'lab': [], 'workshop': []};
+      }
+      debugPrint('    ⚠️ Using course from global search: ${course.name}');
+    }debugPrint('    📚 Found course: ${course.name}');
+    debugPrint('    📋 Available schedule entries in course details: ${courseDetails.schedule.length}');
+    for (int i = 0; i < courseDetails.schedule.length; i++) {
+      final entry = courseDetails.schedule[i];
+      debugPrint('      [$i] ${entry.day} ${entry.time} - ${entry.type} (Group ${entry.group}) - ${entry.staff}');
+    }
+      debugPrint('    📋 Course schedule selection status:');
+    debugPrint('      Lecture time: "${course.lectureTime}"');
+    debugPrint('      Tutorial time: "${course.tutorialTime}"');
+    debugPrint('      Lab time: "${course.labTime}"');
+    debugPrint('      Workshop time: "${course.workshopTime}"');
+    debugPrint('      Has complete selection: ${course.hasCompleteScheduleSelection}');
+    debugPrint('      Course found via: ${semester != null ? 'semester-specific lookup' : 'global search'}');
 
     final selectedLectures = <ScheduleEntry>[];
     final selectedTutorials = <ScheduleEntry>[];
@@ -420,56 +499,85 @@ class CourseProvider with ChangeNotifier {
 
     // Match stored lecture time with schedule entries
     if (course.lectureTime.isNotEmpty) {
-      if (course.lectureTime.startsWith('GROUP_')) {
+      debugPrint('    🎓 Processing lecture selection: "${course.lectureTime}"');      if (course.lectureTime.startsWith('GROUP_')) {
         // New group format: find all entries with the same type and group
+        debugPrint('      Using GROUP format');
         final parts = course.lectureTime.split('_');
         if (parts.length >= 3) {
           final type = parts[1];
           final group = int.tryParse(parts[2]);
+          debugPrint('      Looking for type: "$type", group: $group');
           if (group != null) {
-            selectedLectures.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
-            );
+            final matchingEntries = courseDetails.schedule
+                .where((schedule) => schedule.type == type && schedule.group == group)
+                .toList();
+            selectedLectures.addAll(matchingEntries);
+            debugPrint('      Found ${matchingEntries.length} matching lecture entries');
+            for (final entry in matchingEntries) {
+              debugPrint('        ${entry.day} ${entry.time} - ${entry.type} (Group ${entry.group})');
+            }
           }
         }
       } else {
         // Backward compatibility: old time format
+        debugPrint('      Using legacy time format');
+        var foundMatch = false;
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.lectureTime == scheduleString) {
             selectedLectures.add(schedule);
+            debugPrint('      Found matching lecture: ${schedule.day} ${schedule.time} - ${schedule.type}');
+            foundMatch = true;
             break;
           }
         }
+        if (!foundMatch) {
+          debugPrint('      ❌ No matching lecture found for: "${course.lectureTime}"');
+        }
       }
-    }
-
-    // Match stored tutorial time with schedule entries
+    }    // Match stored tutorial time with schedule entries
     if (course.tutorialTime.isNotEmpty) {
+      debugPrint('    📝 Processing tutorial selection: "${course.tutorialTime}"');
       if (course.tutorialTime.startsWith('GROUP_')) {
         // New group format: find all entries with the same type and group
+        debugPrint('      Using GROUP format');
         final parts = course.tutorialTime.split('_');
         if (parts.length >= 3) {
           final type = parts[1];
           final group = int.tryParse(parts[2]);
+          debugPrint('      Looking for type: "$type", group: $group');
           if (group != null) {
-            selectedTutorials.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
-            );
+            final matchingEntries = courseDetails.schedule
+                .where((schedule) => schedule.type == type && schedule.group == group)
+                .toList();
+            selectedTutorials.addAll(matchingEntries);
+            debugPrint('      Found ${matchingEntries.length} matching tutorial entries');
+            for (final entry in matchingEntries) {
+              debugPrint('        ${entry.day} ${entry.time} - ${entry.type} (Group ${entry.group})');
+            }
           }
         }
       } else {
         // Backward compatibility: old time format
+        debugPrint('      Using legacy time format');
+        var foundMatch = false;
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.tutorialTime == scheduleString) {
             selectedTutorials.add(schedule);
+            debugPrint('      Found matching tutorial: ${schedule.day} ${schedule.time} - ${schedule.type}');
+            foundMatch = true;
             break;
           }
+        }
+        if (!foundMatch) {
+          debugPrint('      ❌ No matching tutorial found for: "${course.tutorialTime}"');
         }
       }
     }
@@ -484,16 +592,22 @@ class CourseProvider with ChangeNotifier {
           final group = int.tryParse(parts[2]);
           if (group != null) {
             selectedLabs.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
+              courseDetails.schedule
+                  .where(
+                    (schedule) =>
+                        schedule.type == type && schedule.group == group,
+                  )
+                  .toList(),
             );
           }
         }
       } else {
         // Backward compatibility: old time format
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.labTime == scheduleString) {
             selectedLabs.add(schedule);
             break;
@@ -512,23 +626,35 @@ class CourseProvider with ChangeNotifier {
           final group = int.tryParse(parts[2]);
           if (group != null) {
             selectedWorkshops.addAll(
-              courseDetails.schedule.where((schedule) =>
-                schedule.type == type && schedule.group == group
-              ).toList()
+              courseDetails.schedule
+                  .where(
+                    (schedule) =>
+                        schedule.type == type && schedule.group == group,
+                  )
+                  .toList(),
             );
           }
         }
       } else {
         // Backward compatibility: old time format
         for (final schedule in courseDetails.schedule) {
-          final scheduleString = StudentCourse.formatScheduleString(schedule.day, schedule.time);
+          final scheduleString = StudentCourse.formatScheduleString(
+            schedule.day,
+            schedule.time,
+          );
           if (course.workshopTime == scheduleString) {
             selectedWorkshops.add(schedule);
             break;
           }
         }
-      }
-    }
+      }    }
+
+    debugPrint('    📊 Selection summary for ${course.name}:');
+    debugPrint('      Lectures: ${selectedLectures.length} entries');
+    debugPrint('      Tutorials: ${selectedTutorials.length} entries');
+    debugPrint('      Labs: ${selectedLabs.length} entries');
+    debugPrint('      Workshops: ${selectedWorkshops.length} entries');
+    debugPrint('      Total selected: ${selectedLectures.length + selectedTutorials.length + selectedLabs.length + selectedWorkshops.length} entries');
 
     return {
       'lecture': selectedLectures,
@@ -572,73 +698,123 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
-Future<bool> deleteStudentAndCourses(String studentId) async{
-
-  try {
-    final studentRef = FirebaseFirestore.instance
-        .collection('Students')
-        .doc(studentId);
-
-    // Step 1: Delete all documents in the 'Courses-per-Semesters' sub collection
-    final semesterDocs = await studentRef.collection('Courses-per-Semesters').get();
-    for (final doc in semesterDocs.docs) {
-      await deleteSemester(studentId, doc.get("semesterName"));
+  // Helper function to convert semester ID to semester name
+  String _getSemesterNameFromId(int semesterId, int year) {
+    switch (semesterId) {
+      case 200:
+        return 'Winter $year-${year + 1}';
+      case 201:
+        return 'Spring ${year + 1}';
+      case 202:
+        return 'Summer $year';
+      default:
+        return 'Semester $semesterId $year';
     }
-
-    // Step 2: Delete the student document
-    await studentRef.delete();
-
-    _error = null;
-    return true;
-  } catch (e) {
-    _error = 'Failed to delete student: $e';
-    notifyListeners();
-    return false;
   }
 
-}
+  // Add semester by ID with validation
+  Future<bool> addSemesterById(String studentId, int semesterId, int year) async {
+    final semesterName = _getSemesterNameFromId(semesterId, year);
+    
+    if (_coursesBySemester.containsKey(semesterName)) {
+      _error = 'Semester "$semesterName" already exists';
+      notifyListeners();
+      return false;
+    }
+
+    // Optimistic update
+    _coursesBySemester[semesterName] = [];
+    notifyListeners();
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId)
+          .collection('Courses-per-Semesters')
+          .doc(semesterName)
+          .set({
+            'semesterName': semesterName,
+            'semesterId': semesterId,
+            'year': year,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+      _error = null;
+      return true;
+    } catch (e) {
+      // Rollback
+      _coursesBySemester.remove(semesterName);
+      _error = 'Failed to add semester: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteStudentAndCourses(String studentId) async {
+    try {
+      final studentRef = FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId);
+
+      // Step 1: Delete all documents in the 'Courses-per-Semesters' sub collection
+      final semesterDocs =
+          await studentRef.collection('Courses-per-Semesters').get();
+      for (final doc in semesterDocs.docs) {
+        await deleteSemester(studentId, doc.get("semesterName"));
+      }
+
+      // Step 2: Delete the student document
+      await studentRef.delete();
+
+      _error = null;
+      return true;
+    } catch (e) {
+      _error = 'Failed to delete student: $e';
+      notifyListeners();
+      return false;
+    }
+  }
 
   // Delete semester with optimistic update
-Future<bool> deleteSemester(String studentId, String semesterName) async {
-  if (!_coursesBySemester.containsKey(semesterName)) {
-    _error = 'Semester "$semesterName" does not exist';
-    notifyListeners();
-    return false;
-  }
-
-  final oldCourses = _coursesBySemester[semesterName]!;
-
-  // Optimistic update
-  _coursesBySemester.remove(semesterName);
-  notifyListeners();
-
-  try {
-    final semesterRef = FirebaseFirestore.instance
-        .collection('Students')
-        .doc(studentId)
-        .collection('Courses-per-Semesters')
-        .doc(semesterName);
-
-    // Step 1: Delete all documents in the 'Courses' sub collection
-    final courseDocs = await semesterRef.collection('Courses').get();
-    for (final doc in courseDocs.docs) {
-      await doc.reference.delete();
+  Future<bool> deleteSemester(String studentId, String semesterName) async {
+    if (!_coursesBySemester.containsKey(semesterName)) {
+      _error = 'Semester "$semesterName" does not exist';
+      notifyListeners();
+      return false;
     }
 
-    // Step 2: Delete the semester document
-    await semesterRef.delete();
+    final oldCourses = _coursesBySemester[semesterName]!;
 
-    _error = null;
-    return true;
-  } catch (e) {
-    // Rollback
-    _coursesBySemester[semesterName] = oldCourses;
-    _error = 'Failed to delete semester: $e';
+    // Optimistic update
+    _coursesBySemester.remove(semesterName);
     notifyListeners();
-    return false;
-  }
-}
 
+    try {
+      final semesterRef = FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId)
+          .collection('Courses-per-Semesters')
+          .doc(semesterName);
+
+      // Step 1: Delete all documents in the 'Courses' sub collection
+      final courseDocs = await semesterRef.collection('Courses').get();
+      for (final doc in courseDocs.docs) {
+        await doc.reference.delete();
+      }
+
+      // Step 2: Delete the semester document
+      await semesterRef.delete();
+
+      _error = null;
+      return true;
+    } catch (e) {
+      // Rollback
+      _coursesBySemester[semesterName] = oldCourses;
+      _error = 'Failed to delete semester: $e';
+      notifyListeners();
+      return false;
+    }
+  }
 
   // Remove course from semester with optimistic update
   Future<bool> removeCourseFromSemester(
@@ -709,14 +885,15 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
 
     semesterNames.sort((a, b) {
       // Sort semesters by year and season
-      final parsedA = _parseSemester(
+      final parsedA = parseSemester(
         a,
       ); //turns "Spring 2025" into {season: "Spring", year: 2025}
-      final parsedB = _parseSemester(b);
+      final parsedB = parseSemester(b);
 
       final yearComparison = parsedA.year.compareTo(parsedB.year);
-      if (yearComparison != 0)
-        {return yearComparison;} // If years are different , sort by year
+      if (yearComparison != 0) {
+        return yearComparison;
+      } // If years are different , sort by year
 
       return _seasonOrder(
         parsedA.season,
@@ -725,6 +902,7 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
 
     return {for (final name in semesterNames) name: _coursesBySemester[name]!};
   }
+
   // Get total credits for a semester
   double getTotalCreditsForSemester(String semesterKey) {
     final courses = _coursesBySemester[semesterKey] ?? [];
@@ -736,14 +914,15 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     }
 
     return total;
-  }// Get course with details (updated return type)
+  } // Get course with details (updated return type)
+
   StudentCourseWithDetails? getCourseWithDetails(
     String semesterKey,
     String courseId,
   ) {
     final courses = _coursesBySemester[semesterKey];
     if (courses == null) return null;
-    
+
     StudentCourse? studentCourse;
     try {
       studentCourse = courses.firstWhere(
@@ -751,7 +930,7 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       );
     } catch (e) {
       return null;
-    }    // Create a basic course details object using stored credit points
+    } // Create a basic course details object using stored credit points
     final courseDetails = EnhancedCourseDetails(
       courseNumber: studentCourse.courseId,
       name: studentCourse.name,
@@ -761,7 +940,9 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       prerequisites: '',
       adjacentCourses: '',
       noAdditionalCredit: '',
-      points: studentCourse.creditPoints.toString(), // Convert credit points to string format
+      points:
+          studentCourse.creditPoints
+              .toString(), // Convert credit points to string format
       responsible: '',
       notes: '',
       exams: {},
@@ -774,10 +955,19 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     );
   }
 
-  ({String season, int year}) _parseSemester(String semesterName) {
+  static ({String season, int year}) parseSemester(String semesterName) {
     final parts = semesterName.split(' ');
     final season = parts[0];
-    final year = (parts.length > 1) ? int.tryParse(parts[1]) ?? 0 : 0;
+    final yearPart = parts.length > 1 ? parts[1] : '';
+
+    int year;
+    if (yearPart.contains('-')) {
+      final years = yearPart.split('-');
+      year = int.tryParse(years.last) ?? 0; // Use the later year for sorting
+    } else {
+      year = int.tryParse(yearPart) ?? 0;
+    }
+
     return (season: season, year: year);
   }
 
@@ -799,8 +989,25 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     String? courseId,
     String? courseName,
     String? faculty,
+     String? selectedSemester,
     int pastSemestersToInclude = 0,
   }) async {
+
+     if (selectedSemester != null) {
+    final parsed = _parseSemesterCode(selectedSemester);
+    if (parsed == null) {
+      debugPrint('❌ Invalid selectedSemester format: $selectedSemester');
+      return [];
+    }
+    final (year, semesterCode) = parsed;
+    return await CourseService.searchCourses(
+      year: year,
+      semester: semesterCode,
+      courseId: courseId,
+      courseName: courseName,
+      faculty: faculty,
+    );
+  }
     if (_currentSemester == null) {
       await _fetchLatestSemester();
     }
@@ -819,17 +1026,29 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       );
     } else {
       // ✅ Fetch all semesters from API
-      final allSemesters = await CourseService.getAvailableSemesters();
+      final allSemesters = await GlobalConfigService.getAvailableSemesters();
       debugPrint('📅 All semesters fetched:');
       for (var s in allSemesters) {
-        debugPrint('  ${s.semester} ${s.year}');
+        debugPrint('  ${parseSemester(s).season} ${parseSemester(s).year}');
       }
       // ✅ Sort them based on custom order (Winter < Spring < Summer)
-      allSemesters.sort(CourseService.compareSemesters);
+      allSemesters.sort((a, b) {
+        final parsedA = parseSemester(a);
+        final parsedB = parseSemester(b);
+
+        final yearCompare = parsedA.year.compareTo(parsedB.year);
+        if (yearCompare != 0) return yearCompare;
+
+        // Season order: Winter < Spring < Summer
+        final seasonOrder = {'Winter': 0, 'Spring': 1, 'Summer': 2};
+        return seasonOrder[parsedA.season]!.compareTo(
+          seasonOrder[parsedB.season]!,
+        );
+      });
 
       debugPrint('📅 Sorted semesters:');
       for (var s in allSemesters) {
-        debugPrint('  ${s.semester} ${s.year}');
+        debugPrint('  ${parseSemester(s).season} ${parseSemester(s).year}');
       }
 
       debugPrint(
@@ -837,11 +1056,16 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
       );
 
       // ✅ Find the current semester index
-      final currentIndex = allSemesters.indexWhere(
-        (s) =>
-            s.year == _currentSemester!.year &&
-            s.semester == _currentSemester!.semester,
-      );
+      final currentIndex = allSemesters.indexWhere((s) {
+        final parsed = _parseSemesterCode(s);
+        if (parsed == null) return false;
+        final (year, code) = parsed;
+        debugPrint(
+          '🔍 Checking semester: $s (year: $year, code: $code)',
+        );
+        return year == _currentSemester!.year &&
+            code == _currentSemester!.semester;
+      });
 
       debugPrint('🔢 Current index in sorted list: $currentIndex');
 
@@ -862,14 +1086,20 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
 
       debugPrint('📚 Semesters to search in:');
       for (var s in selectedSemesters) {
-        debugPrint('  ${s.semester} ${s.year}');
+        debugPrint('  ${parseSemester(s).season} ${parseSemester(s).year}');
       }
       final Map<String, CourseSearchResult> resultMap = {};
 
       for (final sem in selectedSemesters) {
+        final parsed = _parseSemesterCode(sem);
+        if (parsed == null) {
+          debugPrint('❌ Invalid semester format: $sem');
+          continue;
+        }
+        final (year, semesterCode) = parsed;
         final res = await CourseService.searchCourses(
-          year: sem.year,
-          semester: sem.semester,
+          year: year,
+          semester: semesterCode,
           courseId: courseId,
           courseName: courseName,
           faculty: faculty,
@@ -954,25 +1184,29 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
   // Migration method to add credit points to existing courses
   Future<bool> migrateCreditPointsForExistingCourses(String studentId) async {
     debugPrint('🔄 Starting credit points migration for existing courses...');
-    
+
     try {
       bool hasUpdates = false;
-      
+
       for (final entry in _coursesBySemester.entries) {
         final semesterKey = entry.key;
         final courses = entry.value;
-        
+
         for (int i = 0; i < courses.length; i++) {
           final course = courses[i];
-          
+
           // Check if course already has credit points stored
           if (course.creditPoints > 0) {
-            debugPrint('✅ Course ${course.courseId} already has credit points: ${course.creditPoints}');
+            debugPrint(
+              '✅ Course ${course.courseId} already has credit points: ${course.creditPoints}',
+            );
             continue;
           }
-          
-          debugPrint('🔍 Migrating credit points for course: ${course.courseId}');
-          
+
+          debugPrint(
+            '🔍 Migrating credit points for course: ${course.courseId}',
+          );
+
           // Fetch credit points from course details
           double creditPoints = 3.0; // Default fallback
           try {
@@ -981,21 +1215,27 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
               _currentSemester?.semester ?? 200,
               course.courseId,
             );
-            
+
             if (courseDetails != null && courseDetails.creditPoints > 0) {
               creditPoints = courseDetails.creditPoints;
-              debugPrint('📚 Found credit points for ${course.courseId}: $creditPoints');
+              debugPrint(
+                '📚 Found credit points for ${course.courseId}: $creditPoints',
+              );
             } else {
-              debugPrint('⚠️ No credit points found for ${course.courseId}, using default: $creditPoints');
+              debugPrint(
+                '⚠️ No credit points found for ${course.courseId}, using default: $creditPoints',
+              );
             }
           } catch (e) {
-            debugPrint('❌ Error fetching credit points for ${course.courseId}: $e');
+            debugPrint(
+              '❌ Error fetching credit points for ${course.courseId}: $e',
+            );
           }
-          
+
           // Update course with credit points
           final updatedCourse = course.copyWith(creditPoints: creditPoints);
           courses[i] = updatedCourse;
-          
+
           // Update in Firestore
           try {
             await FirebaseFirestore.instance
@@ -1006,22 +1246,26 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
                 .collection('Courses')
                 .doc(course.courseId)
                 .update({'Credit_points': creditPoints});
-            
-            debugPrint('✅ Updated credit points for ${course.courseId} in Firestore');
+
+            debugPrint(
+              '✅ Updated credit points for ${course.courseId} in Firestore',
+            );
             hasUpdates = true;
           } catch (e) {
-            debugPrint('❌ Failed to update ${course.courseId} in Firestore: $e');
+            debugPrint(
+              '❌ Failed to update ${course.courseId} in Firestore: $e',
+            );
           }
         }
       }
-      
+
       if (hasUpdates) {
         notifyListeners();
         debugPrint('🎉 Credit points migration completed successfully!');
       } else {
         debugPrint('ℹ️ No courses needed migration');
       }
-      
+
       return true;
     } catch (e) {
       debugPrint('❌ Credit points migration failed: $e');
@@ -1029,20 +1273,50 @@ Future<bool> deleteSemester(String studentId, String semesterName) async {
     }
   }
 
-List<List<String>> parseRawPrerequisites(String rawPrereqs) {
-  final parsed = <List<String>>[];
-  final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
-  for (final group in orGroups) {
-    final andGroup = group
-        .replaceAll(RegExp(r'[^\d\s]'), '')
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
-        .toList();
-    if (andGroup.isNotEmpty) parsed.add(andGroup);
+  List<List<String>> parseRawPrerequisites(String rawPrereqs) {
+    final parsed = <List<String>>[];
+    final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
+    for (final group in orGroups) {
+      final andGroup =
+          group
+              .replaceAll(RegExp(r'[^\d\s]'), '')
+              .trim()
+              .split(RegExp(r'\s+'))
+              .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+              .toList();
+      if (andGroup.isNotEmpty) parsed.add(andGroup);
+    }
+    return parsed;
   }
-  return parsed;
+
+Future<String> getClosestAvailableSemester(String requestedSemester) async {
+  final available = await GlobalConfigService.getAvailableSemesters();
+
+  if (available.contains(requestedSemester)) {
+    return requestedSemester;
+  }
+
+  final requested = parseSemester(requestedSemester);
+
+  // Filter semesters with the same season
+  final sameSeason = available.where((s) => parseSemester(s).season == requested.season).toList();
+
+  if (sameSeason.isEmpty) {
+    return available.last; // Fallback if no season match
+  }
+
+  // Sort by absolute year difference
+  sameSeason.sort((a, b) {
+    final yearA = parseSemester(a).year;
+    final yearB = parseSemester(b).year;
+    return (yearA - requested.year).abs().compareTo(
+      (yearB - requested.year).abs(),
+    );
+  });
+
+  return sameSeason.first;
 }
+
 
 
 }
