@@ -10,7 +10,6 @@ import '../services/ai/base_ai_service.dart';
 import '../services/ai/ai_config.dart';
 import '../services/ai/ai_utils.dart';
 import '../services/course_service.dart';
-import 'package:string_similarity/string_similarity.dart';
 
 class CourseRecommendationService extends BaseAiService {
   static const String _systemInstruction = '''
@@ -194,7 +193,7 @@ Each course should have both an id and name.
       final matched = allCourses.firstWhere((course) {
         final realName =
             (course['general']['שם מקצוע'] ?? '').toString().toLowerCase();
-        final similarity = realName.similarityTo(aiCourseName.toLowerCase());
+        final similarity = _calculateStringSimilarity(realName, aiCourseName);
         debugPrint(
           '🔍 Matching "$aiCourseName" → "$realName" [score=$similarity]',
         );
@@ -212,6 +211,19 @@ Each course should have both an id and name.
     }
 
     return courseDetails;
+  }
+
+  /// Utility method to calculate string similarity (simple ratio based on common characters)
+  double _calculateStringSimilarity(String a, String b) {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    if (a == b) return 1.0;
+    if (a.isEmpty || b.isEmpty) return 0.0;
+    final aSet = a.split('').toSet();
+    final bSet = b.split('').toSet();
+    final intersection = aSet.intersection(bSet).length;
+    final union = aSet.union(bSet).length;
+    return union == 0 ? 0.0 : intersection / union;
   }
 
   /// Step 3: Generate final recommendations using detailed course info
