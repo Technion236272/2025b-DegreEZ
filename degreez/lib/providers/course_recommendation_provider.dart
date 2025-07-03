@@ -6,7 +6,7 @@ import '../models/course_recommendation_models.dart';
 import '../services/course_recommendation_service.dart';
 import '../services/chat/context_generator_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 class CourseRecommendationProvider extends ChangeNotifier {
   final CourseRecommendationService _recommendationService =
       CourseRecommendationService();
@@ -279,6 +279,8 @@ class CourseRecommendationProvider extends ChangeNotifier {
   /// Set a previous recommendation as the current one
   void setCurrentRecommendation(CourseRecommendationResponse recommendation) {
     _currentRecommendation = recommendation;
+    _selectedYear = recommendation.originalRequest.year;
+    _selectedSemester = recommendation.originalRequest.semester;
     notifyListeners();
   }
 }

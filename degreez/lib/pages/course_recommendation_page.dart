@@ -301,9 +301,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
-                  // Load this recommendation as current
-                  provider.clearCurrentRecommendation();
-                  // You'd implement a method to set current recommendation
+                  provider.setCurrentRecommendation(recommendation);
+                  _tabController.animateTo(1);
                 },
               ),
             );
@@ -480,9 +479,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     debugPrint(
       'Using fallback semester: $fallbackSemester for selected semester: $selectedSemester',
     );
-    final parsed = courseProvider.parseSemesterCode(
-      fallbackSemester
-    );
+    final parsed = courseProvider.parseSemesterCode(fallbackSemester);
     if (parsed == null) {
       debugPrint(
         '❌ Failed to parse semester string: ${recommendationProvider.selectedSemesterDisplay}',
@@ -506,12 +503,11 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     }
 
     // Match course by name
-    final matchedList = await CourseRecommendationService()
-        .fetchCourseDetails(
-          [aiCourseId],
-          apiYear,
-          semesterCode,
-        );
+    final matchedList = await CourseRecommendationService().fetchCourseDetails(
+      [aiCourseId],
+      apiYear,
+      semesterCode,
+    );
 
     if (matchedList.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
