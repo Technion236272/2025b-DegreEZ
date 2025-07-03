@@ -4,16 +4,19 @@ import 'package:degreez/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/course_recommendation_models.dart';
+import '../../providers/course_recommendation_provider.dart';
+import 'feedback_widget.dart';
 
 class RecommendationResultsWidget extends StatelessWidget {
   final CourseRecommendationResponse recommendation;
- final void Function(String courseId, String courseName)? onAddCourse;
-
+  final void Function(String courseId, String courseName)? onAddCourse;
+  final void Function(UserFeedback feedback)? onFeedbackSubmitted;
 
   const RecommendationResultsWidget({
     super.key,
     required this.recommendation,
     this.onAddCourse,
+    this.onFeedbackSubmitted,
   });
 
   @override
@@ -186,6 +189,31 @@ class RecommendationResultsWidget extends StatelessWidget {
             ),
           );
         }),
+
+        // Add feedback widget if callback is provided
+        if (onFeedbackSubmitted != null) ...[
+          const SizedBox(height: 24),
+          Consumer<CourseRecommendationProvider>(
+            builder: (context, provider, child) {
+              final courseSets = provider.getCurrentCourseSets();
+              if (courseSets.isNotEmpty) {
+                return FeedbackWidget(
+                  currentRecommendations: courseSets,
+                  onFeedbackSubmitted: onFeedbackSubmitted!,
+                );
+              }
+              return const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    '💬 Feedback widget will be available once recommendations are generated.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ],
     );
   }
@@ -197,7 +225,7 @@ class RecommendationResultsWidget extends StatelessWidget {
       case 2:
         return Colors.orange;
       case 3:
-        return Colors.yellow[700]!;
+        return Colors.yellow;
       case 4:
         return Colors.blue;
       case 5:

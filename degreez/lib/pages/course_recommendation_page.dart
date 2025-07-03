@@ -12,6 +12,7 @@ import '../providers/course_provider.dart';
 import '../providers/student_provider.dart';
 import '../services/course_service.dart';
 import '../models/student_model.dart';
+import '../models/course_recommendation_models.dart';
 import '../services/course_recommendation_service.dart';
 
 class CourseRecommendationPage extends StatefulWidget {
@@ -251,6 +252,10 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                           courseId,
                           courseName,
                         ),
+                onFeedbackSubmitted: (feedback) => _handleFeedback(
+                  context,
+                  feedback,
+                ),
               ),
             ],
           ),
@@ -553,5 +558,34 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
         backgroundColor: success ? Colors.green : Colors.red,
       ),
     );
+  }
+
+  /// Handle user feedback submission
+  Future<void> _handleFeedback(
+    BuildContext context,
+    UserFeedback feedback,
+  ) async {
+    try {
+      final provider = context.read<CourseRecommendationProvider>();
+      await provider.processFeedback(feedback);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Feedback processed! Recommendations updated.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error processing feedback: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
