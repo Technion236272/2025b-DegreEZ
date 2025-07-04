@@ -93,10 +93,7 @@ class ChatInputWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: themeProvider.surfaceColor,
                 border: Border(
-                  top: BorderSide(
-                    color: themeProvider.borderPrimary,
-                    width: 1,
-                  ),
+                  top: BorderSide(color: themeProvider.borderPrimary, width: 1),
                 ),
               ),
               child: SafeArea(
@@ -112,9 +109,10 @@ class ChatInputWidget extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: currentPdfAttachment != null 
-                                  ? themeProvider.primaryColor.withAlpha(51)
-                                  : themeProvider.mainColor,
+                              color:
+                                  currentPdfAttachment != null
+                                      ? themeProvider.primaryColor.withAlpha(51)
+                                      : themeProvider.mainColor,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: themeProvider.borderPrimary,
@@ -123,9 +121,10 @@ class ChatInputWidget extends StatelessWidget {
                             ),
                             child: Icon(
                               Icons.attach_file,
-                              color: currentPdfAttachment != null 
-                                  ? themeProvider.primaryColor
-                                  : themeProvider.textSecondary,
+                              color:
+                                  currentPdfAttachment != null
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.textSecondary,
                               size: 18,
                             ),
                           ),
@@ -141,35 +140,52 @@ class ChatInputWidget extends StatelessWidget {
                             width: 1,
                           ),
                         ),
-                        child: TextField(
-                          controller: messageController,
-                          enabled: !isLoading,
-                          decoration: InputDecoration(
-                            hintText: isLoading 
-                                ? 'Processing your message...'
-                                : includeUserContext 
-                                    ? 'Ask me anything about your studies... :)'
-                                    : 'Ask me anything... :)',
-                            hintStyle: TextStyle(
-                              color: isLoading 
-                                  ? themeProvider.textSecondary.withAlpha(128)
-                                  : themeProvider.textSecondary,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: 150, // You can adjust this height
+                          ),
+                          child: Scrollbar(
+                            child: TextField(
+                              controller: messageController,
+                              scrollController:
+                                  ScrollController(), // Enables scroll inside
+                              enabled: !isLoading,
+                              decoration: InputDecoration(
+                                hintText:
+                                    isLoading
+                                        ? 'Processing your message...'
+                                        : includeUserContext
+                                        ? 'Ask me anything about your studies... :)'
+                                        : 'Ask me anything... :)',
+                                hintStyle: TextStyle(
+                                  color:
+                                      isLoading
+                                          ? themeProvider.textSecondary
+                                              .withAlpha(128)
+                                          : themeProvider.textSecondary,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                              ),
+                              style: TextStyle(
+                                color:
+                                    isLoading
+                                        ? themeProvider.textSecondary
+                                        : themeProvider.textPrimary,
+                                fontSize: 16,
+                              ),
+                              keyboardType: TextInputType.multiline,
+                              maxLines: null,
+                              minLines: 1,
+                              expands: false,
+                              textCapitalization: TextCapitalization.sentences,
+                              onSubmitted:
+                                  (_) => !isLoading ? onSendMessage() : null,
                             ),
                           ),
-                          style: TextStyle(
-                            color: isLoading 
-                                ? themeProvider.textSecondary
-                                : themeProvider.textPrimary,
-                            fontSize: 16,
-                          ),
-                          maxLines: null,
-                          textCapitalization: TextCapitalization.sentences,
-                          onSubmitted: (_) => !isLoading ? onSendMessage() : null,
                         ),
                       ),
                     ),
@@ -189,14 +205,16 @@ class ChatInputWidget extends StatelessWidget {
   String formatFileSize(int bytes) {
     if (bytes < 1024) return '${bytes}B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
   }
-  
+
   Widget _buildSmartSendButton(ThemeProvider themeProvider) {
     final hasText = messageController.text.trim().isNotEmpty;
-    final shouldShowContextOption = !includeUserContext && hasText && !isLoading;
-    
+    final shouldShowContextOption =
+        !includeUserContext && hasText && !isLoading;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -227,31 +245,34 @@ class ChatInputWidget extends StatelessWidget {
         // Main send button
         Container(
           decoration: BoxDecoration(
-            gradient: isLoading 
-                ? LinearGradient(
-                    colors: [
-                      themeProvider.textSecondary.withAlpha(102),
-                      themeProvider.textSecondary.withAlpha(76),
-                    ],
-                  )
-                : LinearGradient(
-                    colors: [
-                      themeProvider.primaryColor,
-                      themeProvider.primaryColor.withAlpha(204),
-                    ],
-                  ),
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: isLoading 
-                ? []
-                : [
-                    BoxShadow(
-                      color: themeProvider.isDarkMode 
-                          ? Colors.black.withAlpha(76)
-                          : Colors.grey.withAlpha(76),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+            gradient:
+                isLoading
+                    ? LinearGradient(
+                      colors: [
+                        themeProvider.textSecondary.withAlpha(102),
+                        themeProvider.textSecondary.withAlpha(76),
+                      ],
+                    )
+                    : LinearGradient(
+                      colors: [
+                        themeProvider.primaryColor,
+                        themeProvider.primaryColor.withAlpha(204),
+                      ],
                     ),
-                  ],
+            borderRadius: BorderRadius.circular(25),
+            boxShadow:
+                isLoading
+                    ? []
+                    : [
+                      BoxShadow(
+                        color:
+                            themeProvider.isDarkMode
+                                ? Colors.black.withAlpha(76)
+                                : Colors.grey.withAlpha(76),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
           ),
           child: Material(
             color: Colors.transparent,
@@ -268,9 +289,10 @@ class ChatInputWidget extends StatelessWidget {
                       child: Icon(
                         isLoading ? Icons.stop_circle_outlined : Icons.send,
                         key: ValueKey(isLoading),
-                        color: isLoading 
-                            ? themeProvider.textSecondary
-                            : Colors.white,
+                        color:
+                            isLoading
+                                ? themeProvider.textSecondary
+                                : Colors.white,
                         size: 20,
                       ),
                     ),
@@ -285,10 +307,7 @@ class ChatInputWidget extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: themeProvider.mainColor,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 1,
-                            ),
+                            border: Border.all(color: Colors.white, width: 1),
                           ),
                         ),
                       ),
