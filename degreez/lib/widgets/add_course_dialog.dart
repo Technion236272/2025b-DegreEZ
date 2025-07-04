@@ -157,10 +157,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                       title: Text(
                         '${course.courseNumber} - ${course.name}',
                         style: TextStyle(
-                          color:
-                              hasMissing
-                                  ? Colors.redAccent
-                                  : null,
+                          color: hasMissing ? Colors.redAccent : null,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -182,7 +179,12 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Cancel',style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: context.read<ThemeProvider>().secondaryColor,
+            ),
+          ),
         ),
       ],
     );
@@ -195,16 +197,15 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     final courseId = isId ? query : null;
     final courseName = isId ? null : query;
 
-    
-  final requestedSemester = widget.semesterName;
-  debugPrint('🔍 Requested search in semester: $requestedSemester');
+    final requestedSemester = widget.semesterName;
+    debugPrint('🔍 Requested search in semester: $requestedSemester');
 
     final fallbackSemester = await context
         .read<CourseProvider>()
         .getClosestAvailableSemester(requestedSemester);
-        
- debugPrint('✅ Actual semester used for search: $fallbackSemester');
-if (!mounted) return;
+
+    debugPrint('✅ Actual semester used for search: $fallbackSemester');
+    if (!mounted) return;
 
     final fetched = await context.read<CourseProvider>().searchCourses(
       courseId: courseId,
@@ -219,6 +220,10 @@ if (!mounted) return;
       });
     }
   }
+
+
+
+
 
   Future<void> _addCourse(EnhancedCourseDetails courseDetails) async {
     final existingCourses =
@@ -250,19 +255,19 @@ if (!mounted) return;
     String rawPrereqs = courseDetails.prerequisites;
     List<List<String>> parsedPrereqs = [];
 
-      final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
+    final orGroups = rawPrereqs.split(RegExp(r'\s*או\s*'));
 
-      for (final group in orGroups) {
-        final andGroup =
-            group
-                .replaceAll(RegExp(r'[^\d\s]'), '')
-                .trim()
-                .split(RegExp(r'\s+'))
-                .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
-                .toList();
+    for (final group in orGroups) {
+      final andGroup =
+          group
+              .replaceAll(RegExp(r'[^\d\s]'), '')
+              .trim()
+              .split(RegExp(r'\s+'))
+              .where((id) => RegExp(r'^\d{8}$').hasMatch(id))
+              .toList();
 
-        if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
-      }
+      if (andGroup.isNotEmpty) parsedPrereqs.add(andGroup);
+    }
 
     final missing = context.read<CourseProvider>().getMissingPrerequisites(
       widget.semesterName,
@@ -283,8 +288,10 @@ if (!mounted) return;
       for (final group in parsedPrereqs) {
         for (final courseId in group) {
           if (!courseIdToName.containsKey(courseId)) {
+            debugPrint('🧠 Looking up course name for: $courseId');
             final name = await CourseService.getCourseName(courseId);
             courseIdToName[courseId] = name ?? 'Unknown';
+            debugPrint('✅ Resolved name: ${courseIdToName[courseId]}');
           }
         }
       }
@@ -342,18 +349,17 @@ if (!mounted) return;
       workshopTime: '',
       creditPoints: courseDetails.creditPoints, // Store credit points from API
     );
-if (!mounted) return;
-final fallbackSemester = await context
-    .read<CourseProvider>()
-    .getClosestAvailableSemester(widget.semesterName);
-if (!mounted) return;
-final success = await context.read<CourseProvider>().addCourseToSemester(
-  context.read<StudentProvider>().student!.id,
-  widget.semesterName, // ⬅️ This is still where it will be saved
-  course,
-  fallbackSemester, // NEW
-);
-
+    if (!mounted) return;
+    final fallbackSemester = await context
+        .read<CourseProvider>()
+        .getClosestAvailableSemester(widget.semesterName);
+    if (!mounted) return;
+    final success = await context.read<CourseProvider>().addCourseToSemester(
+      context.read<StudentProvider>().student!.id,
+      widget.semesterName, // ⬅️ This is still where it will be saved
+      course,
+      fallbackSemester, // NEW
+    );
 
     if (!mounted) return;
 

@@ -1,5 +1,6 @@
 // services/course_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class CourseService {
   static const String baseUrl = 'https://michael-maltsev.github.io/technion-sap-info-fetcher';
@@ -8,30 +9,57 @@ class CourseService {
   static final Map<String, List<dynamic>> _coursesCache = {};
   static final Map<String, List<SemesterInfo>> _semestersCache = {};
 
-  /// Get available semesters from Firestore
-  static Future<List<SemesterInfo>> getAvailableSemesters() async {
-    if (_semestersCache.isNotEmpty) {
-      return _semestersCache.values.first;
-    }
-    try {
-      // Fetch semesters from Firestore: Technion/data/metadata/semesters (or similar)
-      final doc = await FirebaseFirestore.instance
-          .collection('Technion')
-          .doc('data')
-          .collection('metadata')
-          .doc('semesters')
-          .get();
-      if (doc.exists && doc.data() != null) {
-        final List<dynamic> data = doc.data()!['semesters'] ?? [];
-        final semesters = data.map((item) => SemesterInfo.fromJson(item)).toList();
-        _semestersCache['semesters'] = semesters;
-        return semesters;
-      }
-    } catch (e) {
-      throw Exception('Error fetching semesters from Firestore: $e');
-    }
-    return [];
+    static SemesterInfo? parseSemesterCode(String code) {
+  // Example code: "2024_200", "2024_201", "2024_202"
+  final match = RegExp(r'^(\d{4})_(\d{3})$').firstMatch(code);
+  if (match == null) return null;
+
+  final year = int.parse(match.group(1)!);
+  final semesterNum = int.parse(match.group(2)!);
+
+  return SemesterInfo(
+    year: year,
+    semester: semesterNum,
+    startDate: "",
+    endDate: "",
+  );
+}
+
+static Future<List<SemesterInfo>> getAvailableSemesters() async {
+  debugPrint('📞 getAvailableSemesters called');
+  if (_semestersCache.isNotEmpty) {
+    return _semestersCache.values.first;
   }
+
+  try {
+    final doc = await FirebaseFirestore.instance
+        .collection('Technion')
+        .doc('data')
+        .get();
+
+    if (doc.exists && doc.data() != null) {
+      final List<dynamic> rawList = doc.data()!['Semesters'] ?? [];
+      debugPrint('📅 Raw semesters data: ${rawList.length} entries found');
+
+      final semesters = rawList
+          .whereType<String>()
+          .map((code) => parseSemesterCode(code))
+          .whereType<SemesterInfo>()
+          .toList();
+      debugPrint('📅 Parsed ${semesters.length} valid semesters');
+      debugPrint('📅 Semesters: ${semesters.map((s) => s.semesterName).join(', ')}');
+
+      _semestersCache['semesters'] = semesters;
+      return semesters;
+    }
+  } catch (e) {
+    debugPrint('❌ Error: $e');
+    throw Exception('Error fetching semesters from Firestore: $e');
+  }
+
+  return [];
+}
+
 
   /// Get all courses for a specific semester from Firestore
   static Future<List<dynamic>> getAllCourses(int year, int semester) async {
@@ -105,6 +133,7 @@ class CourseService {
 
   /// Get detailed course information
   static Future<EnhancedCourseDetails?> getCourseDetails(int year, int semester, String courseId) async {
+    debugPrint('📡 getCourseDetails called with: year=$year, semester=$semester, courseId=$courseId');
     final allCourses = await getAllCourses(year, semester);
     
     for (final courseData in allCourses) {
@@ -232,7 +261,8 @@ static Future<String?> getCourseName(String courseId) async {
 
     // Sort with most recent first (e.g., Summer > Spring > Winter)
     allSemesters.sort((a, b) => CourseService.compareSemesters(b, a));
-
+    debugPrint('🔍 Searching for course: $courseId in ${allSemesters.length} semesters');
+    debugPrint('📅 Semesters available: ${allSemesters.map((s) => s.semesterName).join(', ')}');
     for (final sem in allSemesters) {
       try {
         final details = await getCourseDetails(
