@@ -28,6 +28,18 @@ class CourseRecommendationRequest {
       'semesterDisplayName': semesterDisplayName,
     };
   }
+
+    factory CourseRecommendationRequest.fromJson(Map<String, dynamic> json) {
+    return CourseRecommendationRequest(
+      year: json['year'],
+      semester: json['semester'],
+      catalogFilePath: json['catalogFilePath'],
+      userContext: json['userContext'],
+      requestTime: DateTime.parse(json['requestTime']),
+      semesterDisplayName: json['semesterDisplayName'],
+    );
+  }
+
 }
 
 /// Model for candidate courses identified by AI
@@ -177,4 +189,20 @@ class CourseRecommendationResponse {
       'originalRequest': originalRequest.toJson(),
     };
   }
+
+    factory CourseRecommendationResponse.fromJson(Map<String, dynamic> json) {
+    return CourseRecommendationResponse(
+      recommendations: (json['recommendations'] as List)
+          .map((r) => CourseRecommendation.fromJson(r))
+          .toList(),
+      totalCreditPoints: (json['totalCreditPoints'] as num).toDouble(),
+      summary: json['summary'] as String,
+      reasoning: json['reasoning'] as String,
+      generatedAt: DateTime.parse(json['generatedAt']),
+      originalRequest: CourseRecommendationRequest.fromJson(
+        json['originalRequest'],
+      ),
+    );
+  }
+
 }

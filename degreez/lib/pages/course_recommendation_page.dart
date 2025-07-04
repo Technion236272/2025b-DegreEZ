@@ -36,6 +36,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       context.read<CourseRecommendationProvider>().loadAvailableSemesters(
         studentId,
       );
+      context.read<CourseRecommendationProvider>().loadSavedRecommendation();
     });
   }
 
@@ -95,10 +96,13 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                             color: context.read<ThemeProvider>().primaryColor,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'AI Course Recommendations',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
+    Expanded(
+      child: Text(
+        'AI Course Recommendations',
+        style: Theme.of(context).textTheme.headlineSmall,
+        softWrap: true,
+      ),
+    ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -236,7 +240,12 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
               // Stats Summary
               RecommendationStatsWidget(
                 stats: provider.getRecommendationStats(),
-                semester: provider.selectedSemesterDisplay ?? 'Unknown',
+                semester:
+                    provider
+                        .currentRecommendation
+                        ?.originalRequest
+                        .semesterDisplayName ??
+                    'Unknown',
               ),
 
               const SizedBox(height: 16),
@@ -301,9 +310,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios),
                 onTap: () {
-                  // Load this recommendation as current
-                  provider.clearCurrentRecommendation();
-                  // You'd implement a method to set current recommendation
+                  provider.setCurrentRecommendation(recommendation);
+                  _tabController.animateTo(1);
                 },
               ),
             );
@@ -465,7 +473,11 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     final studentProvider = context.read<StudentProvider>();
     final recommendationProvider = context.read<CourseRecommendationProvider>();
 
-    final selectedSemester = recommendationProvider.selectedSemesterDisplay;
+    final selectedSemester =
+        recommendationProvider
+            .currentRecommendation
+            ?.originalRequest
+            .semesterDisplayName;
     final studentId = studentProvider.student!.id;
 
     if (selectedSemester == null) {
@@ -480,9 +492,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     debugPrint(
       'Using fallback semester: $fallbackSemester for selected semester: $selectedSemester',
     );
-    final parsed = courseProvider.parseSemesterCode(
-      fallbackSemester
-    );
+    final parsed = courseProvider.parseSemesterCode(fallbackSemester);
     if (parsed == null) {
       debugPrint(
         '❌ Failed to parse semester string: ${recommendationProvider.selectedSemesterDisplay}',
@@ -498,20 +508,19 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     if (alreadyExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course already exists in this semester.'),
+        SnackBar(
+          content: Text('Course already exists in semester $selectedSemester.'),
         ),
       );
       return;
     }
 
     // Match course by name
-    final matchedList = await CourseRecommendationService()
-        .fetchCourseDetails(
-          [aiCourseId],
-          apiYear,
-          semesterCode,
-        );
+    final matchedList = await CourseRecommendationService().fetchCourseDetails(
+      [aiCourseId],
+      apiYear,
+      semesterCode,
+    );
 
     if (matchedList.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
