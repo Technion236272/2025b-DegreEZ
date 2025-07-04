@@ -240,14 +240,13 @@ class CourseRecommendationProvider extends ChangeNotifier {
     String semesterName;
     switch (semester) {
       case 200:
-        semesterName =
-            'Winter ${year - 1}-$year'; // Academic year spans 2 years
+        semesterName = 'Winter $year-${year + 1}'; // Academic year spans 2 years
         break;
       case 201:
-        semesterName = 'Spring ${year+1}';
+        semesterName = 'Spring ${year + 1}';
         break;
       case 202:
-        semesterName = 'Summer ${year+1}';
+        semesterName = 'Summer $year';
         break;
       default:
         semesterName = 'Semester $semester $year';
