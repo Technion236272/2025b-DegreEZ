@@ -380,6 +380,13 @@ class _CourseMapPageState extends State<CourseMapPage> {
       widget.selectedSemester,
     );
 
+    debugPrint('📋 Selected courses from CourseProvider:');
+    for (final course in selectedCourses) {
+      debugPrint(
+        '  - ${course.name} (${course.courseId}): L="${course.lectureTime}", T="${course.tutorialTime}"}"',
+      );
+    }
+
     debugPrint('🗓️ Selected Semester: ${widget.selectedSemester}');
     debugPrint('📚 Courses in Semester: ${selectedCourses.length}');
 
@@ -419,6 +426,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
       final entries = courseProvider.getSelectedScheduleEntries(
         course.courseId,
         details,
+        semester: widget.selectedSemester,
       );
 
       courseSessionCounts[course.name] = {};
@@ -429,7 +437,16 @@ class _CourseMapPageState extends State<CourseMapPage> {
           final entry = typeEntries[i];
 
           // Skip if building empty
-          if (entry.building.trim().isEmpty) continue;
+          if (entry.building.trim().isEmpty) {
+            debugPrint(
+              '⚠️ SKIPPED: ${course.name} (${entry.type} ${entry.day} ${entry.time}) → empty building',
+            );
+            continue;
+          } else {
+            debugPrint(
+              '✅ Building for ${entry.type} ${entry.day} ${entry.time}: "${entry.building}"',
+            );
+          }
 
           // Label like L1, T2, etc
           final prefix =
