@@ -96,10 +96,13 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                             color: context.read<ThemeProvider>().primaryColor,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'AI Course Recommendations',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
+    Expanded(
+      child: Text(
+        'AI Course Recommendations',
+        style: Theme.of(context).textTheme.headlineSmall,
+        softWrap: true,
+      ),
+    ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -237,7 +240,12 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
               // Stats Summary
               RecommendationStatsWidget(
                 stats: provider.getRecommendationStats(),
-                semester: provider.currentRecommendation?.originalRequest.semesterDisplayName ?? 'Unknown',
+                semester:
+                    provider
+                        .currentRecommendation
+                        ?.originalRequest
+                        .semesterDisplayName ??
+                    'Unknown',
               ),
 
               const SizedBox(height: 16),
@@ -465,7 +473,11 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     final studentProvider = context.read<StudentProvider>();
     final recommendationProvider = context.read<CourseRecommendationProvider>();
 
-    final selectedSemester = recommendationProvider.currentRecommendation?.originalRequest.semesterDisplayName;
+    final selectedSemester =
+        recommendationProvider
+            .currentRecommendation
+            ?.originalRequest
+            .semesterDisplayName;
     final studentId = studentProvider.student!.id;
 
     if (selectedSemester == null) {
@@ -496,7 +508,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     if (alreadyExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text('Course already exists in semester $selectedSemester.'),
         ),
       );
