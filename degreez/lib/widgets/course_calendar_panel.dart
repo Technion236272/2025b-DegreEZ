@@ -136,7 +136,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         ) {
           final rawDate = exams[examKey]!;
           final parsedDate = _parseExamDate(rawDate);
-          
+
           // Determine color and text based on period
           Color periodColor;
           String periodText;
@@ -157,7 +157,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
               periodColor = Colors.purple;
               periodText = 'Midterm B';
               break;
-          }          
+          }
           return ExamInfo(
             courseId: course.courseId,
             courseName: course.name,
@@ -314,18 +314,19 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
   ) {
     // Calculate days until next exam
     Widget? daysDifferenceWidget;
-    
+
     if (currentIndex < allExams.length - 1) {
       final currentExam = allExams[currentIndex];
       final nextExam = allExams[currentIndex + 1];
-      
+
       if (currentExam.examDate != null && nextExam.examDate != null) {
-        final daysDifference = nextExam.examDate!.difference(currentExam.examDate!).inDays;
-        
+        final daysDifference =
+            nextExam.examDate!.difference(currentExam.examDate!).inDays;
+
         Color indicatorColor;
         IconData indicatorIcon;
         String indicatorText;
-        
+
         if (daysDifference == 0) {
           indicatorColor = Colors.red;
           indicatorIcon = Icons.warning;
@@ -347,7 +348,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
           indicatorIcon = Icons.schedule;
           indicatorText = '$daysDifference days';
         }
-        
+
         daysDifferenceWidget = Container(
           margin: const EdgeInsets.only(top: 4),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -359,11 +360,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                indicatorIcon,
-                size: 14,
-                color: indicatorColor,
-              ),
+              Icon(indicatorIcon, size: 14, color: indicatorColor),
               const SizedBox(width: 4),
               Text(
                 '$indicatorText until ${nextExam.courseId}',
@@ -458,6 +455,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         final allCourses = courseProvider.getCoursesForSemester(
           widget.selectedSemester,
         );
+        final totalCredits = allCourses.fold<double>(
+          0.0,
+          (sum, course) => sum + (course.creditPoints ?? 0),
+        );
 
         return Card(
           elevation: 3,
@@ -473,9 +474,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                     children: [
                       // Title on the left
                       Text(
-                        'My Courses (${allCourses.length})',
+                        'My Courses (${totalCredits.toStringAsFixed(1)} Credits)',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -852,31 +853,54 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   ),
                                   trailing: PopupMenuButton<String>(
                                     onSelected: (value) {
-                                      switch (value) {                                        case 'select_schedule':
+                                      switch (value) {
+                                        case 'select_schedule':
                                           showScheduleSelectionDialog(
                                             context,
                                             course,
                                             courseDetails,
-                                            semester: widget.selectedSemester, // Add semester parameter
+                                            semester:
+                                                widget
+                                                    .selectedSemester, // Add semester parameter
                                             onSelectionUpdated: () async {
                                               // Match the calendar page's callback behavior
-                                              debugPrint('Schedule selection updated from course panel, refreshing...');
-                                              
+                                              debugPrint(
+                                                'Schedule selection updated from course panel, refreshing...',
+                                              );
+
                                               // Small delay to ensure consistency
-                                              await Future.delayed(const Duration(milliseconds: 100));
-                                              
+                                              await Future.delayed(
+                                                const Duration(
+                                                  milliseconds: 100,
+                                                ),
+                                              );
+
                                               if (mounted) {
                                                 setState(() {});
-                                                
+
                                                 // Also refresh the calendar events if possible
                                                 // This ensures both functionalities behave the same way
                                                 try {
                                                   if (!context.mounted) return;
-                                                  final themeProvider = context.read<ThemeProvider>();
-                                                  final courseProvider = context.read<CourseProvider>();
-                                                  await refreshCalendarEvents(context, courseProvider, themeProvider);
+                                                  final themeProvider =
+                                                      context
+                                                          .read<
+                                                            ThemeProvider
+                                                          >();
+                                                  final courseProvider =
+                                                      context
+                                                          .read<
+                                                            CourseProvider
+                                                          >();
+                                                  await refreshCalendarEvents(
+                                                    context,
+                                                    courseProvider,
+                                                    themeProvider,
+                                                  );
                                                 } catch (e) {
-                                                  debugPrint('Could not refresh calendar events from course panel: $e');
+                                                  debugPrint(
+                                                    'Could not refresh calendar events from course panel: $e',
+                                                  );
                                                 }
                                               }
                                             },
@@ -1048,7 +1072,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       final courseColor = themeProvider.getCourseColor(course.courseId);
       int eventsAdded = 0;
       // Create events from detailed schedule data only for selected times
-      final courseProvider = context.read<CourseProvider>();      final selectedEntries = courseProvider.getSelectedScheduleEntries(
+      final courseProvider = context.read<CourseProvider>();
+      final selectedEntries = courseProvider.getSelectedScheduleEntries(
         course.courseId,
         courseDetails,
         semester: widget.selectedSemester,
@@ -1220,8 +1245,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
 
   // Method to show course removal confirmation dialog
   void _showRemoveCourseDialog(StudentCourse course) {
-  final selectedSemester = widget.selectedSemester;
-
+    final selectedSemester = widget.selectedSemester;
 
     showDialog(
       context: context,
@@ -1586,16 +1610,19 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         final isLightMode = themeProvider.isLightMode;
-        final backgroundColor = isLightMode 
-            ? AppColorsLightMode.primaryColor 
-            : AppColorsDarkMode.secondaryColor;
-        final borderColor = isLightMode 
-            ? AppColorsLightMode.secondaryColorDim 
-            : AppColorsDarkMode.secondaryColorDim;
-        final iconColor = isLightMode 
-            ? AppColorsLightMode.mainColor 
-            : AppColorsDarkMode.accentColor;
-        
+        final backgroundColor =
+            isLightMode
+                ? AppColorsLightMode.primaryColor
+                : AppColorsDarkMode.secondaryColor;
+        final borderColor =
+            isLightMode
+                ? AppColorsLightMode.secondaryColorDim
+                : AppColorsDarkMode.secondaryColorDim;
+        final iconColor =
+            isLightMode
+                ? AppColorsLightMode.mainColor
+                : AppColorsDarkMode.accentColor;
+
         return GestureDetector(
           onTap: widget.onToggleView,
           child: Container(
@@ -1604,13 +1631,12 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: borderColor,
-                width: 1,
-              ),
+              border: Border.all(color: borderColor, width: 1),
             ),
             child: Icon(
-              widget.viewMode == 0 ? Icons.calendar_view_week : Icons.calendar_view_day,
+              widget.viewMode == 0
+                  ? Icons.calendar_view_week
+                  : Icons.calendar_view_day,
               size: 16,
               color: iconColor,
             ),
