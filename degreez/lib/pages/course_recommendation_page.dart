@@ -36,6 +36,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       context.read<CourseRecommendationProvider>().loadAvailableSemesters(
         studentId,
       );
+      context.read<CourseRecommendationProvider>().loadSavedRecommendation();
     });
   }
 
@@ -236,7 +237,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
               // Stats Summary
               RecommendationStatsWidget(
                 stats: provider.getRecommendationStats(),
-                semester: provider.selectedSemesterDisplay ?? 'Unknown',
+                semester: provider.currentRecommendation?.originalRequest.semesterDisplayName ?? 'Unknown',
               ),
 
               const SizedBox(height: 16),
@@ -464,7 +465,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     final studentProvider = context.read<StudentProvider>();
     final recommendationProvider = context.read<CourseRecommendationProvider>();
 
-    final selectedSemester = recommendationProvider.selectedSemesterDisplay;
+    final selectedSemester = recommendationProvider.currentRecommendation?.originalRequest.semesterDisplayName;
     final studentId = studentProvider.student!.id;
 
     if (selectedSemester == null) {
@@ -495,8 +496,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     if (alreadyExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course already exists in this semester.'),
+         SnackBar(
+          content: Text('Course already exists in semester $selectedSemester.'),
         ),
       );
       return;

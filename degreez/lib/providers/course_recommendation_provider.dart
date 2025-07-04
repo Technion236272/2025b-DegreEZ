@@ -7,6 +7,8 @@ import '../services/course_recommendation_service.dart';
 import '../services/chat/context_generator_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
 class CourseRecommendationProvider extends ChangeNotifier {
   final CourseRecommendationService _recommendationService =
       CourseRecommendationService();
@@ -113,7 +115,6 @@ class CourseRecommendationProvider extends ChangeNotifier {
   String? get catalogFilePath => _catalogFilePath;
   List<Map<String, dynamic>> get availableSemesters => _availableSemesters;
 
-
   bool get canGenerateRecommendations =>
       _selectedYear != null && _selectedSemester != null && !_isLoading;
 
@@ -124,9 +125,10 @@ class CourseRecommendationProvider extends ChangeNotifier {
   }
 
   Future<void> loadAvailableSemesters(String studentId) async {
-  _availableSemesters = await getStudentSemesterList(studentId);
-  notifyListeners();
-}
+    _availableSemesters = await getStudentSemesterList(studentId);
+    notifyListeners();
+  }
+
   /// Set the selected semester and year
   void setSelectedSemester(int year, int semester) {
     _selectedYear = year;
@@ -140,6 +142,34 @@ class CourseRecommendationProvider extends ChangeNotifier {
     _catalogFilePath = filePath;
     notifyListeners();
   }
+
+Future<void> _saveRecommendationToStorage() async {
+  final prefs = await SharedPreferences.getInstance();
+  final jsonList = _previousRecommendations
+      .take(10)
+      .map((r) => r.toJson())
+      .toList();
+  await prefs.setString('recommendation_history', jsonEncode(jsonList));
+}
+
+
+Future<void> loadSavedRecommendation() async {
+  final prefs = await SharedPreferences.getInstance();
+  final jsonString = prefs.getString('recommendation_history');
+  if (jsonString != null) {
+    try {
+      final decoded = jsonDecode(jsonString) as List;
+      _previousRecommendations = decoded
+          .map((json) => CourseRecommendationResponse.fromJson(json))
+          .toList();
+
+      notifyListeners(); // Only updates history tab
+    } catch (e) {
+      debugPrint('Failed to load saved recommendation history: $e');
+    }
+  }
+}
+
 
   /// Generate course recommendations
   Future<void> generateRecommendations(BuildContext context) async {
@@ -183,6 +213,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
       if (_previousRecommendations.length > 10) {
         _previousRecommendations = _previousRecommendations.take(10).toList();
       }
+      await _saveRecommendationToStorage();
     } catch (e) {
       _error = 'Failed to generate recommendations: $e';
     } finally {
@@ -219,10 +250,10 @@ class CourseRecommendationProvider extends ChangeNotifier {
             'Winter ${year - 1}-$year'; // Academic year spans 2 years
         break;
       case 201:
-        semesterName = 'Spring ${year+1}';
+        semesterName = 'Spring ${year + 1}';
         break;
       case 202:
-        semesterName = 'Summer ${year+1}';
+        semesterName = 'Summer ${year + 1}';
         break;
       default:
         semesterName = 'Semester $semester $year';
