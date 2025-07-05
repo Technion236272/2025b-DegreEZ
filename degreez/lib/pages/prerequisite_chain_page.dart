@@ -1,3 +1,5 @@
+import 'package:degreez/models/student_model.dart';
+import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -47,6 +49,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage> {
                 child: SingleChildScrollView(
                   child: PrerequisiteGraph(
                     rootCourseId: selectedCourse!.courseNumber,
+                    studentFaculty: context.read<StudentProvider>().student?.faculty ?? '',
                     courseNames: courseIdToName,
                     courseFaculties: courseFaculties,
                     coursePrereqs: coursePrereqs,
