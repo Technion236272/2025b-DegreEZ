@@ -16,7 +16,7 @@ import '../ai/ai_config.dart';
 /// 4. Maintains PDF and preference context throughout
 class AiGuidedHillClimbingService {
   
-  /// Main optimization method
+  /// Main optimization method - processes each set individually
   Future<List<CourseSet>> optimize({
     required List<CourseSet> initialSets,
     required List<dynamic> validCandidates,
@@ -31,92 +31,53 @@ class AiGuidedHillClimbingService {
       return initialSets;
     }
     
-    debugPrint('🔧 Starting AI-guided hill climbing optimization');
+    debugPrint('🔧 Starting AI-guided hill climbing optimization (Individual Set Processing)');
     debugPrint('📊 Initial sets: ${initialSets.length}');
     debugPrint('🎯 Valid candidates: ${validCandidates.length}');
-    debugPrint('🔄 Max iterations: $maxIterations');
+    debugPrint('🔄 Max iterations per set: $maxIterations');
     debugPrint('🎓 Target semester: ${request.semesterDisplayName}');
     
-    List<CourseSet> currentSets = List.from(initialSets);
-    int improvementCount = 0;
+    final optimizedSets = <CourseSet>[];
+    int totalImprovements = 0;
     
-    for (int iteration = 0; iteration < maxIterations; iteration++) {
-      debugPrint('\n🔄 === Hill Climbing Iteration ${iteration + 1}/$maxIterations ===');
+    // Process each set individually
+    for (int setIndex = 0; setIndex < initialSets.length; setIndex++) {
+      final currentSet = initialSets[setIndex];
+      debugPrint('\n🎯 === Processing Set ${setIndex + 1}/${initialSets.length} ===');
+      debugPrint('� Set reasoning: ${currentSet.reasoning}');
+      debugPrint('📊 Set courses: ${currentSet.courses.length}');
       
       try {
-        // Simple validation: Clean invalid courses from sets
-        debugPrint('🔍 Validating and cleaning course sets...');
-        currentSets = _validateAndCleanSets(currentSets, validCandidates);
-        
-        // Step 1: AI evaluates current solution quality
-        debugPrint('📊 Step 1: Evaluating current solution quality...');
-        final evaluation = await _evaluateCurrentSolution(currentSets, request);
-        debugPrint('📊 Current solution score: ${evaluation.overallScore}/10');
-        debugPrint('📊 Academic progression: ${evaluation.academicProgressionScore}/10');
-        debugPrint('📊 Workload balance: ${evaluation.workloadBalanceScore}/10');
-        debugPrint('📊 Preference alignment: ${evaluation.preferenceAlignmentScore}/10');
-        debugPrint('📊 Availability: ${evaluation.availabilityScore}/10');
-        
-        if (evaluation.weaknesses.isNotEmpty) {
-          debugPrint('⚠️ Identified weaknesses: ${evaluation.weaknesses.join(', ')}');
-        }
-        
-        // Step 2: AI generates smart modifications
-        debugPrint('💡 Step 2: Generating smart modifications...');
-        final modifications = await _generateModifications(
-          currentSets,
+        // Optimize individual set
+        final optimizedSet = await _optimizeIndividualSet(
+          currentSet,
           validCandidates,
-          evaluation,
           request,
-        );
-        debugPrint('💡 Generated ${modifications.length} potential modifications');
-        
-        for (int i = 0; i < modifications.length; i++) {
-          final mod = modifications[i];
-          debugPrint('💡 Modification ${i + 1}: ${mod.type} - ${mod.description} (Expected improvement: ${mod.expectedImprovement})');
-        }
-        
-        // Step 3: AI selects best modification
-        debugPrint('🎯 Step 3: Selecting best modification...');
-        final bestModification = await _selectBestModification(
-          modifications,
-          currentSets,
-          request,
+          maxIterations,
         );
         
-        // Step 4: Apply modification if it improves solution
-        if (bestModification != null && bestModification.expectedImprovement > 0) {
-          debugPrint('✅ Selected modification: ${bestModification.description}');
-          debugPrint('🔧 Step 4: Applying modification...');
-          
-          currentSets = await _applyModification(currentSets, bestModification);
-          improvementCount++;
-          
-          debugPrint('✅ Applied modification successfully');
-          debugPrint('📈 Total improvements applied: $improvementCount');
-        } else {
-          debugPrint('🛑 No beneficial modification found');
-          debugPrint('🎯 Stopping optimization early at iteration ${iteration + 1}');
-          break;
+        optimizedSets.add(optimizedSet);
+        
+        // Count improvements (compare original vs optimized)
+        if (optimizedSet.reasoning.contains('Modified:')) {
+          totalImprovements++;
         }
+        
+        debugPrint('✅ Set ${setIndex + 1} optimization complete');
         
       } catch (e) {
-        debugPrint('❌ Error in iteration ${iteration + 1}: $e');
-        debugPrint('🔄 Continuing with next iteration...');
-        continue;
+        debugPrint('❌ Error optimizing set ${setIndex + 1}: $e');
+        debugPrint('🔄 Using original set as fallback');
+        optimizedSets.add(currentSet);
       }
     }
     
     debugPrint('\n🎯 === Hill Climbing Optimization Complete ===');
-    debugPrint('📊 Final sets count: ${currentSets.length}');
-    debugPrint('📈 Total improvements applied: $improvementCount');
+    debugPrint('📊 Final sets count: ${optimizedSets.length}');
+    debugPrint('📈 Sets with improvements: $totalImprovements');
+    debugPrint('✅ Optimization completed successfully (validation done per iteration)');
     
-    // Final validation: Clean any remaining invalid courses
-    debugPrint('🔍 Final validation and cleanup...');
-    currentSets = _validateAndCleanSets(currentSets, validCandidates);
-    debugPrint('✅ Optimization completed successfully');
-    
-    return currentSets;
+    return optimizedSets;
   }
   
   /// AI evaluates current solution quality with full context
@@ -134,14 +95,14 @@ class AiGuidedHillClimbingService {
       );
       
       final prompt = '''
-Evaluate the quality of these course sets for optimization:
+Evaluate the quality of ${currentSets.length == 1 ? 'this course set' : 'these course sets'} for optimization:
 
 STUDENT CONTEXT:
 ${request.userContext}
 
 TARGET SEMESTER: ${request.semesterDisplayName}
 
-CURRENT COURSE SETS:
+CURRENT COURSE ${currentSets.length == 1 ? 'SET' : 'SETS'}:
 ${jsonEncode(currentSets.map((set) => _courseSetToJson(set)).toList())}
 
 EVALUATION CRITERIA:
@@ -149,6 +110,8 @@ EVALUATION CRITERIA:
 2. Workload balance (difficulty, credit distribution)
 3. Course availability and scheduling
 4. Overall strategic value
+
+${currentSets.length == 1 ? 'Focus on evaluating this single set\'s internal coherence and quality.' : 'Evaluate each set individually and provide overall assessment.'}
 
 Provide detailed scores (1-10) and specific improvement suggestions.
 ''';
@@ -195,12 +158,12 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     );
     
     final prompt = '''
-Based on the evaluation, suggest smart modifications to improve these course sets:
+Based on the evaluation, suggest smart modifications to improve ${currentSets.length == 1 ? 'this course set' : 'these course sets'}:
 
 CURRENT EVALUATION:
 ${evaluation.toJson()}
 
-CURRENT COURSE SETS:
+CURRENT COURSE ${currentSets.length == 1 ? 'SET' : 'SETS'}:
 ${jsonEncode(currentSets.map((set) => _courseSetToJson(set)).toList())}
 
 VALID REPLACEMENT CANDIDATES (ONLY USE THESE):
@@ -221,6 +184,7 @@ MODIFICATION REQUIREMENTS:
   * Which course to ADD (addId) - MUST be from valid candidates list
   * Clear reasoning for the swap
   * Expected improvement score
+  * setId: ${currentSets.length == 1 ? '0 (single set being optimized)' : 'Index of the set to modify'}
 - Maintain 15-18 credit total per set
 - Remember: Only use courses from the valid candidates list provided above!
 - Do not suggest courses that are not in the valid candidates list
@@ -331,6 +295,94 @@ Provide clear reasoning for each modification and expected improvement.
     }
     
     return modifiedSets;
+  }
+  
+  /// Optimize a single course set using hill climbing
+  Future<CourseSet> _optimizeIndividualSet(
+    CourseSet initialSet,
+    List<dynamic> validCandidates,
+    CourseRecommendationRequest request,
+    int maxIterations,
+  ) async {
+    debugPrint('🔧 Starting individual set optimization');
+    debugPrint('📊 Set ID: ${initialSet.setId}');
+    debugPrint('🎯 Courses in set: ${initialSet.courses.length}');
+    debugPrint('📝 Set reasoning: ${initialSet.reasoning}');
+    
+    CourseSet currentSet = initialSet;
+    int improvementCount = 0;
+    
+    for (int iteration = 0; iteration < maxIterations; iteration++) {
+      debugPrint('\n🔄 Set ${initialSet.setId} - Iteration ${iteration + 1}/$maxIterations');
+      
+      try {
+        // Wrap single set in a list for existing methods
+        final currentSets = [currentSet];
+        
+        // Step 1: AI evaluates current set quality
+        debugPrint('📊 Step 1: Evaluating set quality...');
+        final evaluation = await _evaluateCurrentSolution(currentSets, request);
+        debugPrint('📊 Set score: ${evaluation.overallScore}/10');
+        debugPrint('📊 Academic: ${evaluation.academicProgressionScore}/10');
+        debugPrint('📊 Workload: ${evaluation.workloadBalanceScore}/10');
+        
+        if (evaluation.weaknesses.isNotEmpty) {
+          debugPrint('⚠️ Weaknesses: ${evaluation.weaknesses.join(', ')}');
+        }
+        
+        // Step 2: AI generates smart modifications
+        debugPrint('💡 Step 2: Generating modifications...');
+        final modifications = await _generateModifications(
+          currentSets,
+          validCandidates,
+          evaluation,
+          request,
+        );
+        debugPrint('💡 Generated ${modifications.length} potential modifications');
+        
+        // Step 3: AI selects best modification
+        debugPrint('🎯 Step 3: Selecting best modification...');
+        final bestModification = await _selectBestModification(
+          modifications,
+          currentSets,
+          request,
+        );
+        
+        // Step 4: Apply modification if it improves solution
+        if (bestModification != null && bestModification.expectedImprovement > 0) {
+          debugPrint('✅ Selected: ${bestModification.description}');
+          debugPrint('🔧 Step 4: Applying modification...');
+          
+          final modifiedSets = await _applyModification(currentSets, bestModification);
+          if (modifiedSets.isNotEmpty) {
+            // Step 5: Validate and clean the modified set immediately
+            debugPrint('🔍 Step 5: Validating modified set...');
+            final cleanedSets = _validateAndCleanSets(modifiedSets, validCandidates);
+            if (cleanedSets.isNotEmpty) {
+              currentSet = cleanedSets[0]; // Take the cleaned set
+              improvementCount++;
+              debugPrint('✅ Modification applied and validated successfully');
+            } else {
+              debugPrint('❌ Modification resulted in empty set after validation, keeping original');
+            }
+          }
+        } else {
+          debugPrint('🛑 No beneficial modification found');
+          debugPrint('🎯 Stopping set optimization early at iteration ${iteration + 1}');
+          break;
+        }
+        
+      } catch (e) {
+        debugPrint('❌ Error in set ${initialSet.setId} iteration ${iteration + 1}: $e');
+        debugPrint('🔄 Continuing with next iteration...');
+        continue;
+      }
+    }
+    
+    debugPrint('✅ Individual set optimization complete');
+    debugPrint('📈 Improvements applied: $improvementCount');
+    
+    return currentSet;
   }
   
   /// Simple validation: Remove invalid courses from sets
