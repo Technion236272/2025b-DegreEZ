@@ -220,6 +220,9 @@ if (!mounted) return;
     }
   }
 
+// /// Adds the selected course to the specified semester
+  /// Validates prerequisites and shows warnings if any are missing.
+  /// If all prerequisites are met, the course is added to the semester.
   Future<void> _addCourse(EnhancedCourseDetails courseDetails) async {
     final existingCourses =
         context
