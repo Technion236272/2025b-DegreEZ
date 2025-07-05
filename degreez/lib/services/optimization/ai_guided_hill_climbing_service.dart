@@ -77,21 +77,11 @@ class AiGuidedHillClimbingService {
           debugPrint('✅ Selected modification: ${bestModification.description}');
           debugPrint('🔧 Step 4: Applying modification...');
           
-          final modifiedSets = await _applyModification(currentSets, bestModification);
+          currentSets = await _applyModification(currentSets, bestModification);
+          improvementCount++;
           
-          // Step 5: Validate modified sets for course validity
-          debugPrint('✅ Step 5: Validating modified course sets...');
-          final validatedSets = await _validateModifiedSets(modifiedSets, validCandidates, request);
-          
-          if (validatedSets.isNotEmpty) {
-            currentSets = validatedSets;
-            improvementCount++;
-            debugPrint('✅ Applied modification successfully');
-            debugPrint('📈 Total improvements applied: $improvementCount');
-          } else {
-            debugPrint('❌ Modification resulted in invalid course sets, reverting changes');
-            debugPrint('🔄 Continuing with original sets...');
-          }
+          debugPrint('✅ Applied modification successfully');
+          debugPrint('📈 Total improvements applied: $improvementCount');
         } else {
           debugPrint('🛑 No beneficial modification found');
           debugPrint('🎯 Stopping optimization early at iteration ${iteration + 1}');
@@ -207,7 +197,6 @@ CRITICAL CONSTRAINT:
 🚨 ALL COURSE REPLACEMENTS MUST USE ONLY COURSES FROM THE VALID REPLACEMENT CANDIDATES LIST ABOVE
 🚨 You CANNOT suggest courses that are not in the valid candidates list
 🚨 Every course you suggest for addition must have its courseId present in the valid candidates
-🚨 IMPORTANT: Your suggestions will be validated - invalid courses will be automatically removed!
 
 MODIFICATION REQUIREMENTS:
 - Generate 3-5 specific modifications targeting evaluation weaknesses
@@ -327,85 +316,6 @@ Provide clear reasoning for each modification and expected improvement.
     return modifiedSets;
   }
   
-  /// Validate modified course sets using the existing validation service
-  Future<List<CourseSet>> _validateModifiedSets(
-    List<CourseSet> modifiedSets,
-    List<dynamic> validCandidates,
-    CourseRecommendationRequest request,
-  ) async {
-    debugPrint('🔍 Validating ${modifiedSets.length} modified course sets using CandidateValidationService...');
-    
-    try {
-      final validatedSets = <CourseSet>[];
-      
-      // Create a lookup set for valid course IDs (quick validation)
-      final validCourseIds = validCandidates.map((c) => 
-        c['general']?['מספר מקצוע']?.toString() ?? ''
-      ).toSet();
-      
-      debugPrint('📊 Valid course IDs count: ${validCourseIds.length}');
-      
-      for (int i = 0; i < modifiedSets.length; i++) {
-        final set = modifiedSets[i];
-        debugPrint('🔍 Validating set ${i + 1} with ${set.courses.length} courses...');
-        
-        // Quick check: Are all courses in the valid candidates list?
-        final invalidCourses = <String>[];
-        final validCourses = <String>[];
-        
-        for (final course in set.courses) {
-          if (validCourseIds.contains(course.courseId)) {
-            validCourses.add(course.courseId);
-          } else {
-            invalidCourses.add(course.courseId);
-          }
-        }
-        
-        if (invalidCourses.isNotEmpty) {
-          debugPrint('❌ Set ${i + 1} contains invalid courses: ${invalidCourses.join(', ')}');
-          
-          // Try to fix by removing invalid courses
-          if (validCourses.length >= 3) { // Minimum 3 courses
-            final fixedCourses = set.courses.where((course) => 
-              validCourseIds.contains(course.courseId)
-            ).toList();
-            
-            final fixedSet = CourseSet(
-              setId: set.setId,
-              courses: fixedCourses,
-              totalCredits: fixedCourses.length * 3.0, // Estimate
-              reasoning: '${set.reasoning} | Auto-fixed: removed ${invalidCourses.length} invalid courses. DON\'T ADD THESE COURSES: ${invalidCourses.join(', ')} - They are not valid (missing prerequisites, not available in semester, or don\'t exist in catalog)',
-            );
-            validatedSets.add(fixedSet);
-            debugPrint('🔧 Fixed set ${i + 1} by removing ${invalidCourses.length} invalid courses');
-            debugPrint('⚠️ DON\'T ADD THESE COURSES: ${invalidCourses.join(', ')} - They are not valid');
-          } else {
-            debugPrint('💥 Set ${i + 1} has insufficient valid courses (${validCourses.length}), skipping');
-          }
-        } else {
-          // All courses are in valid candidates, set is valid
-          validatedSets.add(set);
-          debugPrint('✅ Set ${i + 1} is valid (all courses in valid candidates)');
-        }
-      }
-      
-      debugPrint('✅ Validation complete: ${validatedSets.length}/${modifiedSets.length} sets are valid');
-      
-      // If we lost too many sets, return original sets as fallback
-      if (validatedSets.length < modifiedSets.length ~/ 2) {
-        debugPrint('⚠️ Too many sets removed during validation, returning original sets');
-        return modifiedSets;
-      }
-      
-      return validatedSets;
-      
-    } catch (e) {
-      debugPrint('❌ Error during validation: $e');
-      debugPrint('🔄 Returning original sets as fallback');
-      return modifiedSets; // Return original sets if validation fails
-    }
-  }
-
   /// Helper method to generate content with optional PDF
   Future<GenerateContentResponse> _generateWithOptionalPdf(
     GenerativeModel model,
