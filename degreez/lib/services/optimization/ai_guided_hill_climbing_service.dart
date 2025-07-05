@@ -22,7 +22,15 @@ class AiGuidedHillClimbingService {
     required List<dynamic> validCandidates,
     required CourseRecommendationRequest request,
     int maxIterations = 5,
+    bool fastMode = false, // NEW: Fast mode parameter
   }) async {
+    if (fastMode) {
+      debugPrint('⚡ AI-guided hill climbing: FAST MODE - returning initial sets directly');
+      debugPrint('📊 Initial sets: ${initialSets.length}');
+      debugPrint('✅ Fast mode optimization complete');
+      return initialSets;
+    }
+    
     debugPrint('🔧 Starting AI-guided hill climbing optimization');
     debugPrint('📊 Initial sets: ${initialSets.length}');
     debugPrint('🎯 Valid candidates: ${validCandidates.length}');
@@ -267,6 +275,7 @@ Provide clear reasoning for each modification and expected improvement.
   }
   
   /// Apply a modification to the course sets
+  /// This method modifies the course sets based on the provided modification details.
   Future<List<CourseSet>> _applyModification(
     List<CourseSet> currentSets,
     CourseModification modification,

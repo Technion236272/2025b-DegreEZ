@@ -77,6 +77,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     return Consumer<CourseRecommendationProvider>(
       builder: (context, provider, child) {
         return SingleChildScrollView(
+          // padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -105,6 +106,51 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                         'Get personalized course recommendations based on your academic history and degree requirements.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Fast Mode Toggle
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            provider.fastMode ? Icons.flash_on : Icons.flash_off,
+                            color: provider.fastMode ? Colors.orange : Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Recommendation Mode',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        title: Text(provider.fastMode ? 'Fast Mode' : 'Optimized Mode'),
+                        subtitle: Text(
+                          provider.fastMode 
+                            ? 'Quick recommendations (Phase 1 only) - ~10 seconds'
+                            : 'AI-optimized recommendations (All phases) - ~30-60 seconds',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        value: provider.fastMode,
+                        onChanged: provider.setFastMode,
+                        secondary: Icon(
+                          provider.fastMode ? Icons.speed : Icons.psychology,
+                          color: provider.fastMode ? Colors.orange : Colors.blue,
                         ),
                       ),
                     ],
@@ -151,7 +197,9 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                           : const Icon(Icons.auto_awesome),
                   label: Text(
                     provider.isLoading
-                        ? 'Generating Recommendations...'
+                        ? (provider.fastMode 
+                          ? 'Generating Fast Recommendations...'
+                          : 'Generating Optimized Recommendations...')
                         : 'Generate Recommendations',
                     style: const TextStyle(fontSize: 16),
                   ),

@@ -22,6 +22,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
   int? _selectedSemester;
   String? _catalogFilePath;
   List<Map<String, dynamic>> _availableSemesters = [];
+  bool _fastMode = false; // NEW: Fast mode toggle
 
   // Feedback state
   RecommendationSession? _currentSession;
@@ -117,6 +118,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
   int? get selectedSemester => _selectedSemester;
   String? get catalogFilePath => _catalogFilePath;
   List<Map<String, dynamic>> get availableSemesters => _availableSemesters;
+  bool get fastMode => _fastMode; // NEW: Fast mode getter
 
 
   bool get canGenerateRecommendations =>
@@ -143,6 +145,12 @@ class CourseRecommendationProvider extends ChangeNotifier {
   /// Set the catalog file path
   void setCatalogFilePath(String? filePath) {
     _catalogFilePath = filePath;
+    notifyListeners();
+  }
+
+  /// Set fast mode
+  void setFastMode(bool fastMode) {
+    _fastMode = fastMode;
     notifyListeners();
   }
 
@@ -181,6 +189,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
       // Generate recommendations
       final response = await _recommendationService.generateRecommendations(
         request,
+        fastMode: _fastMode, // Use provider's fast mode setting
       );
 
       // Update state
