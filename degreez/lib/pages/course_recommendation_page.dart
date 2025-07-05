@@ -13,7 +13,6 @@ import '../providers/student_provider.dart';
 import '../services/course_service.dart';
 import '../models/student_model.dart';
 import '../models/course_recommendation_models.dart';
-import '../services/course_recommendation_service.dart';
 
 class CourseRecommendationPage extends StatefulWidget {
   const CourseRecommendationPage({super.key});
@@ -509,54 +508,62 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       return;
     }
 
-    // Match course by name
-    final matchedList = await CourseRecommendationService()
-        .fetchCourseDetails(
-          [aiCourseId],
-          apiYear,
-          semesterCode,
-        );
+    // Match course by ID using CourseService directly
+    try {
+      final courseInfo = await CourseService.getCourseDetails(
+        apiYear,
+        semesterCode,
+        aiCourseId,
+      );
 
-    if (matchedList.isEmpty) {
+      if (courseInfo == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Course details not found for "$aiCourseName".'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final details = CourseRecommendationDetails.fromCourseService(courseInfo);
+
+      final course = StudentCourse(
+        courseId: details.courseId,
+        name: details.courseName,
+        finalGrade: '',
+        lectureTime: '',
+        tutorialTime: '',
+        labTime: '',
+        workshopTime: '',
+        creditPoints: details.creditPoints,
+      );
+
+      final success = await courseProvider.addCourseToSemester(
+        studentId,
+        selectedSemester,
+        course,
+        fallbackSemester,
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Course details not found for "$aiCourseName".'),
+          content: Text(
+            success
+                ? '${details.courseName} added to $selectedSemester.'
+                : 'Failed to add ${details.courseName}.',
+          ),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding course: $e'),
           backgroundColor: Colors.red,
         ),
       );
-      return;
     }
-
-    final details = matchedList.first;
-
-    final course = StudentCourse(
-      courseId: details.courseId,
-      name: details.courseName,
-      finalGrade: '',
-      lectureTime: '',
-      tutorialTime: '',
-      labTime: '',
-      workshopTime: '',
-      creditPoints: details.creditPoints,
-    );
-
-    final success = await courseProvider.addCourseToSemester(
-      studentId,
-      selectedSemester,
-      course,
-      fallbackSemester,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? '${details.courseName} added to $selectedSemester.'
-              : 'Failed to add ${details.courseName}.',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
-    );
   }
 
   /// Handle user feedback submission
