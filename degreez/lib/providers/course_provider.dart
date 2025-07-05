@@ -1369,4 +1369,98 @@ class CourseProvider with ChangeNotifier {
 
     return sameSeason.first;
   }
+
+  Future<List<CourseSearchResult>> searchInLatestAvailableSemesters({
+    required int count,
+    String? courseId,
+    String? courseName,
+  }) async {
+    final semesters = await GlobalConfigService.getAvailableSemesters();
+
+    // Sort using your defined season + year logic
+    semesters.sort((a, b) {
+      int getSortYear(String semesterName) {
+        final parts = semesterName.split(' ');
+        final yearPart = parts.length > 1 ? parts[1] : '';
+
+        if (yearPart.contains('-')) {
+          final years = yearPart.split('-');
+          return int.tryParse(years.last) ?? 0; // Use later year
+        }
+        return int.tryParse(yearPart) ?? 0;
+      }
+
+      int getSeasonOrder(String semesterName) {
+        final season = semesterName.split(' ').first;
+        const order = {'Winter': 0, 'Spring': 1, 'Summer': 2};
+        return order[season] ?? 99;
+      }
+
+      final yearA = getSortYear(a);
+      final yearB = getSortYear(b);
+      if (yearA != yearB) return yearA.compareTo(yearB);
+
+      final seasonA = getSeasonOrder(a);
+      final seasonB = getSeasonOrder(b);
+      return seasonA.compareTo(seasonB);
+    });
+
+    final selectedSemesters = semesters.reversed.take(count).toList();
+
+    final Map<String, (CourseSearchResult, String)> resultMap = {};
+
+    for (final sem in selectedSemesters) {
+      final parsed = parseSemesterCode(sem);
+      if (parsed == null) continue;
+      final (year, semesterCode) = parsed;
+
+      final results = await CourseService.searchCourses(
+        year: year,
+        semester: semesterCode,
+        courseId: courseId,
+        courseName: courseName,
+      );
+
+      for (final r in results) {
+        final key = r.course.courseNumber;
+        final existing = resultMap[key];
+
+        if (existing == null || _isNewerSemester(sem, existing.$2)) {
+          resultMap[key] = (r, sem);
+        }
+      }
+    }
+
+    return resultMap.values.map((e) => e.$1).toList();
+  }
+
+bool _isNewerSemester(String a, String b) {
+  // Same sort logic used in your earlier sort
+  int getSortYear(String s) {
+    final parts = s.split(' ');
+    final yearPart = parts.length > 1 ? parts[1] : '';
+    if (yearPart.contains('-')) {
+      final years = yearPart.split('-');
+      return int.tryParse(years.last) ?? 0;
+    }
+    return int.tryParse(yearPart) ?? 0;
+  }
+
+  int getSeasonOrder(String s) {
+    final season = s.split(' ').first;
+    const order = {'Winter': 0, 'Spring': 1, 'Summer': 2};
+    return order[season] ?? 99;
+  }
+
+  final yearA = getSortYear(a);
+  final yearB = getSortYear(b);
+  if (yearA != yearB) return yearA > yearB;
+
+  final seasonA = getSeasonOrder(a);
+  final seasonB = getSeasonOrder(b);
+  return seasonA > seasonB;
+}
+
+
+
 }

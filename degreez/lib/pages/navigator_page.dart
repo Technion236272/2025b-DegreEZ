@@ -19,6 +19,7 @@ import '../mixins/ai_import_mixin.dart';
 import '../services/global_config_service.dart';
 import 'package:degreez/pages/course_map_page.dart';
 import 'customized_diagram_page.dart';
+import 'prerequisite_chain_page.dart';
 
 class NavigatorPage extends StatefulWidget {
   const NavigatorPage({super.key});
@@ -183,7 +184,9 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               key: ValueKey(_selectedSemester),
               selectedSemester: _selectedSemester ?? '',
             );
-
+            break;
+          case 'Prerequisite Chains':
+            body = const PrerequisiteChainPage();
             break;
 
           default:
@@ -394,6 +397,12 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               title: 'Profile',
               isSelected: _currentPage == 'Profile',
               onTap: () => _changePage('Profile'),
+            ),
+            _buildDrawerItem(
+              icon: Icons.account_tree_outlined,
+              title: 'Prerequisite Chains',
+              isSelected: _currentPage == 'Prerequisite Chains',
+              onTap: () => _changePage('Prerequisite Chains'),
             ),
 
             //  Course Recommendations
