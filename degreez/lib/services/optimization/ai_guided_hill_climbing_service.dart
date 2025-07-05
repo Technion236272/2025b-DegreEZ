@@ -44,6 +44,10 @@ class AiGuidedHillClimbingService {
       debugPrint('\n🔄 === Hill Climbing Iteration ${iteration + 1}/$maxIterations ===');
       
       try {
+        // Simple validation: Clean invalid courses from sets
+        debugPrint('🔍 Validating and cleaning course sets...');
+        currentSets = _validateAndCleanSets(currentSets, validCandidates);
+        
         // Step 1: AI evaluates current solution quality
         debugPrint('📊 Step 1: Evaluating current solution quality...');
         final evaluation = await _evaluateCurrentSolution(currentSets, request);
@@ -106,6 +110,10 @@ class AiGuidedHillClimbingService {
     debugPrint('\n🎯 === Hill Climbing Optimization Complete ===');
     debugPrint('📊 Final sets count: ${currentSets.length}');
     debugPrint('📈 Total improvements applied: $improvementCount');
+    
+    // Final validation: Clean any remaining invalid courses
+    debugPrint('🔍 Final validation and cleanup...');
+    currentSets = _validateAndCleanSets(currentSets, validCandidates);
     debugPrint('✅ Optimization completed successfully');
     
     return currentSets;
@@ -323,6 +331,48 @@ Provide clear reasoning for each modification and expected improvement.
     }
     
     return modifiedSets;
+  }
+  
+  /// Simple validation: Remove invalid courses from sets
+  List<CourseSet> _validateAndCleanSets(
+    List<CourseSet> courseSets,
+    List<dynamic> validCandidates,
+  ) {
+    final validCourseIds = validCandidates
+        .map((c) => c['general']?['מספר מקצוע']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    
+    final cleanedSets = <CourseSet>[];
+    
+    for (final set in courseSets) {
+      final validCourses = <CourseInSet>[];
+      final removedCourses = <String>[];
+      
+      for (final course in set.courses) {
+        if (validCourseIds.contains(course.courseId)) {
+          validCourses.add(course);
+        } else {
+          removedCourses.add(course.courseId);
+        }
+      }
+      
+      if (removedCourses.isNotEmpty) {
+        debugPrint('🚫 In set ${set.setId} removed invalid courses: ${removedCourses.join(', ')}');
+      }
+      
+      // Only add sets that have valid courses
+      if (validCourses.isNotEmpty) {
+        cleanedSets.add(CourseSet(
+          setId: set.setId,
+          courses: validCourses,
+          totalCredits: validCourses.length * 3.0, // Estimate 3 credits per course
+          reasoning: set.reasoning,
+        ));
+      }
+    }
+    
+    return cleanedSets;
   }
   
   /// Helper method to generate content with optional PDF
