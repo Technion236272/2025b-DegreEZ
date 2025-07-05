@@ -16,13 +16,17 @@ import '../ai/ai_config.dart';
 /// 4. Maintains PDF and preference context throughout
 class AiGuidedHillClimbingService {
   
+
+
+
+// --------------- THE OPTIMIZATION PROCESS ---------------
   /// Main optimization method - processes each set individually
   Future<List<CourseSet>> optimize({
     required List<CourseSet> initialSets,
     required List<dynamic> validCandidates,
     required CourseRecommendationRequest request,
     int maxIterations = 5,
-    bool fastMode = false, // NEW: Fast mode parameter
+    bool fastMode = false, //  Fast mode parameter
   }) async {
     if (fastMode) {
       debugPrint('⚡ AI-guided hill climbing: FAST MODE - returning initial sets directly');
@@ -145,11 +149,14 @@ Provide detailed scores (1-10) and specific improvement suggestions.
   }
   
   /// Generate smart modifications based on evaluation
+  /// the number of modifications is limited to 3-5 per set
+  /// and they must use only valid candidates.
   Future<List<CourseModification>> _generateModifications(
     List<CourseSet> currentSets,
     List<dynamic> validCandidates,
     SolutionEvaluation evaluation,
     CourseRecommendationRequest request,
+    String validationFeedback, // NEW: Include validation feedback
   ) async {
     final modificationModel = FirebaseAI.googleAI().generativeModel(
       model: AiConfig.defaultModel,
@@ -158,44 +165,44 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     );
     
     final prompt = '''
-Based on the evaluation, suggest smart modifications to improve ${currentSets.length == 1 ? 'this course set' : 'these course sets'}:
+            Based on the evaluation, suggest smart modifications to improve ${currentSets.length == 1 ? 'this course set' : 'these course sets'}:
 
-CURRENT EVALUATION:
-${evaluation.toJson()}
+            CURRENT EVALUATION:
+            ${evaluation.toJson()}
 
-CURRENT COURSE ${currentSets.length == 1 ? 'SET' : 'SETS'}:
-${jsonEncode(currentSets.map((set) => _courseSetToJson(set)).toList())}
+            CURRENT COURSE ${currentSets.length == 1 ? 'SET' : 'SETS'}:
+            ${jsonEncode(currentSets.map((set) => _courseSetToJson(set)).toList())}
 
-VALID REPLACEMENT CANDIDATES (ONLY USE THESE):
-${jsonEncode(validCandidates.take(50).map((c) => _candidateToJson(c)).toList())}
+            VALID REPLACEMENT CANDIDATES (ONLY USE THESE):
+            ${jsonEncode(validCandidates.take(50).map((c) => _candidateToJson(c)).toList())}
 
-STUDENT CONTEXT & PREFERENCES:
-${request.userContext}
+            STUDENT CONTEXT & PREFERENCES:
+            ${request.userContext}
 
-CRITICAL CONSTRAINT: 
-🚨 ALL COURSE REPLACEMENTS MUST USE ONLY COURSES FROM THE VALID REPLACEMENT CANDIDATES LIST ABOVE
-🚨 You CANNOT suggest courses that are not in the valid candidates list
-🚨 Every course you suggest for addition must have its courseId present in the valid candidates
+            CRITICAL CONSTRAINT: 
+            🚨 ALL COURSE REPLACEMENTS MUST USE ONLY COURSES FROM THE VALID REPLACEMENT CANDIDATES LIST ABOVE
+            🚨 You CANNOT suggest courses that are not in the valid candidates list
+            🚨 Every course you suggest for addition must have its courseId present in the valid candidates${validationFeedback.isNotEmpty ? '\n\n⚠️ VALIDATION FEEDBACK FROM PREVIOUS ITERATIONS:$validationFeedback' : ''}
 
-MODIFICATION REQUIREMENTS:
-- Generate 3-5 specific modifications targeting evaluation weaknesses
-- Each modification must specify:
-  * Which course to REMOVE (removeId)
-  * Which course to ADD (addId) - MUST be from valid candidates list
-  * Clear reasoning for the swap
-  * Expected improvement score
-  * setId: ${currentSets.length == 1 ? '0 (single set being optimized)' : 'Index of the set to modify'}
-- Maintain 15-18 credit total per set
-- Remember: Only use courses from the valid candidates list provided above!
-- Do not suggest courses that are not in the valid candidates list
+            MODIFICATION REQUIREMENTS:
+            - Generate 3-5 specific modifications targeting evaluation weaknesses
+            - Each modification must specify:
+              * Which course to REMOVE (removeId)
+              * Which course to ADD (addId) - MUST be from valid candidates list
+              * Clear reasoning for the swap
+              * Expected improvement score
+              * setId: ${currentSets.length == 1 ? '0 (single set being optimized)' : 'Index of the set to modify'}
+            - Maintain 15-18 credit total per set
+            - Remember: Only use courses from the valid candidates list provided above!
+            - Do not suggest courses that are not in the valid candidates list
 
-MODIFICATION TYPES:
-1. **Course Swap**: Replace one course with another from valid candidates
-2. **Course Removal**: Remove a course (set addId to null)
-3. **Course Addition**: Add a course from valid candidates (set removeId to null)
+            MODIFICATION TYPES:
+            1. **Course Swap**: Replace one course with another from valid candidates
+            2. **Course Removal**: Remove a course (set addId to null)
+            3. **Course Addition**: Add a course from valid candidates (set removeId to null)
 
-Provide clear reasoning for each modification and expected improvement.
-''';
+            Provide clear reasoning for each modification and expected improvement.
+            ''';
     
     final response = await _generateWithOptionalPdf(
       modificationModel,
@@ -311,6 +318,7 @@ Provide clear reasoning for each modification and expected improvement.
     
     CourseSet currentSet = initialSet;
     int improvementCount = 0;
+    String validationFeedback = ''; // Track validation feedback across iterations
     
     for (int iteration = 0; iteration < maxIterations; iteration++) {
       debugPrint('\n🔄 Set ${initialSet.setId} - Iteration ${iteration + 1}/$maxIterations');
@@ -337,6 +345,7 @@ Provide clear reasoning for each modification and expected improvement.
           validCandidates,
           evaluation,
           request,
+          validationFeedback, // Pass validation feedback from previous iterations
         );
         debugPrint('💡 Generated ${modifications.length} potential modifications');
         
@@ -359,6 +368,17 @@ Provide clear reasoning for each modification and expected improvement.
             debugPrint('🔍 Step 5: Validating modified set...');
             final cleanedSets = _validateAndCleanSets(modifiedSets, validCandidates);
             if (cleanedSets.isNotEmpty) {
+              // Track courses that were removed during validation
+              final originalCourseIds = modifiedSets[0].courses.map((c) => c.courseId).toSet();
+              final cleanedCourseIds = cleanedSets[0].courses.map((c) => c.courseId).toSet();
+              final removedCourses = originalCourseIds.difference(cleanedCourseIds);
+              
+              if (removedCourses.isNotEmpty) {
+                final removedInfo = removedCourses.join(', ');
+                validationFeedback += '\nPrevious iteration removed invalid courses: $removedInfo (not found in valid candidates)';
+                debugPrint('📝 Updated validation feedback: $removedInfo');
+              }
+              
               currentSet = cleanedSets[0]; // Take the cleaned set
               improvementCount++;
               debugPrint('✅ Modification applied and validated successfully');

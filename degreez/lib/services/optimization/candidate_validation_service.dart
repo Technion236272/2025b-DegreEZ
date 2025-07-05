@@ -91,7 +91,13 @@ class CandidateValidationService {
       
       // Skip if course ID is empty
       if (courseId.isEmpty) continue;
-      
+
+      if(courseId == "00440114") {
+        // Special case handling for course 00440114
+        debugPrint('🔍 Special handling for course: $courseId');
+        // Implement any specific logic for this course here
+      }
+
       // Filter A: Remove if course is already completed
       // implemented as a separate method
       if (await _isCourseCompleted(course, studentCourses)) {
