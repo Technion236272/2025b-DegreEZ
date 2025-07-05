@@ -71,8 +71,8 @@ the course name must be in hebrew.
       // Note: apiYear and semesterCode are available if needed for future use
       final (_, _) = parsed;
       
-      // PHASE 1: Get 10 candidate course sets from AI
-      debugPrint('🚀 Phase 1: Generating 10 candidate course sets...');
+      // PHASE 1: Get 3 candidate course sets from AI
+      debugPrint('🚀 Phase 1: Generating 3 candidate course sets...');
       final multiSetResponse = await _identifyMultipleCandidateSets(request);
       debugPrint('✅ Phase 1 complete: Generated ${multiSetResponse.courseSets.length} course sets');
 
@@ -103,7 +103,7 @@ the course name must be in hebrew.
     }
   }
 
-  /// Step 1: Use structured JSON response to identify 10 candidate course sets
+  /// Step 1: Use structured JSON response to identify 3 candidate course sets
   Future<MultiSetCandidateResponse> _identifyMultipleCandidateSets(
     CourseRecommendationRequest request,
   ) async {
@@ -114,16 +114,16 @@ the course name must be in hebrew.
       generationConfig: AiUtils.createJsonConfig(_createMultiSetCandidateSchema()),
     );
 
-    // Prepare the prompt for 10 sets
+    // Prepare the prompt for 3 sets
     String prompt = '''
-Please identify 10 different sets of candidate courses for the following student:
+Please identify 3 different sets of candidate courses for the following student:
 
 ${request.userContext}
 
 Target Semester: ${request.semesterDisplayName}
 
 Requirements:
-- Generate exactly 10 diverse course sets
+- Generate exactly 3 diverse course sets
 - Each set should contain 5-7 courses totaling 15-18 credit points
 - All course names must be in Hebrew
 - Each set should represent a different strategic approach (e.g., core-focused, elective-heavy, prerequisite-clearing, etc.)
@@ -177,7 +177,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
         initialSets: initialSets,
         validCandidates: validCandidates,
         request: request,
-        maxIterations: 3, // Conservative for production
+        maxIterations: 5, // Increased iterations for better optimization
       );
       
       debugPrint('✅ AI-guided hill climbing optimization complete');
@@ -204,7 +204,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
 
     // Prepare the prompt for final selection
     String prompt = '''
-You have been given 10 optimized course sets from a hill climbing algorithm. 
+You have been given 3 optimized course sets from a hill climbing algorithm. 
 Please analyze all sets and choose the best 2 sets for the following student:
 
 STUDENT CONTEXT:
@@ -295,7 +295,7 @@ Return your response as valid JSON with the required schema.
     }
   }
 
-  /// NEW: Schema for 10 candidate course sets
+  /// NEW: Schema for 3 candidate course sets
   static Schema _createMultiSetCandidateSchema() {
     return Schema.object(
       properties: {
@@ -319,10 +319,10 @@ Return your response as valid JSON with the required schema.
               ),
             },
           ),
-          description: 'Array of exactly 10 diverse course sets',
+          description: 'Array of exactly 3 diverse course sets',
         ),
         'overallReasoning': Schema.string(
-          description: 'Overall explanation of the 10 different strategies used in a few words',
+          description: 'Overall explanation of the 3 different strategies used in a few words',
         ),
       },
     );
@@ -363,14 +363,14 @@ Return your response as valid JSON with the required schema.
     );
   }
 
-  /// Schema for final set selection (AI chooses 2 from 10)
+  /// Schema for final set selection (AI chooses 2 from 3)
   static Schema _createFinalSelectionSchema() {
     return Schema.object(
       properties: {
         'selectedSets': Schema.array(
           items: Schema.object(
             properties: {
-              'setId': Schema.number(description: 'Original set ID (0-9)'),
+              'setId': Schema.number(description: 'Original set ID (0-2)'),
               'strategy': Schema.string(description: 'Strategy name for this set'),
               'reasoning': Schema.string(description: 'Why this set was chosen'),
               'courses': Schema.array(

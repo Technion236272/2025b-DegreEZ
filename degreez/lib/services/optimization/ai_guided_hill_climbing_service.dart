@@ -187,17 +187,34 @@ ${evaluation.toJson()}
 CURRENT COURSE SETS:
 ${jsonEncode(currentSets.map((set) => _courseSetToJson(set)).toList())}
 
-VALID REPLACEMENT CANDIDATES:
+VALID REPLACEMENT CANDIDATES (ONLY USE THESE):
 ${jsonEncode(validCandidates.take(50).map((c) => _candidateToJson(c)).toList())}
 
 STUDENT CONTEXT & PREFERENCES:
 ${request.userContext}
 
-Generate 3-5 specific modifications IF THERE WAS A NEED. Each should:
-- Target a specific weakness from the evaluation
-- Use only valid candidates for replacements
-- Maintain in the area of 15-18 credit total per set
-- Provide clear reasoning and expected improvement
+CRITICAL CONSTRAINT: 
+🚨 ALL COURSE REPLACEMENTS MUST USE ONLY COURSES FROM THE VALID REPLACEMENT CANDIDATES LIST ABOVE
+🚨 You CANNOT suggest courses that are not in the valid candidates list
+🚨 Every course you suggest for addition must have its courseId present in the valid candidates
+
+MODIFICATION REQUIREMENTS:
+- Generate 3-5 specific modifications targeting evaluation weaknesses
+- Each modification must specify:
+  * Which course to REMOVE (removeId)
+  * Which course to ADD (addId) - MUST be from valid candidates list
+  * Clear reasoning for the swap
+  * Expected improvement score
+- Maintain 15-18 credit total per set
+- Remember: Only use courses from the valid candidates list provided above!
+- Do not suggest courses that are not in the valid candidates list
+
+MODIFICATION TYPES:
+1. **Course Swap**: Replace one course with another from valid candidates
+2. **Course Removal**: Remove a course (set addId to null)
+3. **Course Addition**: Add a course from valid candidates (set removeId to null)
+
+Provide clear reasoning for each modification and expected improvement.
 ''';
     
     final response = await _generateWithOptionalPdf(
@@ -208,9 +225,26 @@ Generate 3-5 specific modifications IF THERE WAS A NEED. Each should:
     
     try {
       final jsonData = jsonDecode(response.text ?? '{}');
-      return (jsonData['modifications'] as List)
+      final modifications = (jsonData['modifications'] as List)
           .map((m) => CourseModification.fromJson(m))
           .toList();
+      
+      // Additional validation: ensure all suggested courses are from valid candidates
+      final validCourseIds = validCandidates.map((c) => 
+        c['general']?['מספר מקצוע']?.toString() ?? ''
+      ).toSet();
+      
+      final validatedModifications = modifications.where((mod) {
+        if (mod.addId != null && !validCourseIds.contains(mod.addId)) {
+          debugPrint('⚠️ Filtered out invalid modification: Suggested course ${mod.addId} not in valid candidates');
+          return false;
+        }
+        return true;
+      }).toList();
+      
+      debugPrint('✅ Validated ${validatedModifications.length} modifications against valid candidates');
+      
+      return validatedModifications;
     } catch (e) {
       debugPrint('❌ Error parsing modifications response: $e');
       return [];
@@ -350,8 +384,16 @@ Focus on academic progression, workload balance, and student success.
   String _getModificationSystemInstruction() {
     return '''
 You are an expert academic optimizer generating course modifications.
-Create specific, actionable improvements based on evaluation feedback.
-Each modification should target a clear weakness and provide measurable improvement.
+
+CRITICAL RULES:
+1. ALL course replacements must use ONLY courses from the provided valid candidates list
+2. NEVER suggest courses that are not in the valid candidates list
+3. Every courseId you suggest must be present in the valid candidates
+4. Focus on solving specific problems identified in the evaluation
+5. Maintain academic logic and credit balance
+
+Create specific, actionable improvements that target evaluation weaknesses.
+Each modification should provide measurable improvement while respecting all constraints.
 ''';
   }
   
