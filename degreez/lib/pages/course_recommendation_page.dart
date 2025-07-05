@@ -96,13 +96,13 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                             color: context.read<ThemeProvider>().primaryColor,
                           ),
                           const SizedBox(width: 8),
-    Expanded(
-      child: Text(
-        'AI Course Recommendations',
-        style: Theme.of(context).textTheme.headlineSmall,
-        softWrap: true,
-      ),
-    ),
+                          Expanded(
+                            child: Text(
+                              'AI Course Recommendations',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                              softWrap: true,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -308,7 +308,46 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 subtitle: Text(
                   '${recommendation.totalCreditPoints} credits • ${recommendation.generatedAt.toString().split(' ')[0]}',
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      tooltip: 'Delete',
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder:
+                              (context) => AlertDialog(
+                                title: const Text('Delete Recommendation'),
+                                content: const Text(
+                                  'Are you sure you want to delete this item?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, true),
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                        );
+                        if (confirm == true) {
+                          provider.deleteRecommendationAt(index);
+                        }
+                      },
+                    ),
+                    const Icon(Icons.arrow_forward_ios),
+                  ],
+                ),
                 onTap: () {
                   provider.setCurrentRecommendation(recommendation);
                   _tabController.animateTo(1);

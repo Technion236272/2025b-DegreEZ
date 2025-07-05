@@ -247,7 +247,7 @@ Future<void> loadSavedRecommendation() async {
     switch (semester) {
       case 200:
         semesterName =
-            'Winter ${year - 1}-$year'; // Academic year spans 2 years
+            'Winter $year-${year+1}'; // Academic year spans 2 years
         break;
       case 201:
         semesterName = 'Spring ${year + 1}';
@@ -314,4 +314,22 @@ Future<void> loadSavedRecommendation() async {
     _selectedSemester = recommendation.originalRequest.semester;
     notifyListeners();
   }
+
+  Future<void> _saveAllRecommendationsToStorage() async {
+  final prefs = await SharedPreferences.getInstance();
+  final listJson = _previousRecommendations
+      .map((r) => r.toJson()) // ensure `toJson()` exists
+      .toList();
+  await prefs.setString('recommendation_history', jsonEncode(listJson));
+}
+
+  void deleteRecommendationAt(int index) async {
+  if (index >= 0 && index < _previousRecommendations.length) {
+    _previousRecommendations.removeAt(index);
+    await _saveAllRecommendationsToStorage(); // persist new list
+    notifyListeners();
+  }
+
+}
+
 }
