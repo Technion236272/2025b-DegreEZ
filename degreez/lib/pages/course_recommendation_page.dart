@@ -7,7 +7,6 @@ import '../providers/theme_provider.dart';
 import '../widgets/course_recommendation/semester_selector_widget.dart';
 import '../widgets/course_recommendation/catalog_upload_widget.dart';
 import '../widgets/course_recommendation/recommendation_results_widget.dart';
-import '../widgets/course_recommendation/recommendation_stats_widget.dart';
 import '../providers/course_provider.dart';
 import '../providers/student_provider.dart';
 import '../services/course_service.dart';
@@ -280,14 +279,6 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Stats Summary
-              RecommendationStatsWidget(
-                stats: provider.getRecommendationStats(),
-                semester: provider.selectedSemesterDisplay ?? 'Unknown',
-              ),
-
-              const SizedBox(height: 16),
-
               // Recommendations List
               RecommendationResultsWidget(
                 recommendation: provider.currentRecommendation!,

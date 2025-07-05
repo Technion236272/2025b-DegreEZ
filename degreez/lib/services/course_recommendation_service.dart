@@ -99,13 +99,13 @@ the course name must be in hebrew.
         debugPrint('✅ Phase 2 complete: Optimized ${optimizedSets.length} course sets');
       }
 
-      // PHASE 3: AI chooses 2 final sets from optimized sets
-      debugPrint('🧠 Phase 3: AI selecting 2 final sets...');
-      final finalRecommendations = await _chooseFinalTwoSets(
+      // PHASE 3: AI chooses 3 final sets from optimized sets with one highlighted
+      debugPrint('🧠 Phase 3: AI selecting 3 final sets with one highlighted...');
+      final finalRecommendations = await _chooseFinalThreeSets(
         optimizedSets,
         request,
       );
-      debugPrint('✅ Phase 3 complete: Selected 2 final course sets');
+      debugPrint('✅ Phase 3 complete: Selected 3 final course sets with one highlighted');
 
       return finalRecommendations;
     } catch (e) {
@@ -216,8 +216,8 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     }
   }
 
-  /// PHASE 3: AI chooses 2 final sets from optimized sets
-  Future<CourseRecommendationResponse> _chooseFinalTwoSets(
+  /// PHASE 3: AI chooses 3 final sets from optimized sets with one highlighted
+  Future<CourseRecommendationResponse> _chooseFinalThreeSets(
     List<CourseSet> optimizedSets,
     CourseRecommendationRequest request,
   ) async {
@@ -225,13 +225,13 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     final finalSelectionModel = FirebaseAI.googleAI().generativeModel(
       model: AiConfig.defaultModel,
       systemInstruction: Content.text(_systemInstruction),
-      generationConfig: AiUtils.createJsonConfig(_createFinalSelectionSchema()),
+      generationConfig: AiUtils.createJsonConfig(_createFinalThreeSetSelectionSchema()),
     );
 
     // Prepare the prompt for final selection
     String prompt = '''
-You have been given 3 optimized course sets from a hill climbing algorithm. 
-Please analyze all sets and choose the best 2 sets for the following student:
+You have been given optimized course sets from a hill climbing algorithm. 
+Please analyze all sets and present the best 3 sets for the following student, with one highlighted as the primary recommendation:
 
 STUDENT CONTEXT:
 ${request.userContext}
@@ -242,11 +242,11 @@ OPTIMIZED COURSE SETS:
 ${jsonEncode(optimizedSets.map((set) => set.toJson()).toList())}
 
 REQUIREMENTS:
-- Choose exactly 2 sets that best serve the student
-- Each chosen set should offer a different strategic approach
-- Provide detailed reasoning for why each set was chosen
+- Choose exactly 3 sets that best serve the student
+- Each set should offer a different strategic approach
+- Mark one set as the "primary" recommendation (highlighted)
+- Provide brief reasoning for each set
 - Consider the student's preferences, academic level, and degree progression
-- Explain the differences between the two chosen sets
 
 Return your response as valid JSON with the required schema.
 ''';
@@ -262,21 +262,23 @@ Return your response as valid JSON with the required schema.
       
       // Convert the response to our existing CourseRecommendationResponse format
       final selectedSets = jsonData['selectedSets'] as List;
+      final primarySetId = jsonData['primarySetId'] as int;
       final allRecommendations = <CourseRecommendation>[];
       
-      // Convert both sets to recommendations with different priorities
+      // Convert all 3 sets to recommendations
       for (int setIndex = 0; setIndex < selectedSets.length; setIndex++) {
         final set = selectedSets[setIndex];
         final courses = set['courses'] as List;
+        final isPrimary = set['setId'] == primarySetId;
         
         for (final course in courses) {
           allRecommendations.add(CourseRecommendation(
             courseId: course['courseId'],
             courseName: course['courseName'],
             creditPoints: (course['creditPoints'] as num?)?.toDouble() ?? 3.0,
-            reason: set['reasoning'] ?? 'Selected by AI',
-            priority: setIndex + 1, // Set 1 gets priority 1, Set 2 gets priority 2
-            category: 'Set ${setIndex + 1}',
+            reason: set['reasoning'] ?? 'AI recommended',
+            priority: isPrimary ? 1 : (setIndex + 2), // Primary gets priority 1, others get 2,3
+            category: isPrimary ? 'Primary Set' : 'Set ${setIndex + 1}',
           ));
         }
       }
@@ -284,13 +286,13 @@ Return your response as valid JSON with the required schema.
       return CourseRecommendationResponse(
         recommendations: allRecommendations,
         totalCreditPoints: allRecommendations.fold(0.0, (sum, rec) => sum + rec.creditPoints),
-        summary: jsonData['summary'] ?? 'AI selected 2 optimal course sets',
-        reasoning: jsonData['overallReasoning'] ?? 'Selected based on student preferences',
+        summary: jsonData['summary'] ?? 'AI selected 3 optimal course sets with one highlighted',
+        reasoning: jsonData['overallReasoning'] ?? 'Selected based on student preferences with primary recommendation highlighted',
         generatedAt: DateTime.now(),
         originalRequest: request,
       );
     } catch (e) {
-      throw Exception('Failed to parse final set selection response: $e');
+      throw Exception('Failed to parse final three sets selection response: $e');
     }
   }
 
@@ -389,14 +391,14 @@ Return your response as valid JSON with the required schema.
     );
   }
 
-  /// Schema for final set selection (AI chooses 2 from 3)
-  static Schema _createFinalSelectionSchema() {
+  /// Schema for final three sets selection (AI chooses 3 with one highlighted)
+  static Schema _createFinalThreeSetSelectionSchema() {
     return Schema.object(
       properties: {
         'selectedSets': Schema.array(
           items: Schema.object(
             properties: {
-              'setId': Schema.number(description: 'Original set ID (0-2)'),
+              'setId': Schema.number(description: 'Original set ID'),
               'strategy': Schema.string(description: 'Strategy name for this set'),
               'reasoning': Schema.string(description: 'Why this set was chosen'),
               'courses': Schema.array(
@@ -412,11 +414,12 @@ Return your response as valid JSON with the required schema.
               'totalCredits': Schema.number(description: 'Total credits for this set'),
             },
           ),
-          description: 'Exactly 2 selected course sets',
+          description: 'Exactly 3 selected course sets',
         ),
+        'primarySetId': Schema.number(description: 'ID of the primary/highlighted set'),
         'summary': Schema.string(description: 'Brief summary of the selection'),
-        'overallReasoning': Schema.string(description: 'Overall reasoning for choosing these 2 sets'),
-        'comparison': Schema.string(description: 'How the 2 sets differ and complement each other'),
+        'overallReasoning': Schema.string(description: 'Overall reasoning for choosing these 3 sets'),
+        'comparison': Schema.string(description: 'How the 3 sets differ and complement each other'),
       },
     );
   }
@@ -477,7 +480,7 @@ Based on this feedback, intelligently modify the course sets. Consider:
 5. **If GENERAL feedback**: Use your judgment to improve based on their comments
 
 REQUIREMENTS:
-- Return exactly 2 updated course sets
+- Return exactly 3 updated course sets
 - Each set should have 5-7 courses totaling 15-18 credits
 - All course names must be in Hebrew
 - Provide clear reasoning for changes made
@@ -538,7 +541,7 @@ Guidelines:
 - Always maintain academic logic (prerequisites, progression, credit balance)
 - Consider user preferences while ensuring degree requirements are met
 - Be transparent about what changes you made and why
-- Always return exactly 2 updated course sets
+- Always return exactly 3 updated course sets
 - Prioritize user satisfaction while maintaining academic validity
 
 Your responses must be in valid JSON format with the specified schema.

@@ -269,26 +269,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
     return getSemesterDisplayName(_selectedYear!, _selectedSemester!);
   }
 
-  /// Get recommendation statistics
-  Map<String, dynamic> getRecommendationStats() {
-    if (_currentRecommendation == null) return {};
 
-    final recommendations = _currentRecommendation!.recommendations;
-    final categories = <String, int>{};
-
-    for (final rec in recommendations) {
-      categories[rec.category] = (categories[rec.category] ?? 0) + 1;
-    }
-
-    return {
-      'totalCourses': recommendations.length,
-      'totalCredits': _currentRecommendation!.totalCreditPoints,
-      'categories': categories,
-      'highPriority': recommendations.where((r) => r.priority <= 2).length,
-      'mediumPriority': recommendations.where((r) => r.priority == 3).length,
-      'lowPriority': recommendations.where((r) => r.priority >= 4).length,
-    };
-  }
 
   /// Check if a course is already taken by the student
   bool isCourseAlreadyTaken(String courseId, BuildContext context) {
@@ -305,7 +286,6 @@ class CourseRecommendationProvider extends ChangeNotifier {
       'timestamp': DateTime.now().toIso8601String(),
       'semester': getSemesterDisplayName(_selectedYear!, _selectedSemester!),
       'recommendations': _currentRecommendation!.toJson(),
-      'stats': getRecommendationStats(),
     };
   }
 
@@ -417,15 +397,16 @@ class CourseRecommendationProvider extends ChangeNotifier {
     
     // Convert each course set to multiple CourseRecommendation objects
     for (final set in courseSets) {
+      final isPrimary = set.setId == 1; // Assume first set is primary
       for (int i = 0; i < set.courses.length; i++) {
         final course = set.courses[i];
         recommendations.add(CourseRecommendation(
           courseId: course.courseId,
           courseName: course.courseName,
           creditPoints: set.totalCredits / set.courses.length, // Distribute credits evenly
-          reason: '${set.reasoning} (Set ${set.setId}, Course ${i + 1}/${set.courses.length})',
-          priority: set.setId, // Use set ID as priority
-          category: 'Set ${set.setId}',
+          reason: set.reasoning,
+          priority: isPrimary ? 1 : set.setId, // Primary gets priority 1
+          category: isPrimary ? 'Primary Set' : 'Set ${set.setId}',
         ));
       }
     }
