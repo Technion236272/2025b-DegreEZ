@@ -31,7 +31,6 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Course Prerequisite Chain")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

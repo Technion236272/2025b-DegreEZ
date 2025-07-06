@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import '../services/course_service.dart';
 import '../widgets/tree_painter.dart';
+import '../providers/theme_provider.dart';
+import 'package:provider/provider.dart';
+
 
 
 class PrerequisiteGraph extends StatefulWidget {
@@ -100,17 +103,28 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
   child: LayoutBuilder(
     builder: (context, constraints) {
       // Force the GraphView to live in a finite box, then scale it
+final themeProvider = Provider.of<ThemeProvider>(context);
 final treeNode = graphState.toTreeNode(widget.rootCourseId, _names);
+
 return InteractiveViewer(
   constrained: false,
   boundaryMargin: const EdgeInsets.all(500),
   minScale: 0.5,
-  maxScale: 5,
-  child: CustomPaint(
-    size: const Size(2000, 2000),
-    painter: TreePainter(treeNode),
+  maxScale: 3.0,
+  child: Container(
+    width: 2000,
+    height: 2000,
+    color: themeProvider.mainColor,
+    child: CustomPaint(
+      painter: TreePainter(
+        treeNode,
+        themeProvider: themeProvider,
+      ),
+    ),
   ),
 );
+
+
 
     },
   ),
