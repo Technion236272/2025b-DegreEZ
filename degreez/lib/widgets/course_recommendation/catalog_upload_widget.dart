@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
+import '../../providers/theme_provider.dart';
 
 class CatalogUploadWidget extends StatelessWidget {
   final String? catalogFilePath;
@@ -15,6 +17,8 @@ class CatalogUploadWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.read<ThemeProvider>();
+    
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -23,7 +27,7 @@ class CatalogUploadWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.upload_file, color: Theme.of(context).primaryColor),
+                Icon(Icons.upload_file, color: themeProvider.primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   'Course Catalog (Optional)',
@@ -37,7 +41,7 @@ class CatalogUploadWidget extends StatelessWidget {
             Text(
               'Upload your course catalog PDF for more accurate recommendations',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+                color: themeProvider.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
@@ -51,8 +55,8 @@ class CatalogUploadWidget extends StatelessWidget {
                   label: const Text('Select Catalog PDF'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: BorderSide(color: Theme.of(context).primaryColor),
-                    foregroundColor: Theme.of(context).primaryColor,
+                    side: BorderSide(color: themeProvider.primaryColor),
+                    foregroundColor: themeProvider.primaryColor,
                   ),
                 ),
               )
@@ -61,16 +65,16 @@ class CatalogUploadWidget extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withAlpha(26),
+                  color: themeProvider.primaryColor.withAlpha(26),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Theme.of(context).primaryColor.withAlpha(76),
+                    color: themeProvider.primaryColor.withAlpha(76),
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.picture_as_pdf, 
-                         color: Theme.of(context).primaryColor),
+                         color: themeProvider.primaryColor),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -83,7 +87,7 @@ class CatalogUploadWidget extends StatelessWidget {
                           Text(
                             'PDF file selected',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: themeProvider.textSecondary,
                             ),
                           ),
                         ],
@@ -92,7 +96,7 @@ class CatalogUploadWidget extends StatelessWidget {
                     IconButton(
                       onPressed: () => onFileSelected(null),
                       icon: const Icon(Icons.close),
-                      color: Colors.grey[600],
+                      color: themeProvider.textSecondary,
                     ),
                   ],
                 ),

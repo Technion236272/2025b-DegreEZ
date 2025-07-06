@@ -129,7 +129,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                         children: [
                           Icon(
                             provider.fastMode ? Icons.flash_on : Icons.flash_off,
-                            color: provider.fastMode ? Colors.orange : Colors.grey,
+                            color: provider.fastMode ? context.read<ThemeProvider>().warningColor : context.read<ThemeProvider>().textSecondary,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -153,7 +153,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                         onChanged: provider.setFastMode,
                         secondary: Icon(
                           provider.fastMode ? Icons.speed : Icons.psychology,
-                          color: provider.fastMode ? Colors.orange : Colors.blue,
+                          color: provider.fastMode ? context.read<ThemeProvider>().warningColor : context.read<ThemeProvider>().primaryColor,
                         ),
                       ),
                     ],
@@ -221,23 +221,23 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
               if (provider.error != null) ...[
                 const SizedBox(height: 16),
                 Card(
-                  color: Colors.red[50],
+                  color: context.read<ThemeProvider>().errorColor.withAlpha(26),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
-                        Icon(Icons.error, color: Colors.red[700]),
+                        Icon(Icons.error, color: context.read<ThemeProvider>().errorColor),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             provider.error!,
-                            style: TextStyle(color: Colors.red[700]),
+                            style: TextStyle(color: context.read<ThemeProvider>().errorColor),
                           ),
                         ),
                         IconButton(
                           onPressed: provider.clearError,
                           icon: const Icon(Icons.close),
-                          color: Colors.red[700],
+                          color: context.read<ThemeProvider>().errorColor,
                         ),
                       ],
                     ),
@@ -348,7 +348,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
+                      icon: Icon(Icons.delete, color: context.read<ThemeProvider>().errorColor),
                       tooltip: 'Delete',
                       onPressed: () async {
                         final confirm = await showDialog<bool>(
@@ -368,9 +368,9 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                                   TextButton(
                                     onPressed:
                                         () => Navigator.pop(context, true),
-                                    child: const Text(
+                                    child: Text(
                                       'Delete',
-                                      style: TextStyle(color: Colors.red),
+                                      style: TextStyle(color: context.read<ThemeProvider>().errorColor),
                                     ),
                                   ),
                                 ],
@@ -532,9 +532,9 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       if (!mounted) return;
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course recommendations generated successfully!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Course recommendations generated successfully!'),
+          backgroundColor: context.read<ThemeProvider>().successColor,
         ),
       );
     }
@@ -636,14 +636,14 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 ? '${details.courseName} added to $selectedSemester.'
                 : 'Failed to add ${details.courseName}.',
           ),
-          backgroundColor: success ? Colors.green : Colors.red,
+          backgroundColor: success ? context.read<ThemeProvider>().successColor : context.read<ThemeProvider>().errorColor,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error adding course: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: context.read<ThemeProvider>().errorColor,
         ),
       );
     }
@@ -660,9 +660,9 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Feedback processed! Recommendations updated.'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('✅ Feedback processed! Recommendations updated.'),
+            backgroundColor: context.read<ThemeProvider>().successColor,
           ),
         );
       }
@@ -671,7 +671,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Error processing feedback: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: context.read<ThemeProvider>().errorColor,
           ),
         );
       }

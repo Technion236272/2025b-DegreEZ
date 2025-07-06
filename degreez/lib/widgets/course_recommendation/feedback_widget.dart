@@ -63,7 +63,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
             Text(
               'Help me improve the recommendations by sharing your thoughts:',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: themeProvider.textSecondary,
               ),
             ),
             
@@ -121,6 +121,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
   }
 
   Widget _buildQuickActionButtons() {
+    final themeProvider = context.read<ThemeProvider>();
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -128,18 +129,20 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
         _buildQuickButton(
           ' Replace a course',
           FeedbackType.replace,
-          Colors.orange,
+          themeProvider.warningColor,
+          themeProvider,
         ),
         _buildQuickButton(
           '❓ Ask a question',
           FeedbackType.question,
-          Colors.blue,
+          themeProvider.primaryColor,
+          themeProvider,
         ),
       ],
     );
   }
 
-  Widget _buildQuickButton(String label, FeedbackType type, Color color) {
+  Widget _buildQuickButton(String label, FeedbackType type, Color color, ThemeProvider themeProvider) {
     final isSelected = _selectedType == type;
     
     return ActionChip(
@@ -156,7 +159,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
       },
       backgroundColor: isSelected ? color.withOpacity(0.2) : null,
       side: BorderSide(
-        color: isSelected ? color : Colors.grey,
+        color: isSelected ? color : themeProvider.textSecondary,
         width: isSelected ? 2 : 1,
       ),
     );

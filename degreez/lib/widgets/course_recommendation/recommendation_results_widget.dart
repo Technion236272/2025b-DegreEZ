@@ -52,6 +52,13 @@ class RecommendationResultsWidget extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  'Reasoning',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -64,7 +71,7 @@ class RecommendationResultsWidget extends StatelessWidget {
                   child: Text(
                     recommendation.reasoning,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.read<ThemeProvider>().primaryColor,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -99,12 +106,12 @@ class RecommendationResultsWidget extends StatelessWidget {
                   onFeedbackSubmitted: onFeedbackSubmitted!,
                 );
               }
-              return const Card(
+              return Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Text(
                     '💬 Feedback widget is available only on newly generated recommendations.',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: context.read<ThemeProvider>().textSecondary),
                   ),
                 ),
               );
@@ -190,13 +197,13 @@ class RecommendationResultsWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isPrimary 
                           ? context.read<ThemeProvider>().primaryColor
-                          : Colors.grey[300],
+                          : context.read<ThemeProvider>().surfaceColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         '${totalCredits.toStringAsFixed(1)} credits',
                         style: TextStyle(
-                          color: isPrimary ? Colors.white : Colors.grey[700],
+                          color: isPrimary ? context.read<ThemeProvider>().surfaceColor : context.read<ThemeProvider>().textSecondary,
                           fontWeight: FontWeight.w500,
                           fontSize: 12,
                         ),
@@ -214,7 +221,7 @@ class RecommendationResultsWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isPrimary 
                         ? context.read<ThemeProvider>().primaryColor.withAlpha(26)
-                        : Colors.grey[50],
+                        : context.read<ThemeProvider>().surfaceColor,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -233,7 +240,7 @@ class RecommendationResultsWidget extends StatelessWidget {
                               Text(
                                 '${course.courseId} • ${course.creditPoints} credits',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
+                                  color: context.read<ThemeProvider>().textSecondary,
                                 ),
                               ),
                             ],

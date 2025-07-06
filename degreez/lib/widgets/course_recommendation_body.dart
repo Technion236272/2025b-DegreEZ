@@ -323,7 +323,7 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
+                      icon: Icon(Icons.delete, color: context.read<ThemeProvider>().errorColor),
                       tooltip: 'Delete',
                       onPressed: () async {
                         final confirm = await showDialog<bool>(
@@ -340,9 +340,9 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true),
-                                child: const Text(
+                                child: Text(
                                   'Delete',
-                                  style: TextStyle(color: Colors.red),
+                                  style: TextStyle(color: context.read<ThemeProvider>().errorColor),
                                 ),
                               ),
                             ],
@@ -377,9 +377,9 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
       if (provider.currentRecommendation != null) {
         _tabController.animateTo(1); // Switch to Results tab
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recommendations generated successfully!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Recommendations generated successfully!'),
+            backgroundColor: context.read<ThemeProvider>().successColor,
           ),
         );
       }
@@ -387,7 +387,7 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error generating recommendations: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: context.read<ThemeProvider>().errorColor,
         ),
       );
     }
@@ -401,7 +401,7 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Added $courseName to semester'),
-        backgroundColor: Colors.green,
+        backgroundColor: context.read<ThemeProvider>().successColor,
       ),
     );
   }
@@ -416,9 +416,9 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Feedback processed! Recommendations updated.'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('✅ Feedback processed! Recommendations updated.'),
+            backgroundColor: context.read<ThemeProvider>().successColor,
           ),
         );
       }
@@ -427,7 +427,7 @@ class _CourseRecommendationBodyState extends State<CourseRecommendationBody>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Error processing feedback: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: context.read<ThemeProvider>().errorColor,
           ),
         );
       }

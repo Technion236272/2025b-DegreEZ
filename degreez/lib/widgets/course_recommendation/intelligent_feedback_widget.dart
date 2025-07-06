@@ -68,9 +68,9 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
                       final hasConversation = provider.getConversationHistory().isNotEmpty;
                       if (!hasConversation) return const SizedBox();
                       return IconButton(
-                        icon: Icon(
+                        icon:                        Icon(
                           Icons.clear_all,
-                          color: Colors.grey[600],
+                          color: themeProvider.textSecondary,
                           size: 18,
                         ),
                         onPressed: () {
@@ -101,7 +101,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
             Text(
               'Ask questions or request specific course replacements:',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: themeProvider.textSecondary,
               ),
             ),
             
@@ -165,15 +165,15 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
             decoration: BoxDecoration(
               color: themeProvider.cardColor,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: themeProvider.borderPrimary),
             ),
             child: Row(
               children: [
-                Icon(Icons.chat_bubble_outline, color: Colors.grey[400]),
+                Icon(Icons.chat_bubble_outline, color: themeProvider.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   'No conversation yet. Start by asking a question!',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: themeProvider.textSecondary),
                 ),
               ],
             ),
@@ -185,7 +185,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
           decoration: BoxDecoration(
             color: themeProvider.cardColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: themeProvider.borderPrimary),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,9 +238,8 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
         children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: message.isUser 
-                ? themeProvider.primaryColor 
-                : Colors.grey[400],
+            backgroundColor: message.isUser                ? themeProvider.primaryColor
+                : themeProvider.textSecondary,
             child: Icon(
               message.isUser ? Icons.person : Icons.smart_toy,
               size: 14,
@@ -254,7 +253,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
               decoration: BoxDecoration(
                 color: message.isUser 
                     ? themeProvider.primaryColor.withOpacity(0.1)
-                    : Colors.grey[100],
+                    : themeProvider.surfaceColor,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -296,7 +295,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
                     _formatTime(message.timestamp),
                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.grey[500],
+                      color: themeProvider.textSecondary,
                     ),
                   ),
                 ],
@@ -318,6 +317,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
             Icons.help_outline,
             themeProvider.primaryColor,
             'Ask about recommendations, courses, or get explanations',
+            themeProvider,
           ),
         ),
         const SizedBox(width: 12),
@@ -326,15 +326,16 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
             'Replace Course',
             FeedbackType.replace,
             Icons.swap_horiz,
-            Colors.orange,
+            themeProvider.warningColor,
             'Request to replace a specific course',
+            themeProvider,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActionButton(String label, FeedbackType type, IconData icon, Color color, String tooltip) {
+  Widget _buildActionButton(String label, FeedbackType type, IconData icon, Color color, String tooltip, ThemeProvider themeProvider) {
     final isSelected = _selectedType == type;
     
     return Tooltip(
@@ -354,7 +355,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
           decoration: BoxDecoration(
             color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
             border: Border.all(
-              color: isSelected ? color : Colors.grey.shade300,
+              color: isSelected ? color : themeProvider.borderPrimary,
               width: isSelected ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(8),
@@ -363,14 +364,14 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
             children: [
               Icon(
                 icon,
-                color: isSelected ? color : Colors.grey[600],
+                color: isSelected ? color : themeProvider.textSecondary,
                 size: 24,
               ),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? color : Colors.grey[600],
+                  color: isSelected ? color : themeProvider.textSecondary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   fontSize: 12,
                 ),

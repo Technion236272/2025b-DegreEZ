@@ -41,7 +41,7 @@ class RecommendationStatsWidget extends StatelessWidget {
             Text(
               semester,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
+                color: context.read<ThemeProvider>().textSecondary,
               ),
             ),
             const SizedBox(height: 16),
