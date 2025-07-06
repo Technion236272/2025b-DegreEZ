@@ -46,7 +46,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage> {
             const SizedBox(height: 16),
             if (selectedCourse != null && coursePrereqs.isNotEmpty)
               Expanded(
-                child: SingleChildScrollView(
+              
                   child: PrerequisiteGraph(
                     rootCourseId: selectedCourse!.courseNumber,
                     studentFaculty: context.read<StudentProvider>().student?.faculty ?? '',
@@ -54,7 +54,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage> {
                     courseFaculties: courseFaculties,
                     coursePrereqs: coursePrereqs,
                   ),
-                ),
+                
               ),
 
             if (selectedCourse != null && enrichedPrereqs.isEmpty)
