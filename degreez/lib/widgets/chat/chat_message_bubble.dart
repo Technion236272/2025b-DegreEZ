@@ -108,6 +108,7 @@ class ChatMessageBubble extends StatelessWidget {
                         _buildPdfAttachment(themeProvider),
 
                       const SizedBox(height: 4),
+                      Row(children: [
                       Text(
                         _formatTime(message.timestamp),
                         style: TextStyle(
@@ -118,6 +119,15 @@ class ChatMessageBubble extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
+                      IconButton(onPressed: () {
+            Clipboard.setData(ClipboardData(text: message.text));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Copied to clipboard!")),
+            );
+          }, 
+                      icon: Icon(Icons.copy,size: 15,))
+                      ],),
+
                     ],
                   ),
                 ),

@@ -16,6 +16,8 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import '../widgets/next_class_button.dart';
+import '../mixins/course_event_mixin.dart';
+
 
 class CourseMarkerData {
   final LatLng point;
@@ -501,6 +503,11 @@ class _CourseMapPageState extends State<CourseMapPage> {
           _courseLocations.putIfAbsent(label, () => []).add(loc);
 
           visibleEvents[label] = true;
+          int hour = int.parse(entry.time.split(" ")[0].split(":")[0]);
+          int minute = int.parse(entry.time.split(" ")[0].split(":")[1]);
+          int day = (parseHebrewDay(entry.day) > DateTime.now().weekday)
+          ? DateTime.now().day + (parseHebrewDay(entry.day) - DateTime.now().weekday)
+          : DateTime.now().day + 7 + (parseHebrewDay(entry.day) - DateTime.now().weekday);
           markers.add(
             CourseMarkerData(
               point: loc,
@@ -508,6 +515,10 @@ class _CourseMapPageState extends State<CourseMapPage> {
               color: courseColor,
               buildingName: entry.building,
               roomNumber: entry.room.toString(),
+              nextClassTime: DateTime.now().copyWith(
+               day: day, 
+              hour:hour,
+              minute:minute ),
             ),
           );
           debugPrint('📌 Added marker: $label at $loc (color: $courseColor)');
@@ -1077,8 +1088,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
   CourseMarkerData? _getNextClass() {
     // This would integrate with your calendar/schedule data
     // For now, return the closest visible marker
-    if (userLocation == null) return null;
-
+    // if (userLocation == null) return null;
     final visibleMarkers =
         courseMarkers
             .where((marker) => visibleEvents[marker.label] ?? false)
@@ -1086,20 +1096,24 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
     if (visibleMarkers.isEmpty) return null;
 
-    visibleMarkers.sort((a, b) {
-      final distA =
-          _calculateDistance(userLocation!, a.point) ?? double.infinity;
-      final distB =
-          _calculateDistance(userLocation!, b.point) ?? double.infinity;
-      return distA.compareTo(distB);
-    });
+    DateTime minTime = DateTime.now().add(Duration(days: 7));
+    CourseMarkerData? minTimeMarker;
+    for (var marker in visibleMarkers) {
+      if(marker.nextClassTime == null) continue;
 
-    return visibleMarkers.first;
+      if (marker.nextClassTime!.isBefore(minTime) || 
+             (marker.nextClassTime!.isAtSameMomentAs(minTime)))
+             {
+              minTime = marker.nextClassTime!;
+              minTimeMarker = marker;
+             } 
+    }
+
+    return minTimeMarker;
   }
 
   List<CourseMarkerData> _getNearbyClasses() {
     if (userLocation == null) return [];
-
     return courseMarkers
         .where((marker) {
           final distance = _calculateDistance(userLocation!, marker.point);
