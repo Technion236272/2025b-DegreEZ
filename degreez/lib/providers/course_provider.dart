@@ -97,6 +97,7 @@ class CourseProvider with ChangeNotifier {
     return _coursesBySemester[semesterKey] ?? [];
   }
 
+// Get all courses by semester
   Map<String, List<StudentCourse>> get coursesBySemester =>
       Map.unmodifiable(_coursesBySemester);
   CourseLoadingState get loadingState => _loadingState;

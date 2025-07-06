@@ -7,12 +7,11 @@ import '../providers/theme_provider.dart';
 import '../widgets/course_recommendation/semester_selector_widget.dart';
 import '../widgets/course_recommendation/catalog_upload_widget.dart';
 import '../widgets/course_recommendation/recommendation_results_widget.dart';
-import '../widgets/course_recommendation/recommendation_stats_widget.dart';
 import '../providers/course_provider.dart';
 import '../providers/student_provider.dart';
 import '../services/course_service.dart';
 import '../models/student_model.dart';
-import '../services/course_recommendation_service.dart';
+import '../models/course_recommendation_models.dart';
 
 class CourseRecommendationPage extends StatefulWidget {
   const CourseRecommendationPage({super.key});
@@ -78,7 +77,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     return Consumer<CourseRecommendationProvider>(
       builder: (context, provider, child) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          // padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -110,6 +109,51 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                         'Get personalized course recommendations based on your academic history and degree requirements.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Fast Mode Toggle
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            provider.fastMode ? Icons.flash_on : Icons.flash_off,
+                            color: provider.fastMode ? Colors.orange : Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Recommendation Mode',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        title: Text(provider.fastMode ? 'Fast Mode' : 'Optimized Mode'),
+                        subtitle: Text(
+                          provider.fastMode 
+                            ? 'Quick recommendations  - ~1-2 minutes'
+                            : 'AI-optimized recommendations (All phases) - ~10-12 minutes',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        value: provider.fastMode,
+                        onChanged: provider.setFastMode,
+                        secondary: Icon(
+                          provider.fastMode ? Icons.speed : Icons.psychology,
+                          color: provider.fastMode ? Colors.orange : Colors.blue,
                         ),
                       ),
                     ],
@@ -156,7 +200,9 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                           : const Icon(Icons.auto_awesome),
                   label: Text(
                     provider.isLoading
-                        ? 'Generating Recommendations...'
+                        ? (provider.fastMode 
+                          ? 'Generating Fast Recommendations...'
+                          : 'Generating Optimized Recommendations...')
                         : 'Generate Recommendations',
                     style: const TextStyle(fontSize: 16),
                   ),
@@ -237,19 +283,6 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Stats Summary
-              RecommendationStatsWidget(
-                stats: provider.getRecommendationStats(),
-                semester:
-                    provider
-                        .currentRecommendation
-                        ?.originalRequest
-                        .semesterDisplayName ??
-                    'Unknown',
-              ),
-
-              const SizedBox(height: 16),
-
               // Recommendations List
               RecommendationResultsWidget(
                 recommendation: provider.currentRecommendation!,
@@ -260,6 +293,10 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                           courseId,
                           courseName,
                         ),
+                onFeedbackSubmitted: (feedback) => _handleFeedback(
+                  context,
+                  feedback,
+                ),
               ),
             ],
           ),
@@ -487,7 +524,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
   }
 
   void _generateRecommendations(CourseRecommendationProvider provider) async {
-    await provider.generateRecommendations(context);
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await provider.generateRecommendations(context, courseProvider);
 
     if (provider.currentRecommendation != null) {
       // Switch to results tab
@@ -554,52 +592,90 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
       return;
     }
 
-    // Match course by name
-    final matchedList = await CourseRecommendationService().fetchCourseDetails(
-      [aiCourseId],
-      apiYear,
-      semesterCode,
-    );
+    // Match course by ID using CourseService directly
+    try {
+      final courseInfo = await CourseService.getCourseDetails(
+        apiYear,
+        semesterCode,
+        aiCourseId,
+      );
 
-    if (matchedList.isEmpty) {
+      if (courseInfo == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Course details not found for "$aiCourseName".'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final details = CourseRecommendationDetails.fromCourseService(courseInfo);
+
+      final course = StudentCourse(
+        courseId: details.courseId,
+        name: details.courseName,
+        finalGrade: '',
+        lectureTime: '',
+        tutorialTime: '',
+        labTime: '',
+        workshopTime: '',
+        creditPoints: details.creditPoints,
+      );
+
+      final success = await courseProvider.addCourseToSemester(
+        studentId,
+        selectedSemester,
+        course,
+        fallbackSemester,
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Course details not found for "$aiCourseName".'),
+          content: Text(
+            success
+                ? '${details.courseName} added to $selectedSemester.'
+                : 'Failed to add ${details.courseName}.',
+          ),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding course: $e'),
           backgroundColor: Colors.red,
         ),
       );
-      return;
     }
+  }
 
-    final details = matchedList.first;
-
-    final course = StudentCourse(
-      courseId: details.courseId,
-      name: details.courseName,
-      finalGrade: '',
-      lectureTime: '',
-      tutorialTime: '',
-      labTime: '',
-      workshopTime: '',
-      creditPoints: details.creditPoints,
-    );
-
-    final success = await courseProvider.addCourseToSemester(
-      studentId,
-      selectedSemester,
-      course,
-      fallbackSemester,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? '${details.courseName} added to $selectedSemester.'
-              : 'Failed to add ${details.courseName}.',
-        ),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
-    );
+  /// Handle user feedback submission
+  Future<void> _handleFeedback(
+    BuildContext context,
+    UserFeedback feedback,
+  ) async {
+    try {
+      final provider = context.read<CourseRecommendationProvider>();
+      await provider.processFeedback(feedback);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Feedback processed! Recommendations updated.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error processing feedback: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

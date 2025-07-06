@@ -10,8 +10,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class CourseRecommendationProvider extends ChangeNotifier {
-  final CourseRecommendationService _recommendationService =
-      CourseRecommendationService();
+  CourseRecommendationService? _recommendationService;
+
+  // Initialize the service when we have a CourseProvider
+  void _initializeService(CourseProvider courseProvider) {
+    _recommendationService ??= CourseRecommendationService(courseProvider);
+  }
 
   // State variables
   bool _isLoading = false;
@@ -24,6 +28,11 @@ class CourseRecommendationProvider extends ChangeNotifier {
   int? _selectedSemester;
   String? _catalogFilePath;
   List<Map<String, dynamic>> _availableSemesters = [];
+  bool _fastMode = false; // NEW: Fast mode toggle
+
+  // Feedback state
+  RecommendationSession? _currentSession;
+  bool _isProcessingFeedback = false;
 
   Future<List<Map<String, dynamic>>> getStudentSemesterList(
     String studentId,
@@ -105,15 +114,17 @@ class CourseRecommendationProvider extends ChangeNotifier {
 */
   // Getters
   bool get isLoading => _isLoading;
+  bool get isProcessingFeedback => _isProcessingFeedback;
   String? get error => _error;
-  CourseRecommendationResponse? get currentRecommendation =>
-      _currentRecommendation;
+  CourseRecommendationResponse? get currentRecommendation => _currentRecommendation;
+  RecommendationSession? get currentSession => _currentSession;
   List<CourseRecommendationResponse> get previousRecommendations =>
       _previousRecommendations;
   int? get selectedYear => _selectedYear;
   int? get selectedSemester => _selectedSemester;
   String? get catalogFilePath => _catalogFilePath;
   List<Map<String, dynamic>> get availableSemesters => _availableSemesters;
+  bool get fastMode => _fastMode; // NEW: Fast mode getter
 
   bool get canGenerateRecommendations =>
       _selectedYear != null && _selectedSemester != null && !_isLoading;
@@ -170,9 +181,14 @@ Future<void> loadSavedRecommendation() async {
   }
 }
 
+  /// Set fast mode
+  void setFastMode(bool fastMode) {
+    _fastMode = fastMode;
+    notifyListeners();
+  }
 
   /// Generate course recommendations
-  Future<void> generateRecommendations(BuildContext context) async {
+  Future<void> generateRecommendations(BuildContext context, CourseProvider courseProvider) async {
     if (!canGenerateRecommendations) {
       _error = 'Please select a semester and year first';
       notifyListeners();
@@ -200,14 +216,38 @@ Future<void> loadSavedRecommendation() async {
         ),
       );
 
+      // Initialize session for interactive feedback
+      _initializeSession(request);
+
+      // Initialize the service with the CourseProvider
+      _initializeService(courseProvider);
+      
       // Generate recommendations
-      final response = await _recommendationService.generateRecommendations(
+      final response = await _recommendationService!.generateRecommendations(
         request,
+        fastMode: _fastMode, // Use provider's fast mode setting
       );
 
       // Update state
       _currentRecommendation = response;
       _previousRecommendations.insert(0, response);
+
+      // Extract course sets from the response and store in session
+      // The response contains the final 2 sets, but we need to get the course sets format
+      // For now, convert the response back to course sets for the feedback system
+      final courseSets = _convertResponseToCourseSets(response);
+      _currentSession = _currentSession!.copyWith(
+        currentRecommendations: courseSets,
+        conversation: [
+          ConversationMessage(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            isUser: false,
+            content: 'Here are your personalized course recommendations! ${response.summary}',
+            timestamp: DateTime.now(),
+            recommendations: courseSets,
+          ),
+        ],
+      );
 
       // Keep only last 10 recommendations
       if (_previousRecommendations.length > 10) {
@@ -246,14 +286,13 @@ Future<void> loadSavedRecommendation() async {
     String semesterName;
     switch (semester) {
       case 200:
-        semesterName =
-            'Winter $year-${year+1}'; // Academic year spans 2 years
+        semesterName = 'Winter $year-${year + 1}'; // Academic year spans 2 years
         break;
       case 201:
         semesterName = 'Spring ${year + 1}';
         break;
       case 202:
-        semesterName = 'Summer ${year + 1}';
+        semesterName = 'Summer $year';
         break;
       default:
         semesterName = 'Semester $semester $year';
@@ -267,26 +306,7 @@ Future<void> loadSavedRecommendation() async {
     return getSemesterDisplayName(_selectedYear!, _selectedSemester!);
   }
 
-  /// Get recommendation statistics
-  Map<String, dynamic> getRecommendationStats() {
-    if (_currentRecommendation == null) return {};
 
-    final recommendations = _currentRecommendation!.recommendations;
-    final categories = <String, int>{};
-
-    for (final rec in recommendations) {
-      categories[rec.category] = (categories[rec.category] ?? 0) + 1;
-    }
-
-    return {
-      'totalCourses': recommendations.length,
-      'totalCredits': _currentRecommendation!.totalCreditPoints,
-      'categories': categories,
-      'highPriority': recommendations.where((r) => r.priority <= 2).length,
-      'mediumPriority': recommendations.where((r) => r.priority == 3).length,
-      'lowPriority': recommendations.where((r) => r.priority >= 4).length,
-    };
-  }
 
   /// Check if a course is already taken by the student
   bool isCourseAlreadyTaken(String courseId, BuildContext context) {
@@ -303,7 +323,6 @@ Future<void> loadSavedRecommendation() async {
       'timestamp': DateTime.now().toIso8601String(),
       'semester': getSemesterDisplayName(_selectedYear!, _selectedSemester!),
       'recommendations': _currentRecommendation!.toJson(),
-      'stats': getRecommendationStats(),
     };
   }
 
@@ -332,4 +351,171 @@ Future<void> loadSavedRecommendation() async {
 
 }
 
+  /// Process user feedback and get updated recommendations
+  Future<void> processFeedback(UserFeedback feedback) async {
+    if (_currentSession == null) {
+      throw Exception('No active recommendation session');
+    }
+
+    _isProcessingFeedback = true;
+    notifyListeners();
+
+    try {
+      // Add user feedback to conversation
+      final userMessage = ConversationMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        isUser: true,
+        content: feedback.message,
+        timestamp: DateTime.now(),
+        feedback: feedback,
+      );
+
+      // Create feedback processing request
+      final request = FeedbackProcessingRequest(
+        session: _currentSession!.copyWith(
+          conversation: [..._currentSession!.conversation, userMessage],
+        ),
+        feedback: feedback,
+      );
+
+      // Process feedback through the service
+      final feedbackResponse = await _recommendationService!.processFeedback(request);
+
+      // Update current session with the improved course sets
+      _currentSession = _currentSession!.copyWith(
+        conversation: [
+          ..._currentSession!.conversation,
+          userMessage,
+          ConversationMessage(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            isUser: false,
+            content: feedbackResponse.explanation,
+            timestamp: DateTime.now(),
+            recommendations: feedbackResponse.updatedRecommendations,
+          ),
+        ],
+        currentRecommendations: feedbackResponse.updatedRecommendations,
+        lastUpdated: DateTime.now(),
+      );
+
+      // Convert course sets back to CourseRecommendationResponse format for UI compatibility
+      final updatedRecommendation = _convertCourseSetsToResponse(
+        feedbackResponse.updatedRecommendations,
+        feedbackResponse.explanation,
+        _currentSession!.originalRequest,
+      );
+
+      _currentRecommendation = updatedRecommendation;
+      _error = null;
+
+      debugPrint('✅ Feedback processed successfully - ${feedbackResponse.updatedRecommendations.length} sets updated');
+    } catch (e) {
+      _error = 'Failed to process feedback: $e';
+      debugPrint('❌ Error processing feedback: $e');
+    } finally {
+      _isProcessingFeedback = false;
+      notifyListeners();
+    }
+  }
+
+  /// Initialize a new recommendation session
+  void _initializeSession(CourseRecommendationRequest request) {
+    _currentSession = RecommendationSession(
+      sessionId: DateTime.now().millisecondsSinceEpoch.toString(),
+      originalRequest: request,
+      conversation: [],
+      createdAt: DateTime.now(),
+      lastUpdated: DateTime.now(),
+      isActive: true,
+    );
+  }
+
+  /// Get conversation history for UI display
+  List<ConversationMessage> getConversationHistory() {
+    return _currentSession?.conversation ?? [];
+  }
+
+  /// End current session
+  void endSession() {
+    if (_currentSession != null) {
+      _currentSession = _currentSession!.copyWith(isActive: false);
+    }
+    notifyListeners();
+  }
+
+  /// Convert course sets to CourseRecommendationResponse for UI compatibility
+  CourseRecommendationResponse _convertCourseSetsToResponse(
+    List<CourseSet> courseSets,
+    String explanation,
+    CourseRecommendationRequest originalRequest,
+  ) {
+    final recommendations = <CourseRecommendation>[];
+    
+    // Convert each course set to multiple CourseRecommendation objects
+    for (final set in courseSets) {
+      final isPrimary = set.setId == 1; // Assume first set is primary
+      for (int i = 0; i < set.courses.length; i++) {
+        final course = set.courses[i];
+        recommendations.add(CourseRecommendation(
+          courseId: course.courseId,
+          courseName: course.courseName,
+          creditPoints: set.totalCredits / set.courses.length, // Distribute credits evenly
+          reason: set.reasoning,
+          priority: isPrimary ? 1 : set.setId, // Primary gets priority 1
+          category: isPrimary ? 'Primary Set' : 'Set ${set.setId}',
+        ));
+      }
+    }
+
+    return CourseRecommendationResponse(
+      recommendations: recommendations,
+      totalCreditPoints: courseSets.fold(0.0, (sum, set) => sum + set.totalCredits),
+      summary: explanation,
+      reasoning: 'Updated recommendations based on your feedback',
+      generatedAt: DateTime.now(),
+      originalRequest: originalRequest,
+    );
+  }
+
+  /// Convert CourseRecommendationResponse back to CourseSet format for feedback system
+  List<CourseSet> _convertResponseToCourseSets(CourseRecommendationResponse response) {
+    // Group recommendations by category/priority to reconstruct sets
+    final setMap = <String, List<CourseRecommendation>>{};
+    
+    for (final recommendation in response.recommendations) {
+      final setKey = recommendation.category.isNotEmpty 
+          ? recommendation.category 
+          : 'Set ${recommendation.priority}';
+      setMap.putIfAbsent(setKey, () => []).add(recommendation);
+    }
+
+    final courseSets = <CourseSet>[];
+    var setId = 1;
+
+    for (final entry in setMap.entries) {
+      final courses = entry.value.map((rec) => CourseInSet(
+        courseId: rec.courseId,
+        courseName: rec.courseName,
+      )).toList();
+
+      final totalCredits = entry.value.fold(0.0, (sum, rec) => sum + rec.creditPoints);
+      final reasoning = entry.value.isNotEmpty 
+          ? entry.value.first.reason 
+          : 'Course set ${entry.key}';
+
+      courseSets.add(CourseSet(
+        setId: setId++,
+        courses: courses,
+        totalCredits: totalCredits,
+        reasoning: reasoning,
+      ));
+    }
+
+    return courseSets;
+  }
+
+  /// Get current course sets for feedback (from session)
+  List<CourseSet> getCurrentCourseSets() {
+    return _currentSession?.currentRecommendations ?? [];
+  }
 }
