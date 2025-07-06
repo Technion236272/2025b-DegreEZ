@@ -318,10 +318,18 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
     if (currentIndex < allExams.length - 1) {
       final currentExam = allExams[currentIndex];
       final nextExam = allExams[currentIndex + 1];
-
+      var currentTime = DateTime.now();
       if (currentExam.examDate != null && nextExam.examDate != null) {
         final daysDifference =
-            nextExam.examDate!.difference(currentExam.examDate!).inDays;
+            currentTime.copyWith(
+            year: nextExam.examDate!.year,
+            month: nextExam.examDate!.month,
+            day: nextExam.examDate!.day,
+            ).difference(currentTime.copyWith(
+              year: currentExam.examDate!.year,
+            month: currentExam.examDate!.month,
+            day: currentExam.examDate!.day,
+              )).inDays;
 
         Color indicatorColor;
         IconData indicatorIcon;
@@ -334,7 +342,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         } else if (daysDifference == 1) {
           indicatorColor = Colors.orange;
           indicatorIcon = Icons.schedule;
-          indicatorText = 'Next day';
+          indicatorText = 'One day';
         } else if (daysDifference <= 3) {
           indicatorColor = Colors.amber;
           indicatorIcon = Icons.schedule;
@@ -363,7 +371,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
               Icon(indicatorIcon, size: 14, color: indicatorColor),
               const SizedBox(width: 4),
               Text(
-                '$indicatorText until ${nextExam.courseId}',
+                indicatorText == 'Same day'
+                ?'Same day as ${nextExam.courseId}'
+                :'$indicatorText until ${nextExam.courseId}',
                 style: TextStyle(
                   fontSize: 11,
                   color: indicatorColor,
