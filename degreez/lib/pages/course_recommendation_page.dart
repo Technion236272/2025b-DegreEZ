@@ -334,7 +334,6 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: context.read<ThemeProvider>().primaryColor,
-                  child: Text('${recommendation.recommendations.length}'),
                 ),
                 title: Text(
                   provider.getSemesterDisplayName(
@@ -343,7 +342,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   ),
                 ),
                 subtitle: Text(
-                  '${recommendation.totalCreditPoints} credits • ${recommendation.generatedAt.toString().split(' ')[0]}',
+                  '${recommendation.generatedAt.toString().split(' ')[0]}',
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
