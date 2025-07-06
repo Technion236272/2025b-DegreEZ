@@ -16,13 +16,22 @@ class TreePainter extends CustomPainter {
   final double nodeWidth;
   final double nodeHeight;
   final Map<String, Offset> _positions = {};
+  Rect? _boundingBox;
   
+ Rect? getBoundingBox() => _boundingBox;
+
+
   TreePainter(
     this.root, {
     required this.themeProvider, 
     this.nodeWidth = 120,
     this.nodeHeight = 60,
   });
+
+void _updateBoundingBox(Offset center) {
+  final rect = Rect.fromCenter(center: center, width: nodeWidth, height: nodeHeight);
+  _boundingBox = _boundingBox == null ? rect : _boundingBox!.expandToInclude(rect);
+}
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -57,6 +66,9 @@ class TreePainter extends CustomPainter {
     final centerX = x + (totalWidth - nodeWidth) / 2;
     final nodeCenter = Offset(centerX + nodeWidth / 2, y + nodeHeight / 2);
     _positions[node.id] = nodeCenter;
+    _updateBoundingBox(nodeCenter);
+
+    
 
     // Draw edges from children
     for (final child in node.children) {
@@ -81,7 +93,7 @@ class TreePainter extends CustomPainter {
       canvas.drawShadow(Path()..addRRect(rect), Colors.black45, 4, false);
     }
 
-    canvas.drawRRect(rect, Paint()..color = themeProvider.primaryColor);
+    canvas.drawRRect(rect, Paint()..color = themeProvider.secondaryColor);
 
     drawNodeLabel(label, Offset(x, y), canvas);
   }

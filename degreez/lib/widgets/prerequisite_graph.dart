@@ -5,8 +5,6 @@ import '../widgets/tree_painter.dart';
 import '../providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
-
-
 class PrerequisiteGraph extends StatefulWidget {
   final String rootCourseId;
   final String studentFaculty;
@@ -32,6 +30,27 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
   final PageController _pageController = PageController(initialPage: 0);
   late Map<String, String> _names;
   int _current = 0;
+  final TransformationController _transformationController =
+      TransformationController();
+  final GlobalKey _graphKey = GlobalKey();
+
+  void _zoomToFit(Rect bounds, Size viewportSize) {
+    const padding = 40.0;
+
+    final scaleX = (viewportSize.width - padding * 2) / bounds.width;
+    final scaleY = (viewportSize.height - padding * 2) / bounds.height;
+    final scale = scaleX < scaleY ? scaleX : scaleY;
+
+    final dx =
+        -bounds.left * scale + (viewportSize.width - bounds.width * scale) / 2;
+    final dy =
+        -bounds.top * scale + (viewportSize.height - bounds.height * scale) / 2;
+
+    _transformationController.value =
+        Matrix4.identity()
+          ..translate(dx, dy)
+          ..scale(scale);
+  }
 
   @override
   void initState() {
@@ -81,11 +100,12 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
       return const Center(child: Text('No valid prerequisite graphs found.'));
     }
 
-    final builder = BuchheimWalkerConfiguration()
-      ..siblingSeparation = 30
-      ..levelSeparation = 40
-      ..subtreeSeparation = 30
-      ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
+    final builder =
+        BuchheimWalkerConfiguration()
+          ..siblingSeparation = 30
+          ..levelSeparation = 40
+          ..subtreeSeparation = 30
+          ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
     return Column(
       children: [
@@ -98,38 +118,44 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
             onPageChanged: (i) => setState(() => _current = i),
             itemBuilder: (_, index) {
               final graphState = _allStates[index];
-       return Padding(
-  padding: const EdgeInsets.all(8),
-  child: LayoutBuilder(
-    builder: (context, constraints) {
-      // Force the GraphView to live in a finite box, then scale it
-final themeProvider = Provider.of<ThemeProvider>(context);
-final treeNode = graphState.toTreeNode(widget.rootCourseId, _names);
+              return Padding(
+                padding: const EdgeInsets.all(8),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Force the GraphView to live in a finite box, then scale it
+                    final themeProvider = Provider.of<ThemeProvider>(context);
+                    final treeNode = graphState.toTreeNode(
+                      widget.rootCourseId,
+                      _names,
+                    );
+                    final painter = TreePainter(
+                      treeNode,
+                      themeProvider: themeProvider,
+                    );
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final bounds = painter.getBoundingBox();
+                      if (bounds != null) {
+                        _zoomToFit(bounds, constraints.biggest);
+                      }
+                    });
 
-return InteractiveViewer(
-  constrained: false,
-  boundaryMargin: const EdgeInsets.all(500),
-  minScale: 0.5,
-  maxScale: 3.0,
-  child: Container(
-    width: 2000,
-    height: 2000,
-    color: themeProvider.mainColor,
-    child: CustomPaint(
-      painter: TreePainter(
-        treeNode,
-        themeProvider: themeProvider,
-      ),
-    ),
-  ),
-);
-
-
-
-    },
-  ),
-);
-
+                    return InteractiveViewer(
+                      transformationController: _transformationController,
+                      constrained: false,
+                      boundaryMargin: const EdgeInsets.all(500),
+                      minScale: 0.2,
+                      maxScale: 5.0,
+                      child: Container(
+                        key: ValueKey("graph_$index"),
+                        width: 2000,
+                        height: 2000,
+                        color: themeProvider.mainColor,
+                        child: CustomPaint(painter: painter),
+                      ),
+                    );
+                  },
+                ),
+              );
             },
           ),
         ),
@@ -150,8 +176,10 @@ return InteractiveViewer(
                     backgroundColor:
                         selected ? Theme.of(context).colorScheme.primary : null,
                     foregroundColor: selected ? Colors.white : null,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                   onPressed: () {
                     _pageController.animateToPage(
@@ -183,23 +211,35 @@ return InteractiveViewer(
     if (groups == null || groups.isEmpty) return states;
 
     // keep only groups whose IDs you actually fetched prereqs for
-    var valid = groups.where((g) =>
-        g.values.expand((l) => l).every(widget.courseNames.containsKey)).toList();
+    var valid =
+        groups
+            .where(
+              (g) => g.values
+                  .expand((l) => l)
+                  .every(widget.courseNames.containsKey),
+            )
+            .toList();
     if (valid.isEmpty) return states;
 
     // score by faculty preference
-    final scores = valid.map((g) {
-      return g.values
-          .expand((l) => l)
-          .where((cid) =>
-              widget.courseFaculties[cid]?.contains(widget.studentFaculty) ??
-              false)
-          .length;
-    }).toList();
+    final scores =
+        valid.map((g) {
+          return g.values
+              .expand((l) => l)
+              .where(
+                (cid) =>
+                    widget.courseFaculties[cid]?.contains(
+                      widget.studentFaculty,
+                    ) ??
+                    false,
+              )
+              .length;
+        }).toList();
     final maxScore = scores.reduce((a, b) => a > b ? a : b);
 
     valid = [
-      for (var i = 0; i < valid.length; i++) if (scores[i] == maxScore) valid[i]
+      for (var i = 0; i < valid.length; i++)
+        if (scores[i] == maxScore) valid[i],
     ];
 
     final result = <_GraphState>[];
@@ -207,28 +247,23 @@ return InteractiveViewer(
       for (final g in valid) {
         final clone = _GraphState.clone(st);
         final children = g.values.expand((l) => l);
-        for (final cid in children) clone.addEdge(currentId, cid);
+        for (final cid in children) {
+          debugPrint('➡️ From $currentId → child $cid');
+          clone.addEdge(currentId, cid);
+        }
+
         var next = [clone];
         for (final cid in children) {
-          next = next
-              .expand((s) => _buildStatesFrom(cid, [s], nextVisited))
-              .toList();
+          next =
+              next
+                  .expand((s) => _buildStatesFrom(cid, [s], nextVisited))
+                  .toList();
         }
         result.addAll(next);
       }
     }
     return result;
   }
-
-  Widget _buildCourseBox(String title) => Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.lightBlue.shade100,
-          border: Border.all(color: Colors.blue),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(title, textAlign: TextAlign.center),
-      );
 }
 
 /// Holds a Graph and a map from courseId → Node
@@ -236,27 +271,28 @@ class _GraphState {
   final Graph graph = Graph();
   final Map<String, Node> nodeMap = {};
 
-
   TreeNode toTreeNode(String rootId, Map<String, String> names) {
-  final visited = <String>{};
-  TreeNode build(String id) {
-    if (visited.contains(id)) return TreeNode(id: id, label: names[id] ?? id);
-    visited.add(id);
-    final children = graph
-        .edges
-        .where((e) => (e.source.key!.value == id))
-        .map((e) => e.destination.key!.value as String)
-        .toList();
-    return TreeNode(
-      id: id,
-      label: names[id] ?? id,
-      children: children.map(build).toList(),
-    );
+    final visited = <String>{};
+    TreeNode build(String id) {
+      if (visited.contains(id)) return TreeNode(id: id, label: names[id] ?? id);
+      visited.add(id);
+      final children =
+          graph.edges
+              .where((e) => (e.source.key!.value == id))
+              .map((e) => e.destination.key!.value as String)
+              .toList();
+
+      debugPrint('🔍 Building node $id → children: $children');
+
+      return TreeNode(
+        id: id,
+        label: names[id] ?? id,
+        children: children.map(build).toList(),
+      );
+    }
+
+    return build(rootId);
   }
-
-  return build(rootId);
-}
-
 
   _GraphState();
 
@@ -280,6 +316,7 @@ class _GraphState {
   }
 
   void addEdge(String from, String to) {
+    debugPrint('📌 Adding edge: $from → $to');
     addNode(from);
     addNode(to);
     graph.addEdge(nodeMap[from]!, nodeMap[to]!);
