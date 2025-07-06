@@ -45,16 +45,19 @@ class CourseRecommendationRequest {
 class CourseInSet {
   final String courseId;
   final String courseName; // Hebrew name
+  final double creditPoints; // Credit points for this course
   
   CourseInSet({
     required this.courseId,
     required this.courseName,
+    required this.creditPoints,
   });
 
   factory CourseInSet.fromJson(Map<String, dynamic> json) {
     return CourseInSet(
       courseId: json['id'] ?? json['courseId'] ?? '',
       courseName: json['name'] ?? json['courseName'] ?? '',
+      creditPoints: (json['creditPoints'] as num?)?.toDouble() ?? 3.0,
     );
   }
 
@@ -62,6 +65,7 @@ class CourseInSet {
     return {
       'id': courseId,
       'name': courseName,
+      'creditPoints': creditPoints,
     };
   }
 }
@@ -266,6 +270,7 @@ class CourseRecommendationResponse {
   final String reasoning;
   final DateTime generatedAt;
   final CourseRecommendationRequest originalRequest;
+  final List<dynamic>? validCandidates; // NEW: For feedback optimization
 
   CourseRecommendationResponse({
     required this.recommendations,
@@ -274,6 +279,7 @@ class CourseRecommendationResponse {
     required this.reasoning,
     required this.generatedAt,
     required this.originalRequest,
+    this.validCandidates, // NEW: Optional for backward compatibility
   });
 
   Map<String, dynamic> toJson() {
@@ -284,6 +290,7 @@ class CourseRecommendationResponse {
       'reasoning': reasoning,
       'generatedAt': generatedAt.toIso8601String(),
       'originalRequest': originalRequest.toJson(),
+      'validCandidates': validCandidates, // NEW: Include in serialization
     };
   }
 
@@ -299,6 +306,7 @@ class CourseRecommendationResponse {
       originalRequest: CourseRecommendationRequest.fromJson(
         json['originalRequest'],
       ),
+      validCandidates: json['validCandidates'] as List<dynamic>?, // NEW: Deserialize valid candidates
     );
   }
 }
@@ -306,11 +314,8 @@ class CourseRecommendationResponse {
 // === FEEDBACK AND INTERACTION MODELS ===
 
 enum FeedbackType {
-  like,
-  dislike,
   replace,
-  modify,
-  general,
+  question,
 }
 
 class UserFeedback {
@@ -403,6 +408,7 @@ class RecommendationSession {
   final CourseRecommendationRequest originalRequest;
   final List<ConversationMessage> conversation;
   final List<CourseSet>? currentRecommendations;
+  final List<dynamic>? validCandidates; // Store valid candidates to avoid re-fetching
   final DateTime createdAt;
   final DateTime lastUpdated;
   final bool isActive;
@@ -412,6 +418,7 @@ class RecommendationSession {
     required this.originalRequest,
     required this.conversation,
     this.currentRecommendations,
+    this.validCandidates,
     required this.createdAt,
     required this.lastUpdated,
     required this.isActive,
@@ -453,6 +460,7 @@ class RecommendationSession {
     List<CourseSet>? currentRecommendations,
     DateTime? lastUpdated,
     bool? isActive,
+    List<dynamic>? validCandidates, // NEW: Support for updating valid candidates
   }) =>
       RecommendationSession(
         sessionId: sessionId,
@@ -463,6 +471,7 @@ class RecommendationSession {
         createdAt: createdAt,
         lastUpdated: lastUpdated ?? DateTime.now(),
         isActive: isActive ?? this.isActive,
+        validCandidates: validCandidates ?? this.validCandidates, // NEW: Use provided or existing valid candidates
       );
 }
 
@@ -507,7 +516,12 @@ class FeedbackResponse {
         updatedRecommendations: (json['updatedRecommendations'] as List)
             .asMap()
             .entries
-            .map((entry) => CourseSet.fromJson(entry.value, entry.key))
+            .map((entry) {
+              final setJson = entry.value as Map<String, dynamic>;
+              // Use setId from JSON if available, otherwise use array index + 1
+              final setId = (setJson['setId'] as int?) ?? (entry.key + 1);
+              return CourseSet.fromJson(setJson, setId);
+            })
             .toList(),
         explanation: json['explanation'],
         usedAlgorithm: json['usedAlgorithm'] ?? false,

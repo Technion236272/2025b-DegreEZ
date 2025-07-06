@@ -21,7 +21,7 @@ class FeedbackWidget extends StatefulWidget {
 
 class _FeedbackWidgetState extends State<FeedbackWidget> {
   final TextEditingController _feedbackController = TextEditingController();
-  FeedbackType _selectedType = FeedbackType.general;
+  FeedbackType _selectedType = FeedbackType.question;
   String? _selectedCourseId;
   String? _selectedSetId;
   bool _isSubmitting = false;
@@ -80,7 +80,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
             const SizedBox(height: 12),
 
             // Course/Set Selector (if specific feedback)
-            if (_selectedType != FeedbackType.general) ...[
+            if (_selectedType != FeedbackType.question) ...[
               _buildTargetSelector(),
               const SizedBox(height: 12),
             ],
@@ -126,23 +126,13 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
       runSpacing: 8,
       children: [
         _buildQuickButton(
-          '👍 Like recommendations',
-          FeedbackType.like,
-          Colors.green,
-        ),
-        _buildQuickButton(
-          '👎 Don\'t like',
-          FeedbackType.dislike,
-          Colors.red,
-        ),
-        _buildQuickButton(
-          '🔄 Replace a course',
+          ' Replace a course',
           FeedbackType.replace,
           Colors.orange,
         ),
         _buildQuickButton(
-          '✏️ Modify suggestions',
-          FeedbackType.modify,
+          '❓ Ask a question',
+          FeedbackType.question,
           Colors.blue,
         ),
       ],
@@ -157,10 +147,10 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
       onPressed: () {
         setState(() {
           _selectedType = type;
-          if (type == FeedbackType.like) {
-            _feedbackController.text = 'I like these recommendations!';
-          } else if (type == FeedbackType.dislike) {
-            _feedbackController.text = 'I don\'t like these recommendations because...';
+          if (type == FeedbackType.replace) {
+            _feedbackController.text = 'I want to replace this course with...';
+          } else if (type == FeedbackType.question) {
+            _feedbackController.text = 'I have a question about...';
           }
         });
       },
@@ -293,31 +283,19 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
 
   String _getFeedbackTypeLabel(FeedbackType type) {
     switch (type) {
-      case FeedbackType.like:
-        return '👍 Like';
-      case FeedbackType.dislike:
-        return '👎 Dislike';
       case FeedbackType.replace:
         return '🔄 Replace Course';
-      case FeedbackType.modify:
-        return '✏️ Modify';
-      case FeedbackType.general:
-        return '💬 General Feedback';
+      case FeedbackType.question:
+        return '❓ Ask Question';
     }
   }
 
   String _getHintText() {
     switch (_selectedType) {
-      case FeedbackType.like:
-        return 'What do you like about these recommendations?';
-      case FeedbackType.dislike:
-        return 'What don\'t you like? What would you prefer instead?';
       case FeedbackType.replace:
         return 'Which course would you prefer instead? Why?';
-      case FeedbackType.modify:
-        return 'How would you like to modify the recommendations?';
-      case FeedbackType.general:
-        return 'Share any thoughts or suggestions about the recommendations...';
+      case FeedbackType.question:
+        return 'Ask any question about these recommendations...';
     }
   }
 
@@ -348,7 +326,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
       // Clear form
       _feedbackController.clear();
       setState(() {
-        _selectedType = FeedbackType.general;
+        _selectedType = FeedbackType.question;
         _selectedCourseId = null;
         _selectedSetId = null;
       });

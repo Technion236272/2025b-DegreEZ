@@ -113,6 +113,7 @@ the course name must be in hebrew.
       final finalRecommendations = await _chooseFinalThreeSets(
         optimizedSets,
         request,
+        validCandidates, // Pass valid candidates for storage
       );
       debugPrint('✅ Phase 3 complete: Selected 3 final course sets with one highlighted');
 
@@ -233,6 +234,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
   Future<CourseRecommendationResponse> _chooseFinalThreeSets(
     List<CourseSet> optimizedSets,
     CourseRecommendationRequest request,
+    List<dynamic> validCandidates, // NEW: Pass valid candidates for storage
   ) async {
     // Create model for final set selection
     final finalSelectionModel = FirebaseAI.googleAI().generativeModel(
@@ -303,6 +305,7 @@ Return your response as valid JSON with the required schema.
         reasoning: jsonData['overallReasoning'] ?? 'Selected based on student preferences with primary recommendation highlighted',
         generatedAt: DateTime.now(),
         originalRequest: request,
+        validCandidates: validCandidates, // NEW: Include valid candidates for feedback optimization
       );
     } catch (e) {
       throw Exception('Failed to parse final three sets selection response: $e');
@@ -444,6 +447,18 @@ Return your response as valid JSON with the required schema.
     final session = request.session;
     final feedback = request.feedback;
 
+    // Use pre-fetched valid candidates from the session (optimization)
+    List<dynamic> validCandidates;
+    if (session.validCandidates == null || session.validCandidates!.isEmpty) {
+      debugPrint('⚠️ Feedback: No valid candidates found in session, fetching fresh candidates...');
+      final validationService = CandidateValidationService(courseProvider);
+      validCandidates = await validationService.getValidCandidates(session.originalRequest);
+      debugPrint('✅ Feedback: Found ${validCandidates.length} valid candidates for replacements');
+    } else {
+      validCandidates = session.validCandidates!;
+      debugPrint('✅ Feedback: Using pre-fetched valid candidates from session (${validCandidates.length} candidates for replacements)');
+    }
+
     // Create model for feedback processing with function calling
     final feedbackModel = FirebaseAI.googleAI().generativeModel(
       model: AiConfig.defaultModel,
@@ -471,6 +486,9 @@ ${session.originalRequest.userContext}
 
 SEMESTER: ${session.originalRequest.semesterDisplayName}
 
+AVAILABLE VALID COURSES FOR REPLACEMENTS:
+${jsonEncode(validCandidates)}
+
 CONVERSATION HISTORY:
 $conversationContext
 
@@ -484,20 +502,22 @@ ${feedback.courseId != null ? 'Specific Course: ${feedback.courseId}' : ''}
 ${feedback.setId != null ? 'Specific Set: ${feedback.setId}' : ''}
 
 ANALYSIS TASK:
-Based on this feedback, intelligently modify the course sets. Consider:
+Based on this feedback, intelligently respond to the user. Consider:
 
-1. **If LIKE feedback**: Understand what they liked and emphasize similar characteristics
-2. **If DISLIKE feedback**: Identify what they disliked and find alternatives
-3. **If REPLACE feedback**: Find suitable replacement courses that maintain academic logic
-4. **If MODIFY feedback**: Adjust the sets according to their specific requests
-5. **If GENERAL feedback**: Use your judgment to improve based on their comments
+1. **If REPLACE feedback**: Find suitable replacement courses from the AVAILABLE VALID COURSES list above that maintain academic logic and explain the alternatives
+2. **If QUESTION feedback**: Provide detailed, helpful answers about the recommendations, courses, or academic planning
 
 REQUIREMENTS:
-- Return exactly 3 updated course sets
+- For REPLACE: Return exactly 3 updated course sets with the requested replacement
+- For QUESTION: Keep current sets unchanged but provide detailed explanation
 - Each set should have 5-7 courses totaling 15-18 credits
 - All course names must be in Hebrew
+- **IMPORTANT**: Include actual credit points for each course (not average or default values)
+- **CRITICAL**: When replacing courses, ONLY use courses from the AVAILABLE VALID COURSES list above
+- When replacing courses, ensure the new course's actual credit points are used
 - Provide clear reasoning for changes made
 - Maintain academic progression logic
+- Consider course availability in the specified semester
 - Consider course availability in the specified semester
 
 Respond with valid JSON following the schema. Focus on creating sets that address the user's feedback while maintaining educational value.
@@ -574,6 +594,7 @@ Your responses must be in valid JSON format with the specified schema.
                   properties: {
                     'id': Schema.string(),
                     'name': Schema.string(),
+                    'creditPoints': Schema.number(description: 'Credit points for this course'),
                   },
                 ),
               ),

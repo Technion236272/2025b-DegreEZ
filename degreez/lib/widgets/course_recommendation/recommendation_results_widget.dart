@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/course_recommendation_models.dart';
 import '../../providers/course_recommendation_provider.dart';
-import 'feedback_widget.dart';
+import 'intelligent_feedback_widget.dart';
 
 class RecommendationResultsWidget extends StatelessWidget {
   final CourseRecommendationResponse recommendation;
@@ -94,7 +94,7 @@ class RecommendationResultsWidget extends StatelessWidget {
             builder: (context, provider, child) {
               final courseSets = provider.getCurrentCourseSets();
               if (courseSets.isNotEmpty) {
-                return FeedbackWidget(
+                return IntelligentFeedbackWidget(
                   currentRecommendations: courseSets,
                   onFeedbackSubmitted: onFeedbackSubmitted!,
                 );

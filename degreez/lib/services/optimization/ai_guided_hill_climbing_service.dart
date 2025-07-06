@@ -279,13 +279,14 @@ Provide detailed scores (1-10) and specific improvement suggestions.
         final newCourse = CourseInSet(
           courseId: modification.addId!,
           courseName: modification.addCourse!['courseName'] ?? '',
+          creditPoints: (modification.addCourse!['creditPoints'] as num?)?.toDouble() ?? 3.0,
         );
         updatedCourses.add(newCourse);
         debugPrint('➕ Added course: ${modification.addId}');
       }
       
-      // Calculate new total credits
-      double newTotalCredits = updatedCourses.length * 3.0; // Estimate 3 credits per course
+      // Calculate new total credits by summing actual credit points
+      double newTotalCredits = updatedCourses.fold(0.0, (sum, course) => sum + course.creditPoints);
       
       // Update the set
       modifiedSets[modification.setId] = CourseSet(
@@ -437,7 +438,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
         cleanedSets.add(CourseSet(
           setId: set.setId,
           courses: validCourses,
-          totalCredits: validCourses.length * 3.0, // Estimate 3 credits per course
+          totalCredits: validCourses.fold(0.0, (sum, course) => sum + course.creditPoints), // Sum actual credit points
           reasoning: set.reasoning,
         ));
       }

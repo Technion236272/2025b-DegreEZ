@@ -238,6 +238,7 @@ Future<void> loadSavedRecommendation() async {
       final courseSets = _convertResponseToCourseSets(response);
       _currentSession = _currentSession!.copyWith(
         currentRecommendations: courseSets,
+        validCandidates: response.validCandidates, // NEW: Store valid candidates for feedback optimization
         conversation: [
           ConversationMessage(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -459,7 +460,7 @@ Future<void> loadSavedRecommendation() async {
         recommendations.add(CourseRecommendation(
           courseId: course.courseId,
           courseName: course.courseName,
-          creditPoints: set.totalCredits / set.courses.length, // Distribute credits evenly
+          creditPoints: course.creditPoints, // Use actual credit points from course
           reason: set.reasoning,
           priority: isPrimary ? 1 : set.setId, // Primary gets priority 1
           category: isPrimary ? 'Primary Set' : 'Set ${set.setId}',
@@ -469,7 +470,7 @@ Future<void> loadSavedRecommendation() async {
 
     return CourseRecommendationResponse(
       recommendations: recommendations,
-      totalCreditPoints: courseSets.fold(0.0, (sum, set) => sum + set.totalCredits),
+      totalCreditPoints: recommendations.fold(0.0, (sum, rec) => sum + rec.creditPoints),
       summary: explanation,
       reasoning: 'Updated recommendations based on your feedback',
       generatedAt: DateTime.now(),
@@ -496,6 +497,7 @@ Future<void> loadSavedRecommendation() async {
       final courses = entry.value.map((rec) => CourseInSet(
         courseId: rec.courseId,
         courseName: rec.courseName,
+        creditPoints: rec.creditPoints, // Preserve actual credit points
       )).toList();
 
       final totalCredits = entry.value.fold(0.0, (sum, rec) => sum + rec.creditPoints);
@@ -517,5 +519,15 @@ Future<void> loadSavedRecommendation() async {
   /// Get current course sets for feedback (from session)
   List<CourseSet> getCurrentCourseSets() {
     return _currentSession?.currentRecommendations ?? [];
+  }
+
+  /// Clear conversation history for current session
+  void clearConversationHistory() {
+    if (_currentSession != null) {
+      _currentSession = _currentSession!.copyWith(
+        conversation: [],
+      );
+      notifyListeners();
+    }
   }
 }
