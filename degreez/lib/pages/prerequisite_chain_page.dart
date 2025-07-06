@@ -48,6 +48,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage> {
               Expanded(
               
                   child: PrerequisiteGraph(
+                     key: ValueKey(selectedCourse!.courseNumber),
                     rootCourseId: selectedCourse!.courseNumber,
                     studentFaculty: context.read<StudentProvider>().student?.faculty ?? '',
                     courseNames: courseIdToName,

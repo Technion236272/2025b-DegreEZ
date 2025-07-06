@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
+import '../services/course_service.dart';
 
 class PrerequisiteGraph extends StatefulWidget {
   final String rootCourseId;
@@ -22,23 +23,51 @@ class PrerequisiteGraph extends StatefulWidget {
 }
 
 class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
-  late final List<_GraphState> _allStates;
-  late final PageController _pageController;
+  late List<_GraphState> _allStates;
+  final PageController _pageController = PageController(initialPage: 0);
+  late Map<String, String> _names;
   int _current = 0;
 
   @override
   void initState() {
     super.initState();
-    // Build all the graph states just once
-    final initial = _GraphState()..addNode(widget.rootCourseId);
-    _allStates = _buildStatesFrom(widget.rootCourseId, [initial], <String>{});
-    _pageController = PageController();
+    // start _names with whatever was passed in:
+    _names = Map.from(widget.courseNames);
+    _computeStates();
   }
 
+  /// Rebuild the graph states based on the current rootCourseId and coursePrereqs:
+  void _computeStates() {
+    final initial = _GraphState()..addNode(widget.rootCourseId);
+    _allStates = _buildStatesFrom(widget.rootCourseId, [initial], {});
+    _preloadMissingNames();
+  }
+
+  /// Whenever the widget’s inputs change, rebuild:
   @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void didUpdateWidget(covariant PrerequisiteGraph old) {
+    super.didUpdateWidget(old);
+    if (old.rootCourseId != widget.rootCourseId ||
+        old.coursePrereqs != widget.coursePrereqs ||
+        old.courseNames != widget.courseNames) {
+      // reset our name‐map in case the new widget passed more up‐front names
+      _names = Map.from(widget.courseNames);
+      _computeStates();
+      setState(() {}); // trigger a repaint
+    }
+  }
+
+  /// Fetch any course names we didn’t already have:
+  Future<void> _preloadMissingNames() async {
+    final allIds = _allStates.expand((st) => st.nodeMap.keys).toSet();
+    final missing = allIds.where((id) => !_names.containsKey(id)).toList();
+    if (missing.isEmpty) return;
+
+    for (final id in missing) {
+      final fetched = await CourseService.getCourseName(id);
+      _names[id] = fetched ?? id;
+    }
+    setState(() {}); // update the labels
   }
 
   @override
@@ -47,7 +76,6 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
       return const Center(child: Text('No valid prerequisite graphs found.'));
     }
 
-    // Layout configuration for Buchheim-Walker
     final builder = BuchheimWalkerConfiguration()
       ..siblingSeparation = 30
       ..levelSeparation = 40
@@ -56,7 +84,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
 
     return Column(
       children: [
-        // 1) The PageView that shows one graph at a time
+        // 1) The zoomable, paged GraphView
         Expanded(
           child: PageView.builder(
             controller: _pageController,
@@ -65,33 +93,49 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
             onPageChanged: (i) => setState(() => _current = i),
             itemBuilder: (_, index) {
               final graphState = _allStates[index];
-              return Padding(
-                padding: const EdgeInsets.all(8),
-                child: InteractiveViewer(
-                  constrained: false,
-                  boundaryMargin: const EdgeInsets.all(100),
-                  minScale: 0.01,
-                  maxScale: 5.0,
-                  child: GraphView(
-                    graph: graphState.graph,
-                    algorithm: BuchheimWalkerAlgorithm(
-                      builder,
-                      TreeEdgeRenderer(builder),
-                    ),
-                    builder: (node) {
-                      final id = node.key!.value as String;
-                      return _buildCourseBox(widget.courseNames[id] ?? id);
-                    },
-                  ),
-                ),
-              );
+       return Padding(
+  padding: const EdgeInsets.all(8),
+  child: LayoutBuilder(
+    builder: (context, constraints) {
+      // Force the GraphView to live in a finite box, then scale it
+      return InteractiveViewer(
+        constrained: true,                    // <-- must be true
+        boundaryMargin: const EdgeInsets.all(100),
+        minScale: 0.01,
+        maxScale: 5.0,
+        child: SizedBox(
+          width:  constraints.maxWidth,      // <-- finite size
+          height: constraints.maxHeight,
+          child: FittedBox(
+            fit: Alignment.topLeft == Alignment.topLeft
+                ? BoxFit.contain
+                : BoxFit.scaleDown,
+            // Actually render the graph at its intrinsic size
+            child: GraphView(
+              graph: graphState.graph,
+              algorithm: BuchheimWalkerAlgorithm(
+                builder,
+                TreeEdgeRenderer(builder),
+              ),
+              builder: (node) {
+                final id = node.key!.value as String;
+                return _buildCourseBox(_names[id] ?? id);
+              },
+            ),
+          ),
+        ),
+      );
+    },
+  ),
+);
+
             },
           ),
         ),
 
         const SizedBox(height: 8),
 
-        // 2) The scrollable panel of buttons for jumping to any graph
+        // 2) The “Graph 1 | Graph 2 | …” button panel
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -102,13 +146,11 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: selected
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                    foregroundColor:
-                        selected ? Colors.white : null,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    backgroundColor:
+                        selected ? Theme.of(context).colorScheme.primary : null,
+                    foregroundColor: selected ? Colors.white : null,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   onPressed: () {
                     _pageController.animateToPage(
@@ -139,13 +181,12 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     final groups = widget.coursePrereqs[currentId];
     if (groups == null || groups.isEmpty) return states;
 
-    // Filter out any group whose courses lack names
-    var valid = groups.where((g) {
-      return g.values.expand((l) => l).every(widget.courseNames.containsKey);
-    }).toList();
+    // keep only groups whose IDs you actually fetched prereqs for
+    var valid = groups.where((g) =>
+        g.values.expand((l) => l).every(widget.courseNames.containsKey)).toList();
     if (valid.isEmpty) return states;
 
-    // Score each OR-group by how many courses match the student's faculty
+    // score by faculty preference
     final scores = valid.map((g) {
       return g.values
           .expand((l) => l)
@@ -156,21 +197,16 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     }).toList();
     final maxScore = scores.reduce((a, b) => a > b ? a : b);
 
-    // Keep only those groups tied for the top score
     valid = [
-      for (var i = 0; i < valid.length; i++)
-        if (scores[i] == maxScore) valid[i]
+      for (var i = 0; i < valid.length; i++) if (scores[i] == maxScore) valid[i]
     ];
 
-    // For each state so far, branch it by each valid OR-group
     final result = <_GraphState>[];
     for (final st in states) {
       for (final g in valid) {
         final clone = _GraphState.clone(st);
         final children = g.values.expand((l) => l);
-        for (final cid in children) {
-          clone.addEdge(currentId, cid);
-        }
+        for (final cid in children) clone.addEdge(currentId, cid);
         var next = [clone];
         for (final cid in children) {
           next = next
