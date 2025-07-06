@@ -174,7 +174,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
             ${jsonEncode(currentSets.map((set) => _courseSetToJson(set)).toList())}
 
             VALID REPLACEMENT CANDIDATES (ONLY USE THESE):
-            ${jsonEncode(validCandidates.take(50).map((c) => _candidateToJson(c)).toList())}
+            ${jsonEncode(validCandidates.map((c) => _candidateToJson(c)).toList())}
 
             STUDENT CONTEXT & PREFERENCES:
             ${request.userContext}
@@ -192,14 +192,14 @@ Provide detailed scores (1-10) and specific improvement suggestions.
               * Clear reasoning for the swap
               * Expected improvement score
               * setId: ${currentSets.length == 1 ? '0 (single set being optimized)' : 'Index of the set to modify'}
-            - Maintain 15-18 credit total per set
+            - Maintain 15-18 credit total per set (by adding or swapping or removing courses)
             - Remember: Only use courses from the valid candidates list provided above!
             - Do not suggest courses that are not in the valid candidates list
 
             MODIFICATION TYPES:
             1. **Course Swap**: Replace one course with another from valid candidates
             2. **Course Removal**: Remove a course (set addId to null)
-            3. **Course Addition**: Add a course from valid candidates (set removeId to null)
+            3. **Course Addition**: Add a course or more from valid candidates (set removeId to null)
 
             Provide clear reasoning for each modification and expected improvement.
             ''';
@@ -249,7 +249,6 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     // For now, select the modification with highest expected improvement
     // In future iterations, we can add AI-based selection logic
     modifications.sort((a, b) => b.expectedImprovement.compareTo(a.expectedImprovement));
-    
     return modifications.first;
   }
   
@@ -304,7 +303,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     return modifiedSets;
   }
   
-  /// Optimize a single course set using hill climbing
+  /// Optimize a single course set using ai guided hill climbing
   Future<CourseSet> _optimizeIndividualSet(
     CourseSet initialSet,
     List<dynamic> validCandidates,

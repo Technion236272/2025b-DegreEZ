@@ -74,9 +74,15 @@ the course name must be in hebrew.
       // Note: apiYear and semesterCode are available if needed for future use
       final (_, _) = parsed;
       
-      // PHASE 1: Get 3 candidate course sets from AI
-      debugPrint('🚀 Phase 1: Generating 3 candidate course sets...');
-      final multiSetResponse = await _identifyMultipleCandidateSets(request);
+      // PHASE 0: Get valid candidates upfront for all phases
+      debugPrint('🔍 Phase 0: Fetching valid candidates for all phases...');
+      final validationService = CandidateValidationService(courseProvider);
+      final validCandidates = await validationService.getValidCandidates(request);
+      debugPrint('✅ Phase 0 complete: Found ${validCandidates.length} valid candidates');
+      
+      // PHASE 1: Get 3 candidate course sets from AI (with valid candidates)
+      debugPrint('🚀 Phase 1: Generating 3 candidate course sets with valid candidates...');
+      final multiSetResponse = await _identifyMultipleCandidateSets(request, validCandidates);
       debugPrint('✅ Phase 1 complete: Generated ${multiSetResponse.courseSets.length} course sets');
 
       if (multiSetResponse.courseSets.isEmpty) {
@@ -94,6 +100,7 @@ the course name must be in hebrew.
       final optimizedSets = await _optimizeCourseSetsWithHillClimbing(
         multiSetResponse.courseSets,
         request,
+        validCandidates, // Pass the pre-fetched valid candidates
         fastMode, // Pass fast mode to optimization
       );
       
@@ -119,6 +126,7 @@ the course name must be in hebrew.
   /// Step 1: Use structured JSON response to identify 3 candidate course sets
   Future<MultiSetCandidateResponse> _identifyMultipleCandidateSets(
     CourseRecommendationRequest request,
+    List<dynamic> validCandidates, // NEW: Pass valid candidates
   ) async {
     // Create model for multiple candidate course sets identification
     final candidateModel = FirebaseAI.googleAI().generativeModel(
@@ -126,8 +134,10 @@ the course name must be in hebrew.
       systemInstruction: Content.text(_systemInstruction),
       generationConfig: AiUtils.createJsonConfig(_createMultiSetCandidateSchema()),
     );
-
-    // Prepare the prompt for 3 sets
+    // printing the user context for debugging
+    debugPrint('🔍 User context for candidate sets: ${request.userContext}');
+    debugPrint('🔍 Preparing to identify multiple candidate sets...');
+    // Prepare the prompt for 3 sets with valid candidates
     String prompt = '''
 Please identify 3 different sets of candidate courses for the following student:
 
@@ -135,13 +145,16 @@ ${request.userContext}
 
 Target Semester: ${request.semesterDisplayName}
 
+AVAILABLE VALID COURSES:
+${jsonEncode(validCandidates)}
+
 Requirements:
 - Generate exactly 3 diverse course sets
 - Each set should contain 5-7 courses totaling 15-18 credit points
 - All course names must be in Hebrew
 - Each set should represent a different strategic approach (e.g., core-focused, elective-heavy, prerequisite-clearing, etc.)
 - Consider the student's academic level, major, and completed courses
-- Ensure courses are likely available in the specified semester
+- ONLY use courses from the provided valid courses list above
 - Provide brief reasoning for each set's strategy
 
 Return your response as valid JSON with the required schema.
@@ -173,6 +186,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
   Future<List<CourseSet>> _optimizeCourseSetsWithHillClimbing(
     List<CourseSet> initialSets,
     CourseRecommendationRequest request,
+    List<dynamic> validCandidates, // NEW: Pre-fetched valid candidates
     bool fastMode, // NEW: Fast mode parameter
   ) async {
     if (fastMode) {
@@ -182,11 +196,8 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     }
     
     try {
-      // Step 1: Get valid candidates for optimization
-      debugPrint('🔍 Step 1: Fetching valid candidates...');
-      final validationService = CandidateValidationService(courseProvider);
-      final validCandidates = await validationService.getValidCandidates(request);
-      debugPrint('✅ Found ${validCandidates.length} valid candidates');
+      // Step 1: Use the pre-fetched valid candidates (no need to fetch again)
+      debugPrint('✅ Step 1: Using pre-fetched valid candidates (${validCandidates.length} candidates)');
       
       // Step 2: Run AI-guided hill climbing optimization (or skip in fast mode)
       if (fastMode) {

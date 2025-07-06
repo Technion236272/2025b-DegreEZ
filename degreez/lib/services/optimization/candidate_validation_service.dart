@@ -35,6 +35,10 @@ class CandidateValidationService {
     final validCourses = await _filterCourses(allCourses, studentCourses, request.semesterDisplayName);
     debugPrint('✅ Filtered to ${validCourses.length} valid candidates');
     
+    // step 4: minimize the valid courses' size by cutting unnecessary data about them
+    // we keep general -> courseId, faculty, creditPoints, syllabus
+    _minimizeCourseData(validCourses);
+
     return validCourses;
   }
   
@@ -56,6 +60,8 @@ class CandidateValidationService {
       
       // Fetch all courses from the semester
       final allCourses = await CourseService.getAllCourses(apiYear, semesterCode);
+      
+      // Return courses as-is since we'll minimize the data later
       return allCourses;
       
     } catch (e) {
@@ -283,6 +289,43 @@ class CandidateValidationService {
     } catch (e) {
       debugPrint('⚠️ Error checking parallel courses for $courseId: $e');
       return false; // If error, assume no parallel courses
+    }
+  }
+  
+  /// Minimize course data by removing unnecessary fields and keeping only essential fields in general
+  void _minimizeCourseData(List<dynamic> courses) {
+    for (var course in courses) {
+      course.remove('schedule');
+      course.remove('metadata');
+      
+      // Keep only specific fields in the general object
+      if (course['general'] is Map<String, dynamic>) {
+        final general = course['general'] as Map<String, dynamic>;
+        final filteredGeneral = <String, dynamic>{};
+        
+        // Keep only the fields you need
+        if (general.containsKey('מספר מקצוע')) {
+          filteredGeneral['מספר מקצוע'] = general['מספר מקצוע'];
+        }
+        if (general.containsKey('פקולטה')) {
+          filteredGeneral['פקולטה'] = general['פקולטה'];
+        }
+        if (general.containsKey('נקודות זכות')) {
+          filteredGeneral['נקודות זכות'] = general['נקודות זכות'];
+        }
+        if (general.containsKey('סילבוס')) {
+          filteredGeneral['סילבוס'] = general['סילבוס'];
+        }
+        if (general.containsKey('שם מקצוע')) {
+          filteredGeneral['שם מקצוע'] = general['שם מקצוע'];
+        }
+        if (general.containsKey('נקודות')) {
+          filteredGeneral['נקודות'] = general['נקודות'];
+        }
+        
+        // Replace the general object with the filtered version
+        course['general'] = filteredGeneral;
+      }
     }
   }
 }

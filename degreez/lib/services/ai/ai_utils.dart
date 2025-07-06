@@ -24,7 +24,7 @@ class AiUtils {
       final bytes = await file.openRead(0, 5).first;
       final header = String.fromCharCodes(bytes);
       return header.startsWith('%PDF');
-    } catch (e) {
+  } catch (e) {
       return false;
     }
   }
