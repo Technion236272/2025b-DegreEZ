@@ -103,7 +103,7 @@ class RecommendationResultsWidget extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Text(
-                    '💬 Feedback widget will be available once recommendations are generated.',
+                    '💬 Feedback widget is available only on newly generated recommendations.',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),
