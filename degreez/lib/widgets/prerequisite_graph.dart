@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:graphview/GraphView.dart';
 import '../services/course_service.dart';
+import '../widgets/tree_painter.dart';
+
 
 class PrerequisiteGraph extends StatefulWidget {
   final String rootCourseId;
@@ -98,33 +100,18 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
   child: LayoutBuilder(
     builder: (context, constraints) {
       // Force the GraphView to live in a finite box, then scale it
-      return InteractiveViewer(
-        constrained: true,                    // <-- must be true
-        boundaryMargin: const EdgeInsets.all(100),
-        minScale: 0.01,
-        maxScale: 5.0,
-        child: SizedBox(
-          width:  constraints.maxWidth,      // <-- finite size
-          height: constraints.maxHeight,
-          child: FittedBox(
-            fit: Alignment.topLeft == Alignment.topLeft
-                ? BoxFit.contain
-                : BoxFit.scaleDown,
-            // Actually render the graph at its intrinsic size
-            child: GraphView(
-              graph: graphState.graph,
-              algorithm: BuchheimWalkerAlgorithm(
-                builder,
-                TreeEdgeRenderer(builder),
-              ),
-              builder: (node) {
-                final id = node.key!.value as String;
-                return _buildCourseBox(_names[id] ?? id);
-              },
-            ),
-          ),
-        ),
-      );
+final treeNode = graphState.toTreeNode(widget.rootCourseId, _names);
+return InteractiveViewer(
+  constrained: false,
+  boundaryMargin: const EdgeInsets.all(500),
+  minScale: 0.5,
+  maxScale: 5,
+  child: CustomPaint(
+    size: const Size(2000, 2000),
+    painter: TreePainter(treeNode),
+  ),
+);
+
     },
   ),
 );
@@ -234,6 +221,28 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
 class _GraphState {
   final Graph graph = Graph();
   final Map<String, Node> nodeMap = {};
+
+
+  TreeNode toTreeNode(String rootId, Map<String, String> names) {
+  final visited = <String>{};
+  TreeNode build(String id) {
+    if (visited.contains(id)) return TreeNode(id: id, label: names[id] ?? id);
+    visited.add(id);
+    final children = graph
+        .edges
+        .where((e) => (e.source.key!.value == id))
+        .map((e) => e.destination.key!.value as String)
+        .toList();
+    return TreeNode(
+      id: id,
+      label: names[id] ?? id,
+      children: children.map(build).toList(),
+    );
+  }
+
+  return build(rootId);
+}
+
 
   _GraphState();
 
