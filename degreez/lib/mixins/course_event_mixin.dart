@@ -161,29 +161,7 @@ mixin CourseEventMixin {
       return CourseEventType.workshop;
     }
     return CourseEventType.lecture; // Default
-  }  // Convert Hebrew day to DateTime weekday
-  int parseHebrewDay(String hebrewDay) {
-    // Handle both full Hebrew names and single letters
-    final dayMap = {
-      // Full Hebrew names
-      'ראשון': DateTime.sunday,
-      'שני': DateTime.monday,
-      'שלישי': DateTime.tuesday,
-      'רביעי': DateTime.wednesday,
-      'חמישי': DateTime.thursday,
-      'שישי': DateTime.friday,
-      'שבת': DateTime.saturday,
-      // Single Hebrew letters (more common in API)
-      'א': DateTime.sunday,
-      'ב': DateTime.monday,
-      'ג': DateTime.tuesday,
-      'ד': DateTime.wednesday,
-      'ה': DateTime.thursday,
-      'ו': DateTime.friday,
-      'ש': DateTime.saturday,
-    };
-    return dayMap[hebrewDay] ?? DateTime.monday;
-  }
+  }  
   // Convert DateTime weekday constant to day offset from Sunday
   // This is needed because DateTime.weekday uses 1=Monday, 7=Sunday
   // but we need offsets like Sunday=0, Monday=1, ..., Saturday=6
@@ -229,3 +207,27 @@ mixin CourseEventMixin {
     }
   }
 }
+
+// Convert Hebrew day to DateTime weekday
+  int parseHebrewDay(String hebrewDay) {
+    // Handle both full Hebrew names and single letters
+    final dayMap = {
+      // Full Hebrew names
+      'ראשון': DateTime.sunday,
+      'שני': DateTime.monday,
+      'שלישי': DateTime.tuesday,
+      'רביעי': DateTime.wednesday,
+      'חמישי': DateTime.thursday,
+      'שישי': DateTime.friday,
+      'שבת': DateTime.saturday,
+      // Single Hebrew letters (more common in API)
+      'א': DateTime.sunday,
+      'ב': DateTime.monday,
+      'ג': DateTime.tuesday,
+      'ד': DateTime.wednesday,
+      'ה': DateTime.thursday,
+      'ו': DateTime.friday,
+      'ש': DateTime.saturday,
+    };
+    return dayMap[hebrewDay] ?? DateTime.monday;
+  }
