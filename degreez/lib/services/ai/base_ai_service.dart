@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'package:firebase_ai/firebase_ai.dart';
-
 /// Base AI service that provides common Firebase AI functionality
 /// This eliminates redundant model initialization across different AI services
 abstract class BaseAiService {
@@ -23,7 +22,12 @@ abstract class BaseAiService {
     required String systemInstruction,
     GenerationConfig? generationConfig,
   }) {
-    _model = FirebaseAI.googleAI().generativeModel(
+    // _model = FirebaseAI.googleAI().generativeModel(
+    //   model: modelName,
+    //   systemInstruction: Content.text(systemInstruction),
+    //   generationConfig: generationConfig,
+    // );
+    _model = FirebaseAI.vertexAI().generativeModel(
       model: modelName,
       systemInstruction: Content.text(systemInstruction),
       generationConfig: generationConfig,

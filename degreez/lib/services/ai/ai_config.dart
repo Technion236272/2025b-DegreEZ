@@ -1,7 +1,7 @@
 /// AI configuration constants and utilities shared across all AI services
 class AiConfig {
   // Model configurations
-  static const String defaultModel = 'gemini-2.5-flash';
+  static const String defaultModel = 'gemini-2.5-pro';
   
   // Common system instruction prefixes
   static const String baseSystemInstruction = "You are an AI assistant for DegreEZ, an academic planning app.";

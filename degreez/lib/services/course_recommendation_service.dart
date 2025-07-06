@@ -47,6 +47,15 @@ the course name must be in hebrew.
         ),
       );
 
+  /// Helper method to create a specialized model for different operations
+  GenerativeModel _createSpecializedModel(Schema schema, {String? customSystemInstruction}) {
+    return FirebaseAI.googleAI().generativeModel(
+      model: AiConfig.defaultModel,
+      systemInstruction: Content.text(customSystemInstruction ?? _systemInstruction),
+      generationConfig: AiUtils.createJsonConfig(schema),
+    );
+  }
+
   /// Main method to generate course recommendations
   Future<CourseRecommendationResponse> generateRecommendations(
     CourseRecommendationRequest request, {
@@ -129,12 +138,8 @@ the course name must be in hebrew.
     CourseRecommendationRequest request,
     List<dynamic> validCandidates, // NEW: Pass valid candidates
   ) async {
-    // Create model for multiple candidate course sets identification
-    final candidateModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
-      systemInstruction: Content.text(_systemInstruction),
-      generationConfig: AiUtils.createJsonConfig(_createMultiSetCandidateSchema()),
-    );
+    // Use specialized model for multiple candidate course sets identification
+    final candidateModel = _createSpecializedModel(_createMultiSetCandidateSchema());
     // printing the user context for debugging
     debugPrint('🔍 User context for candidate sets: ${request.userContext}');
     debugPrint('🔍 Preparing to identify multiple candidate sets...');
@@ -236,12 +241,8 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     CourseRecommendationRequest request,
     List<dynamic> validCandidates, // NEW: Pass valid candidates for storage
   ) async {
-    // Create model for final set selection
-    final finalSelectionModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
-      systemInstruction: Content.text(_systemInstruction),
-      generationConfig: AiUtils.createJsonConfig(_createFinalThreeSetSelectionSchema()),
-    );
+    // Use specialized model for final set selection
+    final finalSelectionModel = _createSpecializedModel(_createFinalThreeSetSelectionSchema());
 
     // Prepare the prompt for final selection
     String prompt = '''
@@ -459,11 +460,10 @@ Return your response as valid JSON with the required schema.
       debugPrint('✅ Feedback: Using pre-fetched valid candidates from session (${validCandidates.length} candidates for replacements)');
     }
 
-    // Create model for feedback processing with function calling
-    final feedbackModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
-      systemInstruction: Content.text(_getFeedbackSystemInstruction()),
-      generationConfig: AiUtils.createJsonConfig(_createFeedbackResponseSchema()),
+    // Use specialized model for feedback processing with function calling
+    final feedbackModel = _createSpecializedModel(
+      _createFeedbackResponseSchema(),
+      customSystemInstruction: _getFeedbackSystemInstruction(),
     );
 
     // Prepare conversation context for the AI
