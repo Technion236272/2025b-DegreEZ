@@ -8,8 +8,12 @@ import '../services/chat/context_generator_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CourseRecommendationProvider extends ChangeNotifier {
-  final CourseRecommendationService _recommendationService =
-      CourseRecommendationService();
+  CourseRecommendationService? _recommendationService;
+
+  // Initialize the service when we have a CourseProvider
+  void _initializeService(CourseProvider courseProvider) {
+    _recommendationService ??= CourseRecommendationService(courseProvider);
+  }
 
   // State variables
   bool _isLoading = false;
@@ -155,7 +159,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
   }
 
   /// Generate course recommendations
-  Future<void> generateRecommendations(BuildContext context) async {
+  Future<void> generateRecommendations(BuildContext context, CourseProvider courseProvider) async {
     if (!canGenerateRecommendations) {
       _error = 'Please select a semester and year first';
       notifyListeners();
@@ -186,8 +190,11 @@ class CourseRecommendationProvider extends ChangeNotifier {
       // Initialize session for interactive feedback
       _initializeSession(request);
 
+      // Initialize the service with the CourseProvider
+      _initializeService(courseProvider);
+      
       // Generate recommendations
-      final response = await _recommendationService.generateRecommendations(
+      final response = await _recommendationService!.generateRecommendations(
         request,
         fastMode: _fastMode, // Use provider's fast mode setting
       );
@@ -323,7 +330,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
       );
 
       // Process feedback through the service
-      final feedbackResponse = await _recommendationService.processFeedback(request);
+      final feedbackResponse = await _recommendationService!.processFeedback(request);
 
       // Update current session with the improved course sets
       _currentSession = _currentSession!.copyWith(

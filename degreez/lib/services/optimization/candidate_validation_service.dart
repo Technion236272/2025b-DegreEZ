@@ -13,6 +13,9 @@ import '../../providers/course_provider.dart';
 /// The service uses the same prerequisite checking logic as the add course widget,
 /// ensuring consistent behavior throughout the application.
 class CandidateValidationService {
+  final CourseProvider courseProvider;
+  
+  CandidateValidationService(this.courseProvider);
   
   /// Get all valid course candidates for the target semester
   Future<List<dynamic>> getValidCandidates(
@@ -66,11 +69,15 @@ class CandidateValidationService {
     try {
       debugPrint('📝 Fetching student courses from CourseProvider');
       
-      // Create a CourseProvider instance to get student courses
-      final courseProvider = CourseProvider();
+      // Use the provided CourseProvider instance instead of creating a new one
       final allCourses = courseProvider.coursesBySemester;
+      debugPrint('📊 CourseProvider has ${allCourses.length} semesters with courses');
+      
       // flatten all courses into a single list regardless of semester
-      return allCourses.values.expand((courses) => courses).toList();
+      final flattenedCourses = allCourses.values.expand((courses) => courses).toList();
+      debugPrint('📚 Total courses found: ${flattenedCourses.length}');
+      
+      return flattenedCourses;
 
     } catch (e) {
       debugPrint('❌ Error fetching student courses: $e');
@@ -92,8 +99,8 @@ class CandidateValidationService {
       // Skip if course ID is empty
       if (courseId.isEmpty) continue;
 
-      if(courseId == "00440114") {
-        // Special case handling for course 00440114
+      if(courseId == "02340236") {
+        // Special case handling for course 02340236
         debugPrint('🔍 Special handling for course: $courseId');
         // Implement any specific logic for this course here
       }
@@ -121,7 +128,8 @@ class CandidateValidationService {
       // Course passed all filters - add to valid candidates
       validCourses.add(course);
     }
-    
+    final courseCount = validCourses.length;
+    debugPrint('📚 Total valid courses found: $courseCount');
     return validCourses;
   }
   
@@ -185,7 +193,6 @@ class CandidateValidationService {
       }
       
       // Check if student has missing prerequisites using CourseProvider
-      final courseProvider = CourseProvider();
       final missingPrereqs = courseProvider.getMissingPrerequisites(
         semesterDisplayName,
         parsedPrereqs,

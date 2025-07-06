@@ -13,6 +13,8 @@ import 'optimization/ai_guided_hill_climbing_service.dart';
 import 'optimization/candidate_validation_service.dart';
 
 class CourseRecommendationService extends BaseAiService {
+  final CourseProvider courseProvider;
+  
   static const String _systemInstruction = '''
 ${AiConfig.baseSystemInstruction}
 
@@ -35,8 +37,8 @@ Consider these factors:
 Respond with valid JSON only, following the exact schema provided.
 the course name must be in hebrew.
 ''';
-
-  CourseRecommendationService()
+  
+  CourseRecommendationService(this.courseProvider)
     : super(
         modelName: AiConfig.defaultModel,
         systemInstruction: _systemInstruction,
@@ -52,9 +54,9 @@ the course name must be in hebrew.
   }) async {
     try {
       // Parse actual year/semester based on display label like "Winter 2024-2025"
-      final fallbackSemester = await CourseProvider()
+      final fallbackSemester = await courseProvider
           .getClosestAvailableSemester(request.semesterDisplayName);
-      final parsed = CourseProvider().parseSemesterCode(fallbackSemester);
+      final parsed = courseProvider.parseSemesterCode(fallbackSemester);
       debugPrint(
         '🟢 Selected semester from UI: ${request.semesterDisplayName}',
       );
@@ -182,7 +184,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     try {
       // Step 1: Get valid candidates for optimization
       debugPrint('🔍 Step 1: Fetching valid candidates...');
-      final validationService = CandidateValidationService();
+      final validationService = CandidateValidationService(courseProvider);
       final validCandidates = await validationService.getValidCandidates(request);
       debugPrint('✅ Found ${validCandidates.length} valid candidates');
       

@@ -482,7 +482,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
   }
 
   void _generateRecommendations(CourseRecommendationProvider provider) async {
-    await provider.generateRecommendations(context);
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    await provider.generateRecommendations(context, courseProvider);
 
     if (provider.currentRecommendation != null) {
       // Switch to results tab
