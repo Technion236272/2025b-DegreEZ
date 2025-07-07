@@ -40,9 +40,6 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  // final model =
-  //     FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
-
   runApp(const MyApp());
 }
 

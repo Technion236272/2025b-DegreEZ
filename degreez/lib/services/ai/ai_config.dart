@@ -1,7 +1,11 @@
 /// AI configuration constants and utilities shared across all AI services
 class AiConfig {
   // Model configurations
-  static const String defaultModel = 'gemini-2.5-pro';
+  static const String defaultModel = 'gemini-2.5-flash';
+  static const String optimizationModel = 'gemini-2.5-pro'; // More powerful model for optimization
+  
+  // Feature flags
+  static const bool useOptimizationModelByDefault = true; // Toggle optimization model usage
   
   // Common system instruction prefixes
   static const String baseSystemInstruction = "You are an AI assistant for DegreEZ, an academic planning app.";
@@ -22,4 +26,17 @@ class AiConfig {
   // Common MIME types
   static const String pdfMimeType = 'application/pdf';
   static const String jsonMimeType = 'application/json';
+  
+  // Utility methods for model selection
+  static String getModelForOptimization({bool useOptimizationModel = true}) {
+    return useOptimizationModel ? optimizationModel : defaultModel;
+  }
+  
+  static String getModelBasedOnMode({bool fastMode = false}) {
+    return fastMode ? defaultModel : optimizationModel;
+  }
+  
+  static String getModelForChat() => defaultModel;
+  
+  static String getModelForDocumentAnalysis() => defaultModel;
 }
