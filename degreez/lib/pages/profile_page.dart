@@ -20,6 +20,7 @@ import 'package:degreez/widgets/selectors/semester_year_selector.dart';
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../widgets/calculate_gpa_function.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -264,7 +265,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 )
                 .fold<double>(0.0, (sum, credits) => sum + credits);
 
-            final gpa = _calculateGPA(courseNotifier.coursesBySemester);
+            final gpa = calculateAverage(getCompletedCourses(
+                courseNotifier.sortedCoursesBySemester,
+                courseNotifier
+              )).gpa;
             final stats = _getCompletionStats(courseNotifier.coursesBySemester);
             final completionPercentage =
                 stats['total']! > 0
@@ -505,7 +509,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      gpa.toStringAsFixed(2),
+                      gpa.toStringAsFixed(1),
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
