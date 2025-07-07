@@ -38,6 +38,8 @@ class _FullScreenGraphPageState extends State<FullScreenGraphPage> {
   void dispose() {
     // Exit fullscreen mode when leaving
     _exitFullscreen();
+    // Clear focus to prevent keyboard from showing when returning
+    FocusManager.instance.primaryFocus?.unfocus();
     super.dispose();
   }
 
@@ -66,12 +68,13 @@ class _FullScreenGraphPageState extends State<FullScreenGraphPage> {
       // Handle back button properly
       onPopInvoked: (didPop) {
         if (!didPop) {
+          // Clear focus before exiting to prevent keyboard from opening
+          FocusManager.instance.primaryFocus?.unfocus();
           _exitFullscreen();
           Navigator.of(context).pop();
         }
       },
       child: Scaffold(
-    
         // Conditionally show app bar - always hidden since this is fullscreen
         appBar: null,
         body: Stack(
@@ -105,6 +108,8 @@ class _FullScreenGraphPageState extends State<FullScreenGraphPage> {
                     color: themeProvider.textPrimary,
                   ),
                   onPressed: () {
+                    // Clear focus before closing to prevent keyboard from opening
+                    FocusManager.instance.primaryFocus?.unfocus();
                     _exitFullscreen();
                     Navigator.of(context).pop();
                   },
