@@ -174,7 +174,12 @@ class TreePainter extends CustomPainter {
     );
 
     if (themeProvider.isDarkMode) {
-      canvas.drawShadow(Path()..addRRect(rect), Colors.black45, 4, false);
+      canvas.drawShadow(
+        Path()..addRRect(rect),
+        themeProvider.isDarkMode ? Colors.black45 : Colors.grey.shade300,
+        4,
+        false,
+      );
     }
 
     // 👈 ADD THIS: Visual feedback for interactive nodes
@@ -282,7 +287,9 @@ class TreePainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = Colors.grey.shade800
+        ..color = themeProvider.isDarkMode 
+            ? Colors.grey.shade600 
+            : Colors.grey.shade800
         ..strokeWidth = 2
         ..style = PaintingStyle.stroke,
     );

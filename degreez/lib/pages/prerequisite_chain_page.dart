@@ -60,7 +60,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
         slivers: [
           // Modern App Bar
@@ -68,7 +68,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
             expandedHeight: 120,
             pinned: true,
             backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
             flexibleSpace: FlexibleSpaceBar(
               title: const Text(
                 'Prerequisite Explorer',
@@ -88,11 +88,11 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                     ],
                   ),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.account_tree,
                     size: 80,
-                    color: Colors.white24,
+                    color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.24),
                   ),
                 ),
               ),
@@ -162,6 +162,9 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search by course ID or name (e.g., "02340123" or "calculus")',
+                hintStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 prefixIcon: const Icon(Icons.school),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -180,7 +183,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: Theme.of(context).colorScheme.surfaceVariant,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -205,7 +208,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                 child: Text(
                   'Type at least 3 characters to search',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -244,7 +247,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                 Text(
                   'Search for any course to visualize its prerequisite chain and explore different prerequisite paths.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -373,7 +376,12 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: index < searchResults.length - 1
-              ? const Border(bottom: BorderSide(color: Colors.grey, width: 0.2))
+              ? Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.2,
+                  ),
+                )
               : null,
         ),
         child: Row(
@@ -432,7 +440,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
             Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: Colors.grey[400],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ],
         ),
@@ -452,19 +460,23 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: Colors.grey[600]),
+          Icon(
+            icon,
+            size: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -497,7 +509,7 @@ Widget _buildSelectedCourseSection() {
                       label: const Text('Fullscreen'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.white,
+                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -556,11 +568,11 @@ void _openFullscreenGraph() {
     context: context,
     barrierDismissible: false,
     builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -705,7 +717,7 @@ Widget _buildHelpSection(String title, List<String> points, IconData icon) {
                 point,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -736,7 +748,7 @@ Widget _buildStatItem(String label, String value, IconData icon, Color color) {
         label,
         style: TextStyle(
           fontSize: 12,
-          color: Colors.grey[600],
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     ],
@@ -747,7 +759,7 @@ void _showErrorSnackBar(String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
-      backgroundColor: Colors.red,
+      backgroundColor: Theme.of(context).colorScheme.error,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -760,7 +772,7 @@ void _showSuccessSnackBar(String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message),
-      backgroundColor: Colors.green,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -800,9 +812,9 @@ void _showSuccessSnackBar(String message) {
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.book,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     size: 28,
                   ),
                 ),
@@ -893,7 +905,7 @@ void _showSuccessSnackBar(String message) {
             Icon(
               Icons.check_circle_outline,
               size: 64,
-              color: Colors.green[400],
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 16),
             Text(
@@ -906,7 +918,7 @@ void _showSuccessSnackBar(String message) {
             Text(
               'This course has no prerequisite requirements. You can enroll directly!',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),

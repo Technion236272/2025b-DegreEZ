@@ -397,7 +397,9 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                       : '${_displayedStates.length} paths',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                  ).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -583,7 +585,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                                   : null,
                           foregroundColor:
                               selected
-                                  ? Colors.white
+                                  ? Theme.of(context).colorScheme.onPrimary
                                   : (isBestGraph && !selected)
                                   ? Theme.of(
                                     context,
@@ -618,7 +620,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                                 size: 10,
                                 color:
                                     selected
-                                        ? Colors.white
+                                        ? Theme.of(context).colorScheme.onPrimary
                                         : Theme.of(context).colorScheme.primary,
                               ),
                               const SizedBox(height: 2),
@@ -682,7 +684,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
               children: [
                 LinearProgressIndicator(
                   value: _displayedStates.length / _allCombinations.length,
-                  backgroundColor: Colors.grey[300],
+                  backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     Theme.of(context).colorScheme.primary,
                   ),
@@ -690,7 +692,10 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                 const SizedBox(height: 4),
                 Text(
                   '${_displayedStates.length} of ${_allCombinations.length} paths loaded',
-                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -827,11 +832,6 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     return positionKey;
   }
 
-  // Keep the original method for backward compatibility
-  String _extractOriginalCourseId(String nodeId) {
-    return _extractOriginalCourseIdFromKey(nodeId);
-  }
-
   void _showDebugInfo(Offset tapPosition, Map<String, Offset> nodePositions) {
     debugPrint('❌ No node found at $tapPosition');
 
@@ -864,23 +864,17 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
           ],
         ),
         duration: const Duration(seconds: 3),
-        backgroundColor: Colors.orange,
+        backgroundColor: Theme.of(context).colorScheme.error,
         action:
             closestNode != null && closestDistance < 200
                 ? SnackBarAction(
                   label: 'Select',
-                  textColor: Colors.white,
+                  textColor: Theme.of(context).colorScheme.onError,
                   onPressed: () => _showCourseInfo(closestNode!),
                 )
                 : null,
       ),
     );
-  }
-
-  String? _findTappedNode(Offset position, TreePainter painter) {
-    // This method is now integrated into _findAndShowTappedNode for better debugging
-    // Keep this method for compatibility but it won't be used
-    return null;
   }
 
   void _showCourseInfo(String courseId) {
@@ -926,7 +920,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailRow('Course ID', courseId, Icons.tag),
+                _buildDetailRow('Course ID', courseId, Icons.tag, isLightText: true),
                 const SizedBox(height: 12),
                 _buildDetailRow('Course Name', courseName, Icons.book),
                 const SizedBox(height: 12),
@@ -984,7 +978,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -996,7 +990,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon) {
+  Widget _buildDetailRow(String label, String value, IconData icon, {bool isLightText = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1032,7 +1026,9 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: isLightText 
+                    ? Theme.of(context).colorScheme.onSurfaceVariant
+                    : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -1228,7 +1224,10 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
           Expanded(
             child: Text(
               description,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],

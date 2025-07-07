@@ -420,7 +420,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
           ),
           Text(
             'Course ID: ${examInfo.courseId}',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           Text('📝 ${examInfo.examType}', style: const TextStyle(fontSize: 12)),
           if (daysDifferenceWidget != null) ...[
@@ -1277,7 +1280,12 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                         'Course: ${course.name}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text('Course ID: ${course.courseId}'),
+                      Text(
+                        'Course ID: ${course.courseId}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       Text('Semester: $selectedSemester'),
                     ],
                   ),

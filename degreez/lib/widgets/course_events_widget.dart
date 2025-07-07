@@ -321,7 +321,10 @@ class _CourseEventsWidgetState extends State<CourseEventsWidget> with CourseEven
           const SizedBox(height: 8),
           Text(
             'Course ID: ${widget.courseDetails.courseNumber}',
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16),
           

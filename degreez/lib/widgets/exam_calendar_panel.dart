@@ -295,7 +295,10 @@ Widget _buildExamListTile(ExamInfo examInfo, ThemeProvider themeProvider, List<E
         ),
         Text(
           'Course ID: ${examInfo.courseId}',
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         Text(
           '📝 ${examInfo.examType}',
