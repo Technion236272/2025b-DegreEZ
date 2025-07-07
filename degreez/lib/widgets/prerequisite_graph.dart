@@ -638,7 +638,89 @@ class _GraphState {
     return children;
   }
 
-  // SOLUTION 1: Show full tree for each path (nodes can appear multiple times)
+ // FIXED: Tree conversion with proper shared node handling
+  TreeNode toTreeNodeWithSharedMarking(String rootId, Map<String, String> names) {
+    debugPrint('🌳 Converting to tree starting from: $rootId (marking shared nodes)');
+    
+    // First pass: identify nodes that have multiple parents (shared nodes)
+    final nodeParents = <String, Set<String>>{};
+    for (final edge in graph.edges) {
+      final from = edge.source.key?.value as String?;
+      final to = edge.destination.key?.value as String?;
+      if (from != null && to != null) {
+        nodeParents.putIfAbsent(to, () => {}).add(from);
+      }
+    }
+    
+    // Identify truly shared nodes (nodes with multiple parents)
+    final sharedNodes = nodeParents.entries
+        .where((entry) => entry.value.length > 1)
+        .map((entry) => entry.key)
+        .toSet();
+    
+    debugPrint('🔗 Shared nodes detected: ${sharedNodes.join(', ')}');
+    for (final nodeId in sharedNodes) {
+      final parents = nodeParents[nodeId]!;
+      debugPrint('  $nodeId has parents: ${parents.join(', ')}');
+    }
+    
+    // Track which shared nodes we've already shown in full
+    final sharedNodesShown = <String>{};
+    
+    // Second pass: build tree with shared node indicators
+    TreeNode build(String id, Set<String> currentPath, int depth) {
+      final indent = '  ' * depth;
+      debugPrint('${indent}🔍 Building node: $id (depth: $depth)');
+      
+      // Prevent infinite loops
+      if (currentPath.contains(id)) {
+        debugPrint("${indent}🔄 Loop detected, stopping: $id");
+        return TreeNode(id: id, label: "${names[id] ?? id} (loop)", children: []);
+      }
+
+      final newPath = {...currentPath, id};
+      final children = _getDirectChildren(id);
+      final isSharedNode = sharedNodes.contains(id);
+      
+      // If this is a shared node and we've already shown it in full elsewhere
+      if (isSharedNode && sharedNodesShown.contains(id)) {
+        debugPrint("${indent}🔗 Shared node $id already shown - creating reference");
+        final label = "${names[id] ?? id} (see above)";
+        return TreeNode(id: id, label: label, children: []);
+      }
+      
+      // If this is a shared node and this is its first full appearance, mark it as shown
+      if (isSharedNode) {
+        sharedNodesShown.add(id);
+        debugPrint("${indent}🌟 First full appearance of shared node: $id");
+      }
+      
+      debugPrint("${indent}👶 Children of $id: ${children.join(', ')} (count: ${children.length})");
+
+      final childNodes = children.map((childId) => 
+        build(childId, newPath, depth + 1)
+      ).toList();
+      
+      debugPrint("${indent}✅ Built node $id with ${childNodes.length} children");
+      
+      // Add indicator if this node is shared
+      final label = isSharedNode 
+          ? "${names[id] ?? id} (shared)"
+          : (names[id] ?? id);
+      
+      return TreeNode(
+        id: id,
+        label: label,
+        children: childNodes,
+      );
+    }
+
+    final result = build(rootId, {}, 0);
+    debugPrint('🌳 Tree conversion completed (with shared marking)');
+    return result;
+  }
+
+  // ALTERNATIVE: Show shared nodes in full everywhere (duplicates allowed)
   TreeNode toTreeNodeWithDuplicates(String rootId, Map<String, String> names) {
     debugPrint('🌳 Converting to tree starting from: $rootId (allowing duplicates)');
     
@@ -649,7 +731,7 @@ class _GraphState {
       // Only prevent infinite loops within the same path
       if (currentPath.contains(id)) {
         debugPrint("${indent}🔄 Loop detected in current path, stopping: $id");
-        return TreeNode(id: id, label: names[id] ?? id, children: []);
+        return TreeNode(id: id, label: "${names[id] ?? id} (loop)", children: []);
       }
 
       final newPath = {...currentPath, id};
@@ -675,47 +757,60 @@ class _GraphState {
     return result;
   }
 
-  // SOLUTION 2: Show tree with shared nodes marked
-  TreeNode toTreeNodeWithSharedMarking(String rootId, Map<String, String> names) {
-    debugPrint('🌳 Converting to tree starting from: $rootId (marking shared nodes)');
+  // BEST OPTION: Show shared nodes with full subtree in first occurrence, reference in subsequent
+  TreeNode toTreeNodeWithSmartSharing(String rootId, Map<String, String> names) {
+    debugPrint('🌳 Converting to tree starting from: $rootId (smart sharing)');
     
-    // First pass: identify nodes that appear multiple times
-    final nodeOccurrences = <String, int>{};
-    void countOccurrences(String id, Set<String> visited) {
-      if (visited.contains(id)) return;
-      final newVisited = {...visited, id};
+    // Track the order nodes are visited in a breadth-first manner
+    final visitOrder = <String>[];
+    final queue = <String>[rootId];
+    final processed = <String>{};
+    
+    // Determine visit order to decide which occurrence gets the full subtree
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      if (processed.contains(current)) continue;
       
-      nodeOccurrences[id] = (nodeOccurrences[id] ?? 0) + 1;
+      processed.add(current);
+      visitOrder.add(current);
       
-      final children = _getDirectChildren(id);
-      for (final child in children) {
-        countOccurrences(child, newVisited);
-      }
+      final children = _getDirectChildren(current);
+      queue.addAll(children);
     }
-    countOccurrences(rootId, {});
     
-    // Second pass: build tree with shared node indicators
+    debugPrint('📋 Visit order: ${visitOrder.join(' → ')}');
+    
+    // Track which nodes we've shown in full
+    final nodesShownInFull = <String>{};
+    
     TreeNode build(String id, Set<String> currentPath, int depth) {
       final indent = '  ' * depth;
       debugPrint('${indent}🔍 Building node: $id (depth: $depth)');
       
+      // Prevent infinite loops
       if (currentPath.contains(id)) {
         debugPrint("${indent}🔄 Loop detected, stopping: $id");
-        return TreeNode(id: id, label: names[id] ?? id, children: []);
+        return TreeNode(id: id, label: "${names[id] ?? id} (loop)", children: []);
       }
 
       final newPath = {...currentPath, id};
       final children = _getDirectChildren(id);
       
-      // Check if this node appears elsewhere (shared)
-      final isShared = (nodeOccurrences[id] ?? 0) > 1;
-      final hasBeenVisitedBefore = currentPath.isNotEmpty; // Not the root
+      // Check if this node has already been shown in full
+      final hasBeenShownInFull = nodesShownInFull.contains(id);
       
-      if (isShared && hasBeenVisitedBefore) {
-        debugPrint("${indent}🔗 Shared node $id - showing as reference");
-        final label = "${names[id] ?? id} (shared)";
-        return TreeNode(id: id, label: label, children: []);
+      if (hasBeenShownInFull) {
+        debugPrint("${indent}🔗 Node $id already shown in full - creating reference");
+        return TreeNode(
+          id: id, 
+          label: "${names[id] ?? id} (→ see above)", 
+          children: [],
+        );
       }
+      
+      // Mark this node as shown in full
+      nodesShownInFull.add(id);
+      debugPrint("${indent}🌟 Showing $id in full (first occurrence)");
       
       debugPrint("${indent}👶 Children of $id: ${children.join(', ')} (count: ${children.length})");
 
@@ -733,15 +828,21 @@ class _GraphState {
     }
 
     final result = build(rootId, {}, 0);
-    debugPrint('🌳 Tree conversion completed (with shared marking)');
+    debugPrint('🌳 Tree conversion completed (with smart sharing)');
     return result;
   }
 
-  // Your original method - just renamed for clarity
-  TreeNode toTreeNode(String rootId, Map<String, String> names) {
-    // Use the solution that works best for you:
+TreeNode toTreeNode(String rootId, Map<String, String> names) {
+    // Choose the best approach for your needs:
+    
+    // Option 1: Show duplicates everywhere (simplest, shows full tree)
     return toTreeNodeWithDuplicates(rootId, names);
- //   return toTreeNodeWithSharedMarking(rootId, names);
+    
+    // Option 2: Smart sharing (shows full subtree once, then references)
+    // return toTreeNodeWithSmartSharing(rootId, names);
+    
+    // Option 3: Fixed shared marking (shows shared nodes with indicators)
+    // return toTreeNodeWithSharedMarking(rootId, names);
   }
 
   void _debugGraphStructure() {
