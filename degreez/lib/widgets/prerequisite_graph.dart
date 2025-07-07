@@ -26,257 +26,29 @@ class PrerequisiteGraph extends StatefulWidget {
 }
 
 class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
-  late List<_GraphState> _allStates;
-  final PageController _pageController = PageController(initialPage: 0);
+  // Lazy loading configuration
+  static const int LAZY_THRESHOLD = 20;  // Start lazy loading if more than 20 graphs
+  static const int INITIAL_BATCH_SIZE = 5;
+  static const int BATCH_SIZE = 3;
+  
+  // State management
+  List<Map<String, int>> _allCombinations = [];
+  List<_GraphState> _displayedStates = [];
   late Map<String, String> _names;
   int _current = 0;
-  final TransformationController _transformationController =
-      TransformationController();
+  bool _isLazyMode = false;
+  bool _isLoadingMore = false;
+  bool _isInitialLoading = true;
+  
+  // UI controllers
+  final PageController _pageController = PageController(initialPage: 0);
+  final TransformationController _transformationController = TransformationController();
 
   @override
   void initState() {
     super.initState();
     _names = Map.from(widget.courseNames);
     _computeStates();
-  }
-
-  void _computeStates() {
-    debugPrint('🚀 Starting graph computation for: ${widget.rootCourseId}');
-     _inspectPrerequisiteData();
-    // Create one graph per OR-group combination
-    _allStates = _buildOneGraphPerORGroup(widget.rootCourseId);
-    
-    debugPrint('📊 Generated ${_allStates.length} total graphs');
-    _preloadMissingNames();
-  }
-
-  /// NEW METHOD: Build one graph for each valid OR-group combination
-  List<_GraphState> _buildOneGraphPerORGroup(String rootId) {
-    final result = <_GraphState>[];
-    final allORGroupCombinations = _generateORGroupCombinations(rootId, {});
-    
-    debugPrint('🔍 Found ${allORGroupCombinations.length} OR-group combinations');
-    
-    for (int i = 0; i < allORGroupCombinations.length; i++) {
-      final combination = allORGroupCombinations[i];
-      debugPrint('\n🎯 Building graph ${i + 1} with combination: $combination');
-      
-      final graphState = _GraphState();
-      graphState.addNode(rootId);
-      
-      final success = _buildGraphWithCombination(rootId, graphState, combination, {});
-      
-      if (success) {
-        debugPrint('✅ Graph ${i + 1} built successfully');
-        graphState._debugGraphStructure();
-        result.add(graphState);
-      } else {
-        debugPrint('❌ Graph ${i + 1} failed to build');
-      }
-    }
-    
-    return result;
-  }
-
-  
-
-  /// Build a graph using a specific OR-group combination
-// Modified _buildGraphWithCombination method with specific debugging for 02340141
-bool _buildGraphWithCombination(
-  String courseId,
-  _GraphState graph,
-  Map<String, int> combination,
-  Set<String> visited,
-) {
-  if (visited.contains(courseId)) return true;
-  
-  final nextVisited = {...visited, courseId};
-  final groups = widget.coursePrereqs[courseId];
-  
-  if (groups == null || groups.isEmpty) return true;
-  
-  // Add specific debugging for the problematic course
-  if (courseId == '02340141') {
-    debugPrint('\n🚨 SPECIAL DEBUG FOR 02340141 🚨');
-    _debugSpecificCourse(courseId);
-  }
-  
-  final validGroups = _filterValidGroups(groups);
-  if (validGroups.isEmpty) return true;
-  
-  // Get the chosen OR-group for this course
-  final chosenGroupIndex = combination[courseId];
-  if (chosenGroupIndex == null || chosenGroupIndex >= validGroups.length) {
-    debugPrint('❌ Invalid group index for $courseId: $chosenGroupIndex');
-    debugPrint('   Available groups: ${validGroups.length}');
-    debugPrint('   Combination: $combination');
-    
-    if (courseId == '02340141') {
-      debugPrint('🚨 02340141 GROUP SELECTION FAILED!');
-      debugPrint('   chosenGroupIndex: $chosenGroupIndex');
-      debugPrint('   validGroups.length: ${validGroups.length}');
-      debugPrint('   Full combination map: $combination');
-    }
-    return false;
-  }
-  
-  final chosenGroup = validGroups[chosenGroupIndex];
-  final children = chosenGroup.values.expand((l) => l).toList();
-  
-  if (courseId == '02340141') {
-    debugPrint('🚨 02340141 CHOSEN GROUP:');
-    debugPrint('   Chosen index: $chosenGroupIndex');
-    debugPrint('   Chosen group: $chosenGroup');
-    debugPrint('   Children: ${children.join(', ')} (${children.length} total)');
-  }
-  
-  debugPrint('🔗 Adding ${children.length} children to $courseId: ${children.join(', ')}');
-  
-  // Add all children to this parent
-  for (final childId in children) {
-    graph.addEdge(courseId, childId);
-  }
-  
-  // Verify the edges were added correctly
-  final actualChildren = graph._getDirectChildren(courseId);
-  if (actualChildren.length != children.length) {
-    debugPrint('❌ Edge count mismatch for $courseId:');
-    debugPrint('   Expected: ${children.join(', ')} (${children.length})');
-    debugPrint('   Actual: ${actualChildren.join(', ')} (${actualChildren.length})');
-    
-    if (courseId == '02340141') {
-      debugPrint('🚨 02340141 EDGE MISMATCH DETECTED!');
-    }
-    return false;
-  }
-  
-  debugPrint('✅ Successfully added ${children.length} children to $courseId');
-  
-  // Recursively build for all children
-  for (final childId in children) {
-    if (!_buildGraphWithCombination(childId, graph, combination, nextVisited)) {
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-// Also add debugging to the combination generation for 02340141
-List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String> visited) {
-  if (visited.contains(courseId)) return [{}];
-  
-  final nextVisited = {...visited, courseId};
-  final groups = widget.coursePrereqs[courseId];
-  
-  if (groups == null || groups.isEmpty) return [{}];
-  
-  // Special debugging for 02340141
-  if (courseId == '02340141') {
-    debugPrint('\n🔍 GENERATING COMBINATIONS FOR 02340141');
-    _debugSpecificCourse(courseId);
-  }
-  
-  // Filter valid groups
-  final validGroups = _filterValidGroups(groups);
-  if (validGroups.isEmpty) return [{}];
-  
-  if (courseId == '02340141') {
-    debugPrint('🔍 02340141 valid groups after filtering: ${validGroups.length}');
-    for (int i = 0; i < validGroups.length; i++) {
-      final group = validGroups[i];
-      final children = group.values.expand((l) => l).toList();
-      debugPrint('   Group $i: ${children.join(', ')}');
-    }
-  }
-  
-  debugPrint('📋 Course $courseId has ${validGroups.length} valid OR-groups');
-  
-  // Get combinations for all children
-  final childCombinations = <List<Map<String, int>>>[];
-  
-  for (int groupIndex = 0; groupIndex < validGroups.length; groupIndex++) {
-    final group = validGroups[groupIndex];
-    final children = group.values.expand((l) => l).toList();
-    
-    if (courseId == '02340141') {
-      debugPrint('🔍 02340141 processing group $groupIndex with children: ${children.join(', ')}');
-    }
-    
-    // Get combinations for each child
-    List<Map<String, int>> groupChildCombos = [{}];
-    
-    for (final childId in children) {
-      final childCombos = _generateORGroupCombinations(childId, nextVisited);
-      
-      // Merge child combinations
-      final newGroupChildCombos = <Map<String, int>>[];
-      for (final existing in groupChildCombos) {
-        for (final childCombo in childCombos) {
-          final merged = {...existing, ...childCombo};
-          newGroupChildCombos.add(merged);
-        }
-      }
-      groupChildCombos = newGroupChildCombos;
-    }
-    
-    // Add this course's OR-group choice to each combination
-    final groupCombosWithChoice = groupChildCombos.map((combo) => {
-      ...combo,
-      courseId: groupIndex,
-    }).toList();
-    
-    if (courseId == '02340141') {
-      debugPrint('🔍 02340141 group $groupIndex produces ${groupCombosWithChoice.length} combinations');
-    }
-    
-    childCombinations.add(groupCombosWithChoice);
-  }
-  
-  // Flatten all combinations
-  final allCombinations = childCombinations.expand((x) => x).toList();
-  
-  if (courseId == '02340141') {
-    debugPrint('🔍 02340141 FINAL: ${allCombinations.length} total combinations');
-    for (int i = 0; i < allCombinations.length; i++) {
-      debugPrint('   Combination $i: ${allCombinations[i]}');
-    }
-  }
-  
-  debugPrint('🔢 Course $courseId contributes ${allCombinations.length} combinations');
-  
-  return allCombinations;
-}
-
-  /// Filter and score OR-groups
-  List<Map<String, List<String>>> _filterValidGroups(List<Map<String, List<String>>> groups) {
-    // Filter groups where all children exist in courseNames
-    var valid = groups.where((g) {
-      final children = g.values.expand((l) => l).toList();
-      return children.every(widget.courseNames.containsKey);
-    }).toList();
-
-    if (valid.isEmpty) return [];
-
-    // Score groups by faculty matching
-    final scores = valid.map((g) {
-      final children = g.values.expand((l) => l).toList();
-      return children
-          .where((cid) => 
-              widget.courseFaculties[cid]?.contains(widget.studentFaculty) ?? false)
-          .length;
-    }).toList();
-
-    // If we have faculty-matching groups, prefer them
-    final maxScore = scores.reduce((a, b) => a > b ? a : b);
-    if (maxScore > 0) {
-      valid = [
-        for (int i = 0; i < valid.length; i++)
-          if (scores[i] == maxScore) valid[i]
-      ];
-    }
-
-    return valid;
   }
 
   @override
@@ -287,12 +59,229 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
         old.courseNames != widget.courseNames) {
       _names = Map.from(widget.courseNames);
       _computeStates();
-      setState(() {});
     }
   }
 
+  void _computeStates() async {
+    setState(() {
+      _isInitialLoading = true;
+      _displayedStates.clear();
+      _current = 0;
+    });
+
+    final stopwatch = Stopwatch()..start();
+    debugPrint('🚀 Starting graph computation for: ${widget.rootCourseId}');
+    
+    // Generate all possible OR-group combinations (fast)
+    _allCombinations = _generateORGroupCombinations(widget.rootCourseId, {});
+    
+    stopwatch.stop();
+    debugPrint('⏱️ Combination generation took: ${stopwatch.elapsedMilliseconds}ms');
+    debugPrint('📊 Generated ${_allCombinations.length} combinations');
+    
+    // Decide on lazy vs eager loading
+    _isLazyMode = _allCombinations.length > LAZY_THRESHOLD;
+    
+    if (_isLazyMode) {
+      debugPrint('🔄 Using lazy loading mode (${_allCombinations.length} > $LAZY_THRESHOLD)');
+      await _loadInitialBatch();
+    } else {
+      debugPrint('⚡ Using eager loading mode');
+      await _loadAllGraphs();
+    }
+
+    setState(() {
+      _isInitialLoading = false;
+    });
+
+    _preloadMissingNames();
+  }
+
+  Future<void> _loadInitialBatch() async {
+    final initialCombinations = _allCombinations.take(INITIAL_BATCH_SIZE).toList();
+    final graphs = await _buildGraphsFromCombinations(initialCombinations);
+    
+    setState(() {
+      _displayedStates = graphs;
+    });
+    
+    debugPrint('📦 Loaded initial batch: ${graphs.length} graphs');
+  }
+
+  Future<void> _loadAllGraphs() async {
+    final graphs = await _buildGraphsFromCombinations(_allCombinations);
+    
+    setState(() {
+      _displayedStates = graphs;
+    });
+    
+    debugPrint('📦 Loaded all graphs: ${graphs.length} graphs');
+  }
+
+  Future<void> _loadMoreGraphs() async {
+    if (!_isLazyMode || _isLoadingMore || _displayedStates.length >= _allCombinations.length) {
+      return;
+    }
+
+    setState(() => _isLoadingMore = true);
+
+    // Get next batch of combinations
+    final startIndex = _displayedStates.length;
+    final endIndex = (startIndex + BATCH_SIZE).clamp(0, _allCombinations.length);
+    final nextCombinations = _allCombinations.sublist(startIndex, endIndex);
+    
+    debugPrint('🔄 Loading batch ${startIndex + 1}-$endIndex of ${_allCombinations.length}');
+
+    // Build graphs for this batch
+    final newGraphs = await _buildGraphsFromCombinations(nextCombinations);
+
+    setState(() {
+      _displayedStates.addAll(newGraphs);
+      _isLoadingMore = false;
+    });
+
+    debugPrint('📈 Loaded ${newGraphs.length} more graphs. Total: ${_displayedStates.length}/${_allCombinations.length}');
+  }
+
+  Future<List<_GraphState>> _buildGraphsFromCombinations(List<Map<String, int>> combinations) async {
+    final graphs = <_GraphState>[];
+    
+    for (int i = 0; i < combinations.length; i++) {
+      final combination = combinations[i];
+      
+      // Create graph for this combination
+      final graphState = _GraphState();
+      graphState.addNode(widget.rootCourseId);
+      
+      final success = _buildGraphWithCombination(widget.rootCourseId, graphState, combination, {});
+      
+      if (success) {
+        graphs.add(graphState);
+      }
+      
+      // Yield control periodically to keep UI responsive
+      if (i % 5 == 0) {
+        await Future.delayed(Duration.zero);
+      }
+    }
+    
+    return graphs;
+  }
+
+  // Your existing OR-group combination generation (unchanged)
+  List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String> visited) {
+    if (visited.contains(courseId)) return [{}];
+    
+    final nextVisited = {...visited, courseId};
+    final groups = widget.coursePrereqs[courseId];
+    
+    if (groups == null || groups.isEmpty) return [{}];
+    
+    final validGroups = _filterValidGroups(groups);
+    if (validGroups.isEmpty) return [{}];
+    
+    final childCombinations = <List<Map<String, int>>>[];
+    
+    for (int groupIndex = 0; groupIndex < validGroups.length; groupIndex++) {
+      final group = validGroups[groupIndex];
+      final children = group.values.expand((l) => l).toList();
+      
+      List<Map<String, int>> groupChildCombos = [{}];
+      
+      for (final childId in children) {
+        final childCombos = _generateORGroupCombinations(childId, nextVisited);
+        
+        final newGroupChildCombos = <Map<String, int>>[];
+        for (final existing in groupChildCombos) {
+          for (final childCombo in childCombos) {
+            final merged = {...existing, ...childCombo};
+            newGroupChildCombos.add(merged);
+          }
+        }
+        groupChildCombos = newGroupChildCombos;
+      }
+      
+      final groupCombosWithChoice = groupChildCombos.map((combo) => {
+        ...combo,
+        courseId: groupIndex,
+      }).toList();
+      
+      childCombinations.add(groupCombosWithChoice);
+    }
+    
+    final allCombinations = childCombinations.expand((x) => x).toList();
+    return allCombinations;
+  }
+
+  // Your existing graph building logic (unchanged)
+  bool _buildGraphWithCombination(
+    String courseId,
+    _GraphState graph,
+    Map<String, int> combination,
+    Set<String> visited,
+  ) {
+    if (visited.contains(courseId)) return true;
+    
+    final nextVisited = {...visited, courseId};
+    final groups = widget.coursePrereqs[courseId];
+    
+    if (groups == null || groups.isEmpty) return true;
+    
+    final validGroups = _filterValidGroups(groups);
+    if (validGroups.isEmpty) return true;
+    
+    final chosenGroupIndex = combination[courseId];
+    if (chosenGroupIndex == null || chosenGroupIndex >= validGroups.length) {
+      return false;
+    }
+    
+    final chosenGroup = validGroups[chosenGroupIndex];
+    final children = chosenGroup.values.expand((l) => l).toList();
+    
+    for (final childId in children) {
+      graph.addEdge(courseId, childId);
+    }
+    
+    for (final childId in children) {
+      if (!_buildGraphWithCombination(childId, graph, combination, nextVisited)) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  List<Map<String, List<String>>> _filterValidGroups(List<Map<String, List<String>>> groups) {
+    var valid = groups.where((g) {
+      final children = g.values.expand((l) => l).toList();
+      return children.every(widget.courseNames.containsKey);
+    }).toList();
+
+    if (valid.isEmpty) return [];
+
+    final scores = valid.map((g) {
+      final children = g.values.expand((l) => l).toList();
+      return children
+          .where((cid) => 
+              widget.courseFaculties[cid]?.contains(widget.studentFaculty) ?? false)
+          .length;
+    }).toList();
+
+    if (scores.isNotEmpty) {
+      final maxScore = scores.reduce((a, b) => a > b ? a : b);
+      if (maxScore > 0) {
+        valid = [
+          for (int i = 0; i < valid.length; i++)
+            if (scores[i] == maxScore) valid[i]
+        ];
+      }
+    }
+
+    return valid;
+  }
+
   Future<void> _preloadMissingNames() async {
-    final allIds = _allStates.expand((st) => st.nodeMap.keys).toSet();
+    final allIds = _displayedStates.expand((st) => st.nodeMap.keys).toSet();
     final missing = allIds.where((id) => !_names.containsKey(id)).toList();
     if (missing.isEmpty) return;
 
@@ -310,26 +299,62 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
     final scaleY = (viewportSize.height - padding * 2) / bounds.height;
     final scale = scaleX < scaleY ? scaleX : scaleY;
 
-    final dx =
-        -bounds.left * scale + (viewportSize.width - bounds.width * scale) / 2;
-    final dy =
-        -bounds.top * scale + (viewportSize.height - bounds.height * scale) / 2;
+    final dx = -bounds.left * scale + (viewportSize.width - bounds.width * scale) / 2;
+    final dy = -bounds.top * scale + (viewportSize.height - bounds.height * scale) / 2;
 
-    _transformationController.value =
-        Matrix4.identity()
-          ..translate(dx, dy)
-          ..scale(scale);
+    _transformationController.value = Matrix4.identity()
+      ..translate(dx, dy)
+      ..scale(scale);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_allStates.isEmpty) {
+    if (_isInitialLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Generating prerequisite graphs...'),
+          ],
+        ),
+      );
+    }
+
+    if (_displayedStates.isEmpty) {
       return const Center(child: Text('No valid prerequisite graphs found.'));
     }
 
     return Column(
       children: [
-        // Header with graph information
+        // Lazy loading info banner
+        if (_isLazyMode)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.flash_on, size: 16, color: Colors.blue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Loaded ${_displayedStates.length}/${_allCombinations.length} paths',
+                    style: const TextStyle(fontSize: 11, color: Colors.blue),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Header
         Container(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -338,15 +363,21 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
                 _names[widget.rootCourseId] ?? widget.rootCourseId,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
               const SizedBox(height: 8),
               Text(
-                '${_allStates.length} different prerequisite paths',
+                _isLazyMode 
+                    ? 'Loaded ${_displayedStates.length}/${_allCombinations.length} paths'
+                    : '${_displayedStates.length} paths',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[600],
                 ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
-              if (_allStates.isNotEmpty) _buildCurrentGraphInfo(),
+              if (_displayedStates.isNotEmpty) _buildCurrentGraphInfo(),
             ],
           ),
         ),
@@ -356,23 +387,24 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
           child: PageView.builder(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _allStates.length,
-            onPageChanged: (i) => setState(() => _current = i),
+            itemCount: _displayedStates.length,
+            onPageChanged: (i) {
+              setState(() => _current = i);
+              
+              // Auto-load more when approaching the end
+              if (_isLazyMode && i >= _displayedStates.length - 2) {
+                _loadMoreGraphs();
+              }
+            },
             itemBuilder: (_, index) {
-              final graphState = _allStates[index];
+              final graphState = _displayedStates[index];
               return Padding(
                 padding: const EdgeInsets.all(8),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final themeProvider = Provider.of<ThemeProvider>(context);
-                    final treeNode = graphState.toTreeNode(
-                      widget.rootCourseId,
-                      _names,
-                    );
-                    final painter = TreePainter(
-                      treeNode,
-                      themeProvider: themeProvider,
-                    );
+                    final treeNode = graphState.toTreeNode(widget.rootCourseId, _names);
+                    final painter = TreePainter(treeNode, themeProvider: themeProvider);
                     
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       final bounds = painter.getBoundingBox();
@@ -404,38 +436,8 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
 
         const SizedBox(height: 8),
 
-        // Navigation buttons
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: List.generate(_allStates.length, (i) {
-              final selected = i == _current;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        selected ? Theme.of(context).colorScheme.primary : null,
-                    foregroundColor: selected ? Colors.white : null,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  onPressed: () {
-                    _pageController.animateToPage(
-                      i,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                  child: Text('Path ${i + 1}'),
-                ),
-              );
-            }),
-          ),
-        ),
+        // Navigation controls
+        _buildNavigationControls(),
 
         const SizedBox(height: 8),
       ],
@@ -443,20 +445,20 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
   }
 
   Widget _buildCurrentGraphInfo() {
-    if (_allStates.isEmpty) return const SizedBox();
+    if (_displayedStates.isEmpty) return const SizedBox();
 
-    final currentState = _allStates[_current];
+    final currentState = _displayedStates[_current];
     final nodeCount = currentState.nodeMap.length;
     final edgeCount = currentState.graph.edges.length;
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Wrap(
+        alignment: WrapAlignment.spaceEvenly,
         children: [
           _buildInfoChip('Courses', nodeCount.toString()),
           _buildInfoChip('Prerequisites', edgeCount.toString()),
-          _buildInfoChip('Path', '${_current + 1} of ${_allStates.length}'),
+          _buildInfoChip('Path', '${_current + 1}/${_displayedStates.length}'),
         ],
       ),
     );
@@ -464,129 +466,120 @@ List<Map<String, int>> _generateORGroupCombinations(String courseId, Set<String>
 
   Widget _buildInfoChip(String label, String value) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         '$label: $value',
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
       ),
     );
   }
 
-
-  void _debugSpecificCourse(String courseId) {
-  debugPrint('\n🔍 === DEBUGGING COURSE: $courseId ===');
-  
-  final groups = widget.coursePrereqs[courseId];
-  if (groups == null || groups.isEmpty) {
-    debugPrint('❌ No prerequisite groups found for $courseId');
-    return;
-  }
-  
-  debugPrint('📋 Raw prerequisite groups for $courseId:');
-  for (int i = 0; i < groups.length; i++) {
-    final group = groups[i];
-    debugPrint('  OR-group ${i + 1}: $group');
-    
-    final children = group.values.expand((l) => l).toList();
-    debugPrint('    → Flattened children: ${children.join(', ')} (${children.length} total)');
-    
-    // Check if all children exist in courseNames
-    for (final child in children) {
-      if (widget.courseNames.containsKey(child)) {
-        debugPrint('    ✅ $child exists in courseNames: ${widget.courseNames[child]}');
-      } else {
-        debugPrint('    ❌ $child MISSING from courseNames');
-      }
-    }
-    
-    // Check faculty matching
-    final facultyMatches = children.where((cid) => 
-        widget.courseFaculties[cid]?.contains(widget.studentFaculty) ?? false
-    ).length;
-    debugPrint('    🎯 Faculty matches: $facultyMatches/${children.length}');
-  }
-  
-  // Test the filtering logic
-  final validGroups = _filterValidGroups(groups);
-  debugPrint('\n📊 After filtering:');
-  debugPrint('  Valid groups: ${validGroups.length}/${groups.length}');
-  
-  for (int i = 0; i < validGroups.length; i++) {
-    final group = validGroups[i];
-    final children = group.values.expand((l) => l).toList();
-    debugPrint('  Valid group ${i + 1}: ${children.join(', ')}');
-  }
-  
-  debugPrint('=== END DEBUG FOR $courseId ===\n');
-}
-void _inspectPrerequisiteData() {
-  debugPrint('\n🔍 === INSPECTING ALL PREREQUISITE DATA ===');
-  
-  final problematicCourses = ['02340141', '02340218', '02340123'];
-  
-  for (final courseId in problematicCourses) {
-    debugPrint('\n📋 Course: $courseId');
-    debugPrint('   Name: ${widget.courseNames[courseId] ?? 'NOT FOUND'}');
-    debugPrint('   Faculty: ${widget.courseFaculties[courseId] ?? 'NOT FOUND'}');
-    debugPrint('   Student Faculty: ${widget.studentFaculty}');
-    
-    final groups = widget.coursePrereqs[courseId];
-    if (groups == null || groups.isEmpty) {
-      debugPrint('   ❌ No prerequisite groups');
-      continue;
-    }
-    
-    debugPrint('   📊 ${groups.length} prerequisite groups:');
-    
-    for (int i = 0; i < groups.length; i++) {
-      final group = groups[i];
-      debugPrint('     Group ${i + 1}: $group');
-      
-      // Extract all course IDs from this group
-      final allCourseIds = <String>[];
-      for (final entry in group.entries) {
-        final key = entry.key;
-        final values = entry.value;
+  Widget _buildNavigationControls() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 48, // Fixed height to prevent overflow
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Graph navigation buttons
+                ...List.generate(_displayedStates.length, (i) {
+                  final selected = i == _current;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: SizedBox(
+                      width: 60, // Fixed width to prevent overflow
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selected 
+                              ? Theme.of(context).colorScheme.primary 
+                              : null,
+                          foregroundColor: selected ? Colors.white : null,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
+                        ),
+                        onPressed: () {
+                          _pageController.animateToPage(
+                            i,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        child: Text(
+                          '${i + 1}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                
+                // Load more button
+                if (_isLazyMode && _displayedStates.length < _allCombinations.length)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: _isLoadingMore
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : SizedBox(
+                            width: 50,
+                            child: ElevatedButton(
+                              onPressed: _loadMoreGraphs,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                              ),
+                              child: Text(
+                                '+${_allCombinations.length - _displayedStates.length}',
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ),
+                  ),
+              ],
+            ),
+          ),
+        ),
         
-        // Check if key looks like a course ID
-        if (RegExp(r'^\d{8}$').hasMatch(key)) {
-          allCourseIds.add(key);
-        }
-        
-        // Add all values that look like course IDs
-        for (final value in values) {
-          if (RegExp(r'^\d{8}$').hasMatch(value)) {
-            allCourseIds.add(value);
-          }
-        }
-      }
-      
-      debugPrint('     → Course IDs: ${allCourseIds.join(', ')} (${allCourseIds.length} total)');
-      
-      // Check availability of each course ID
-      for (final id in allCourseIds) {
-        final exists = widget.courseNames.containsKey(id);
-        final name = widget.courseNames[id] ?? 'UNKNOWN';
-        final faculty = widget.courseFaculties[id] ?? 'UNKNOWN';
-        final facultyMatch = widget.courseFaculties[id]?.contains(widget.studentFaculty) ?? false;
-        
-        debugPrint('       $id: ${exists ? '✅' : '❌'} $name ($faculty) ${facultyMatch ? '🎯' : ''}');
-      }
-    }
+        // Progress indicator for lazy loading
+        if (_isLazyMode)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                LinearProgressIndicator(
+                  value: _displayedStates.length / _allCombinations.length,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_displayedStates.length} of ${_allCombinations.length} paths loaded',
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
-  
-  debugPrint('\n=== END PREREQUISITE DATA INSPECTION ===\n');
 }
 
-}
-
-/// Enhanced GraphState class with better edge management
-// Simple fix: Allow nodes to appear multiple times in the tree if they have different paths
-
+// Enhanced _GraphState with better tree conversion
 class _GraphState {
   final Graph graph = Graph();
   final Map<String, Node> nodeMap = {};
@@ -596,19 +589,13 @@ class _GraphState {
     if (!nodeMap.containsKey(id)) {
       nodeMap[id] = Node.Id(id);
       graph.addNode(nodeMap[id]!);
-      debugPrint('✅ Added node: $id');
     }
   }
 
   void addEdge(String from, String to) {
     final edgeKey = '$from→$to';
     
-    if (_addedEdges.contains(edgeKey)) {
-      debugPrint('⚠️  Edge already exists: $from → $to');
-      return;
-    }
-    
-    debugPrint('🔗 Adding edge: $from → $to');
+    if (_addedEdges.contains(edgeKey)) return;
     
     addNode(from);
     addNode(to);
@@ -618,132 +605,31 @@ class _GraphState {
     
     graph.addEdge(fromNode, toNode);
     _addedEdges.add(edgeKey);
-    
-    debugPrint('✅ Edge added successfully: $from → $to');
   }
 
   List<String> _getDirectChildren(String parentId) {
     final parentNode = nodeMap[parentId];
-    if (parentNode == null) {
-      debugPrint('❌ Parent node not found: $parentId');
-      return [];
-    }
+    if (parentNode == null) return [];
     
-    final children = graph.edges
+    return graph.edges
         .where((edge) => edge.source == parentNode)
         .map((edge) => edge.destination.key!.value as String)
         .toList();
-    
-    debugPrint('📊 Direct children of $parentId: ${children.join(', ')} (count: ${children.length})');
-    return children;
   }
 
- // FIXED: Tree conversion with proper shared node handling
-  TreeNode toTreeNodeWithSharedMarking(String rootId, Map<String, String> names) {
-    debugPrint('🌳 Converting to tree starting from: $rootId (marking shared nodes)');
-    
-    // First pass: identify nodes that have multiple parents (shared nodes)
-    final nodeParents = <String, Set<String>>{};
-    for (final edge in graph.edges) {
-      final from = edge.source.key?.value as String?;
-      final to = edge.destination.key?.value as String?;
-      if (from != null && to != null) {
-        nodeParents.putIfAbsent(to, () => {}).add(from);
-      }
-    }
-    
-    // Identify truly shared nodes (nodes with multiple parents)
-    final sharedNodes = nodeParents.entries
-        .where((entry) => entry.value.length > 1)
-        .map((entry) => entry.key)
-        .toSet();
-    
-    debugPrint('🔗 Shared nodes detected: ${sharedNodes.join(', ')}');
-    for (final nodeId in sharedNodes) {
-      final parents = nodeParents[nodeId]!;
-      debugPrint('  $nodeId has parents: ${parents.join(', ')}');
-    }
-    
-    // Track which shared nodes we've already shown in full
-    final sharedNodesShown = <String>{};
-    
-    // Second pass: build tree with shared node indicators
-    TreeNode build(String id, Set<String> currentPath, int depth) {
-      final indent = '  ' * depth;
-      debugPrint('${indent}🔍 Building node: $id (depth: $depth)');
-      
-      // Prevent infinite loops
+  TreeNode toTreeNode(String rootId, Map<String, String> names) {
+    // Use the duplicates approach for now - most reliable
+    TreeNode build(String id, Set<String> currentPath) {
       if (currentPath.contains(id)) {
-        debugPrint("${indent}🔄 Loop detected, stopping: $id");
         return TreeNode(id: id, label: "${names[id] ?? id} (loop)", children: []);
       }
 
       final newPath = {...currentPath, id};
       final children = _getDirectChildren(id);
-      final isSharedNode = sharedNodes.contains(id);
-      
-      // If this is a shared node and we've already shown it in full elsewhere
-      if (isSharedNode && sharedNodesShown.contains(id)) {
-        debugPrint("${indent}🔗 Shared node $id already shown - creating reference");
-        final label = "${names[id] ?? id} (see above)";
-        return TreeNode(id: id, label: label, children: []);
-      }
-      
-      // If this is a shared node and this is its first full appearance, mark it as shown
-      if (isSharedNode) {
-        sharedNodesShown.add(id);
-        debugPrint("${indent}🌟 First full appearance of shared node: $id");
-      }
-      
-      debugPrint("${indent}👶 Children of $id: ${children.join(', ')} (count: ${children.length})");
 
       final childNodes = children.map((childId) => 
-        build(childId, newPath, depth + 1)
+        build(childId, newPath)
       ).toList();
-      
-      debugPrint("${indent}✅ Built node $id with ${childNodes.length} children");
-      
-      // Add indicator if this node is shared
-      final label = isSharedNode 
-          ? "${names[id] ?? id} (shared)"
-          : (names[id] ?? id);
-      
-      return TreeNode(
-        id: id,
-        label: label,
-        children: childNodes,
-      );
-    }
-
-    final result = build(rootId, {}, 0);
-    debugPrint('🌳 Tree conversion completed (with shared marking)');
-    return result;
-  }
-
-  // ALTERNATIVE: Show shared nodes in full everywhere (duplicates allowed)
-  TreeNode toTreeNodeWithDuplicates(String rootId, Map<String, String> names) {
-    debugPrint('🌳 Converting to tree starting from: $rootId (allowing duplicates)');
-    
-    TreeNode build(String id, Set<String> currentPath, int depth) {
-      final indent = '  ' * depth;
-      debugPrint('${indent}🔍 Building node: $id (depth: $depth)');
-      
-      // Only prevent infinite loops within the same path
-      if (currentPath.contains(id)) {
-        debugPrint("${indent}🔄 Loop detected in current path, stopping: $id");
-        return TreeNode(id: id, label: "${names[id] ?? id} (loop)", children: []);
-      }
-
-      final newPath = {...currentPath, id};
-      final children = _getDirectChildren(id);
-      
-      debugPrint("${indent}👶 Children of $id: ${children.join(', ')} (count: ${children.length})");
-
-      final childNodes = children.map((childId) => 
-        build(childId, newPath, depth + 1)
-      ).toList();
-      
-      debugPrint("${indent}✅ Built node $id with ${childNodes.length} children");
       
       return TreeNode(
         id: id,
@@ -752,139 +638,7 @@ class _GraphState {
       );
     }
 
-    final result = build(rootId, {}, 0);
-    debugPrint('🌳 Tree conversion completed (with duplicates allowed)');
-    return result;
-  }
-
-  // BEST OPTION: Show shared nodes with full subtree in first occurrence, reference in subsequent
-  TreeNode toTreeNodeWithSmartSharing(String rootId, Map<String, String> names) {
-    debugPrint('🌳 Converting to tree starting from: $rootId (smart sharing)');
-    
-    // Track the order nodes are visited in a breadth-first manner
-    final visitOrder = <String>[];
-    final queue = <String>[rootId];
-    final processed = <String>{};
-    
-    // Determine visit order to decide which occurrence gets the full subtree
-    while (queue.isNotEmpty) {
-      final current = queue.removeAt(0);
-      if (processed.contains(current)) continue;
-      
-      processed.add(current);
-      visitOrder.add(current);
-      
-      final children = _getDirectChildren(current);
-      queue.addAll(children);
-    }
-    
-    debugPrint('📋 Visit order: ${visitOrder.join(' → ')}');
-    
-    // Track which nodes we've shown in full
-    final nodesShownInFull = <String>{};
-    
-    TreeNode build(String id, Set<String> currentPath, int depth) {
-      final indent = '  ' * depth;
-      debugPrint('${indent}🔍 Building node: $id (depth: $depth)');
-      
-      // Prevent infinite loops
-      if (currentPath.contains(id)) {
-        debugPrint("${indent}🔄 Loop detected, stopping: $id");
-        return TreeNode(id: id, label: "${names[id] ?? id} (loop)", children: []);
-      }
-
-      final newPath = {...currentPath, id};
-      final children = _getDirectChildren(id);
-      
-      // Check if this node has already been shown in full
-      final hasBeenShownInFull = nodesShownInFull.contains(id);
-      
-      if (hasBeenShownInFull) {
-        debugPrint("${indent}🔗 Node $id already shown in full - creating reference");
-        return TreeNode(
-          id: id, 
-          label: "${names[id] ?? id} (→ see above)", 
-          children: [],
-        );
-      }
-      
-      // Mark this node as shown in full
-      nodesShownInFull.add(id);
-      debugPrint("${indent}🌟 Showing $id in full (first occurrence)");
-      
-      debugPrint("${indent}👶 Children of $id: ${children.join(', ')} (count: ${children.length})");
-
-      final childNodes = children.map((childId) => 
-        build(childId, newPath, depth + 1)
-      ).toList();
-      
-      debugPrint("${indent}✅ Built node $id with ${childNodes.length} children");
-      
-      return TreeNode(
-        id: id,
-        label: names[id] ?? id,
-        children: childNodes,
-      );
-    }
-
-    final result = build(rootId, {}, 0);
-    debugPrint('🌳 Tree conversion completed (with smart sharing)');
-    return result;
-  }
-
-TreeNode toTreeNode(String rootId, Map<String, String> names) {
-    // Choose the best approach for your needs:
-    
-    // Option 1: Show duplicates everywhere (simplest, shows full tree)
-    return toTreeNodeWithDuplicates(rootId, names);
-    
-    // Option 2: Smart sharing (shows full subtree once, then references)
-    // return toTreeNodeWithSmartSharing(rootId, names);
-    
-    // Option 3: Fixed shared marking (shows shared nodes with indicators)
-    // return toTreeNodeWithSharedMarking(rootId, names);
-  }
-
-  void _debugGraphStructure() {
-    debugPrint('📊 === GRAPH STRUCTURE DEBUG ===');
-    debugPrint('Nodes: ${nodeMap.keys.join(', ')}');
-    debugPrint('Total nodes: ${nodeMap.length}');
-    debugPrint('Total edges: ${graph.edges.length}');
-    
-    debugPrint('Edges:');
-    for (final edge in graph.edges) {
-      final from = edge.source.key?.value as String?;
-      final to = edge.destination.key?.value as String?;
-      debugPrint('  $from → $to');
-    }
-    
-    // Check for nodes with multiple parents (diamond dependencies)
-    final nodeParents = <String, List<String>>{};
-    for (final edge in graph.edges) {
-      final from = edge.source.key?.value as String?;
-      final to = edge.destination.key?.value as String?;
-      if (from != null && to != null) {
-        nodeParents.putIfAbsent(to, () => []).add(from);
-      }
-    }
-    
-    debugPrint('Node parents:');
-    for (final entry in nodeParents.entries) {
-      final nodeId = entry.key;
-      final parents = entry.value;
-      if (parents.length > 1) {
-        debugPrint('  🔹 $nodeId has ${parents.length} parents: ${parents.join(', ')} (DIAMOND DEPENDENCY)');
-      } else {
-        debugPrint('  $nodeId: ${parents.join(', ')}');
-      }
-    }
-    
-    debugPrint('Node children count:');
-    for (final nodeId in nodeMap.keys) {
-      final childCount = _getDirectChildren(nodeId).length;
-      debugPrint('  $nodeId: $childCount children');
-    }
-    debugPrint('=== END GRAPH DEBUG ===');
+    return build(rootId, {});
   }
 
   _GraphState();
