@@ -66,20 +66,22 @@ class SemesterSelectorWidget extends StatelessWidget {
                               display,
                             );
                             if (parsed != null) {
+                              // The color change is handled by selectedColor and labelStyle below.
                               final (year, semesterCode) = parsed;
                               onSemesterSelected(year, semesterCode);
+                              
                             }
                           }
                         },
 
                         selectedColor: Theme.of(
                           context,
-                        ).primaryColor.withAlpha(51),
+                        ).primaryColor,
                         labelStyle: TextStyle(
                           color:
                               isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : null,
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).textTheme.bodyMedium?.color,
                           fontWeight: isSelected ? FontWeight.bold : null,
                         ),
                       );
