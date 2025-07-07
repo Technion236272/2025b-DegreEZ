@@ -47,11 +47,27 @@ the course name must be in hebrew.
         ),
       );
 
+  /// Helper method to create a specialized model for different operations
+  GenerativeModel _createSpecializedModel(
+    Schema schema, {
+    String? customSystemInstruction,
+    bool useOptimizationModel = false,
+  }) {
+    final modelName = useOptimizationModel ? AiConfig.optimizationModel : AiConfig.defaultModel;
+    return FirebaseAI.googleAI().generativeModel(
+      model: modelName,
+      systemInstruction: Content.text(customSystemInstruction ?? _systemInstruction),
+      generationConfig: AiUtils.createJsonConfig(schema),
+    );
+  }
+
   /// Main method to generate course recommendations
   Future<CourseRecommendationResponse> generateRecommendations(
     CourseRecommendationRequest request, {
     bool fastMode = false, // NEW: Fast mode parameter
   }) async {
+    // In fast mode, use default model; in optimization mode, use pro model
+    final useOptimizationModel = !fastMode;
     try {
       // Parse actual year/semester based on display label like "Winter 2024-2025"
       final fallbackSemester = await courseProvider
@@ -102,6 +118,7 @@ the course name must be in hebrew.
         request,
         validCandidates, // Pass the pre-fetched valid candidates
         fastMode, // Pass fast mode to optimization
+        useOptimizationModel, // Pass optimization model preference
       );
       
       if (!fastMode) {
@@ -114,6 +131,7 @@ the course name must be in hebrew.
         optimizedSets,
         request,
         validCandidates, // Pass valid candidates for storage
+        useOptimizationModel, // Pass optimization model preference
       );
       debugPrint('✅ Phase 3 complete: Selected 3 final course sets with one highlighted');
 
@@ -129,12 +147,8 @@ the course name must be in hebrew.
     CourseRecommendationRequest request,
     List<dynamic> validCandidates, // NEW: Pass valid candidates
   ) async {
-    // Create model for multiple candidate course sets identification
-    final candidateModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
-      systemInstruction: Content.text(_systemInstruction),
-      generationConfig: AiUtils.createJsonConfig(_createMultiSetCandidateSchema()),
-    );
+    // Use specialized model for multiple candidate course sets identification
+    final candidateModel = _createSpecializedModel(_createMultiSetCandidateSchema());
     // printing the user context for debugging
     debugPrint('🔍 User context for candidate sets: ${request.userContext}');
     debugPrint('🔍 Preparing to identify multiple candidate sets...');
@@ -189,6 +203,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     CourseRecommendationRequest request,
     List<dynamic> validCandidates, // NEW: Pre-fetched valid candidates
     bool fastMode, // NEW: Fast mode parameter
+    bool useOptimizationModel, // NEW: Control optimization model usage
   ) async {
     if (fastMode) {
       debugPrint('⚡ Starting FAST MODE - skipping hill climbing optimization...');
@@ -216,6 +231,8 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
         fastMode: fastMode, // NEW: Pass fast mode to optimization
       );
       
+      // Note: Hill climbing service already uses AiConfig.optimizationModel for better performance
+      
       if (fastMode) {
         debugPrint('✅ Fast mode optimization complete');
       } else {
@@ -235,12 +252,12 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
     List<CourseSet> optimizedSets,
     CourseRecommendationRequest request,
     List<dynamic> validCandidates, // NEW: Pass valid candidates for storage
+    bool useOptimizationModel, // NEW: Control optimization model usage
   ) async {
-    // Create model for final set selection
-    final finalSelectionModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
-      systemInstruction: Content.text(_systemInstruction),
-      generationConfig: AiUtils.createJsonConfig(_createFinalThreeSetSelectionSchema()),
+    // Use specialized model for final set selection with optimization model
+    final finalSelectionModel = _createSpecializedModel(
+      _createFinalThreeSetSelectionSchema(),
+      useOptimizationModel: useOptimizationModel, // Use parameter to control model choice
     );
 
     // Prepare the prompt for final selection
@@ -459,11 +476,10 @@ Return your response as valid JSON with the required schema.
       debugPrint('✅ Feedback: Using pre-fetched valid candidates from session (${validCandidates.length} candidates for replacements)');
     }
 
-    // Create model for feedback processing with function calling
-    final feedbackModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
-      systemInstruction: Content.text(_getFeedbackSystemInstruction()),
-      generationConfig: AiUtils.createJsonConfig(_createFeedbackResponseSchema()),
+    // Use specialized model for feedback processing with function calling
+    final feedbackModel = _createSpecializedModel(
+      _createFeedbackResponseSchema(),
+      customSystemInstruction: _getFeedbackSystemInstruction(),
     );
 
     // Prepare conversation context for the AI

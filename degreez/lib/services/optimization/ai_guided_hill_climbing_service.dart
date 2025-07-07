@@ -26,7 +26,7 @@ class AiGuidedHillClimbingService {
     required List<dynamic> validCandidates,
     required CourseRecommendationRequest request,
     int maxIterations = 5,
-    bool fastMode = false, //  Fast mode parameter
+    bool fastMode = false, // Fast mode parameter
   }) async {
     if (fastMode) {
       debugPrint('⚡ AI-guided hill climbing: FAST MODE - returning initial sets directly');
@@ -58,6 +58,7 @@ class AiGuidedHillClimbingService {
           validCandidates,
           request,
           maxIterations,
+          fastMode, // Pass fastMode parameter
         );
         
         optimizedSets.add(optimizedSet);
@@ -88,12 +89,13 @@ class AiGuidedHillClimbingService {
   Future<SolutionEvaluation> _evaluateCurrentSolution(
     List<CourseSet> currentSets,
     CourseRecommendationRequest request,
+    bool fastMode, // Add fastMode parameter
   ) async {
     debugPrint('📊 Starting solution evaluation...');
     
     try {
       final evaluationModel = FirebaseAI.googleAI().generativeModel(
-        model: AiConfig.defaultModel,
+        model: fastMode ? AiConfig.defaultModel : AiConfig.optimizationModel, // Use appropriate model
         systemInstruction: Content.text(_getEvaluationSystemInstruction()),
         generationConfig: AiUtils.createJsonConfig(_createEvaluationSchema()),
       );
@@ -157,9 +159,10 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     SolutionEvaluation evaluation,
     CourseRecommendationRequest request,
     String validationFeedback, // NEW: Include validation feedback
+    bool fastMode, // Add fastMode parameter
   ) async {
     final modificationModel = FirebaseAI.googleAI().generativeModel(
-      model: AiConfig.defaultModel,
+      model: fastMode ? AiConfig.defaultModel : AiConfig.optimizationModel, // Use appropriate model
       systemInstruction: Content.text(_getModificationSystemInstruction()),
       generationConfig: AiUtils.createJsonConfig(_createModificationSchema()),
     );
@@ -310,6 +313,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     List<dynamic> validCandidates,
     CourseRecommendationRequest request,
     int maxIterations,
+    bool fastMode, // Add fastMode parameter
   ) async {
     debugPrint('🔧 Starting individual set optimization');
     debugPrint('📊 Set ID: ${initialSet.setId}');
@@ -329,7 +333,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
         
         // Step 1: AI evaluates current set quality
         debugPrint('📊 Step 1: Evaluating set quality...');
-        final evaluation = await _evaluateCurrentSolution(currentSets, request);
+        final evaluation = await _evaluateCurrentSolution(currentSets, request, fastMode);
         debugPrint('📊 Set score: ${evaluation.overallScore}/10');
         debugPrint('📊 Academic: ${evaluation.academicProgressionScore}/10');
         debugPrint('📊 Workload: ${evaluation.workloadBalanceScore}/10');
@@ -346,6 +350,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
           evaluation,
           request,
           validationFeedback, // Pass validation feedback from previous iterations
+          fastMode, // Pass fastMode parameter
         );
         debugPrint('💡 Generated ${modifications.length} potential modifications');
         

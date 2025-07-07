@@ -71,7 +71,7 @@ class RecommendationResultsWidget extends StatelessWidget {
                   child: Text(
                     recommendation.reasoning,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white,
+                      color: context.read<ThemeProvider>().textSecondary,
                     ),
                   ),
                 ),
