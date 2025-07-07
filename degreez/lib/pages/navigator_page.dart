@@ -1,6 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/pages/calendar_page.dart';
+import 'package:degreez/pages/course_recommendation_page.dart';
 import 'package:degreez/pages/credits_page.dart';
 import 'package:degreez/pages/gpa_calculator_page.dart';
 import 'package:degreez/pages/profile_page.dart';
@@ -18,7 +19,7 @@ import '../mixins/ai_import_mixin.dart';
 import '../services/global_config_service.dart';
 import 'package:degreez/pages/course_map_page.dart';
 import 'customized_diagram_page.dart';
-import '../widgets/course_recommendation_body.dart';
+
 
 class NavigatorPage extends StatefulWidget {
   const NavigatorPage({super.key});
@@ -185,7 +186,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             );
             break;
           case 'Course Recommendations':
-            body = const CourseRecommendationBody();
+            body = const CourseRecommendationPage();
             break;
 
           default:

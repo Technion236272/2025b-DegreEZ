@@ -321,7 +321,7 @@ class EnhancedCourseDetails {
 
   factory EnhancedCourseDetails.fromSapJson(Map<String, dynamic> json) {
     final general = json['general'] as Map<String, dynamic>;
-    final scheduleList = json['schedule'] as List<dynamic>;
+    final scheduleList = (json['schedule'] as List<dynamic>?) ?? [];
     
 
    //  debugPrint('🧪 Parsing course: ${general['מספר מקצוע']}');
@@ -352,7 +352,10 @@ class EnhancedCourseDetails {
       responsible: general['אחראים'] ?? '',
       notes: general['הערות'] ?? '',
       exams: exams,
-      schedule: scheduleList.map((s) => ScheduleEntry.fromJson(s)).toList(),
+      schedule: scheduleList
+          .where((s) => s != null && s is Map<String, dynamic>)
+          .map((s) => ScheduleEntry.fromJson(s as Map<String, dynamic>))
+          .toList(),
     );
   }
 
