@@ -243,11 +243,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Add the semester timeline
-                  SemesterTimeline(
-                    semesters: _buildTimelineData(semesters),
-                    currentSemesterIndex: _currentSemesterIndex,
-                    onSemesterTap: _scrollToSemester,
-                  ),                  // Enhanced: Updated instruction text
+                  // SemesterTimeline(
+                  //   semesters: _buildTimelineData(semesters),
+                  //   currentSemesterIndex: _currentSemesterIndex,
+                  //   onSemesterTap: _scrollToSemester,
+                  // ),                  // Enhanced: Updated instruction text
                   Padding(
                     padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
                     child: AutoSizeText(

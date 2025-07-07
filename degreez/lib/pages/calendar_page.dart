@@ -255,7 +255,7 @@ class _CalendarPageState extends State<CalendarPage>
           Duration(days: DateTime.now().weekday % 7),
         ),
         maxDay: DateTime.now().add(
-          Duration(days: 7 - DateTime.now().weekday % 7),
+          Duration(days: (6 - DateTime.now().weekday) % 7),
         ),
         initialDay: DateTime.now(),
         heightPerMinute: 1,

@@ -1,4 +1,5 @@
 // lib/widgets/course_calendar_panel.dart - Updated with ColorThemeProvider
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:calendar_view/calendar_view.dart';
@@ -1035,6 +1036,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                   ],
                 ),
               ),
+              AutoSizeText("tap and Hold on a course card to view details about it, tap the course card to change selected schedule",
+              minFontSize: 8,
+              maxFontSize: 13,
+              maxLines: 2,),
             ],
           ),
         );
