@@ -486,194 +486,218 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     );
   }
 
-// Replace your _buildNavigationControls method with this enhanced version:
+  // Replace your _buildNavigationControls method with this enhanced version:
 
-Widget _buildNavigationControls() {
-  return Column(
-    children: [
-      // Best graph info banner (only show if there are multiple graphs)
-      if (_displayedStates.length > 1)
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
-              ],
+  Widget _buildNavigationControls() {
+    return Column(
+      children: [
+        // Best graph info banner (only show if there are multiple graphs)
+        if (_displayedStates.length > 1)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.3),
+                  Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              ),
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.star,
-                color: Theme.of(context).colorScheme.primary,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Graph 1 is your best match based on your taken courses',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.star,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 18,
                 ),
-              ),
-              TextButton(
-                onPressed: _showBestGraphInfo,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Why?',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-      // Navigation buttons
-      SizedBox(
-        height: 48, // Fixed height to prevent overflow
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Graph navigation buttons
-              ...List.generate(_displayedStates.length, (i) {
-                final selected = i == _current;
-                final isBestGraph = i == 0; // First graph is the best
-                
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: SizedBox(
-                    width: 60, // Fixed width to prevent overflow
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: selected 
-                            ? Theme.of(context).colorScheme.primary 
-                            : (isBestGraph && !selected)
-                                ? Theme.of(context).colorScheme.primaryContainer
-                                : null,
-                        foregroundColor: selected 
-                            ? Colors.white 
-                            : (isBestGraph && !selected)
-                                ? Theme.of(context).colorScheme.onPrimaryContainer
-                                : null,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 8,
-                        ),
-                        side: isBestGraph && !selected
-                            ? BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 1,
-                              )
-                            : null,
-                      ),
-                      onPressed: () {
-                        _pageController.animateToPage(
-                          i,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isBestGraph) ...[
-                            Icon(
-                              Icons.star,
-                              size: 10,
-                              color: selected 
-                                  ? Colors.white 
-                                  : Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(height: 2),
-                          ],
-                          Text(
-                            '${i + 1}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isBestGraph ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Graph 1 is your best match based on your taken courses',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
-                );
-              }),
-              
-              // Load more button
-              if (_isLazyMode && _displayedStates.length < _allCombinations.length)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: _isLoadingMore
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : SizedBox(
-                          width: 50,
-                          child: ElevatedButton(
-                            onPressed: _loadMoreGraphs,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                            ),
-                            child: Text(
-                              '+${_allCombinations.length - _displayedStates.length}',
-                              style: const TextStyle(fontSize: 10),
-                            ),
+                ),
+                TextButton(
+                  onPressed: _showBestGraphInfo,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Why?',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Navigation buttons
+        SizedBox(
+          height: 48, // Fixed height to prevent overflow
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Graph navigation buttons
+                ...List.generate(_displayedStates.length, (i) {
+                  final selected = i == _current;
+                  final isBestGraph = i == 0; // First graph is the best
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: SizedBox(
+                      width: 60, // Fixed width to prevent overflow
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              selected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : (isBestGraph && !selected)
+                                  ? Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer
+                                  : null,
+                          foregroundColor:
+                              selected
+                                  ? Colors.white
+                                  : (isBestGraph && !selected)
+                                  ? Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer
+                                  : null,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
                           ),
+                          side:
+                              isBestGraph && !selected
+                                  ? BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    width: 1,
+                                  )
+                                  : null,
                         ),
-                ),
-            ],
+                        onPressed: () {
+                          _pageController.animateToPage(
+                            i,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isBestGraph) ...[
+                              Icon(
+                                Icons.star,
+                                size: 10,
+                                color:
+                                    selected
+                                        ? Colors.white
+                                        : Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 2),
+                            ],
+                            Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight:
+                                    isBestGraph
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+
+                // Load more button
+                if (_isLazyMode &&
+                    _displayedStates.length < _allCombinations.length)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child:
+                        _isLoadingMore
+                            ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : SizedBox(
+                              width: 50,
+                              child: ElevatedButton(
+                                onPressed: _loadMoreGraphs,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  '+${_allCombinations.length - _displayedStates.length}',
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                              ),
+                            ),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
-      
-      // Progress indicator for lazy loading
-      if (_isLazyMode)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            children: [
-              LinearProgressIndicator(
-                value: _displayedStates.length / _allCombinations.length,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).colorScheme.primary,
+
+        // Progress indicator for lazy loading
+        if (_isLazyMode)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                LinearProgressIndicator(
+                  value: _displayedStates.length / _allCombinations.length,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${_displayedStates.length} of ${_allCombinations.length} paths loaded',
-                style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  '${_displayedStates.length} of ${_allCombinations.length} paths loaded',
+                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                ),
+              ],
+            ),
           ),
-        ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   void _handleLongPress(
     Offset tapPosition,
@@ -685,7 +709,7 @@ Widget _buildNavigationControls() {
     // Get the current transformation matrix
     final transform = _transformationController.value;
 
-    // Simple approach: Get scale and translation from the matrix
+    // Get scale and translation from the matrix
     final scale = transform.getMaxScaleOnAxis();
     final translation = transform.getTranslation();
 
@@ -693,69 +717,162 @@ Widget _buildNavigationControls() {
       '📐 Scale: $scale, Translation: ${translation.x}, ${translation.y}',
     );
 
-    // Convert tap position to the coordinate system of the painted content
+    // More precise coordinate transformation
+    // Account for the InteractiveViewer's transformation and container padding
     final adjustedX =
-        (tapPosition.dx - translation.x) / scale -
-        100; // Account for container padding
+        (tapPosition.dx - translation.x) / scale - 100; // Container padding
     final adjustedY = (tapPosition.dy - translation.y) / scale - 100;
     final adjustedPosition = Offset(adjustedX, adjustedY);
 
     debugPrint('📍 Adjusted position: $adjustedPosition');
 
-    // Find which course node was tapped
+    // Also try a simpler approach - just use the raw tap position with larger hit radius
+    debugPrint('📍 Raw tap position: $tapPosition');
+
+    // Try both approaches
     _findAndShowTappedNode(adjustedPosition, painter);
+
+    // If that fails, also try with raw position (for debugging)
+    // This will help us understand which coordinate system works better
   }
 
   void _findAndShowTappedNode(Offset position, TreePainter painter) {
     final nodePositions = painter.getNodePositions();
-    debugPrint('🔍 Checking against ${nodePositions.length} nodes');
+    debugPrint('🔍 Checking against ${nodePositions.length} node positions');
+    debugPrint(
+      '📋 Available node position keys: ${nodePositions.keys.toList()}',
+    );
 
     String? tappedCourseId;
     double minDistance = double.infinity;
 
-    // Find the closest node within a reasonable distance
+    // More generous hit detection - use a reasonable hit radius
+    const double hitRadius = 100.0; // Increased hit radius for easier tapping
+
+    // Find the closest node within hit radius
     for (final entry in nodePositions.entries) {
-      final courseId = entry.key;
+      final positionKey =
+          entry.key; // This might be "courseId" or "courseId_0", "courseId_1"
       final nodeCenter = entry.value;
 
       // Calculate distance from tap to node center
       final distance = (position - nodeCenter).distance;
-      debugPrint('📏 Distance to $courseId: $distance (center: $nodeCenter)');
-
-      // Check if tap is within node bounds (using a more generous hit area)
-      final hitRadius =
-          (painter.nodeWidth + painter.nodeHeight) /
-          3; // More generous hit area
+      debugPrint(
+        '📏 Distance to $positionKey: $distance (center: $nodeCenter)',
+      );
 
       if (distance < hitRadius && distance < minDistance) {
         minDistance = distance;
-        tappedCourseId = courseId;
+        tappedCourseId = positionKey;
       }
     }
 
     debugPrint(
-      '🎯 Tapped course: $tappedCourseId (min distance: $minDistance)',
+      '🎯 Tapped position key: $tappedCourseId (min distance: $minDistance)',
     );
 
     if (tappedCourseId != null) {
-      _showCourseInfo(tappedCourseId);
+      // 🔧 FIX: Extract original course ID from position key
+      final originalCourseId = _extractOriginalCourseIdFromKey(tappedCourseId);
+      debugPrint(
+        '🔧 Using original course ID: $originalCourseId (from key: $tappedCourseId)',
+      );
+      _showCourseInfo(originalCourseId);
     } else {
-      // Show debug info if no node was found
-      _showDebugInfo(position, nodePositions);
+      // If no exact hit, try with an even more generous radius
+      const double veryGenerousRadius = 150.0;
+
+      for (final entry in nodePositions.entries) {
+        final positionKey = entry.key;
+        final nodeCenter = entry.value;
+        final distance = (position - nodeCenter).distance;
+
+        if (distance < veryGenerousRadius && distance < minDistance) {
+          minDistance = distance;
+          tappedCourseId = positionKey;
+        }
+      }
+
+      if (tappedCourseId != null) {
+        final originalCourseId = _extractOriginalCourseIdFromKey(
+          tappedCourseId,
+        );
+        debugPrint(
+          '🎯 Found with generous radius: $originalCourseId (distance: $minDistance)',
+        );
+        _showCourseInfo(originalCourseId);
+      } else {
+        _showDebugInfo(position, nodePositions);
+      }
     }
+  }
+
+  // 🔧 NEW: Extract original course ID from position key (handles "courseId_0" format)
+  String _extractOriginalCourseIdFromKey(String positionKey) {
+    // Handle cases like:
+    // "02340123" -> "02340123"
+    // "02340123_0" -> "02340123"
+    // "02340123 (loop)" -> "02340123"
+
+    if (positionKey.contains('_')) {
+      // Remove the "_0", "_1" suffix for duplicated positions
+      return positionKey.split('_').first;
+    }
+
+    if (positionKey.contains(' (')) {
+      // Remove " (loop)" suffix
+      return positionKey.split(' (').first;
+    }
+
+    return positionKey;
+  }
+
+  // Keep the original method for backward compatibility
+  String _extractOriginalCourseId(String nodeId) {
+    return _extractOriginalCourseIdFromKey(nodeId);
   }
 
   void _showDebugInfo(Offset tapPosition, Map<String, Offset> nodePositions) {
     debugPrint('❌ No node found at $tapPosition');
 
-    // Show a simple snackbar for debugging
+    // Find the closest node for debugging
+    String? closestNode;
+    double closestDistance = double.infinity;
+
+    for (final entry in nodePositions.entries) {
+      final distance = (tapPosition - entry.value).distance;
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestNode = entry.key;
+      }
+    }
+
+    debugPrint('🔍 Closest node: $closestNode at distance: $closestDistance');
+
+    // Show a snackbar with debug info and offer to select the closest node
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'Long press detected at ${tapPosition.dx.toInt()}, ${tapPosition.dy.toInt()}',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Long press detected at ${tapPosition.dx.toInt()}, ${tapPosition.dy.toInt()}',
+            ),
+            if (closestNode != null)
+              Text('Closest: $closestNode (${closestDistance.toInt()}px away)'),
+          ],
         ),
-        duration: const Duration(seconds: 1),
+        duration: const Duration(seconds: 3),
         backgroundColor: Colors.orange,
+        action:
+            closestNode != null && closestDistance < 200
+                ? SnackBarAction(
+                  label: 'Select',
+                  textColor: Colors.white,
+                  onPressed: () => _showCourseInfo(closestNode!),
+                )
+                : null,
       ),
     );
   }
@@ -1010,13 +1127,11 @@ Widget _buildNavigationControls() {
 
     // 3. Bonus for having the root course taken (if applicable)
 
-
     // 4. Penalty for very complex graphs (encourage simpler paths)
     final complexityPenalty =
         graphCourses.length > 10 ? -(graphCourses.length - 10) : 0;
 
-    final totalScore =
-        matchScore + coverageScore + complexityPenalty;
+    final totalScore = matchScore + coverageScore + complexityPenalty;
 
     debugPrint('📈 Graph score calculation:');
     debugPrint('  Courses in graph: ${graphCourses.length}');
@@ -1030,98 +1145,96 @@ Widget _buildNavigationControls() {
 
     return totalScore;
   }
+
   void _showBestGraphInfo() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            Icons.star,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 8),
-          const Text('Best Graph'),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'The "best graph" is automatically selected based on:',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          _buildCriteriaItem(
-            '📚 Course matches',
-            'Prioritizes paths with courses you\'ve already taken',
-          ),
-          _buildCriteriaItem(
-            '📊 Coverage percentage',
-            'Higher percentage of familiar courses in the path',
-          ),
-          _buildCriteriaItem(
-            '🎯 Path simplicity',
-            'Prefers simpler, more direct prerequisite paths',
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Row(
               children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                Icon(Icons.star, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'The graph with the star ⭐ is your best match!',
-                    style: TextStyle(fontSize: 12),
+                const Text('Best Graph'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'The "best graph" is automatically selected based on:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                _buildCriteriaItem(
+                  '📚 Course matches',
+                  'Prioritizes paths with courses you\'ve already taken',
+                ),
+                _buildCriteriaItem(
+                  '📊 Coverage percentage',
+                  'Higher percentage of familiar courses in the path',
+                ),
+                _buildCriteriaItem(
+                  '🎯 Path simplicity',
+                  'Prefers simpler, more direct prerequisite paths',
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'The graph with the star ⭐ is your best match!',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Got it'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildCriteriaItem(String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              description,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Got it'),
-        ),
-      ],
-    ),
-  );
-}
-Widget _buildCriteriaItem(String title, String description) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 14)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            description,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
+    );
+  }
 }
 
 // Helper class to pair graphs with their scores
