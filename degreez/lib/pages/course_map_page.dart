@@ -505,9 +505,18 @@ class _CourseMapPageState extends State<CourseMapPage> {
           visibleEvents[label] = true;
           int hour = int.parse(entry.time.split(" ")[0].split(":")[0]);
           int minute = int.parse(entry.time.split(" ")[0].split(":")[1]);
-          int day = (parseHebrewDay(entry.day) > DateTime.now().weekday)
-          ? DateTime.now().day + (parseHebrewDay(entry.day) - DateTime.now().weekday)
-          : DateTime.now().day + 7 + (parseHebrewDay(entry.day) - DateTime.now().weekday);
+          int day = 
+          (parseHebrewDay(entry.day) == DateTime.now().weekday
+          && (DateTime.now().hour<hour 
+             || (DateTime.now().hour==hour && DateTime.now().minute<minute)))
+          ? DateTime.now().day
+          :(parseHebrewDay(entry.day) > DateTime.now().weekday)
+              ? DateTime.now().day + (parseHebrewDay(entry.day) - DateTime.now().weekday)
+              : DateTime.now().day + 7 + (parseHebrewDay(entry.day) - DateTime.now().weekday);
+          DateTime nextClass = DateTime.now().copyWith(
+               day: day, 
+              hour:hour,
+              minute:minute );
           markers.add(
             CourseMarkerData(
               point: loc,
@@ -515,10 +524,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
               color: courseColor,
               buildingName: entry.building,
               roomNumber: entry.room.toString(),
-              nextClassTime: DateTime.now().copyWith(
-               day: day, 
-              hour:hour,
-              minute:minute ),
+              nextClassTime: nextClass
             ),
           );
           debugPrint('📌 Added marker: $label at $loc (color: $courseColor)');
