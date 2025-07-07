@@ -11,6 +11,7 @@ class PrerequisiteGraph extends StatefulWidget {
   final Map<String, String> courseNames;
   final Map<String, String> courseFaculties;
   final Map<String, List<Map<String, List<String>>>> coursePrereqs;
+  final bool showHeader;
 
   const PrerequisiteGraph({
     Key? key,
@@ -19,6 +20,7 @@ class PrerequisiteGraph extends StatefulWidget {
     required this.courseNames,
     required this.courseFaculties,
     required this.coursePrereqs,
+    this.showHeader = true,
   }) : super(key: key);
 
   @override
@@ -328,33 +330,8 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
 
     return Column(
       children: [
-        // Lazy loading info banner
-        if (_isLazyMode)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.flash_on, size: 16, color: Colors.blue),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Loaded ${_displayedStates.length}/${_allCombinations.length} paths',
-                    style: const TextStyle(fontSize: 11, color: Colors.blue),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
         // Header
+      if (widget.showHeader)
         Container(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -377,7 +354,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (_displayedStates.isNotEmpty) _buildCurrentGraphInfo(),
+           //   if (_displayedStates.isNotEmpty) _buildCurrentGraphInfo(),
             ],
           ),
         ),
@@ -413,20 +390,25 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                       }
                     });
 
-                    return InteractiveViewer(
-                      transformationController: _transformationController,
-                      constrained: false,
-                      boundaryMargin: const EdgeInsets.all(500),
-                      minScale: 0.2,
-                      maxScale: 5.0,
-                      child: Container(
-                        key: ValueKey("graph_$index"),
-                        width: 2000,
-                        height: 2000,
-                        color: themeProvider.mainColor,
-                        child: CustomPaint(painter: painter),
-                      ),
-                    );
+return InteractiveViewer(
+  transformationController: _transformationController,
+  constrained: false,
+  boundaryMargin: const EdgeInsets.all(1000), // big margin for easier pan
+  minScale: 0.2,
+  maxScale: 5.0,
+  panEnabled: true,
+  scaleEnabled: true,
+  child: Container(
+    padding: const EdgeInsets.all(100), // 👈 this gives space for gestures
+    alignment: Alignment.topLeft,
+    child: CustomPaint(
+      size: const Size(2000, 2000), // 👈 this replaces getPreferredSize
+      painter: painter,
+    ),
+  ),
+);
+
+
                   },
                 ),
               );
@@ -444,40 +426,8 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     );
   }
 
-  Widget _buildCurrentGraphInfo() {
-    if (_displayedStates.isEmpty) return const SizedBox();
 
-    final currentState = _displayedStates[_current];
-    final nodeCount = currentState.nodeMap.length;
-    final edgeCount = currentState.graph.edges.length;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        alignment: WrapAlignment.spaceEvenly,
-        children: [
-          _buildInfoChip('Courses', nodeCount.toString()),
-          _buildInfoChip('Prerequisites', edgeCount.toString()),
-          _buildInfoChip('Path', '${_current + 1}/${_displayedStates.length}'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoChip(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        '$label: $value',
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
-      ),
-    );
-  }
 
   Widget _buildNavigationControls() {
     return Column(
