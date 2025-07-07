@@ -291,155 +291,280 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
   ) {
     final user = loginNotifier.user;
     final student = studentProvider.student;
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
 
     return Drawer(
+      elevation: 16,
       child: Container(
-        color:
-            Theme.of(context).brightness == Brightness.light
-                ? AppColorsLightMode.drawerColor
-                : Theme.of(context).colorScheme.surface,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isLightMode
+                ? [
+                    const Color(0xFFFAFAFA),
+                    const Color(0xFFF5F5F5),
+                    const Color(0xFFEFEFEF),
+                  ]
+                : [
+                    const Color(0xFF17191B),
+                    const Color(0xFF1F2123),
+                    const Color(0xFF242628),
+                  ],
+          ),
+        ),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Enhanced User Header
-            UserAccountsDrawerHeader(
-              accountName: Text(
-                student?.name ?? user?.displayName ?? 'User',
-                style: TextStyle(
-                  color:
-                      Theme.of(context).brightness == Brightness.light
-                          ? AppColorsLightMode.textPrimary
-                          : AppColorsDarkMode.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              accountEmail: Text(
-                user?.email ?? '',
-                style: TextStyle(
-                  color:
-                      Theme.of(context).brightness == Brightness.light
-                          ? AppColorsLightMode.textSecondary
-                          : AppColorsDarkMode.textSecondary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              currentAccountPicture: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color:
-                        Theme.of(context).brightness == Brightness.light
-                            ? AppColorsLightMode.primaryColor
-                            : AppColorsDarkMode.secondaryColor, // Border color
-                    width: 3.0, // Border width
-                  ),
-                ),
-                child: CircleAvatar(
-                  backgroundImage:
-                      user?.photoURL != null
-                          ? NetworkImage(user!.photoURL!)
-                          : null,
-                  child:
-                      user?.photoURL == null
-                          ? Text(user?.displayName?.substring(0, 1) ?? 'U')
-                          : null,
-                ),
+            // Enhanced User Header with beautiful gradient and shadows
+            Container(
+              constraints: const BoxConstraints(
+                minHeight: 180,
+                maxHeight: 220,
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    context.read<ThemeProvider>().isLightMode
-                        ? context.read<ThemeProvider>().accentColorLight
-                        : context.read<ThemeProvider>().mainColor,
-                    context.read<ThemeProvider>().isLightMode
-                        ? context.read<ThemeProvider>().accentColor
-                        : context.read<ThemeProvider>().accentColorDark,
-                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
+                  colors: isLightMode
+                      ? [
+                          const Color(0xFF4CAF50),
+                          const Color(0xFF66BB6A),
+                          const Color(0xFF81C784),
+                        ]
+                      : [
+                          const Color(0xFF1F3D56),
+                          const Color(0xFF306780),
+                          const Color(0xFF4A7A9A),
+                        ],
                 ),
-                color:
-                    Theme.of(context).brightness == Brightness.light
-                        ? AppColorsLightMode.drawerHeaderColor
-                        : AppColorsDarkMode.secondaryColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(51),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Profile Picture with enhanced styling
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 3.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 32,
+                          backgroundColor: Colors.white,
+                          backgroundImage: user?.photoURL != null
+                              ? NetworkImage(user!.photoURL!)
+                              : null,
+                          child: user?.photoURL == null
+                              ? Text(
+                                  user?.displayName?.substring(0, 1) ?? 'U',
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: isLightMode
+                                        ? const Color(0xFF4CAF50)
+                                        : const Color(0xFF1F3D56),
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // User Name - with proper text overflow handling
+                      Flexible(
+                        child: Text(
+                          student?.name ?? user?.displayName ?? 'User',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Email - with proper text overflow handling
+                      Flexible(
+                        child: Text(
+                          user?.email ?? '',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black26,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            const SizedBox(height: 8),
+
+            // Navigation Items with enhanced styling
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Column(
+                children: [
+                  _buildDrawerItem(
+                    icon: Icons.calendar_today,
+                    title: 'Calendar',
+                    isSelected: _currentPage == 'Calendar',
+                    onTap: () => _changePage('Calendar'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.trending_up,
+                    title: 'Customized Diagram',
+                    isSelected: _currentPage == 'Customized Diagram',
+                    onTap: () => _changePage('Customized Diagram'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.calculate,
+                    title: 'GPA Calculator',
+                    isSelected: _currentPage == 'GPA Calculator',
+                    onTap: () => _changePage('GPA Calculator'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.smart_toy,
+                    title: 'AI Assistant',
+                    isSelected: _currentPage == 'AI Assistant',
+                    onTap: () => _changePage('AI Assistant'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.map,
+                    title: 'Map',
+                    isSelected: _currentPage == 'Map',
+                    onTap: () => _changePage('Map'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.auto_awesome,
+                    title: 'Course Recommendations',
+                    isSelected: _currentPage == 'Course Recommendations',
+                    onTap: () => _changePage('Course Recommendations'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.account_tree_outlined,
+                    title: 'Prerequisite Chains',
+                    isSelected: _currentPage == 'Prerequisite Chains',
+                    onTap: () => _changePage('Prerequisite Chains'),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.person,
+                    title: 'Profile',
+                    isSelected: _currentPage == 'Profile',
+                    onTap: () => _changePage('Profile'),
+                  ),
+                ],
               ),
             ),
 
-            // Navigation Items
-            _buildDrawerItem(
-              icon: Icons.calendar_today,
-              title: 'Calendar',
-              isSelected: _currentPage == 'Calendar',
-              onTap: () => _changePage('Calendar'),
+            const SizedBox(height: 16),
+            
+            // Elegant Divider
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Theme.of(context).brightness == Brightness.light
+                          ? Colors.grey.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.1),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
             ),
-            _buildDrawerItem(
-              icon: Icons.trending_up,
-              title: 'Customized Diagram',
-              isSelected: _currentPage == 'Customized Diagram',
-              onTap: () => _changePage('Customized Diagram'),
+            
+            const SizedBox(height: 16),
+            
+            // Bottom Section with subtle background
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              decoration: BoxDecoration(
+                color: isLightMode
+                    ? Colors.grey.withOpacity(0.05)
+                    : Colors.white.withOpacity(0.02),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  _buildDrawerItem(
+                    isSelected: _currentPage == 'Credits',
+                    icon: Icons.info_outline_rounded,
+                    title: 'Credits',
+                    onTap: () {
+                      showCreditsPage(context);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    isSelected: _currentPage == 'Log Out',
+                    icon: Icons.logout,
+                    title: 'Log Out',
+                    isLogout: true,
+                    onTap: () async {
+                      studentProvider.clear();
+                      context.read<CourseProvider>().clear();
+                      context.read<SignUpProvider>().resetSelected();
+                      await loginNotifier.signOut();
+                      if (context.mounted) {
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/', (route) => false);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-            _buildDrawerItem(
-              icon: Icons.calculate,
-              title: 'GPA Calculator',
-              isSelected: _currentPage == 'GPA Calculator',
-              onTap: () => _changePage('GPA Calculator'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.smart_toy,
-              title: 'AI Assistant',
-              isSelected: _currentPage == 'AI Assistant',
-              onTap: () => _changePage('AI Assistant'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.map,
-              title: 'Map',
-              isSelected: _currentPage == 'Map',
-              onTap: () => _changePage('Map'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.auto_awesome,
-              title: 'Course Recommendations',
-              isSelected: _currentPage == 'Course Recommendations',
-              onTap: () => _changePage('Course Recommendations'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.account_tree_outlined,
-              title: 'Prerequisite Chains',
-              isSelected: _currentPage == 'Prerequisite Chains',
-              onTap: () => _changePage('Prerequisite Chains'),
-            ),
-            _buildDrawerItem(
-              icon: Icons.person,
-              title: 'Profile',
-              isSelected: _currentPage == 'Profile',
-              onTap: () => _changePage('Profile'),
-            ),
-
-            const Divider(),
-            _buildDrawerItem(
-              isSelected: _currentPage == 'Log Out',
-              icon: Icons.logout,
-              title: 'Log Out',
-              onTap: () async {
-                studentProvider.clear();
-                context.read<CourseProvider>().clear();
-                context.read<SignUpProvider>().resetSelected();
-                await loginNotifier.signOut();
-                if (context.mounted) {
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil('/', (route) => false);
-                }
-              },
-            ),
-            _buildDrawerItem(
-              isSelected: _currentPage == 'Credits',
-              icon: Icons.info_outline_rounded,
-              title: 'Credits',
-              onTap: () {
-                showCreditsPage(context);
-              },
-            ),
+            
+            const SizedBox(height: 16),
 
             // // Add Course - New menu item for easier access
             // ListTile(
@@ -481,39 +606,116 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     required String title,
     required bool isSelected,
     required VoidCallback onTap,
+    bool isLogout = false,
   }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color:
-            isSelected
-                ? (Theme.of(context).brightness == Brightness.light
-                    ? AppColorsLightMode.secondaryColor
-                    : AppColorsDarkMode.secondaryColor)
-                : (Theme.of(context).brightness == Brightness.light
-                    ? AppColorsLightMode.textSecondary
-                    : AppColorsDarkMode.secondaryColorDim),
+    final isLightMode = Theme.of(context).brightness == Brightness.light;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: isSelected
+            ? LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: isLightMode
+                    ? [
+                        const Color(0xFF4CAF50).withOpacity(0.1),
+                        const Color(0xFF66BB6A).withOpacity(0.08),
+                      ]
+                    : [
+                        const Color(0xFF1F3D56).withOpacity(0.3),
+                        const Color(0xFF306780).withOpacity(0.2),
+                      ],
+              )
+            : null,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: isLightMode
+                      ? const Color(0xFF4CAF50).withOpacity(0.2)
+                      : const Color(0xFF1F3D56).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color:
-              isSelected
-                  ? (Theme.of(context).brightness == Brightness.light
-                      ? AppColorsLightMode.secondaryColor
-                      : AppColorsDarkMode.secondaryColor)
-                  : (Theme.of(context).brightness == Brightness.light
-                      ? AppColorsLightMode.textSecondary
-                      : AppColorsDarkMode.secondaryColorDim),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          splashColor: isLightMode
+              ? const Color(0xFF4CAF50).withOpacity(0.1)
+              : const Color(0xFF1F3D56).withOpacity(0.2),
+          highlightColor: isLightMode
+              ? const Color(0xFF4CAF50).withOpacity(0.05)
+              : const Color(0xFF1F3D56).withOpacity(0.1),
+          onTap: () {
+            Navigator.pop(context); // Close drawer
+            onTap();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected
+                        ? (isLightMode
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFF1F3D56))
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: isLogout
+                        ? const Color(0xFFE53E3E)
+                        : (isSelected
+                            ? Colors.white
+                            : (isLightMode
+                                ? const Color(0xFF4A5568)
+                                : const Color(0xFFB8C7D6))),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isLogout
+                          ? const Color(0xFFE53E3E)
+                          : (isSelected
+                              ? (isLightMode
+                                  ? const Color(0xFF2D3748)
+                                  : const Color(0xFFB8C7D6))
+                              : (isLightMode
+                                  ? const Color(0xFF4A5568)
+                                  : const Color(0xFF9CA3AF))),
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: isLightMode
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFF1F3D56),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
-      selected: isSelected,
-      selectedTileColor: Theme.of(context).primaryColor.withAlpha(25),
-      onTap: () {
-        Navigator.pop(context); // Close drawer
-        onTap();
-      },
     );
   }
 
