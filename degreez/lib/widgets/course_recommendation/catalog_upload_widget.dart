@@ -56,7 +56,7 @@ class CatalogUploadWidget extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: themeProvider.primaryColor),
-                    foregroundColor: themeProvider.primaryColor,
+                    foregroundColor: themeProvider.secondaryColor,
                   ),
                 ),
               )
