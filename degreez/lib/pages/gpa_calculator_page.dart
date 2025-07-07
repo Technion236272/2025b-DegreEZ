@@ -370,23 +370,10 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 courseProvider,
                 excludedCourseIds: _excludedCourseIds
               );
-              final currentResult = calculateAverage(completedCoursesWithExecluded);
+              final currentResult = calculateAverage(completedCourses);
 
               // Calculate projected average including what-if courses
               final allCourses = [
-                ...completedCourses,
-                ..._whatIfCourses.map(
-                  (course) => GpaCalculationItem(
-                    name: course.name,
-                    courseId: '',
-                    grade: course.grade,
-                    credits: course.credits,
-                    isWhatIf: true,
-                    semesterKey: 'what-if',
-                  ),
-                ),
-              ];
-              final allCoursesWithExecluded = [
                 ...completedCoursesWithExecluded,
                 ..._whatIfCourses.map(
                   (course) => GpaCalculationItem(
@@ -399,7 +386,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   ),
                 ),
               ];
-              final projectedResult = calculateAverage(allCoursesWithExecluded);
+              final projectedResult = calculateAverage(allCourses);
 
               // Extract GPA and credits from results
               final currentAverage = currentResult.gpa;
@@ -437,7 +424,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                       // Current Courses Section
                       _buildCurrentCoursesSection(
                         themeProvider,
-                        completedCourses,
+                        completedCoursesWithExecluded, //change to completedCourses
                       ),
 
                       const SizedBox(height: 24),
