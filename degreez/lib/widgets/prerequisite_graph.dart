@@ -4,6 +4,7 @@ import '../services/course_service.dart';
 import '../widgets/tree_painter.dart';
 import '../providers/theme_provider.dart';
 import 'package:provider/provider.dart';
+import '../providers/course_provider.dart';
 
 class PrerequisiteGraph extends StatefulWidget {
   final String rootCourseId;
@@ -190,7 +191,10 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
       }
     }
 
-    return graphs;
+    // 🎯 NEW: Sort graphs by "best" (most matching courses with student's taken courses)
+    final sortedGraphs = _sortGraphsByBestMatch(graphs);
+
+    return sortedGraphs;
   }
 
   // Your existing OR-group combination generation (unchanged)
@@ -482,110 +486,194 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
     );
   }
 
-  Widget _buildNavigationControls() {
-    return Column(
-      children: [
-        SizedBox(
-          height: 48, // Fixed height to prevent overflow
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Graph navigation buttons
-                ...List.generate(_displayedStates.length, (i) {
-                  final selected = i == _current;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: SizedBox(
-                      width: 60, // Fixed width to prevent overflow
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              selected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
-                          foregroundColor: selected ? Colors.white : null,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 8,
-                          ),
-                        ),
-                        onPressed: () {
-                          _pageController.animateToPage(
-                            i,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
-                        child: Text(
-                          '${i + 1}',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+// Replace your _buildNavigationControls method with this enhanced version:
 
-                // Load more button
-                if (_isLazyMode &&
-                    _displayedStates.length < _allCombinations.length)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child:
-                        _isLoadingMore
-                            ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : SizedBox(
-                              width: 50,
-                              child: ElevatedButton(
-                                onPressed: _loadMoreGraphs,
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 8,
-                                  ),
-                                ),
-                                child: Text(
-                                  '+${_allCombinations.length - _displayedStates.length}',
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                              ),
-                            ),
-                  ),
+Widget _buildNavigationControls() {
+  return Column(
+    children: [
+      // Best graph info banner (only show if there are multiple graphs)
+      if (_displayedStates.length > 1)
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
               ],
             ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.star,
+                color: Theme.of(context).colorScheme.primary,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Graph 1 is your best match based on your taken courses',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: _showBestGraphInfo,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Why?',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
-        // Progress indicator for lazy loading
-        if (_isLazyMode)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                LinearProgressIndicator(
-                  value: _displayedStates.length / _allCombinations.length,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary,
+      // Navigation buttons
+      SizedBox(
+        height: 48, // Fixed height to prevent overflow
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Graph navigation buttons
+              ...List.generate(_displayedStates.length, (i) {
+                final selected = i == _current;
+                final isBestGraph = i == 0; // First graph is the best
+                
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: SizedBox(
+                    width: 60, // Fixed width to prevent overflow
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selected 
+                            ? Theme.of(context).colorScheme.primary 
+                            : (isBestGraph && !selected)
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                        foregroundColor: selected 
+                            ? Colors.white 
+                            : (isBestGraph && !selected)
+                                ? Theme.of(context).colorScheme.onPrimaryContainer
+                                : null,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 8,
+                        ),
+                        side: isBestGraph && !selected
+                            ? BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 1,
+                              )
+                            : null,
+                      ),
+                      onPressed: () {
+                        _pageController.animateToPage(
+                          i,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isBestGraph) ...[
+                            Icon(
+                              Icons.star,
+                              size: 10,
+                              color: selected 
+                                  ? Colors.white 
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(height: 2),
+                          ],
+                          Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isBestGraph ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                );
+              }),
+              
+              // Load more button
+              if (_isLazyMode && _displayedStates.length < _allCombinations.length)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _isLoadingMore
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : SizedBox(
+                          width: 50,
+                          child: ElevatedButton(
+                            onPressed: _loadMoreGraphs,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                            ),
+                            child: Text(
+                              '+${_allCombinations.length - _displayedStates.length}',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_displayedStates.length} of ${_allCombinations.length} paths loaded',
-                  style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                ),
-              ],
-            ),
+            ],
           ),
-      ],
-    );
-  }
+        ),
+      ),
+      
+      // Progress indicator for lazy loading
+      if (_isLazyMode)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            children: [
+              LinearProgressIndicator(
+                value: _displayedStates.length / _allCombinations.length,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${_displayedStates.length} of ${_allCombinations.length} paths loaded',
+                style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+    ],
+  );
+}
 
   void _handleLongPress(
     Offset tapPosition,
@@ -849,6 +937,199 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
       ),
     );
   }
+
+  List<_GraphState> _sortGraphsByBestMatch(List<_GraphState> graphs) {
+    if (!mounted) return graphs;
+
+    // Get student's taken courses
+    final takenCourses = _getStudentTakenCourses();
+
+    debugPrint(
+      '🎓 Student has taken ${takenCourses.length} courses: $takenCourses',
+    );
+
+    // Calculate score for each graph
+    final graphsWithScores =
+        graphs.map((graph) {
+          final score = _calculateGraphScore(graph, takenCourses);
+          return _GraphWithScore(graph, score);
+        }).toList();
+
+    // Sort by score (highest first)
+    graphsWithScores.sort((a, b) => b.score.compareTo(a.score));
+
+    // Log the scores for debugging
+    debugPrint('📊 Graph scores (best to worst):');
+    for (int i = 0; i < graphsWithScores.length && i < 5; i++) {
+      final item = graphsWithScores[i];
+      final courses = item.graph.nodeMap.keys.toList();
+      debugPrint('  Graph ${i + 1}: Score ${item.score} (courses: $courses)');
+    }
+
+    return graphsWithScores.map((item) => item.graph).toList();
+  }
+
+  Set<String> _getStudentTakenCourses() {
+    try {
+      final courseProvider = Provider.of<CourseProvider>(
+        context,
+        listen: false,
+      );
+      final takenCourses = <String>{};
+
+      // Get all courses from all semesters
+      for (final semester in courseProvider.sortedCoursesBySemester.values) {
+        for (final course in semester) {
+          takenCourses.add(course.courseId);
+        }
+      }
+
+      return takenCourses;
+    } catch (e) {
+      debugPrint('❌ Error getting student courses: $e');
+      return <String>{};
+    }
+  }
+
+  int _calculateGraphScore(_GraphState graph, Set<String> takenCourses) {
+    final graphCourses = graph.nodeMap.keys.toSet();
+
+    // Calculate different scoring factors
+
+    // 1. Number of matching courses (main factor)
+    final matchingCourses = graphCourses.intersection(takenCourses);
+    final matchScore =
+        matchingCourses.length * 100; // Weight: 100 points per match
+
+    // 2. Percentage of graph covered by taken courses
+    final coverageScore =
+        graphCourses.isEmpty
+            ? 0
+            : ((matchingCourses.length / graphCourses.length) * 50)
+                .round(); // Weight: up to 50 points
+
+    // 3. Bonus for having the root course taken (if applicable)
+
+
+    // 4. Penalty for very complex graphs (encourage simpler paths)
+    final complexityPenalty =
+        graphCourses.length > 10 ? -(graphCourses.length - 10) : 0;
+
+    final totalScore =
+        matchScore + coverageScore + complexityPenalty;
+
+    debugPrint('📈 Graph score calculation:');
+    debugPrint('  Courses in graph: ${graphCourses.length}');
+    debugPrint(
+      '  Matching courses: ${matchingCourses.length} (${matchingCourses.take(3).join(', ')}${matchingCourses.length > 3 ? '...' : ''})',
+    );
+    debugPrint('  Match score: $matchScore');
+    debugPrint('  Coverage score: $coverageScore');
+    debugPrint('  Complexity penalty: $complexityPenalty');
+    debugPrint('  Total score: $totalScore');
+
+    return totalScore;
+  }
+  void _showBestGraphInfo() {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Row(
+        children: [
+          Icon(
+            Icons.star,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          const Text('Best Graph'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'The "best graph" is automatically selected based on:',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          _buildCriteriaItem(
+            '📚 Course matches',
+            'Prioritizes paths with courses you\'ve already taken',
+          ),
+          _buildCriteriaItem(
+            '📊 Coverage percentage',
+            'Higher percentage of familiar courses in the path',
+          ),
+          _buildCriteriaItem(
+            '🎯 Path simplicity',
+            'Prefers simpler, more direct prerequisite paths',
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'The graph with the star ⭐ is your best match!',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Got it'),
+        ),
+      ],
+    ),
+  );
+}
+Widget _buildCriteriaItem(String title, String description) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 14)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            description,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+}
+
+// Helper class to pair graphs with their scores
+class _GraphWithScore {
+  final _GraphState graph;
+  final int score;
+
+  _GraphWithScore(this.graph, this.score);
 }
 
 // Enhanced _GraphState with better tree conversion
