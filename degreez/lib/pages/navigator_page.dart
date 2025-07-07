@@ -264,12 +264,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
           ),
         ];
 
-      case 'AI Assistant':
-        // For AI Assistant page, maybe no additional AI button needed
-        return [];
-
-      default:
-        // For other pages, show a generic AI assistant button
+      case 'Calendar':
+        // For Course Recommendations page, maybe no additional AI button needed
         return [
           IconButton(
             icon: const Icon(Icons.bolt_sharp),
@@ -281,6 +277,10 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             tooltip: 'AI Assistant',
           ),
         ];
+
+      default:
+        // For other pages, show a generic AI assistant button
+        return [];
     }
   }
 
@@ -403,16 +403,16 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               onTap: () => _changePage('Course Recommendations'),
             ),
             _buildDrawerItem(
-              icon: Icons.person,
-              title: 'Profile',
-              isSelected: _currentPage == 'Profile',
-              onTap: () => _changePage('Profile'),
-            ),
-            _buildDrawerItem(
               icon: Icons.account_tree_outlined,
               title: 'Prerequisite Chains',
               isSelected: _currentPage == 'Prerequisite Chains',
               onTap: () => _changePage('Prerequisite Chains'),
+            ),
+            _buildDrawerItem(
+              icon: Icons.person,
+              title: 'Profile',
+              isSelected: _currentPage == 'Profile',
+              onTap: () => _changePage('Profile'),
             ),
 
             const Divider(),

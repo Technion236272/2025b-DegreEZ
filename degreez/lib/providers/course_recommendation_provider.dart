@@ -28,7 +28,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
   int? _selectedSemester;
   String? _catalogFilePath;
   List<Map<String, dynamic>> _availableSemesters = [];
-  bool _fastMode = false; // NEW: Fast mode toggle
+  bool _fastMode = true; // NEW: Fast mode toggle - default to ON
 
   // Feedback state
   RecommendationSession? _currentSession;

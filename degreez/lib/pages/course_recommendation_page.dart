@@ -51,15 +51,12 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Recommendations'),
-        backgroundColor: themeProvider.mainColor,
-        foregroundColor: themeProvider.textPrimary,
-        bottom: TabBar(
+        title: TabBar(
           controller: _tabController,
           labelColor: themeProvider.secondaryColor,
           unselectedLabelColor: themeProvider.textPrimary,
           indicatorColor: themeProvider.secondaryColor,
-          tabs: const [
+          tabs: [
             Tab(icon: Icon(Icons.search), text: 'Generate'),
             Tab(icon: Icon(Icons.list), text: 'Results'),
             Tab(icon: Icon(Icons.analytics), text: 'History'),

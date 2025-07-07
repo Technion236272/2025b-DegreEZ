@@ -30,7 +30,7 @@ class CatalogUploadWidget extends StatelessWidget {
                 Icon(Icons.upload_file, color: themeProvider.primaryColor),
                 const SizedBox(width: 8),
                 Text(
-                  'Course Catalog (Optional)',
+                  'Course Catalog (Recommended)',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
