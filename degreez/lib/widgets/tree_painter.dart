@@ -10,6 +10,12 @@ class TreeNode {
   TreeNode({required this.id, required this.label, this.children = const []});
 }
 
+// Enhanced TreePainter with node position tracking
+// Add these properties and methods to your TreePainter class:
+
+// Enhanced TreePainter with node position tracking
+// Add these properties and methods to your TreePainter class:
+
 class TreePainter extends CustomPainter {
   final TreeNode root;
   final ThemeProvider themeProvider; 
@@ -18,25 +24,41 @@ class TreePainter extends CustomPainter {
   final Map<String, Offset> _positions = {};
   Rect? _boundingBox;
   
- Rect? getBoundingBox() => _boundingBox;
-
+  // 👈 ADD THIS: Map to store node positions for hit testing
+  final Map<String, Offset> _nodePositions = {};
+  
+  Rect? getBoundingBox() => _boundingBox;
+  
+  // 👈 ADD THIS: Method to get node positions for gesture detection
+  Map<String, Offset> getNodePositions() => Map.from(_nodePositions);
 
   TreePainter(
     this.root, {
     required this.themeProvider, 
-    this.nodeWidth = 120,
-    this.nodeHeight = 60,
-  });
+    this.nodeWidth = 140,
+    this.nodeHeight = 80,
+  }) {
+    // Debug print to ensure painter is created
+    debugPrint('🎨 TreePainter created with nodeWidth: $nodeWidth, nodeHeight: $nodeHeight');
+  }
 
-void _updateBoundingBox(Offset center) {
-  final rect = Rect.fromCenter(center: center, width: nodeWidth, height: nodeHeight);
-  _boundingBox = _boundingBox == null ? rect : _boundingBox!.expandToInclude(rect);
-}
+  void _updateBoundingBox(Offset center) {
+    final rect = Rect.fromCenter(center: center, width: nodeWidth, height: nodeHeight);
+    _boundingBox = _boundingBox == null ? rect : _boundingBox!.expandToInclude(rect);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     _positions.clear();
+    _nodePositions.clear(); // 👈 ADD THIS: Clear previous positions
+    debugPrint('🎨 TreePainter painting with size: $size');
     _layoutAndPaint(root, 0, 0, canvas);
+    debugPrint('🎨 TreePainter finished, stored ${_nodePositions.length} node positions');
+    
+    // Debug print all node positions
+    _nodePositions.forEach((id, position) {
+      debugPrint('📍 Node $id at position: $position');
+    });
   }
 
   double _layoutAndPaint(TreeNode node, double x, double y, Canvas canvas) {
@@ -65,10 +87,10 @@ void _updateBoundingBox(Offset center) {
 
     final centerX = x + (totalWidth - nodeWidth) / 2;
     final nodeCenter = Offset(centerX + nodeWidth / 2, y + nodeHeight / 2);
-    _positions[node.id] = nodeCenter;
-    _updateBoundingBox(nodeCenter);
-
     
+    _positions[node.id] = nodeCenter;
+    _nodePositions[node.id] = nodeCenter; // 👈 ADD THIS: Store for gesture detection
+    _updateBoundingBox(nodeCenter);
 
     // Draw edges from children
     for (final child in node.children) {
@@ -76,11 +98,12 @@ void _updateBoundingBox(Offset center) {
       drawEdge(childCenter, nodeCenter, canvas);
     }
 
-    drawNode(nodeCenter, node.label, canvas);
+    drawNode(nodeCenter, node.label, canvas, node.id); // 👈 MODIFIED: Pass node ID
     return totalWidth;
   }
 
-  void drawNode(Offset center, String label, Canvas canvas) {
+  // 👈 MODIFIED: Add nodeId parameter to help with debugging
+  void drawNode(Offset center, String label, Canvas canvas, String nodeId) {
     final x = center.dx - nodeWidth / 2;
     final y = center.dy - nodeHeight / 2;
 
@@ -93,13 +116,24 @@ void _updateBoundingBox(Offset center) {
       canvas.drawShadow(Path()..addRRect(rect), Colors.black45, 4, false);
     }
 
-    canvas.drawRRect(rect, Paint()..color = themeProvider.secondaryColor);
+    // 👈 ADD THIS: Visual feedback for interactive nodes
+    final paint = Paint()..color = themeProvider.secondaryColor;
+    
+    // Add a subtle border to indicate the node is interactive
+    final borderPaint = Paint()
+      ..color = themeProvider.primaryColor.withOpacity(0.3)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    
+    canvas.drawRRect(rect, paint);
+    canvas.drawRRect(rect, borderPaint);
 
     drawNodeLabel(label, Offset(x, y), canvas);
   }
 
   void drawNodeLabel(String label, Offset topLeft, Canvas canvas) {
-    final textPainter = TextPainter(
+    // First, try to fit the full text
+    var textPainter = TextPainter(
       text: TextSpan(
         text: label,
         style: TextStyle(
@@ -113,6 +147,40 @@ void _updateBoundingBox(Offset center) {
       maxLines: 2,
     )..layout(maxWidth: nodeWidth - 16);
 
+    // If text doesn't fit, try with smaller font
+    if (textPainter.height > nodeHeight - 16) {
+      textPainter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: themeProvider.textPrimary,
+            fontSize: 11, // Smaller font
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+        maxLines: 3, // Allow more lines with smaller font
+      )..layout(maxWidth: nodeWidth - 12);
+    }
+
+    // If still doesn't fit, try even smaller
+    if (textPainter.height > nodeHeight - 12) {
+      textPainter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: themeProvider.textPrimary,
+            fontSize: 9, // Even smaller font
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+        maxLines: 4, // Allow even more lines
+      )..layout(maxWidth: nodeWidth - 10);
+    }
+
     final offset = Offset(
       topLeft.dx + (nodeWidth - textPainter.width) / 2,
       topLeft.dy + (nodeHeight - textPainter.height) / 2,
@@ -120,39 +188,33 @@ void _updateBoundingBox(Offset center) {
     textPainter.paint(canvas, offset);
   }
 
-void drawEdge(Offset childCenter, Offset parentCenter, Canvas canvas) {
-  // Corrected anchor points
-  final from = Offset(childCenter.dx, childCenter.dy - nodeHeight / 2);  // top of child
-  final to = Offset(parentCenter.dx, parentCenter.dy + nodeHeight / 2);  // bottom of parent
+  void drawEdge(Offset childCenter, Offset parentCenter, Canvas canvas) {
+    // Corrected anchor points
+    final from = Offset(childCenter.dx, childCenter.dy - nodeHeight / 2);  // top of child
+    final to = Offset(parentCenter.dx, parentCenter.dy + nodeHeight / 2);  // bottom of parent
 
-  final midY = (from.dy + to.dy) / 2;
-  final controlOffset = (from.dx - to.dx).abs() / 2 + 20;
+    final midY = (from.dy + to.dy) / 2;
+    final controlOffset = (from.dx - to.dx).abs() / 2 + 20;
 
-  final controlPoint1 = Offset(from.dx, midY - controlOffset);
-  final controlPoint2 = Offset(to.dx, midY + controlOffset);
+    final controlPoint1 = Offset(from.dx, midY - controlOffset);
+    final controlPoint2 = Offset(to.dx, midY + controlOffset);
 
-  final path = Path()
-    ..moveTo(from.dx, from.dy)
-    ..cubicTo(
-      controlPoint1.dx, controlPoint1.dy,
-      controlPoint2.dx, controlPoint2.dy,
-      to.dx, to.dy,
+    final path = Path()
+      ..moveTo(from.dx, from.dy)
+      ..cubicTo(
+        controlPoint1.dx, controlPoint1.dy,
+        controlPoint2.dx, controlPoint2.dy,
+        to.dx, to.dy,
+      );
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.grey.shade800
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke,
     );
-
-  canvas.drawPath(
-    path,
-    Paint()
-      ..color = Colors.grey.shade800
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke,
-  );
-}
-
-
-
-
-
-
+  }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => true;
