@@ -321,6 +321,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 80),
 
                   DeleteUserButton(),
+                  
+                  const SizedBox(height: 80),
                 ],
               ),
             );

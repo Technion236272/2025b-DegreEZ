@@ -348,12 +348,11 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Profile Picture with enhanced styling
                       Container(
                         width: 70,
                         height: 70,
@@ -372,7 +371,6 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                           ],
                         ),
                         child: CircleAvatar(
-                          radius: 32,
                           backgroundColor: Colors.white,
                           backgroundImage: user?.photoURL != null
                               ? NetworkImage(user!.photoURL!)
@@ -391,14 +389,14 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                               : null,
                         ),
                       ),
+                      // Profile Picture with enhanced styling
                       const SizedBox(height: 12),
                       // User Name - with proper text overflow handling
-                      Flexible(
-                        child: Text(
+                      
+                      AutoSizeText(
                           student?.name ?? user?.displayName ?? 'User',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(
@@ -409,13 +407,12 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                             ],
                           ),
                           maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          minFontSize: 10,
+                          maxFontSize: 25,
                         ),
-                      ),
                       const SizedBox(height: 4),
                       // Email - with proper text overflow handling
-                      Flexible(
-                        child: Text(
+                      AutoSizeText(
                           user?.email ?? '',
                           style: const TextStyle(
                             color: Colors.white70,
@@ -429,19 +426,18 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                               ),
                             ],
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          minFontSize: 10,
+                          maxFontSize: 25,
                         ),
-                      ),
-                      const SizedBox(height: 8),
+                      
+                      // const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
 
             // Navigation Items with enhanced styling
             Padding(
@@ -564,7 +560,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 100),
 
             // // Add Course - New menu item for easier access
             // ListTile(
