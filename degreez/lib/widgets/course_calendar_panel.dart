@@ -1042,11 +1042,14 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             ],
           ),
         ),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 20,vertical: 5), 
+        (allCourses.length <= 1) 
+        ? Padding(padding: EdgeInsets.symmetric(horizontal: 20,vertical: 5), 
         child: AutoSizeText("tap and Hold on a course card to view details about it, tap the course card to change selected schedule",
               minFontSize: 8,
-              maxFontSize: 13,
-              maxLines: 2,),),
+              maxFontSize: 30,
+              maxLines: 2,),
+              )
+        : SizedBox(),
         ]
         );
       },
