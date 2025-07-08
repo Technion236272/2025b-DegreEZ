@@ -1202,7 +1202,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '${_formatDistance(distance)} • $walkingTime min walk',
+                            _formatDistance(distance),
                             style: TextStyle(
                               color: themeProvider.textSecondary,
                               fontSize: 14,
@@ -1528,35 +1528,58 @@ class _CourseMapPageState extends State<CourseMapPage> {
                   ],
                 ),
               ),
-              _buildQuickActionsPanel(themeProvider),
+              // _buildQuickActionsPanel(themeProvider),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: themeProvider.primaryColor,
-            foregroundColor:
-                themeProvider.isLightMode
-                    ? themeProvider.surfaceColor
-                    : themeProvider.secondaryColor,
-            tooltip: 'Center on me',
-            elevation: 6,
-            child: const Icon(Icons.my_location),
-            onPressed: () {
-              if (userLocation != null) {
-                // move instantly to user, zoom level 16.0 (tweak as you like)
-                _mapController.move(userLocation!, 16.0);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Location not available yet',
-                      style: TextStyle(color: themeProvider.textPrimary),
+          floatingActionButton: SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SizedBox(
+        width: double.infinity, // 👈 forces the Row to stretch full width
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // 👈 Left-aligned button
+            NextClassButton(
+              courseName: _getNextClass()!.label,
+              buildingName: _getNextClass()!.buildingName,
+              roomNumber: _getNextClass()!.roomNumber,
+              courseColor: _getNextClass()!.color,
+              themeProvider: themeProvider,
+              onTap: () => _showNextClassDialog(_getNextClass()!, themeProvider),
+            ),
+
+            // 👉 Right-aligned FAB
+            FloatingActionButton(
+              heroTag: 'fab-right',
+              backgroundColor: themeProvider.primaryColor,
+              foregroundColor: themeProvider.isLightMode
+                  ? themeProvider.surfaceColor
+                  : themeProvider.secondaryColor,
+              tooltip: 'Center on me',
+              elevation: 6,
+              child: const Icon(Icons.my_location),
+              onPressed: () {
+                if (userLocation != null) {
+                  _mapController.move(userLocation!, 16.0);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Location not available yet',
+                        style: TextStyle(color: themeProvider.textPrimary),
+                      ),
+                      backgroundColor: themeProvider.cardColor,
                     ),
-                    backgroundColor: themeProvider.cardColor,
-                  ),
-                );
-              }
-            },
-          ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         );
       },
