@@ -59,7 +59,7 @@ buildTypes {
         signingConfig = signingConfigs.getByName("release")
      }
 
-       getByName("debug") { }
+    //    getByName("debug") { }
 }
 
 }
