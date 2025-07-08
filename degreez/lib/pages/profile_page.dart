@@ -747,7 +747,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
           // _buildDetailRow('Student ID', student.id),
-          _buildDetailRow('Current Semester', student.semester.toString()),
+          _buildDetailRow('Enrollment Semester', student.semester.toString()),
           // _buildDetailRow('Catalog Year', student.catalog),
           if (student.preferences.isNotEmpty)
             _buildDetailRow('Academic Preferences', student.preferences),
