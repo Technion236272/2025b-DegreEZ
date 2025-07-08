@@ -474,7 +474,9 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
           (sum, course) => sum + (course.creditPoints ?? 0),
         );
 
-        return Card(
+        return Column( 
+        children: [
+        Card(
           elevation: 3,
           margin: const EdgeInsets.all(8.0),
           child: Column(
@@ -1036,12 +1038,16 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                   ],
                 ),
               ),
-              AutoSizeText("tap and Hold on a course card to view details about it, tap the course card to change selected schedule",
-              minFontSize: 8,
-              maxFontSize: 13,
-              maxLines: 2,),
+              
             ],
           ),
+        ),
+        Padding(padding: EdgeInsets.symmetric(horizontal: 20,vertical: 5), 
+        child: AutoSizeText("tap and Hold on a course card to view details about it, tap the course card to change selected schedule",
+              minFontSize: 8,
+              maxFontSize: 13,
+              maxLines: 2,),),
+        ]
         );
       },
     );

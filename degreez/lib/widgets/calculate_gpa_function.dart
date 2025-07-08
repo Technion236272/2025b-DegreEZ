@@ -113,6 +113,14 @@ GpaCalculationResult calculateAverage(List<GpaCalculationItem> courses) {
             debugPrint(
               'DEBUG: Adding course ${course.name} with grade $grade and credits $credits',
             );
+            for (final completedCourse in completedCourses.toList())
+            {
+              if(course.name == completedCourse.name)
+              {
+                completedCourses.removeWhere((val){return val.name==course.name;});
+              }
+
+            }
 
             completedCourses.add(
               GpaCalculationItem(
