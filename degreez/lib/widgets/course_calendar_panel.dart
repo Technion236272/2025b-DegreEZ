@@ -1042,7 +1042,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
             ],
           ),
         ),
-        (allCourses.length <= 1) 
+        (allCourses.length <= 2 && allCourses.isNotEmpty) 
         ? Padding(padding: EdgeInsets.symmetric(horizontal: 20,vertical: 5), 
         child: AutoSizeText("tap and Hold on a course card to view details about it, tap the course card to change selected schedule",
               minFontSize: 8,
