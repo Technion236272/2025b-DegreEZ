@@ -85,7 +85,6 @@ class _ProfilePageState extends State<ProfilePage> {
     context.read<SignUpProvider>().setSelectedMajor(student.major);
     context.read<SignUpProvider>().setSelectedSemester(student.semester);
     context.read<SignUpProvider>().setSelectedUniversity(student.university);
-    context.read<SignUpProvider>().setSelectedUniversity(student.university);
 
     final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
     final RegExp preferencesValidator = RegExp(r'^(.?)+$');
