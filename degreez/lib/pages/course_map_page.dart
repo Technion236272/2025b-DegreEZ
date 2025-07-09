@@ -1539,15 +1539,22 @@ class _CourseMapPageState extends State<CourseMapPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // 👈 Left-aligned button
-            NextClassButton(
-              courseName: _getNextClass()!.label,
-              buildingName: _getNextClass()!.buildingName,
-              roomNumber: _getNextClass()!.roomNumber,
-              courseColor: _getNextClass()!.color,
-              themeProvider: themeProvider,
-              onTap: () => _showNextClassDialog(_getNextClass()!, themeProvider),
-            ),
+            // 👈 Left-aligned button - only show if there's a next class
+            () {
+              final nextClass = _getNextClass();
+              if (nextClass != null) {
+                return NextClassButton(
+                  courseName: nextClass.label,
+                  buildingName: nextClass.buildingName,
+                  roomNumber: nextClass.roomNumber,
+                  courseColor: nextClass.color,
+                  themeProvider: themeProvider,
+                  onTap: () => _showNextClassDialog(nextClass, themeProvider),
+                );
+              } else {
+                return const SizedBox(); // Empty space when no next class
+              }
+            }(),
 
             // 👉 Right-aligned FAB
             FloatingActionButton(
