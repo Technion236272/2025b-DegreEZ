@@ -193,7 +193,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  color: themeProvider.primaryColor.withAlpha(26),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
@@ -252,7 +252,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: message.isUser 
-                    ? themeProvider.primaryColor.withOpacity(0.1)
+                    ? themeProvider.primaryColor.withAlpha(26)
                     : themeProvider.surfaceColor,
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -266,8 +266,8 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
                       margin: const EdgeInsets.only(bottom: 4),
                       decoration: BoxDecoration(
                         color: message.feedback!.type == FeedbackType.replace 
-                            ? Colors.orange.withOpacity(0.2)
-                            : themeProvider.primaryColor.withOpacity(0.2),
+                            ? Colors.orange.withAlpha(51)
+                            : themeProvider.primaryColor.withAlpha(51),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -353,7 +353,7 @@ class _IntelligentFeedbackWidgetState extends State<IntelligentFeedbackWidget> {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? color.withAlpha(26) : Colors.transparent,
             border: Border.all(
               color: isSelected ? color : themeProvider.borderPrimary,
               width: isSelected ? 2 : 1,

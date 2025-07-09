@@ -15,14 +15,14 @@ class PrerequisiteGraph extends StatefulWidget {
   final bool showHeader;
 
   const PrerequisiteGraph({
-    Key? key,
+    super.key,
     required this.rootCourseId,
     required this.studentFaculty,
     required this.courseNames,
     required this.courseFaculties,
     required this.coursePrereqs,
     this.showHeader = true,
-  }) : super(key: key);
+  });
 
   @override
   _PrerequisiteGraphState createState() => _PrerequisiteGraphState();
@@ -503,15 +503,15 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                 colors: [
                   Theme.of(
                     context,
-                  ).colorScheme.primaryContainer.withOpacity(0.3),
+                  ).colorScheme.primaryContainer.withAlpha(76),
                   Theme.of(
                     context,
-                  ).colorScheme.primaryContainer.withOpacity(0.1),
+                  ).colorScheme.primaryContainer.withAlpha(26),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primary.withAlpha(76),
               ),
             ),
             child: Row(
@@ -933,7 +933,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.surfaceVariant.withOpacity(0.3),
+                    ).colorScheme.surfaceVariant.withAlpha(76),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -998,7 +998,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withAlpha(26),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(
@@ -1181,7 +1181,7 @@ class _PrerequisiteGraphState extends State<PrerequisiteGraph> {
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primaryContainer.withOpacity(0.3),
+                    ).colorScheme.primaryContainer.withAlpha(76),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(

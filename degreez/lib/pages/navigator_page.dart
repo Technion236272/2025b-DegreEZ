@@ -364,7 +364,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withAlpha(51),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -508,8 +508,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                     colors: [
                       Colors.transparent,
                       Theme.of(context).brightness == Brightness.light
-                          ? Colors.grey.withOpacity(0.3)
-                          : Colors.white.withOpacity(0.1),
+                          ? Colors.grey.withAlpha(76)
+                          : Colors.white.withAlpha(26),
                       Colors.transparent,
                     ],
                   ),
@@ -525,8 +525,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               decoration: BoxDecoration(
                 color: isLightMode
-                    ? Colors.grey.withOpacity(0.05)
-                    : Colors.white.withOpacity(0.02),
+                    ? Colors.grey.withAlpha(13)
+                    : Colors.white.withAlpha(5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -616,12 +616,12 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 end: Alignment.centerRight,
                 colors: isLightMode
                     ? [
-                        const Color(0xFF4CAF50).withOpacity(0.1),
-                        const Color(0xFF66BB6A).withOpacity(0.08),
+                        const Color(0xFF4CAF50).withAlpha(26),
+                        const Color(0xFF66BB6A).withAlpha(20),
                       ]
                     : [
-                        const Color(0xFF1F3D56).withOpacity(0.3),
-                        const Color(0xFF306780).withOpacity(0.2),
+                        const Color(0xFF1F3D56).withAlpha(76),
+                        const Color(0xFF306780).withAlpha(51),
                       ],
               )
             : null,
@@ -629,8 +629,8 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             ? [
                 BoxShadow(
                   color: isLightMode
-                      ? const Color(0xFF4CAF50).withOpacity(0.2)
-                      : const Color(0xFF1F3D56).withOpacity(0.3),
+                      ? const Color(0xFF4CAF50).withAlpha(51)
+                      : const Color(0xFF1F3D56).withAlpha(76),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -642,11 +642,11 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           splashColor: isLightMode
-              ? const Color(0xFF4CAF50).withOpacity(0.1)
-              : const Color(0xFF1F3D56).withOpacity(0.2),
+              ? const Color(0xFF4CAF50).withAlpha(26)
+              : const Color(0xFF1F3D56).withAlpha(51),
           highlightColor: isLightMode
-              ? const Color(0xFF4CAF50).withOpacity(0.05)
-              : const Color(0xFF1F3D56).withOpacity(0.1),
+              ? const Color(0xFF4CAF50).withAlpha(13)
+              : const Color(0xFF1F3D56).withAlpha(26),
           onTap: () {
             Navigator.pop(context); // Close drawer
             onTap();

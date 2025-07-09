@@ -92,7 +92,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                   child: Icon(
                     Icons.account_tree,
                     size: 80,
-                    color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.24),
+                    color: Theme.of(context).colorScheme.onPrimary.withAlpha(61),
                   ),
                 ),
               ),
@@ -233,7 +233,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                 Icon(
                   Icons.explore,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(178),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -526,7 +526,7 @@ Widget _buildSelectedCourseSection() {
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                        color: Theme.of(context).colorScheme.outline.withAlpha(76),
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -536,7 +536,7 @@ Widget _buildSelectedCourseSection() {
                         Container(
                           width: 1,
                           height: 24,
-                          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                          color: Theme.of(context).colorScheme.outline.withAlpha(76),
                         ),
                       ],
                     ),
@@ -568,7 +568,7 @@ void _openFullscreenGraph() {
     context: context,
     barrierDismissible: false,
     builder: (context) => Dialog(
-      backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+      backgroundColor: Theme.of(context).colorScheme.surface.withAlpha(230),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -795,7 +795,7 @@ void _showSuccessSnackBar(String message) {
             end: Alignment.bottomRight,
             colors: [
               Theme.of(context).colorScheme.primaryContainer,
-              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7),
+              Theme.of(context).colorScheme.primaryContainer.withAlpha(178),
             ],
           ),
           borderRadius: BorderRadius.circular(16),

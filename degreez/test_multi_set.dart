@@ -1,5 +1,7 @@
 // Test file to verify the new multi-set functionality
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
+
 import 'lib/models/course_recommendation_models.dart';
 
 void main() {
@@ -31,21 +33,21 @@ void main() {
 
   try {
     final response = MultiSetCandidateResponse.fromJson(testJson);
-    print('✅ Successfully parsed ${response.courseSets.length} course sets');
+    debugPrint('✅ Successfully parsed ${response.courseSets.length} course sets');
     
     for (int i = 0; i < response.courseSets.length; i++) {
       final set = response.courseSets[i];
-      print('Set ${set.setId}: ${set.courses.length} courses, ${set.totalCredits} credits');
-      print('  Reasoning: ${set.reasoning}');
+      debugPrint('Set ${set.setId}: ${set.courses.length} courses, ${set.totalCredits} credits');
+      debugPrint('  Reasoning: ${set.reasoning}');
       for (final course in set.courses) {
-        print('  - ${course.courseId}: ${course.courseName}');
+        debugPrint('  - ${course.courseId}: ${course.courseName}');
       }
-      print('');
+      debugPrint('');
     }
     
-    print('Overall reasoning: ${response.overallReasoning}');
+    debugPrint('Overall reasoning: ${response.overallReasoning}');
     
   } catch (e) {
-    print('❌ Error parsing JSON: $e');
+    debugPrint('❌ Error parsing JSON: $e');
   }
 }

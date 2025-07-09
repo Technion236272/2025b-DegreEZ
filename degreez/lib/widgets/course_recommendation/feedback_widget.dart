@@ -157,7 +157,7 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
           }
         });
       },
-      backgroundColor: isSelected ? color.withOpacity(0.2) : null,
+      backgroundColor: isSelected ? color.withAlpha(51) : null,
       side: BorderSide(
         color: isSelected ? color : themeProvider.textSecondary,
         width: isSelected ? 2 : 1,
