@@ -28,6 +28,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
   late ScrollController _scrollController;
   final List<GlobalKey> _semesterKeys = [];
   int _currentSemesterIndex = 0;
+  final formKey = GlobalKey<FormState>();
+  bool loading = false;
 
   @override
   void initState() {
@@ -378,14 +380,16 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   color: themeProvider.textPrimary,
                 ),
               ),
-              content: Column(
+              content: Form(key:  formKey,
+                child: 
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
                   SemesterSeasonSelector(),
                   SizedBox(height: 12),
                   SemesterYearSelector(),
                 ],
-              ),
+              ),),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -406,6 +410,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     }),
                   ),
                   onPressed: () {
+                    if (formKey.currentState?.validate() != true) {
+                  return;
+                }
                     final signUpProvider = context.read<SignUpProvider>();
                     final selectedSeason = signUpProvider.selectedSemesterSeason;
                     final selectedYear = signUpProvider.selectedSemesterYear;
@@ -449,7 +456,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 20, bottom: 10),              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.only(top: 20, bottom: 10),              
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -608,6 +616,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     String semesterName,
     String studentId,
   ) {
+    if(!mounted) return;
     final themeProvider = context.read<ThemeProvider>();
     showDialog(
       context: context,
@@ -639,21 +648,31 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
               TextButton(
                 style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-      if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
-      }
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+var color = loading
+                        ? Colors.grey
+                        : context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor;
+return color;
     }),
                   ),
-                onPressed: () async {
+                onPressed: loading
+                        ? null
+                        : () async {
+                  if (loading == true) return;
+                  
+                  setState(() {
+                    loading = true;
+                  });
                   await Provider.of<CourseProvider>(
                     context,
                     listen: false,
                   ).deleteSemester(studentId, semesterName);
-                  if (!context.mounted) return;
+                  if (!ctx.mounted) return;
                   Navigator.of(ctx).pop();
                   // Enhanced: Trigger UI refresh
                   _onCourseUpdated();
+                  setState(() {
+                    loading = false;
+                  });
                 },
                 child: Text(
                   'Delete',
