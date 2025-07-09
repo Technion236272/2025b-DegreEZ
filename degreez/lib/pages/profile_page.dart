@@ -17,6 +17,7 @@ import 'package:degreez/widgets/selectors/faculty_selector.dart';
 import 'package:degreez/widgets/selectors/major_selector.dart';
 import 'package:degreez/widgets/selectors/semester_season_selector.dart';
 import 'package:degreez/widgets/selectors/semester_year_selector.dart';
+import 'package:degreez/widgets/selectors/university_selector.dart';
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,25 +32,6 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   // Calculate GPA from completed courses
-  double _calculateGPA(Map<String, List<StudentCourse>> coursesBySemester) {
-    double totalPoints = 0;
-    int totalCourses = 0;
-
-    for (var courses in coursesBySemester.values) {
-      for (var course in courses) {
-        if (course.finalGrade.isNotEmpty) {
-          final grade = double.tryParse(course.finalGrade);
-          if (grade != null && grade >= 0 && grade <= 100) {
-            totalPoints += grade;
-            totalCourses++;
-          }
-        }
-      }
-    }
-
-    return totalCourses > 0 ? totalPoints / totalCourses : 0.0;
-  }
-
   // Get completion statistics
   Map<String, int> _getCompletionStats(
     Map<String, List<StudentCourse>> coursesBySemester,
@@ -102,6 +84,7 @@ class _ProfilePageState extends State<ProfilePage> {
     context.read<SignUpProvider>().setSelectedFaculty(student.faculty);
     context.read<SignUpProvider>().setSelectedMajor(student.major);
     context.read<SignUpProvider>().setSelectedSemester(student.semester);
+    context.read<SignUpProvider>().setSelectedUniversity(student.university);
 
     final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
     final RegExp preferencesValidator = RegExp(r'^(.?)+$');
@@ -136,6 +119,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     validatorRegex: nameValidator,
                     errorMessage: "Really? an empty name ...",
                     context: context,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10, bottom: 10),
+                    child: UniversitySelector(),
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 10, bottom: 10),
@@ -207,6 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   faculty: context.read<SignUpProvider>().selectedFaculty ?? '',
                   catalog: context.read<SignUpProvider>().selectedCatalog ?? '',
                   semester: context.read<SignUpProvider>().selectedSemester ?? '',
+                  university: context.read<SignUpProvider>().selectedUniversity ?? 'Technion',
                 );
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(

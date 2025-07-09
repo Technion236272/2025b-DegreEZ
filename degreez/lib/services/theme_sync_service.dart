@@ -38,6 +38,7 @@ class ThemeSyncService {
           catalog: student.catalog,
           semester: student.semester,
           themeMode: themeMode.name,
+          university: student.university, // Keep university unchanged
         );
       }
     } catch (e) {

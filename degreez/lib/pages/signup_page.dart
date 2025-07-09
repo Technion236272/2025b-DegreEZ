@@ -9,6 +9,7 @@ import 'package:degreez/widgets/selectors/faculty_selector.dart';
 import 'package:degreez/widgets/selectors/major_selector.dart';
 import 'package:degreez/widgets/selectors/semester_season_selector.dart';
 import 'package:degreez/widgets/selectors/semester_year_selector.dart';
+import 'package:degreez/widgets/selectors/university_selector.dart';
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -158,6 +159,10 @@ class _SignUpPageState extends State<SignUpPage> {
                           ),
                           Padding(
                             padding: EdgeInsets.only(top: 10, bottom: 10),
+                            child: UniversitySelector(),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 10, bottom: 10),
                             child: CatalogSelector(),
                           ),
                           Padding(
@@ -225,6 +230,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 preferences: _preferencesController.text.trim(),
                                 semester: signUpProvider.selectedSemester ?? '',
                                 catalog: signUpProvider.selectedCatalog ?? '',
+                                university: signUpProvider.selectedUniversity ?? 'Technion',
                               );
 
                               // Create student using StudentProvider

@@ -73,6 +73,7 @@ class StudentProvider with ChangeNotifier {
     required String faculty,
     required String catalog,
     required String semester, // Changed from int to String
+    required String university, // Add university parameter
     String? themeMode, // Optional theme mode parameter
   }) async {
     if (_student == null) return false;
@@ -88,6 +89,7 @@ class StudentProvider with ChangeNotifier {
       faculty: faculty,
       catalog: catalog,
       semester: semester,
+      university: university,
       themeMode: themeMode ?? _student!.themeMode, // Preserve existing if not provided
     );
     _notifyListeners();
@@ -100,6 +102,7 @@ class StudentProvider with ChangeNotifier {
         'Faculty': faculty,
         'Catalog': catalog,
         'Semester': semester, // Now stored as String
+        'University': university,
       };
       
       // Only update theme mode if provided
