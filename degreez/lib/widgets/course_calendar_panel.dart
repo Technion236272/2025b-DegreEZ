@@ -804,6 +804,31 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                             ),
                                           ),
                                         ),
+                                      // Add warning badge for courses without complete schedule selection
+                                      if (!course.hasCompleteScheduleSelection)
+                                        Container(
+                                          margin: const EdgeInsets.only(left: 4),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withAlpha(50),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: Colors.red,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            '!',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                   subtitle: Column(
@@ -837,11 +862,20 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                           ),
                                         )
                                       else
-                                        const Text(
-                                          'Schedule: All times shown',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey,
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.withOpacity(0.1),
+                                            border: Border.all(color: Colors.orange, width: 1),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text(
+                                            'Schedule: Not selected - Tap menu to select times',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.orange,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                           ),
                                         ),
 
@@ -954,13 +988,30 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                           false;
 
                                       return [
-                                        const PopupMenuItem(
+                                        PopupMenuItem(
                                           value: 'select_schedule',
                                           child: Row(
                                             children: [
-                                              Icon(Icons.schedule),
-                                              SizedBox(width: 8),
-                                              Text('Select Schedule'),
+                                              Icon(
+                                                Icons.schedule,
+                                                color: course.hasCompleteScheduleSelection 
+                                                  ? null 
+                                                  : Colors.orange,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                course.hasCompleteScheduleSelection
+                                                  ? 'Select Schedule'
+                                                  : 'Select Schedule (Required)',
+                                                style: TextStyle(
+                                                  color: course.hasCompleteScheduleSelection
+                                                    ? null
+                                                    : Colors.orange,
+                                                  fontWeight: course.hasCompleteScheduleSelection
+                                                    ? FontWeight.normal
+                                                    : FontWeight.bold,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
