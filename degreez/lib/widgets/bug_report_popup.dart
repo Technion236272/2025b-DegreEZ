@@ -51,6 +51,7 @@ Future<void> bugReportPopup(BuildContext context, BugReportNotifier notifier) {
   final TextEditingController descriptionController = TextEditingController();
   return showDialog(
     context: context,
+    barrierDismissible: false, // Prevent dismissing by tapping outside
     builder: (BuildContext dialogContext) {
       notifier.isLoading ? debugPrint('BUG SUCCESS') : debugPrint('BUG FAILED');
       return Consumer<ThemeProvider>(

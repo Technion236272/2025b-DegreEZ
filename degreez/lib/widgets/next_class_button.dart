@@ -23,31 +23,12 @@ class NextClassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      elevation: 6,
-      borderRadius: BorderRadius.circular(25),
-      color: courseColor,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(25),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            gradient: LinearGradient(
-              colors: [
-                courseColor,
-                courseColor.withAlpha(204),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            border: Border.all(
-              color: themeProvider.surfaceColor.withAlpha(51),
-              width: 1,
-            ),
-          ),
-          child: Row(
+    return Padding(padding: EdgeInsets.symmetric(horizontal: 20),
+    child:  
+    ElevatedButton (
+      style: ButtonStyle(backgroundColor: WidgetStateColor.resolveWith((val){return courseColor;})),
+      onPressed: onTap,
+      child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
@@ -63,6 +44,8 @@ class NextClassButton extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
+              Padding(padding: const EdgeInsets.symmetric(vertical: 10),
+              child: 
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -87,7 +70,7 @@ class NextClassButton extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
+              ),),
               const SizedBox(width: 8),
               Icon(
                 Icons.chevron_right,
@@ -96,8 +79,82 @@ class NextClassButton extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
+        ),);
+    // return Material(
+    //   elevation: 6,
+    //   borderRadius: BorderRadius.circular(25),
+    //   color: courseColor,
+    //   child: InkWell(
+    //     borderRadius: BorderRadius.circular(25),
+    //     onTap: onTap,
+    //     child: Container(
+    //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    //       decoration: BoxDecoration(
+    //         borderRadius: BorderRadius.circular(25),
+    //         gradient: LinearGradient(
+    //           colors: [
+    //             courseColor,
+    //             courseColor.withAlpha(204),
+    //           ],
+    //           begin: Alignment.topLeft,
+    //           end: Alignment.bottomRight,
+    //         ),
+    //         border: Border.all(
+    //           color: themeProvider.surfaceColor.withAlpha(51),
+    //           width: 1,
+    //         ),
+    //       ),
+    //       child: Row(
+    //         mainAxisSize: MainAxisSize.min,
+    //         children: [
+    //           Container(
+    //             padding: const EdgeInsets.all(6),
+    //             decoration: BoxDecoration(
+    //               color: themeProvider.surfaceColor.withAlpha(51),
+    //               borderRadius: BorderRadius.circular(12),
+    //             ),
+    //             child: Icon(
+    //               Icons.schedule,
+    //               color: themeProvider.surfaceColor,
+    //               size: 16,
+    //             ),
+    //           ),
+    //           const SizedBox(width: 10),
+    //           Column(
+    //             crossAxisAlignment: CrossAxisAlignment.start,
+    //             mainAxisSize: MainAxisSize.min,
+    //             children: [
+    //               Text(
+    //                 'Next Class',
+    //                 style: TextStyle(
+    //                   color: themeProvider.surfaceColor.withAlpha(230),
+    //                   fontSize: 10,
+    //                   fontWeight: FontWeight.w500,
+    //                 ),
+    //               ),
+    //               const SizedBox(height: 2),
+    //               Text(
+    //                 buildingName,
+    //                 style: TextStyle(
+    //                   color: themeProvider.surfaceColor,
+    //                   fontSize: 13,
+    //                   fontWeight: FontWeight.bold,
+    //                 ),
+    //                 maxLines: 1,
+    //                 overflow: TextOverflow.ellipsis,
+    //               ),
+    //             ],
+    //           ),
+    //           const SizedBox(width: 8),
+    //           Icon(
+    //             Icons.chevron_right,
+    //             color: themeProvider.surfaceColor.withAlpha(204),
+    //             size: 18,
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 }

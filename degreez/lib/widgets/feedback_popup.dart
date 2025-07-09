@@ -47,6 +47,7 @@ Future<void> feedbackPopup(BuildContext context, FeedbackNotifier notifier) {
   final TextEditingController descriptionController = TextEditingController();
   return showDialog(
     context: context,
+    barrierDismissible: false, // Prevent dismissing by tapping outside
     builder: (BuildContext dialogContext) {
       notifier.isLoading ? debugPrint('FEEDBACK SUCCESS') : debugPrint('FEEDBACK FAILED');
       return Consumer<ThemeProvider>(

@@ -12,13 +12,13 @@ class FullScreenGraphPage extends StatefulWidget {
   final Map<String, List<Map<String, List<String>>>> coursePrereqs;
 
   const FullScreenGraphPage({
-    Key? key,
+    super.key,
     required this.rootCourseId,
     required this.studentFaculty,
     required this.courseNames,
     required this.courseFaculties,
     required this.coursePrereqs,
-  }) : super(key: key);
+  });
 
   @override
   State<FullScreenGraphPage> createState() => _FullScreenGraphPageState();
@@ -97,7 +97,7 @@ class _FullScreenGraphPageState extends State<FullScreenGraphPage> {
               top: MediaQuery.of(context).padding.top + 16,
               right: 16,
               child: Card(
-                color: themeProvider.cardColor.withOpacity(0.9),
+                color: themeProvider.cardColor.withAlpha(230),
                 elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -123,7 +123,7 @@ class _FullScreenGraphPageState extends State<FullScreenGraphPage> {
               top: MediaQuery.of(context).padding.top + 16,
               left: 16,
               child: Card(
-                color: themeProvider.cardColor.withOpacity(0.9),
+                color: themeProvider.cardColor.withAlpha(230),
                 elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

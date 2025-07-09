@@ -28,6 +28,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
   late ScrollController _scrollController;
   final List<GlobalKey> _semesterKeys = [];
   int _currentSemesterIndex = 0;
+  final formKey = GlobalKey<FormState>();
+  bool loading = false;
 
   @override
   void initState() {
@@ -224,6 +226,27 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      SizedBox(height: 20,),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                      backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
+                      foregroundColor: themeProvider.mainColor,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                        onPressed: showAiImportDialog, 
+                        child: Padding(padding: EdgeInsets.all(10),child: AutoSizeText(
+                        'Upload Grade Sheet to automatically add courses',
+                        style: TextStyle(
+                          color: themeProvider.primaryColor,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                      ),)
+                      ,)
+                      
                     ],
                   ),
                 ),
@@ -233,6 +256,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
             // Ensure we have enough keys for the semesters
             while (_semesterKeys.length < semesters.length) {
               _semesterKeys.add(GlobalKey());
+            }
+            int allCoursesCount=0;
+            for (List<StudentCourse> semester in semesters.values) {
+              allCoursesCount += semester.length;
             }
 
             // Detect device orientation
@@ -248,19 +275,38 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   //   currentSemesterIndex: _currentSemesterIndex,
                   //   onSemesterTap: _scrollToSemester,
                   // ),                  // Enhanced: Updated instruction text
-                  Padding(
-                    padding: EdgeInsets.only(left: 25, top: 10, bottom: 5),
+                  ((semesters.length <= 2 && allCoursesCount==0) || allCoursesCount <= 3)  
+                  ? Padding(
+                    padding: EdgeInsets.only(left: 25, top: 10, bottom: 5,right: 5),
                     child: AutoSizeText(
-                      'Tap a course for quick actions \nLong press to view prerequisites'
+                      'Tip: You can press the Robot in the corner to automatically upload your courses',
+                      style: TextStyle(
+                        color: themeProvider.textSecondary,
+                      ),
+                      minFontSize: 10,
+                      maxFontSize: 30,
+                      maxLines: 2,
+                    ),
+                  )
+                  : SizedBox(),
+
+                  allCoursesCount != 0 && allCoursesCount <= 2
+                  ? Padding(
+                    padding: EdgeInsets.only(left: 25, top: 5, bottom: 5,right: 5),
+                    child: AutoSizeText(
+                      'Tap a course for quick actions Long press to view prerequisites'
                       '\n(Long press the same course to disable prerequisites view)',
                       style: TextStyle(
                         color: themeProvider.textSecondary,
                       ),
                       minFontSize: 10,
-                      maxFontSize: 14,
-                      maxLines: 3,
+                      maxFontSize: 30,
+                      maxLines: 2,
                     ),
-                  ),
+                  )
+                  : SizedBox(),
+
+                  
 
                   // Semester list
                   Expanded(
@@ -334,14 +380,16 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   color: themeProvider.textPrimary,
                 ),
               ),
-              content: Column(
+              content: Form(key:  formKey,
+                child: 
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
                   SemesterSeasonSelector(),
                   SizedBox(height: 12),
                   SemesterYearSelector(),
                 ],
-              ),
+              ),),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -362,6 +410,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     }),
                   ),
                   onPressed: () {
+                    if (formKey.currentState?.validate() != true) {
+                  return;
+                }
                     final signUpProvider = context.read<SignUpProvider>();
                     final selectedSeason = signUpProvider.selectedSemesterSeason;
                     final selectedYear = signUpProvider.selectedSemesterYear;
@@ -405,7 +456,8 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 20, bottom: 10),              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              margin: const EdgeInsets.only(top: 20, bottom: 10),              
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -564,6 +616,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     String semesterName,
     String studentId,
   ) {
+    if(!mounted) return;
     final themeProvider = context.read<ThemeProvider>();
     showDialog(
       context: context,
@@ -595,21 +648,31 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
               TextButton(
                 style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-      if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
-      }
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
+var color = loading
+                        ? Colors.grey
+                        : context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor;
+return color;
     }),
                   ),
-                onPressed: () async {
+                onPressed: loading
+                        ? null
+                        : () async {
+                  if (loading == true) return;
+                  
+                  setState(() {
+                    loading = true;
+                  });
                   await Provider.of<CourseProvider>(
                     context,
                     listen: false,
                   ).deleteSemester(studentId, semesterName);
-                  if (!context.mounted) return;
+                  if (!ctx.mounted) return;
                   Navigator.of(ctx).pop();
                   // Enhanced: Trigger UI refresh
                   _onCourseUpdated();
+                  setState(() {
+                    loading = false;
+                  });
                 },
                 child: Text(
                   'Delete',

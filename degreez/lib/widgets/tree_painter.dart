@@ -188,7 +188,7 @@ class TreePainter extends CustomPainter {
     // Add a subtle border to indicate the node is interactive
     final borderPaint =
         Paint()
-          ..color = themeProvider.primaryColor.withOpacity(0.3)
+          ..color = themeProvider.primaryColor.withAlpha(76)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1;
 
