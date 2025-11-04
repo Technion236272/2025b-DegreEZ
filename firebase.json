@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "degreez-fbec6",
     "public": "degreez/build/web",
     "ignore": [
       "firebase.json",

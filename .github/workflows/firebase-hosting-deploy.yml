@@ -51,5 +51,4 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
-          # Ensure project id is set explicitly
-          firebase deploy --only hosting --project degreez-fbec6 --token "$FIREBASE_TOKEN"
+          firebase deploy --only hosting:degreez-fbec6 --project degreez-fbec6 --token "$FIREBASE_TOKEN"
