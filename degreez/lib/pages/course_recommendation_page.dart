@@ -78,6 +78,41 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // AI Budget Warning Banner
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: context.read<ThemeProvider>().warningColor.withOpacity(0.1),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.read<ThemeProvider>().warningColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: context.read<ThemeProvider>().warningColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Please be mindful not to overuse AI services. Our budget is limited, and we want everyone to enjoy the AI features!',
+                        style: TextStyle(
+                          color: context.read<ThemeProvider>().textPrimary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
               // Header
               Card(
                 child: Padding(
