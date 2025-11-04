@@ -6,7 +6,7 @@ import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/course_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/providers/theme_provider.dart';
-import 'package:degreez/Widgets/note_popup.dart';
+import 'package:degreez/widgets/note_popup.dart';
 
 class CourseActionsPopup extends StatefulWidget {
   final StudentCourse course;
