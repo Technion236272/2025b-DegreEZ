@@ -31,7 +31,14 @@ class LogInNotifier extends ChangeNotifier {
     // Initialize GoogleSignIn with web client id when running on web. The
     // client id can be provided via .env as WEB_GOOGLE_CLIENT_ID (or
     // GOOGLE_CLIENT_ID).
-    final clientId = dotenv.env['WEB_GOOGLE_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
+    String? clientId;
+    try {
+      clientId = dotenv.env['WEB_GOOGLE_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
+    } catch (e) {
+      debugPrint('Could not read from dotenv: $e');
+      // Hardcode the web client ID for when .env is not available
+      clientId = '557089994187-jp2craaq3akgo35l1ughg0gd53d3tpn4.apps.googleusercontent.com';
+    }
     if (kIsWeb) {
       _googleSignIn = GoogleSignIn(clientId: clientId);
     } else {
