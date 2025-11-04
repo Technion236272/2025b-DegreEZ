@@ -11,31 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      // Read web config from environment variables (from .env) so you can
-      // provide web credentials without running the FlutterFire CLI.
-      final apiKey = dotenv.env['WEB_API_KEY'];
-      final appId = dotenv.env['WEB_APP_ID'];
-      final messagingSenderId = dotenv.env['WEB_MESSAGING_SENDER_ID'];
-      final projectId = dotenv.env['WEB_PROJECT_ID'];
-      final authDomain = dotenv.env['WEB_AUTH_DOMAIN'];
-      final storageBucket = dotenv.env['WEB_STORAGE_BUCKET'];
-      final measurementId = dotenv.env['WEB_MEASUREMENT_ID'];
-
-      if (apiKey != null && appId != null && projectId != null) {
-        return FirebaseOptions(
-          apiKey: apiKey,
-          appId: appId,
-          messagingSenderId: messagingSenderId ?? '',
-          projectId: projectId,
-          authDomain: authDomain,
-          storageBucket: storageBucket,
-          measurementId: measurementId,
-        );
-      }
-
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for Web - set WEB_API_KEY, WEB_APP_ID and WEB_PROJECT_ID in your .env or run the FlutterFire CLI.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -73,5 +49,14 @@ class DefaultFirebaseOptions {
     messagingSenderId: dotenv.env['MESSAGING_SENDER_ID']!,
     projectId: dotenv.env['PROJECT_ID']!,
     storageBucket: dotenv.env['STORAGE_BUCKET']!,
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAhjdzM_Eb6satYCro6ZwPKWBHi-CFHM6A',
+    appId: '1:557089994187:web:d2bea349b681ac8743f24e',
+    messagingSenderId: '557089994187',
+    projectId: 'degreez-fbec6',
+    storageBucket: 'degreez-fbec6.firebasestorage.app',
+    authDomain: 'degreez-fbec6.firebaseapp.com',
   );
 }
