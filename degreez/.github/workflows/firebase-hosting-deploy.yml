@@ -17,26 +17,12 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: 'stable'
 
       - name: Install dependencies
-        working-directory: ./degreez
         run: flutter pub get
 
-      - name: Create .env file for web build
-        working-directory: ./degreez
-        run: |
-          echo "WEB_API_KEY=AIzaSyAhjdzM_Eb6satYCro6ZwPKWBHi-CFHM6A" > .env
-          echo "WEB_APP_ID=1:557089994187:web:d2bea349b681ac8743f24e" >> .env
-          echo "WEB_MESSAGING_SENDER_ID=557089994187" >> .env
-          echo "WEB_PROJECT_ID=degreez-fbec6" >> .env
-          echo "WEB_STORAGE_BUCKET=degreez-fbec6.firebasestorage.app" >> .env
-          echo "WEB_AUTH_DOMAIN=degreez-fbec6.firebaseapp.com" >> .env
-          echo "WEB_MEASUREMENT_ID=" >> .env
-          echo "WEB_GOOGLE_CLIENT_ID=557089994187-jp2craaq3akgo35l1ughg0gd53d3tpn4.apps.googleusercontent.com" >> .env
-
       - name: Build web
-        working-directory: ./degreez
         run: flutter build web --release
 
       - name: Setup Node (for firebase-tools)
