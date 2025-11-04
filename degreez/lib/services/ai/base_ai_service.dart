@@ -22,12 +22,7 @@ abstract class BaseAiService {
     required String systemInstruction,
     GenerationConfig? generationConfig,
   }) {
-    // _model = FirebaseAI.googleAI().generativeModel(
-    //   model: modelName,
-    //   systemInstruction: Content.text(systemInstruction),
-    //   generationConfig: generationConfig,
-    // );
-    _model = FirebaseAI.vertexAI().generativeModel(
+    _model = FirebaseAI.googleAI().generativeModel(
       model: modelName,
       systemInstruction: Content.text(systemInstruction),
       generationConfig: generationConfig,
