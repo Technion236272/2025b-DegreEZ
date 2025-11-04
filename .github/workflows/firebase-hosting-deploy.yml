@@ -20,9 +20,11 @@ jobs:
           flutter-version: 'stable'
 
       - name: Install dependencies
+        working-directory: ./degreez
         run: flutter pub get
 
       - name: Build web
+        working-directory: ./degreez
         run: flutter build web --release
 
       - name: Setup Node (for firebase-tools)
