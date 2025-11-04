@@ -130,8 +130,45 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
         builder: (context, themeProvider, _) {
           return Scaffold(
             backgroundColor: themeProvider.mainColor,
-            body: Consumer2<StudentProvider, CourseProvider>(
-              builder: (context, studentNotifier, courseNotifier, _) {
+            body: Column(
+              children: [
+                // AI Budget Warning Banner
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: themeProvider.warningColor.withOpacity(0.1),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: themeProvider.warningColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: themeProvider.warningColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Please be mindful not to overuse AI services. Our budget is limited, and we want everyone to enjoy the AI features!',
+                          style: TextStyle(
+                            color: themeProvider.textPrimary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Main content
+                Expanded(
+                  child: Consumer2<StudentProvider, CourseProvider>(
+                    builder: (context, studentNotifier, courseNotifier, _) {
                 final courseNotifier = context.read<CourseProvider>();
                 if (studentNotifier.isLoading && studentNotifier.isLoading) {
                   return const Center(child: CircularProgressIndicator());
@@ -346,7 +383,11 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 ],
               ),
             );
-          },        ),
+          },
+                  ),
+                ),
+              ],
+            ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 _showAddSemesterDialog(context);
