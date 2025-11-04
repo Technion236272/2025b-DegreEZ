@@ -130,7 +130,7 @@ class StudentCourse {
       tutorialTime: data['Tutorial_time'] ?? '',
       labTime: data['Lab_time'] ?? '',
       workshopTime: data['Workshop_time'] ?? '',
-      creditPoints: (data['Credit_points'] as num?)?.toDouble() ?? 3.0, // Default to 3.0 if not specified
+      creditPoints: (data['Credit_points'] as num?)?.toDouble() ?? 0.0, // Default to 0.0 if not specified
       note: data['Note'] ?? '',
       prerequisites: parsedPrereqs,
     );

@@ -1,5 +1,6 @@
 // lib/widgets/course_recommendation/semester_selector_widget.dart
 
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:degreez/providers/course_provider.dart';
 class SemesterSelectorWidget extends StatelessWidget {
@@ -38,6 +39,13 @@ class SemesterSelectorWidget extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            AutoSizeText(
+              "To display and select a semester here please add it on customized diagram first",
+              maxLines: 2,
+              minFontSize: 10,
+              maxFontSize: 40,
             ),
             const SizedBox(height: 16),
 
