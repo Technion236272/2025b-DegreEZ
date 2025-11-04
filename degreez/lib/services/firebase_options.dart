@@ -5,8 +5,6 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 /// Default Firebase configuration options for the current platform
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -43,12 +41,12 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static FirebaseOptions android = FirebaseOptions(
-    apiKey: dotenv.env['WEB_API_KEY']!,
-    appId: dotenv.env['WEB_APP_ID']!,
-    messagingSenderId: dotenv.env['MESSAGING_SENDER_ID']!,
-    projectId: dotenv.env['PROJECT_ID']!,
-    storageBucket: dotenv.env['STORAGE_BUCKET']!,
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyAhjdzM_Eb6satYCro6ZwPKWBHi-CFHM6A',
+    appId: '1:557089994187:android:ca0bf2a0953eaaff43f24e',
+    messagingSenderId: '557089994187',
+    projectId: 'degreez-fbec6',
+    storageBucket: 'degreez-fbec6.firebasestorage.app',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
