@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// A provider class that manages authentication state using Google Sign-In and Firebase Auth.
 class LogInNotifier extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // FirebaseAuth may not be available on web when Firebase isn't configured.
+  // Access it lazily and defensively so the app doesn't crash at startup.
+  late final GoogleSignIn _googleSignIn;
+  FirebaseAuth? _auth;
 
   // Private field to store the current user
   User? _user;
@@ -25,23 +28,42 @@ class LogInNotifier extends ChangeNotifier {
 
   // Constructor: listen to auth state changes
   LogInNotifier() {
+    // Initialize GoogleSignIn with web client id when running on web. The
+    // client id can be provided via .env as WEB_GOOGLE_CLIENT_ID (or
+    // GOOGLE_CLIENT_ID).
+    final clientId = dotenv.env['WEB_GOOGLE_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
+    if (kIsWeb) {
+      _googleSignIn = GoogleSignIn(clientId: clientId);
+    } else {
+      _googleSignIn = GoogleSignIn();
+    }
+    try {
+      _auth = FirebaseAuth.instance;
+    } catch (e) {
+      debugPrint('FirebaseAuth not available: $e');
+      _auth = null;
+    }
+
     _initUser();
-    // Listen for authentication state changes
-    _auth.authStateChanges().listen((User? user) {
-      _user = user;
-      debugPrint(
-        "Auth state changed: User is ${user != null ? 'signed in' : 'signed out'}",
-      );
-      if (user != null) {
-        _newUser = false;
-      }
-      notifyListeners();
-    });
+
+    // Listen for authentication state changes if auth is available
+    if (_auth != null) {
+      _auth!.authStateChanges().listen((User? user) {
+        _user = user;
+        debugPrint(
+          "Auth state changed: User is ${user != null ? 'signed in' : 'signed out'}",
+        );
+        if (user != null) {
+          _newUser = false;
+        }
+        notifyListeners();
+      });
+    }
   }
 
   // Initialize user on startup
   void _initUser() {
-    _user = _auth.currentUser;
+    _user = _auth?.currentUser;
     debugPrint("Init user: ${_user?.displayName ?? 'No user'}");
     if (user != null) {
       _stayedSignedIn = true;
@@ -109,7 +131,10 @@ class LogInNotifier extends ChangeNotifier {
 
       // Sign in to Firebase with the Google OAuth credential
       debugPrint("Signing in to Firebase with Google credential");
-      final UserCredential userCredential = await _auth.signInWithCredential(
+      if (_auth == null) {
+        throw Exception('FirebaseAuth is not available on this platform.');
+      }
+      final UserCredential userCredential = await _auth!.signInWithCredential(
         credential,
       );
 
@@ -138,7 +163,12 @@ class LogInNotifier extends ChangeNotifier {
 
     try {
       debugPrint("Signing out");
-      await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
+      // If FirebaseAuth isn't available, just sign out of Google locally.
+      if (_auth != null) {
+        await Future.wait([_auth!.signOut(), _googleSignIn.signOut()]);
+      } else {
+        await _googleSignIn.signOut();
+      }
 
       _user = null;
       debugPrint("Sign out complete");
@@ -163,7 +193,11 @@ class LogInNotifier extends ChangeNotifier {
     notifyListeners();
     // Delete from Authentication
     try {
-      await user?.delete();
+      if (_auth != null) {
+        await user?.delete();
+      } else {
+        throw Exception('FirebaseAuth not available; cannot delete user');
+      }
     } catch (e) {
       debugPrint("Failed to delete User: $e");
       _errorMessage = e.toString();

@@ -45,3 +45,11 @@ flutter:
     - assets/
     - assets/Faculties2024-2025/
     - assets/Faculties2023-2024/
+
+# If dependency overrides were used to workaround plugin mismatches, remove
+# them when upgrading packages to compatible versions. No overrides currently.
+dependency_overrides:
+  # Ensure the `location` web plugin and platform interface versions align
+  # so the `changeSettings` signature matches across implementations.
+  location_platform_interface: 6.0.1
+  location_web: 6.0.1

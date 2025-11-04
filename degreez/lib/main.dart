@@ -30,16 +30,25 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  // Initialize Firebase
-  try {
-    Firebase.app();
-  } catch (e) {
-    debugPrint("Firebase app is not initialized");
-    await Firebase.initializeApp(
-      name: "DegreEZ",
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
+  // Initialize Firebase. If Firebase options for the current platform (web)
+  // are not configured, log and continue so the app UI can run (features
+  // requiring Firebase will still be disabled).
+    try {
+      // Try to use an existing app (e.g. during hot-restart)
+      Firebase.app();
+    } catch (_) {
+      try {
+        // Initialize the default Firebase app so FirebaseAuth and other
+        // packages can access the [DEFAULT] app instance.
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } catch (e) {
+        // Fail gracefully when Firebase is not configured for the current
+        // platform (common for web until FlutterFire is configured).
+        debugPrint('Firebase initialization skipped: $e');
+      }
+    }
   runApp(const MyApp());
 }
 
