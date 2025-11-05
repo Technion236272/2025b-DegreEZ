@@ -57,7 +57,7 @@ class CourseInSet {
     return CourseInSet(
       courseId: json['id'] ?? json['courseId'] ?? '',
       courseName: json['name'] ?? json['courseName'] ?? '',
-      creditPoints: (json['creditPoints'] as num?)?.toDouble() ?? 3.0,
+      creditPoints: (json['creditPoints'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
