@@ -91,7 +91,15 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
       
     } catch (e) {
       debugPrint('Error during AI import: ${e.toString()}');
-      showSnackBar('Error during AI import: ${e.toString()}', isError: true);
+      // Close the loading dialog if still open
+      if (mounted) Navigator.of(context).pop();
+      
+      // Check if it's the web unsupported error
+      if (e.toString().contains('not supported on the web')) {
+        showSnackBar('PDF import is only available on the mobile app. Please use the Android version to import your grade sheet.', isError: true);
+      } else {
+        showSnackBar('Error during AI import: ${e.toString()}', isError: true);
+      }
     }
   }
 

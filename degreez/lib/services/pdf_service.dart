@@ -19,15 +19,8 @@ class PdfService {
       if (result != null) {
         if (kIsWeb) {
           // On web, we can't create File objects from dart:io
-          // Return null for now and handle file data separately
-          if (result.files.single.bytes != null) {
-            int fileSize = result.files.single.bytes!.length;
-            if (fileSize > maxFileSizeBytes) {
-              throw Exception('PDF file is too large. Maximum size allowed is ${(maxFileSizeBytes / 1024 / 1024).toInt()}MB.');
-            }
-          }
-          // Web doesn't support File objects, caller should use result.files.single.bytes
-          throw UnsupportedError('PDF file picking is not yet supported on web. This feature is only available on mobile devices.');
+          // Throw a clear error that will be caught and displayed
+          throw Exception('PDF import is currently not supported on the web version. Please use the Android mobile app to import your grade sheet.');
         } else {
           // Mobile/Desktop path
           if (result.files.single.path != null) {
@@ -45,6 +38,10 @@ class PdfService {
       }
       return null;
     } catch (e) {
+      // Re-throw with a clear message
+      if (e.toString().contains('not supported on the web')) {
+        rethrow;
+      }
       throw Exception('Failed to pick PDF file: ${e.toString()}');
     }
   }
