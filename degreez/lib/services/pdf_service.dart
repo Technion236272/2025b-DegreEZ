@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'ai/ai_config.dart';
 
 class PdfService {
@@ -11,20 +12,36 @@ class PdfService {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
-        withData: false,
+        withData: kIsWeb, // On web, we need the data
         withReadStream: false,
       );
 
-      if (result != null && result.files.single.path != null) {
-        File file = File(result.files.single.path!);
-        
-        // Check file size
-        int fileSize = await file.length();
-        if (fileSize > maxFileSizeBytes) {
-          throw Exception('PDF file is too large. Maximum size allowed is ${(maxFileSizeBytes / 1024 / 1024).toInt()}MB.');
+      if (result != null) {
+        if (kIsWeb) {
+          // On web, we can't create File objects from dart:io
+          // Return null for now and handle file data separately
+          if (result.files.single.bytes != null) {
+            int fileSize = result.files.single.bytes!.length;
+            if (fileSize > maxFileSizeBytes) {
+              throw Exception('PDF file is too large. Maximum size allowed is ${(maxFileSizeBytes / 1024 / 1024).toInt()}MB.');
+            }
+          }
+          // Web doesn't support File objects, caller should use result.files.single.bytes
+          throw UnsupportedError('PDF file picking is not yet supported on web. This feature is only available on mobile devices.');
+        } else {
+          // Mobile/Desktop path
+          if (result.files.single.path != null) {
+            File file = File(result.files.single.path!);
+            
+            // Check file size
+            int fileSize = await file.length();
+            if (fileSize > maxFileSizeBytes) {
+              throw Exception('PDF file is too large. Maximum size allowed is ${(maxFileSizeBytes / 1024 / 1024).toInt()}MB.');
+            }
+            
+            return file;
+          }
         }
-        
-        return file;
       }
       return null;
     } catch (e) {
