@@ -265,7 +265,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                             child: Padding(
                               padding: EdgeInsets.all(10),
                               child: AutoSizeText(
-                                'Upload Grade Sheet to automatically add courses',
+                                'Upload Grade Sheet to automatically add courses \n - PDF import now works on web! \n - MAKE SURE TO IMPORT ENGLISH VERSION \n ALSO, IF YOU ATTACH THE FILE THEN THE AGENT WILL START AND IT WILL TAKE TIME, be patient :)',
                                 style: TextStyle(
                                   color: themeProvider.primaryColor,
                                 ),
@@ -379,7 +379,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        ' - Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - PDF import now works on web! \n - MAKE SURE TO IMPORT ENGLISH VERSION \n ALSO, IF YOU ATTACH THE FILE THEN THE AGENT WILL START AND IT WILL TAKE TIME, be patient :)\n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
+                                        ' - Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - Operations here can be a bit slow, be patient bro. \n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
                                         style: TextStyle(
                                           color: themeProvider.textPrimary,
                                           fontSize: 13,

@@ -78,9 +78,16 @@ showCreditsPage(context) {
               ),
               
               const Text(
-                '© Ramzy Ayan\n Maintained and developed solely by me after the original Android project was completed.',
+                '© Ramzy Ayann\n',
                 style: TextStyle(
                   fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Text(
+                'Maintained and developed Solely by me since July 2025.',
+                style: TextStyle(
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -160,7 +167,7 @@ showCreditsPage(context) {
               
               // Course Info
               Text(
-                'This application started its development under the provision of Technion\'s Android course',
+                'This application started its development under the provision of Technion\'s Android course april 2025 - july 2025.\n\n',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

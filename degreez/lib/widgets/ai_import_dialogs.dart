@@ -214,7 +214,7 @@ class AiImportDialogs {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'AI is extracting course information from your grade sheet',
+                    'AI is extracting course information from your grade sheet, dont leave this page, please wait...',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: themeProvider.textSecondary,

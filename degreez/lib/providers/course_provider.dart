@@ -1259,7 +1259,7 @@ class CourseProvider with ChangeNotifier {
           );
 
           // Fetch credit points from course details
-          double creditPoints = 3.0; // Default fallback
+          double creditPoints = 0.0; // Default fallback
           try {
             final courseDetails = await CourseService.getCourseDetails(
               _currentSemester?.year ?? 2024,
