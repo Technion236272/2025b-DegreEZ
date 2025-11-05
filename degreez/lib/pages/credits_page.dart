@@ -78,7 +78,7 @@ showCreditsPage(context) {
               ),
               
               const Text(
-                '© Ramzy Ayan',
+                '© Ramzy Ayan\n Maintained and developed solely by me after the original Android project was completed.',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,

@@ -155,7 +155,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Please be mindful not to overuse AI services. Our budget is limited, and we want everyone to enjoy the AI features! \n this AI agent to import grades automatically isnt working for web. \n MAKE SURE TO IMPORT ENGLISH VERSION',
+                          ' - Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - This AI feature to import grades automatically isn\'t working for web. \n - MAKE SURE TO IMPORT ENGLISH VERSION \n ALSO, IF YOU ATTACH THE FILE THEN THE AGENT WILL START AND IT WILL TAKE TIME, be patient :)\n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
                           style: TextStyle(
                             color: themeProvider.textPrimary,
                             fontSize: 13,

@@ -148,13 +148,13 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                   size: 24,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Find Course',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+                // Text(
+                //   '',
+                //   style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                //     fontWeight: FontWeight.w600,
+                //     color: Theme.of(context).colorScheme.primary,
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 12),
