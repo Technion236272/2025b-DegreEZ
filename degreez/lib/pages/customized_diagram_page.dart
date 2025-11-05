@@ -23,8 +23,9 @@ class CustomizedDiagramPage extends StatefulWidget {
   State<CustomizedDiagramPage> createState() => _CustomizedDiagramPageState();
 }
 
-class _CustomizedDiagramPageState extends State<CustomizedDiagramPage> 
-    with AiImportMixin { // Add the mixin here
+class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
+    with AiImportMixin {
+  // Add the mixin here
   late ScrollController _scrollController;
   final List<GlobalKey> _semesterKeys = [];
   int _currentSemesterIndex = 0;
@@ -109,6 +110,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
       );
     }).toList();
   }
+
   // Enhanced: Callback to refresh UI when course is updated
   void _onCourseUpdated() {
     setState(() {
@@ -122,7 +124,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     super.onImportCompleted();
     // Additional actions specific to this page
     _onCourseUpdated();
-  }  @override
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => CustomizedDiagramNotifier(),
@@ -130,50 +134,14 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
         builder: (context, themeProvider, _) {
           return Scaffold(
             backgroundColor: themeProvider.mainColor,
-            body: Column(
-              children: [
-                // AI Budget Warning Banner
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: themeProvider.warningColor.withOpacity(0.1),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: themeProvider.warningColor.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: themeProvider.warningColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          ' - Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - This AI feature to import grades automatically isn\'t working for web. \n - MAKE SURE TO IMPORT ENGLISH VERSION \n ALSO, IF YOU ATTACH THE FILE THEN THE AGENT WILL START AND IT WILL TAKE TIME, be patient :)\n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
-                          style: TextStyle(
-                            color: themeProvider.textPrimary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Main content
-                Expanded(
-                  child: Consumer2<StudentProvider, CourseProvider>(
-                    builder: (context, studentNotifier, courseNotifier, _) {
+            body: Consumer2<StudentProvider, CourseProvider>(
+              builder: (context, studentNotifier, courseNotifier, _) {
                 final courseNotifier = context.read<CourseProvider>();
                 if (studentNotifier.isLoading && studentNotifier.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (studentNotifier.error != '' && studentNotifier.error != null) {
+                if (studentNotifier.error != '' &&
+                    studentNotifier.error != null) {
                   return Center(
                     child: Container(
                       margin: const EdgeInsets.all(20),
@@ -185,28 +153,39 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                             themeProvider.surfaceColor,
                           ],
                           begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,                    ),
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: themeProvider.isDarkMode ? AppColorsDarkMode.shadowColor : AppColorsLightMode.shadowColor,
+                            color:
+                                themeProvider.isDarkMode
+                                    ? AppColorsDarkMode.shadowColor
+                                    : AppColorsLightMode.shadowColor,
                             blurRadius: 8,
                             offset: Offset(0, 4),
                           ),
                         ],
-                      ),                child: Column(
+                      ),
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.error,
                             size: 64,
-                            color: themeProvider.isDarkMode ? AppColorsDarkMode.errorColor : AppColorsLightMode.errorColor,
+                            color:
+                                themeProvider.isDarkMode
+                                    ? AppColorsDarkMode.errorColor
+                                    : AppColorsLightMode.errorColor,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Error: ${studentNotifier.error}',
                             style: TextStyle(
-                              color: themeProvider.isDarkMode ? AppColorsDarkMode.errorColor : AppColorsLightMode.errorColor,
+                              color:
+                                  themeProvider.isDarkMode
+                                      ? AppColorsDarkMode.errorColor
+                                      : AppColorsLightMode.errorColor,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -216,177 +195,250 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                       ),
                     ),
                   );
-                }            final semesters = courseNotifier.sortedCoursesBySemester;
-            if (semesters.isEmpty) {
-              return Center(
-                child: Container(
-                  margin: const EdgeInsets.all(20),
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        themeProvider.mainColor,
-                        themeProvider.surfaceColor,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: themeProvider.isDarkMode ? AppColorsDarkMode.shadowColorStrong : AppColorsLightMode.shadowColor,
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
+                }
+                final semesters = courseNotifier.sortedCoursesBySemester;
+                if (semesters.isEmpty) {
+                  return Center(
+                    child: Container(
+                      margin: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(40),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            themeProvider.mainColor,
+                            themeProvider.surfaceColor,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                themeProvider.isDarkMode
+                                    ? AppColorsDarkMode.shadowColorStrong
+                                    : AppColorsLightMode.shadowColor,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timeline,
+                            size: 64,
+                            color: themeProvider.secondaryColor,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No courses to display',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.secondaryColor,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Add courses to see your degree progress',
+                            style: TextStyle(
+                              color: themeProvider.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  themeProvider.isLightMode
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.secondaryColor,
+                              foregroundColor: themeProvider.mainColor,
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                            onPressed: showAiImportDialog,
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: AutoSizeText(
+                                'Upload Grade Sheet to automatically add courses',
+                                style: TextStyle(
+                                  color: themeProvider.primaryColor,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // Ensure we have enough keys for the semesters
+                while (_semesterKeys.length < semesters.length) {
+                  _semesterKeys.add(GlobalKey());
+                }
+                int allCoursesCount = 0;
+                for (List<StudentCourse> semester in semesters.values) {
+                  allCoursesCount += semester.length;
+                }
+
+                // Detect device orientation
+                final orientation = MediaQuery.of(context).orientation;
+
+                return SafeArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.timeline,
-                        size: 64,
-                        color: themeProvider.secondaryColor,
-                      ),                      SizedBox(height: 16),
-                      Text(
-                        'No courses to display',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: themeProvider.secondaryColor,
+                      // Add the semester timeline
+                      // SemesterTimeline(
+                      //   semesters: _buildTimelineData(semesters),
+                      //   currentSemesterIndex: _currentSemesterIndex,
+                      //   onSemesterTap: _scrollToSemester,
+                      // ),                  // Enhanced: Updated instruction text
+                      ((semesters.length <= 2 && allCoursesCount == 0) ||
+                              allCoursesCount <= 3)
+                          ? Padding(
+                            padding: EdgeInsets.only(
+                              left: 25,
+                              top: 10,
+                              bottom: 5,
+                              right: 5,
+                            ),
+                            child: AutoSizeText(
+                              'Tip: You can press the Robot in the corner to automatically upload your courses',
+                              style: TextStyle(
+                                color: themeProvider.textSecondary,
+                              ),
+                              minFontSize: 10,
+                              maxFontSize: 30,
+                              maxLines: 2,
+                            ),
+                          )
+                          : SizedBox(),
+
+                      allCoursesCount != 0 && allCoursesCount <= 2
+                          ? Padding(
+                            padding: EdgeInsets.only(
+                              left: 25,
+                              top: 5,
+                              bottom: 5,
+                              right: 5,
+                            ),
+                            child: AutoSizeText(
+                              'Tap a course for quick actions Long press to view prerequisites'
+                              '\n(Long press the same course to disable prerequisites view)',
+                              style: TextStyle(
+                                color: themeProvider.textSecondary,
+                              ),
+                              minFontSize: 10,
+                              maxFontSize: 30,
+                              maxLines: 2,
+                            ),
+                          )
+                          : SizedBox(),
+
+                      // Scrollable content with banner
+                      Expanded(
+                        child: CustomScrollView(
+                          controller: _scrollController,
+                          slivers: [
+                            // AI Budget Warning Banner as first item
+                            SliverToBoxAdapter(
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: themeProvider.warningColor.withOpacity(
+                                    0.1,
+                                  ),
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: themeProvider.warningColor
+                                          .withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: themeProvider.warningColor,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        ' - Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - PDF import now works on web! \n - MAKE SURE TO IMPORT ENGLISH VERSION \n ALSO, IF YOU ATTACH THE FILE THEN THE AGENT WILL START AND IT WILL TAKE TIME, be patient :)\n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
+                                        style: TextStyle(
+                                          color: themeProvider.textPrimary,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Semester list
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  if (index == semesters.length) {
+                                    // This is the extra bottom space
+                                    return const SizedBox(height: 100);
+                                  }
+                                  final semesterKey = semesters.keys.elementAt(
+                                    index,
+                                  );
+                                  final semester = {
+                                    'semester': index + 1,
+                                    'name': semesterKey,
+                                    'courses': semesters[semesterKey]!,
+                                  };
+
+                                  return Container(
+                                    key: _semesterKeys[index],
+                                    child:
+                                        orientation == Orientation.portrait
+                                            ? _buildVerticalSemesterSection(
+                                              context,
+                                              semester,
+                                              studentNotifier,
+                                            )
+                                            : _buildVerticalSemesterSection(
+                                              context,
+                                              semester,
+                                              studentNotifier,
+                                            ),
+                                  );
+                                }, childCount: semesters.length + 1),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Add courses to see your degree progress',
-                        style: TextStyle(
-                          color: themeProvider.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 20,),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-                      foregroundColor: themeProvider.mainColor,
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                        onPressed: showAiImportDialog, 
-                        child: Padding(padding: EdgeInsets.all(10),child: AutoSizeText(
-                        'Upload Grade Sheet to automatically add courses',
-                        style: TextStyle(
-                          color: themeProvider.primaryColor,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                      ),)
-                      ,)
-                      
                     ],
                   ),
-                ),
-              );
-            }
-
-            // Ensure we have enough keys for the semesters
-            while (_semesterKeys.length < semesters.length) {
-              _semesterKeys.add(GlobalKey());
-            }
-            int allCoursesCount=0;
-            for (List<StudentCourse> semester in semesters.values) {
-              allCoursesCount += semester.length;
-            }
-
-            // Detect device orientation
-            final orientation = MediaQuery.of(context).orientation;
-
-            return SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Add the semester timeline
-                  // SemesterTimeline(
-                  //   semesters: _buildTimelineData(semesters),
-                  //   currentSemesterIndex: _currentSemesterIndex,
-                  //   onSemesterTap: _scrollToSemester,
-                  // ),                  // Enhanced: Updated instruction text
-                  ((semesters.length <= 2 && allCoursesCount==0) || allCoursesCount <= 3)  
-                  ? Padding(
-                    padding: EdgeInsets.only(left: 25, top: 10, bottom: 5,right: 5),
-                    child: AutoSizeText(
-                      'Tip: You can press the Robot in the corner to automatically upload your courses',
-                      style: TextStyle(
-                        color: themeProvider.textSecondary,
-                      ),
-                      minFontSize: 10,
-                      maxFontSize: 30,
-                      maxLines: 2,
-                    ),
-                  )
-                  : SizedBox(),
-
-                  allCoursesCount != 0 && allCoursesCount <= 2
-                  ? Padding(
-                    padding: EdgeInsets.only(left: 25, top: 5, bottom: 5,right: 5),
-                    child: AutoSizeText(
-                      'Tap a course for quick actions Long press to view prerequisites'
-                      '\n(Long press the same course to disable prerequisites view)',
-                      style: TextStyle(
-                        color: themeProvider.textSecondary,
-                      ),
-                      minFontSize: 10,
-                      maxFontSize: 30,
-                      maxLines: 2,
-                    ),
-                  )
-                  : SizedBox(),
-
-                  
-
-                  // Semester list
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      itemCount: semesters.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == semesters.length) {
-                          // This is the extra bottom space
-                          return const SizedBox(height: 100); // Adjust height as needed
-                        }
-                        final semesterKey = semesters.keys.elementAt(index);
-                        final semester = {
-                          'semester': index + 1,
-                          'name': semesterKey,
-                          'courses': semesters[semesterKey]!,
-                        };
-
-                        return Container(
-                          key: _semesterKeys[index],
-                          child:
-                              orientation == Orientation.portrait
-                                  ? _buildVerticalSemesterSection(
-                                    context,
-                                    semester,
-                                    studentNotifier,
-                                  )
-                                  : _buildVerticalSemesterSection(
-                                    context,
-                                    semester,
-                                    studentNotifier,                                  ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-                  ),
-                ),
-              ],
+                );
+              },
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
@@ -400,6 +452,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
       ),
     );
   }
+
   void _showAddSemesterDialog(BuildContext context) async {
     await showDialog(
       context: context,
@@ -414,23 +467,23 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
               //   ),
               //   borderRadius: BorderRadius.circular(16),
               // ),
-              backgroundColor: themeProvider.mainColor, // Changed to night black
+              backgroundColor:
+                  themeProvider.mainColor, // Changed to night black
               title: Text(
                 'Add New Semester',
-                style: TextStyle(
-                  color: themeProvider.textPrimary,
+                style: TextStyle(color: themeProvider.textPrimary),
+              ),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    SemesterSeasonSelector(),
+                    SizedBox(height: 12),
+                    SemesterYearSelector(),
+                  ],
                 ),
               ),
-              content: Form(key:  formKey,
-                child: 
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SemesterSeasonSelector(),
-                  SizedBox(height: 12),
-                  SemesterYearSelector(),
-                ],
-              ),),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -442,22 +495,30 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   ),
                 ),
                 TextButton(
-                  style:ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-      if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
-      }
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
-    }),
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                      Set<WidgetState> states,
+                    ) {
+                      if (states.contains(WidgetState.pressed)) {
+                        return context.read<ThemeProvider>().isLightMode
+                            ? context.read<ThemeProvider>().accentColor
+                            : context.read<ThemeProvider>().secondaryColor;
+                      }
+                      return context.read<ThemeProvider>().isLightMode
+                          ? context.read<ThemeProvider>().accentColor
+                          : context.read<ThemeProvider>().secondaryColor;
+                    }),
                   ),
                   onPressed: () {
                     if (formKey.currentState?.validate() != true) {
-                  return;
-                }
+                      return;
+                    }
                     final signUpProvider = context.read<SignUpProvider>();
-                    final selectedSeason = signUpProvider.selectedSemesterSeason;
+                    final selectedSeason =
+                        signUpProvider.selectedSemesterSeason;
                     final selectedYear = signUpProvider.selectedSemesterYear;
-                    final semesterName = '${selectedSeason ?? ''} ${selectedYear ?? ''}';
+                    final semesterName =
+                        '${selectedSeason ?? ''} ${selectedYear ?? ''}';
                     context.read<CourseProvider>().addSemester(
                       context.read<StudentProvider>().student!.id,
                       semesterName,
@@ -479,6 +540,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
       },
     );
   }
+
   // Vertical layout for portrait mode - enhanced with responsive grid and update callback
   Widget _buildVerticalSemesterSection(
     BuildContext context,
@@ -497,23 +559,24 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 20, bottom: 10),              
+              margin: const EdgeInsets.only(top: 20, bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    themeProvider.mainColor,
-                    themeProvider.surfaceColor,
-                  ],
+                  colors: [themeProvider.mainColor, themeProvider.surfaceColor],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                ),            borderRadius: BorderRadius.circular(16),
+                ),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
+                    color:
+                        themeProvider.isDarkMode
+                            ? Colors.black
+                            : AppColorsLightMode.shadowColor,
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
                 ],
               ),
               child: Row(
@@ -544,7 +607,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: themeProvider.isDarkMode ? AppColorsDarkMode.mainColor : AppColorsLightMode.mainColor,
+                              color:
+                                  themeProvider.isDarkMode
+                                      ? AppColorsDarkMode.mainColor
+                                      : AppColorsLightMode.mainColor,
                             ),
                           ),
                         ),
@@ -555,10 +621,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(
-                          Icons.add,
-                          color: themeProvider.textPrimary,
-                        ),
+                        icon: Icon(Icons.add, color: themeProvider.textPrimary),
                         tooltip: 'Add Course',
                         onPressed: () {
                           AddCourseDialog.show(
@@ -586,7 +649,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                   ),
                 ],
               ),
-            ),            // Display message if no courses
+            ), // Display message if no courses
             courses.isEmpty
                 ? Container(
                   margin: const EdgeInsets.symmetric(
@@ -603,7 +666,10 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: themeProvider.isDarkMode ? AppColorsDarkMode.shadowColor : AppColorsLightMode.shadowColor,
+                        color:
+                            themeProvider.isDarkMode
+                                ? AppColorsDarkMode.shadowColor
+                                : AppColorsLightMode.shadowColor,
                         blurRadius: 4,
                         offset: Offset(0, 1),
                       ),
@@ -652,12 +718,13 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
       },
     );
   }
+
   void _confirmDeleteSemester(
     BuildContext context,
     String semesterName,
     String studentId,
   ) {
-    if(!mounted) return;
+    if (!mounted) return;
     final themeProvider = context.read<ThemeProvider>();
     showDialog(
       context: context,
@@ -683,38 +750,46 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(
                   'Cancel',
-                  style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),
+                  style: TextStyle(
+                    color: context.read<ThemeProvider>().secondaryColor,
+                  ),
                 ),
               ),
               TextButton(
                 style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-var color = loading
-                        ? Colors.grey
-                        : context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor;
-return color;
-    }),
-                  ),
-                onPressed: loading
+                  backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                    Set<WidgetState> states,
+                  ) {
+                    var color =
+                        loading
+                            ? Colors.grey
+                            : context.read<ThemeProvider>().isLightMode
+                            ? context.read<ThemeProvider>().accentColor
+                            : context.read<ThemeProvider>().secondaryColor;
+                    return color;
+                  }),
+                ),
+                onPressed:
+                    loading
                         ? null
                         : () async {
-                  if (loading == true) return;
-                  
-                  setState(() {
-                    loading = true;
-                  });
-                  await Provider.of<CourseProvider>(
-                    context,
-                    listen: false,
-                  ).deleteSemester(studentId, semesterName);
-                  if (!ctx.mounted) return;
-                  Navigator.of(ctx).pop();
-                  // Enhanced: Trigger UI refresh
-                  _onCourseUpdated();
-                  setState(() {
-                    loading = false;
-                  });
-                },
+                          if (loading == true) return;
+
+                          setState(() {
+                            loading = true;
+                          });
+                          await Provider.of<CourseProvider>(
+                            context,
+                            listen: false,
+                          ).deleteSemester(studentId, semesterName);
+                          if (!ctx.mounted) return;
+                          Navigator.of(ctx).pop();
+                          // Enhanced: Trigger UI refresh
+                          _onCourseUpdated();
+                          setState(() {
+                            loading = false;
+                          });
+                        },
                 child: Text(
                   'Delete',
                   style: TextStyle(
@@ -725,5 +800,6 @@ return color;
               ),
             ],
           ),
-    );  }
+    );
+  }
 }

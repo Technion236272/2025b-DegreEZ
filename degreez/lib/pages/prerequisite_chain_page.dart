@@ -140,23 +140,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                // Text(
-                //   '',
-                //   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                //     fontWeight: FontWeight.w600,
-                //     color: Theme.of(context).colorScheme.primary,
-                //   ),
-                // ),
-              ],
-            ),
+            
             const SizedBox(height: 12),
             TextField(
               controller: _searchController,

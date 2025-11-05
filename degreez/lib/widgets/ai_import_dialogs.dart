@@ -41,7 +41,7 @@ class AiImportDialogs {
                 const SizedBox(height: 8),
                 Text(
                   '1. Go to your SAP account and request your grade sheet. (תעודת ציונים)\n'
-                  '2. Once its approved you will have a version in english and in hebrew, select the english version of your grade sheet and save it in your drive / phone\n'
+                  '2. Once its approved you will have a version in english and in hebrew, select the ENGLISH version of your grade sheet and save it in your drive / phone\n'
                   '3. import it here so the AI can extract course information automatically\n'
                   '4. Review and import the extracted courses',
                   style: TextStyle(
