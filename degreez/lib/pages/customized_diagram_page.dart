@@ -155,7 +155,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Please be mindful not to overuse AI services. Our budget is limited, and we want everyone to enjoy the AI features!',
+                          'Please be mindful not to overuse AI services. Our budget is limited, and we want everyone to enjoy the AI features! \n this AI agent to import grades automatically isnt working for web. \n MAKE SURE TO IMPORT ENGLISH VERSION',
                           style: TextStyle(
                             color: themeProvider.textPrimary,
                             fontSize: 13,
