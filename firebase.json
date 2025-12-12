@@ -7,6 +7,17 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Permissions-Policy",
+            "value": "geolocation=(self)"
+          }
+        ]
+      }
+    ],
     "rewrites": [
       {
         "source": "**",
