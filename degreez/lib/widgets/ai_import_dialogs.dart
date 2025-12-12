@@ -80,6 +80,32 @@ class AiImportDialogs {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  'Example Grade Sheet:',
+                  style: TextStyle(
+                    color: themeProvider.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: themeProvider.borderPrimary,
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/example of grade sheet.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
