@@ -7,13 +7,9 @@ import '../widgets/ai_import_dialogs.dart';
 /// Mixin to provide AI import functionality to any StatefulWidget
 /// This separates the AI import logic from the main page logic
 mixin AiImportMixin<T extends StatefulWidget> on State<T> {
-  
   /// Shows the AI import dialog and handles the complete import process
   void showAiImportDialog() {
-    AiImportDialogs.showAiImportDialog(
-      context,
-      onStartImport: startAiImport,
-    );
+    AiImportDialogs.showAiImportDialog(context, onStartImport: startAiImport);
   }
 
   /// Starts the AI import process
@@ -22,28 +18,30 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
       showSnackBar('Starting AI grade sheet import...', isLoading: true);
       // Show visual loading dialog
       AiImportDialogs.showAnalysisDialog(context);
-      
+
       // Process the import using the service
       final summary = await AiImportService.processAiImport(context);
-      
+
       // Debug: Print summary details
-      debugPrint('AI Import Summary: \u001b[38;5;10m${summary.toString()}\u001b[0m');
+      debugPrint(
+        'AI Import Summary: \u001b[38;5;10m${summary.toString()}\u001b[0m',
+      );
       debugPrint('Total courses: ${summary.totalCourses}');
       debugPrint('Total success: ${summary.totalSuccess}');
       debugPrint('Successfully added: ${summary.successfullyAdded}');
       debugPrint('Successfully updated: ${summary.successfullyUpdated}');
       debugPrint('Failed: ${summary.failed}');
       debugPrint('Results count: ${summary.results.length}');
-      
+
       // Close the loading dialog if still mounted
       if (mounted) Navigator.of(context).pop();
-      
+
       if (summary.totalCourses == 0) {
         // User cancelled or no courses found
         showSnackBar('Import cancelled by user.');
         return;
       }
-      
+
       // Always show the results dialog if we have any courses processed
       if (summary.totalCourses > 0) {
         if (summary.totalSuccess > 0) {
@@ -54,18 +52,23 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
           // Trigger UI update if callback is provided
           onImportCompleted();
         } else {
-          showSnackBar('No courses were successfully processed.', isError: true);
+          showSnackBar(
+            'No courses were successfully processed.',
+            isError: true,
+          );
         }
-        
+
         // Show results dialog for any import attempt
         if (mounted) {
           debugPrint('Showing results dialog...');
-          debugPrint('Context valid: \u001b[38;5;10m${context.mounted}\u001b[0m');
+          debugPrint(
+            'Context valid: \u001b[38;5;10m${context.mounted}\u001b[0m',
+          );
           debugPrint('Widget mounted: $mounted');
-          
+
           // Add a small delay to ensure the context is ready
           await Future.delayed(const Duration(milliseconds: 500));
-          
+
           if (mounted && context.mounted) {
             try {
               // Show the modern, scrollable results dialog
@@ -88,18 +91,12 @@ mixin AiImportMixin<T extends StatefulWidget> on State<T> {
           debugPrint('Cannot show dialog: widget not mounted');
         }
       }
-      
     } catch (e) {
       debugPrint('Error during AI import: ${e.toString()}');
       // Close the loading dialog if still open
       if (mounted) Navigator.of(context).pop();
-      
-      // Check if it's the web unsupported error
-      if (e.toString().contains('not supported on the web')) {
-        showSnackBar('PDF import is only available on the mobile app. Please use the Android version to import your grade sheet.', isError: true);
-      } else {
-        showSnackBar('Error during AI import: ${e.toString()}', isError: true);
-      }
+
+      showSnackBar('Error during AI import: ${e.toString()}', isError: true);
     }
   }
 

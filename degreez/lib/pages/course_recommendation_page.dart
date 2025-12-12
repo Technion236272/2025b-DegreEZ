@@ -73,215 +73,266 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
   Widget _buildGenerateTab() {
     return Consumer<CourseRecommendationProvider>(
       builder: (context, provider, child) {
-        return SingleChildScrollView(
-          // padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // AI Budget Warning Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: context.read<ThemeProvider>().warningColor.withOpacity(0.1),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: context.read<ThemeProvider>().warningColor.withOpacity(0.3),
-                      width: 1,
-                    ),
+        return Column(
+          children: [
+            // AI Budget Warning Banner (fixed at top)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: context.read<ThemeProvider>().warningColor.withOpacity(
+                  0.1,
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: context
+                        .read<ThemeProvider>()
+                        .warningColor
+                        .withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: context.read<ThemeProvider>().warningColor,
-                      size: 20,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: context.read<ThemeProvider>().warningColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - First, you need to add a new semester in customized diagram then come back here :) , and please wait until the AI finishes processing the file after you upload it, it may take several minutes.',
+                      style: TextStyle(
+                        color: context.read<ThemeProvider>().textPrimary,
+                        fontSize: 13,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Please be mindful not to overuse AI services. Our budget is limited, and we want everyone to enjoy the AI features!',
-                        style: TextStyle(
-                          color: context.read<ThemeProvider>().textPrimary,
-                          fontSize: 13,
+                  ),
+                ],
+              ),
+            ),
+
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  color:
+                                      context
+                                          .read<ThemeProvider>()
+                                          .primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'AI Course Recommendations',
+                                    style:
+                                        Theme.of(
+                                          context,
+                                        ).textTheme.headlineSmall,
+                                    softWrap: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Get personalized course recommendations based on your academic history and degree requirements.',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 24),
+
+                    // Fast Mode Toggle
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  provider.fastMode
+                                      ? Icons.flash_on
+                                      : Icons.flash_off,
+                                  color:
+                                      provider.fastMode
+                                          ? context
+                                              .read<ThemeProvider>()
+                                              .warningColor
+                                          : context
+                                              .read<ThemeProvider>()
+                                              .textSecondary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Recommendation Mode',
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            SwitchListTile(
+                              title: Text(
+                                provider.fastMode
+                                    ? 'Fast Mode'
+                                    : 'Optimized Mode',
+                              ),
+                              subtitle: Text(
+                                provider.fastMode
+                                    ? 'Quick recommendations  - ~1-2 minutes'
+                                    : 'AI-optimized recommendations (All phases) - ~10-12 minutes',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              value: provider.fastMode,
+                              onChanged: provider.setFastMode,
+                              secondary: Icon(
+                                provider.fastMode
+                                    ? Icons.speed
+                                    : Icons.psychology,
+                                color:
+                                    provider.fastMode
+                                        ? context
+                                            .read<ThemeProvider>()
+                                            .warningColor
+                                        : context
+                                            .read<ThemeProvider>()
+                                            .primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Semester Selection
+                    SemesterSelectorWidget(
+                      availableSemesters: provider.availableSemesters,
+                      selectedYear: provider.selectedYear,
+                      selectedSemester: provider.selectedSemester,
+                      onSemesterSelected: provider.setSelectedSemester,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Catalog Upload
+                    CatalogUploadWidget(
+                      catalogFilePath: provider.catalogFilePath,
+                      onFileSelected: provider.setCatalogFilePath,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Generate Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            provider.canGenerateRecommendations &&
+                                    !provider.isLoading
+                                ? () => _generateRecommendations(provider)
+                                : null,
+                        icon:
+                            provider.isLoading
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.auto_awesome),
+                        label: Text(
+                          provider.isLoading
+                              ? (provider.fastMode
+                                  ? 'Generating Fast Recommendations...'
+                                  : 'Generating Optimized Recommendations...')
+                              : 'Generate Recommendations',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              context.read<ThemeProvider>().primaryColor,
+                          foregroundColor:
+                              context.read<ThemeProvider>().secondaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Error Display
+                    if (provider.error != null) ...[
+                      const SizedBox(height: 16),
+                      Card(
+                        color: context
+                            .read<ThemeProvider>()
+                            .errorColor
+                            .withAlpha(26),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error,
+                                color: context.read<ThemeProvider>().errorColor,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  provider.error!,
+                                  style: TextStyle(
+                                    color:
+                                        context
+                                            .read<ThemeProvider>()
+                                            .errorColor,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: provider.clearError,
+                                icon: const Icon(Icons.close),
+                                color: context.read<ThemeProvider>().errorColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    // Information Cards
+                    const SizedBox(height: 32),
+                    _buildInfoCards(),
                   ],
                 ),
               ),
-              
-              // Header
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            color: context.read<ThemeProvider>().primaryColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'AI Course Recommendations',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                              softWrap: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Get personalized course recommendations based on your academic history and degree requirements.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Fast Mode Toggle
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            provider.fastMode ? Icons.flash_on : Icons.flash_off,
-                            color: provider.fastMode ? context.read<ThemeProvider>().warningColor : context.read<ThemeProvider>().textSecondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Recommendation Mode',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SwitchListTile(
-                        title: Text(provider.fastMode ? 'Fast Mode' : 'Optimized Mode'),
-                        subtitle: Text(
-                          provider.fastMode 
-                            ? 'Quick recommendations  - ~1-2 minutes'
-                            : 'AI-optimized recommendations (All phases) - ~10-12 minutes',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        value: provider.fastMode,
-                        onChanged: provider.setFastMode,
-                        secondary: Icon(
-                          provider.fastMode ? Icons.speed : Icons.psychology,
-                          color: provider.fastMode ? context.read<ThemeProvider>().warningColor : context.read<ThemeProvider>().primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Semester Selection
-              SemesterSelectorWidget(
-                availableSemesters: provider.availableSemesters,
-                selectedYear: provider.selectedYear,
-                selectedSemester: provider.selectedSemester,
-                onSemesterSelected: provider.setSelectedSemester,
-              ),
-
-              const SizedBox(height: 24),
-
-              // Catalog Upload
-              CatalogUploadWidget(
-                catalogFilePath: provider.catalogFilePath,
-                onFileSelected: provider.setCatalogFilePath,
-              ),
-
-              const SizedBox(height: 32),
-
-              // Generate Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed:
-                      provider.canGenerateRecommendations && !provider.isLoading
-                          ? () => _generateRecommendations(provider)
-                          : null,
-                  icon:
-                      provider.isLoading
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.auto_awesome),
-                  label: Text(
-                    provider.isLoading
-                        ? (provider.fastMode 
-                          ? 'Generating Fast Recommendations...'
-                          : 'Generating Optimized Recommendations...')
-                        : 'Generate Recommendations',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.read<ThemeProvider>().primaryColor,
-                    foregroundColor:
-                        context.read<ThemeProvider>().secondaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Error Display
-              if (provider.error != null) ...[
-                const SizedBox(height: 16),
-                Card(
-                  color: context.read<ThemeProvider>().errorColor.withAlpha(26),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error, color: context.read<ThemeProvider>().errorColor),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            provider.error!,
-                            style: TextStyle(color: context.read<ThemeProvider>().errorColor),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: provider.clearError,
-                          icon: const Icon(Icons.close),
-                          color: context.read<ThemeProvider>().errorColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-
-              // Information Cards
-              const SizedBox(height: 32),
-              _buildInfoCards(),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -325,10 +376,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                           courseId,
                           courseName,
                         ),
-                onFeedbackSubmitted: (feedback) => _handleFeedback(
-                  context,
-                  feedback,
-                ),
+                onFeedbackSubmitted:
+                    (feedback) => _handleFeedback(context, feedback),
               ),
             ],
           ),
@@ -380,7 +429,10 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.delete, color: context.read<ThemeProvider>().errorColor),
+                      icon: Icon(
+                        Icons.delete,
+                        color: context.read<ThemeProvider>().errorColor,
+                      ),
                       tooltip: 'Delete',
                       onPressed: () async {
                         final confirm = await showDialog<bool>(
@@ -402,7 +454,12 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                                         () => Navigator.pop(context, true),
                                     child: Text(
                                       'Delete',
-                                      style: TextStyle(color: context.read<ThemeProvider>().errorColor),
+                                      style: TextStyle(
+                                        color:
+                                            context
+                                                .read<ThemeProvider>()
+                                                .errorColor,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -668,7 +725,10 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                 ? '${details.courseName} added to $selectedSemester.'
                 : 'Failed to add ${details.courseName}.',
           ),
-          backgroundColor: success ? context.read<ThemeProvider>().successColor : context.read<ThemeProvider>().errorColor,
+          backgroundColor:
+              success
+                  ? context.read<ThemeProvider>().successColor
+                  : context.read<ThemeProvider>().errorColor,
         ),
       );
     } catch (e) {
@@ -689,11 +749,13 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     try {
       final provider = context.read<CourseRecommendationProvider>();
       await provider.processFeedback(feedback);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('✅ Feedback processed! Recommendations updated.'),
+            content: const Text(
+              '✅ Feedback processed! Recommendations updated.',
+            ),
             backgroundColor: context.read<ThemeProvider>().successColor,
           ),
         );

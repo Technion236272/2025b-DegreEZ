@@ -92,8 +92,8 @@ DegreEZ is specifically designed for the Technion environment:
 Developed by Technion students who understand the unique challenges of academic planning. DegreEZ is built from real student experiences and feedback.
 
 **Developers:**
-- © Moamen Kassem
 - © Ramzy Ayan  
+- © Moamen Kassem
 - © Ibraheem Akaree
 
 ### 🆓 Free to Use
