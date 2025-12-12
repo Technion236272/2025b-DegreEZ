@@ -8,6 +8,7 @@ on:
       - web-version
       - release/2.1.2
       - hotfix/location_issue
+      - feature/adding_import_web
 
 jobs:
   build_and_deploy:
