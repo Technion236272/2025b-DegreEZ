@@ -1398,6 +1398,200 @@ class _CourseMapPageState extends State<CourseMapPage> {
     );
   }
 
+  void _showClassDetailsDialog(
+    CourseMarkerData marker,
+    ThemeProvider themeProvider,
+  ) {
+    final distance = userLocation != null 
+        ? _calculateDistance(userLocation!, marker.point) 
+        : null;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.cardColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: themeProvider.borderPrimary, width: 1),
+        ),
+        title: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: marker.color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                Icons.school,
+                color: themeProvider.surfaceColor,
+                size: 14,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Class Details',
+                style: TextStyle(
+                  color: themeProvider.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Course name
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: marker.color.withAlpha(26),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: marker.color.withAlpha(76),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    marker.label.split('(').first.trim(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: themeProvider.textPrimary,
+                    ),
+                  ),
+                  if (marker.label.contains('(')) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      marker.label.split('(')[1].replaceAll(')', ''),
+                      style: TextStyle(
+                        color: themeProvider.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Location details
+            _buildDetailRow(
+              Icons.location_on,
+              'Building',
+              marker.buildingName,
+              themeProvider,
+            ),
+            const SizedBox(height: 8),
+            _buildDetailRow(
+              Icons.meeting_room,
+              'Room',
+              marker.roomNumber,
+              themeProvider,
+            ),
+            if (distance != null) ...[
+              const SizedBox(height: 8),
+              _buildDetailRow(
+                Icons.directions_walk,
+                'Distance',
+                _formatDistance(distance),
+                themeProvider,
+              ),
+            ],
+            if (marker.nextClassTime != null) ...[
+              const SizedBox(height: 8),
+              _buildDetailRow(
+                Icons.access_time,
+                'Next Class',
+                _formatDateTime(marker.nextClassTime!),
+                themeProvider,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: TextStyle(color: themeProvider.textSecondary),
+            ),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: marker.color,
+              foregroundColor: Colors.white,
+              elevation: 2,
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _launchNavigation(marker.point);
+            },
+            icon: const Icon(Icons.directions, size: 18),
+            label: const Text('Navigate'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value,
+    ThemeProvider themeProvider,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: themeProvider.textSecondary),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            color: themeProvider.textSecondary,
+            fontSize: 14,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: themeProvider.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = dateTime.difference(now);
+    
+    if (difference.inMinutes < 0) {
+      return 'In progress or passed';
+    } else if (difference.inMinutes < 60) {
+      return 'In ${difference.inMinutes} minutes';
+    } else if (difference.inHours < 24) {
+      return 'In ${difference.inHours} hours';
+    } else {
+      final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final day = days[dateTime.weekday - 1];
+      final hour = dateTime.hour.toString().padLeft(2, '0');
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      return '$day at $hour:$minute';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -1472,6 +1666,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
                                     '${cm.label}\n${cm.buildingName} - Room ${cm.roomNumber}',
                                 child: GestureDetector(
                                   onTap: () => _launchNavigation(cm.point),
+                                  onLongPress: () => _showClassDetailsDialog(cm, themeProvider),
                                   child: _buildEnhancedMarker(
                                     cm,
                                     isHighlighted,
@@ -1517,6 +1712,53 @@ class _CourseMapPageState extends State<CourseMapPage> {
                 ],
               ),
               _buildSearchAndFilters(themeProvider),
+              // Instruction note
+              Positioned(
+                top: 80,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: themeProvider.cardColor.withAlpha(230),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: themeProvider.borderPrimary,
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: themeProvider.isDarkMode
+                            ? Colors.black.withAlpha(76)
+                            : Colors.black.withAlpha(26),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 14,
+                        color: themeProvider.primaryColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Long press icons for details',
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               Positioned(
                 top: 80,
                 left: 20,
