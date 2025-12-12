@@ -2,12 +2,17 @@
 
 /// Constants for introductory/prerequisite courses that are completed before starting Technion
 /// These are not actual Technion courses but are requirements for admission
-class IntroductoryCourses {
-  /// Set of introductory course IDs that students complete before Technion
+class IntroductoryCourses {  /// Set of introductory course IDs that students complete before Technion
   static const Set<String> introductoryCourseIds = {
     '01130013', // Introductory Physics 1
     '01130014', // Introductory Physics 2
     '01030015', // Introductory Mathematics 1
+    '03240433', // Holocaust in Cinema
+    '03200101', // Social Activities
+    '03200102', // Social Activities
+    '03240489', // The World's Best Designer
+    '03250000', // Sexual Harassment Awareness
+    '03200033', // Faculty Elective
   };
 
   /// Map of introductory course details
@@ -27,11 +32,57 @@ class IntroductoryCourses {
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
       isExemption: true,
-    ),
-    '01030015': IntroductoryCourseData(
+    ),    '01030015': IntroductoryCourseData(
       courseId: '01030015',
       name: 'Introductory Mathematics 1',
       creditPoints: 0.0, // Usually no credit points for prerequisites
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),    '03240433': IntroductoryCourseData(
+      courseId: '03240433',
+      name: 'Holocaust in Cinema',
+      creditPoints: 2.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '03200101': IntroductoryCourseData(
+      courseId: '03200101',
+      name: 'Social Activities',
+      creditPoints: 1.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '03200102': IntroductoryCourseData(
+      courseId: '03200102',
+      name: 'Social Activities',
+      creditPoints: 1.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '03240489': IntroductoryCourseData(
+      courseId: '03240489',
+      name: "The World's Best Designer",
+      creditPoints: 2.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '03250000': IntroductoryCourseData(
+      courseId: '03250000',
+      name: 'Sexual Harassment Awareness',
+      creditPoints: 0.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '03200033': IntroductoryCourseData(
+      courseId: '03200033',
+      name: 'Faculty Elective',
+      creditPoints: 2.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
       isExemption: true,
