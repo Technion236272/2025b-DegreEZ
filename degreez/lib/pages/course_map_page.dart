@@ -18,7 +18,6 @@ import 'package:geolocator/geolocator.dart';
 import '../widgets/next_class_button.dart';
 import '../mixins/course_event_mixin.dart';
 
-
 class CourseMarkerData {
   final LatLng point;
   final String label;
@@ -116,113 +115,112 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
     await showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: themeProvider.cardColor,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: themeProvider.borderPrimary, width: 1),
-            ),
-            title: Text(
-              'Choose an app for navigation',
-              style: TextStyle(color: themeProvider.textPrimary),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.cardColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: themeProvider.borderPrimary, width: 1),
+        ),
+        title: Text(
+          'Choose an app for navigation',
+          style: TextStyle(color: themeProvider.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (await canLaunchUrl(googleMapsUrl)) {
+                    await launchUrl(
+                      googleMapsUrl,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } else {
+                    _showErrorSnack();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      if (await canLaunchUrl(googleMapsUrl)) {
-                        await launchUrl(
-                          googleMapsUrl,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      } else {
-                        _showErrorSnack();
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: themeProvider.borderPrimary,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            'assets/google_maps_logo.png',
-                            width: 30,
-                            height: 30,
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            'Google Maps',
-                            style: TextStyle(
-                              color: themeProvider.textPrimary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
+                    border: Border.all(
+                      color: themeProvider.borderPrimary,
+                      width: 1,
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      if (await canLaunchUrl(wazeUrl)) {
-                        await launchUrl(
-                          wazeUrl,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      } else {
-                        _showErrorSnack();
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: themeProvider.borderPrimary,
-                          width: 1,
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/google_maps_logo.png',
+                        width: 30,
+                        height: 30,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Google Maps',
+                        style: TextStyle(
+                          color: themeProvider.textPrimary,
+                          fontSize: 16,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            'assets/waze_logo.png',
-                            width: 30,
-                            height: 30,
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            'Waze',
-                            style: TextStyle(
-                              color: themeProvider.textPrimary,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 12),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (await canLaunchUrl(wazeUrl)) {
+                    await launchUrl(
+                      wazeUrl,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } else {
+                    _showErrorSnack();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: themeProvider.borderPrimary,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/waze_logo.png',
+                        width: 30,
+                        height: 30,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'Waze',
+                        style: TextStyle(
+                          color: themeProvider.textPrimary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -334,46 +332,88 @@ class _CourseMapPageState extends State<CourseMapPage> {
   }
 
   Future<void> _getUserLocation() async {
-    // 1. Make sure the service is on & we have permission
-    if (!await location.serviceEnabled()) {
-      if (!await location.requestService()) return;
-    }
-    if (await location.hasPermission() == PermissionStatus.denied) {
-      if (await location.requestPermission() != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    // 2. Try to get the very next GPS update, but don’t wait forever.
     try {
-      final loc = await location.onLocationChanged.first.timeout(
-        const Duration(seconds: 5),
-      );
-      userLocation = LatLng(loc.latitude!, loc.longitude!);
-      debugPrint("✅ Got a location fix from the stream: $userLocation");
-    } on TimeoutException {
-      debugPrint(
-        "⚠️ Timeout waiting for onLocationChanged, trying getLocation()…",
-      );
-      // 3. Fallback: try getLocation(), but with a timeout
+      // 1. Make sure the service is on & we have permission
+      // On web, serviceEnabled() may throw or behave unexpectedly
+      bool serviceEnabled = false;
       try {
-        final loc = await location.getLocation().timeout(
+        serviceEnabled = await location.serviceEnabled().timeout(
           const Duration(seconds: 3),
         );
-        userLocation = LatLng(loc.latitude!, loc.longitude!);
-        debugPrint("✅ Got a location from getLocation(): $userLocation");
-      } on Exception catch (e) {
-        debugPrint("❌ Gave up on getLocation(): $e");
+        if (!serviceEnabled) {
+          serviceEnabled = await location.requestService().timeout(
+            const Duration(seconds: 3),
+          );
+        }
+      } catch (e) {
+        debugPrint("⚠️ Service check failed (likely web): $e");
+        // On web, we can still try to get location even if service check fails
+        serviceEnabled = true;
       }
-    }
+      
+      if (!serviceEnabled) {
+        debugPrint("⚠️ Location service not enabled, continuing without user location");
+        return;
+      }
 
-    // 4. Now subscribe for all future updates
-    _locationSubscription = location.onLocationChanged.listen((loc) {
-      if (!mounted) return;
-      setState(() {
+      // Check permission with timeout
+      PermissionStatus permission = PermissionStatus.denied;
+      try {
+        permission = await location.hasPermission().timeout(
+          const Duration(seconds: 3),
+        );
+        if (permission == PermissionStatus.denied) {
+          permission = await location.requestPermission().timeout(
+            const Duration(seconds: 10),
+          );
+        }
+      } catch (e) {
+        debugPrint("⚠️ Permission check failed: $e");
+        return;
+      }
+
+      if (permission != PermissionStatus.granted && 
+          permission != PermissionStatus.grantedLimited) {
+        debugPrint("⚠️ Location permission not granted, continuing without user location");
+        return;
+      }
+
+      // 2. Try to get the very next GPS update, but don't wait forever.
+      try {
+        final loc = await location.onLocationChanged.first.timeout(
+          const Duration(seconds: 5),
+        );
         userLocation = LatLng(loc.latitude!, loc.longitude!);
-      });
-    });
+        debugPrint("✅ Got a location fix from the stream: $userLocation");
+      } on TimeoutException {
+        debugPrint(
+          "⚠️ Timeout waiting for onLocationChanged, trying getLocation()…",
+        );
+        // 3. Fallback: try getLocation(), but with a timeout
+        try {
+          final loc = await location.getLocation().timeout(
+            const Duration(seconds: 3),
+          );
+          userLocation = LatLng(loc.latitude!, loc.longitude!);
+          debugPrint("✅ Got a location from getLocation(): $userLocation");
+        } on Exception catch (e) {
+          debugPrint("❌ Gave up on getLocation(): $e");
+        }
+      }
+
+      // 4. Now subscribe for all future updates (only if we got initial location)
+      if (userLocation != null) {
+        _locationSubscription = location.onLocationChanged.listen((loc) {
+          if (!mounted) return;
+          setState(() {
+            userLocation = LatLng(loc.latitude!, loc.longitude!);
+          });
+        });
+      }
+    } catch (e) {
+      // Catch-all for any unexpected errors - ensure the map still loads
+      debugPrint("❌ Unexpected error in _getUserLocation: $e");
+    }
   }
 
   Future<void> _loadCourseMarkers() async {
@@ -1138,106 +1178,105 @@ class _CourseMapPageState extends State<CourseMapPage> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: themeProvider.cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.schedule, color: nextClass.color, size: 24),
+            const SizedBox(width: 12),
+            Text(
+              'Next Class',
+              style: TextStyle(
+                color: themeProvider.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            title: Row(
-              children: [
-                Icon(Icons.schedule, color: nextClass.color, size: 24),
-                const SizedBox(width: 12),
-                Text(
-                  'Next Class',
-                  style: TextStyle(
-                    color: themeProvider.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: nextClass.color.withAlpha(26),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: nextClass.color.withAlpha(76),
+                  width: 1,
                 ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: nextClass.color.withAlpha(26),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: nextClass.color.withAlpha(76),
-                      width: 1,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    nextClass.label.split('(').first.trim(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: themeProvider.textPrimary,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        nextClass.label.split('(').first.trim(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: themeProvider.textPrimary,
-                        ),
+                  const SizedBox(height: 8),
+                  if (nextClass.label.contains('(')) ...[
+                    Text(
+                      nextClass.label.split('(')[1].replaceAll(')', ''),
+                      style: TextStyle(
+                        color: themeProvider.textSecondary,
+                        fontSize: 14,
                       ),
-                      const SizedBox(height: 8),
-                      if (nextClass.label.contains('(')) ...[
-                        Text(
-                          nextClass.label.split('(')[1].replaceAll(')', ''),
-                          style: TextStyle(
-                            color: themeProvider.textSecondary,
-                            fontSize: 14,
-                          ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.directions_walk,
+                        color: nextClass.color,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatDistance(distance),
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
+                          fontSize: 14,
                         ),
-                        const SizedBox(height: 8),
-                      ],
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.directions_walk,
-                            color: nextClass.color,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatDistance(distance),
-                            style: TextStyle(
-                              color: themeProvider.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'Close',
-                  style: TextStyle(color: themeProvider.textSecondary),
-                ),
-              ),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: nextClass.color,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _launchNavigation(nextClass.point);
-                },
-                icon: const Icon(Icons.directions, size: 18),
-                label: const Text('Navigate'),
-              ),
-            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: TextStyle(color: themeProvider.textSecondary),
+            ),
           ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: nextClass.color,
+              foregroundColor: Colors.white,
+              elevation: 2,
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _launchNavigation(nextClass.point);
+            },
+            icon: const Icon(Icons.directions, size: 18),
+            label: const Text('Navigate'),
+          ),
+        ],
+      ),
     );
   }
 
