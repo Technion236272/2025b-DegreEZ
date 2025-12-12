@@ -71,6 +71,7 @@ class _CourseMapPageState extends State<CourseMapPage> {
     final match = RegExp(
       r'^(Winter|Spring|Summer) (\d{4})(?:-(\d{4}))?$',
     ).firstMatch(semesterName);
+    
     if (match == null) return null;
 
     final season = match.group(1)!;
