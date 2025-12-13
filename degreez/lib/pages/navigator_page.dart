@@ -271,7 +271,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             icon: const Icon(Icons.bolt_sharp),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('AI Assistant coming soon!')),
+                const SnackBar(content: Text('AI Assistant for calendar coming soon!')),
               );
             },
             tooltip: 'AI Assistant',

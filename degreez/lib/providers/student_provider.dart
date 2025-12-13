@@ -16,12 +16,16 @@ class StudentProvider with ChangeNotifier {
   bool get hasStudent => _student != null;
   // Fetch student data with proper error handling
   Future<bool> fetchStudentData(String userId) async {
-    if (_isLoading) return false; // Prevent concurrent calls
+    if (_isLoading) {
+      debugPrint('⚠️ StudentProvider: Already loading, skipping duplicate call');
+      return false; // Prevent concurrent calls
+    }
     
     _setLoadingState(true);
     
     try {
       debugPrint('📥 StudentProvider: Fetching student data for userId: $userId');
+      debugPrint('📥 StudentProvider: Collection: Students, Document ID: $userId');
       
       final docSnapshot = await FirebaseFirestore.instance
           .collection('Students')
@@ -30,20 +34,23 @@ class StudentProvider with ChangeNotifier {
 
       debugPrint('📥 StudentProvider: Document exists: ${docSnapshot.exists}');
       debugPrint('📥 StudentProvider: Data source: ${docSnapshot.metadata.isFromCache ? "CACHE" : "SERVER"}');
-
+      
       if (docSnapshot.exists) {
+        debugPrint('📥 StudentProvider: Document data: ${docSnapshot.data()}');
         _student = StudentModel.fromFirestore(docSnapshot);
         _error = null;
-        debugPrint('✅ StudentProvider: Student loaded successfully: ${_student?.name}');
+        debugPrint('✅ StudentProvider: Student loaded successfully: ${_student?.name} (ID: ${_student?.id})');
         _notifyListeners();
         return true;
       } else {
         debugPrint('❌ StudentProvider: Student document not found for userId: $userId');
+        debugPrint('❌ StudentProvider: Checked collection "Students" with doc ID: $userId');
         _setError('Student not found');
         return false;
       }
     } catch (e) {
       debugPrint('❌ StudentProvider: Error fetching student: $e');
+      debugPrint('❌ StudentProvider: Error type: ${e.runtimeType}');
       _setError('Failed to fetch student: $e');
       return false;
     } finally {

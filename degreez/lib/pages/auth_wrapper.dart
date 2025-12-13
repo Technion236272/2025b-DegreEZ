@@ -31,8 +31,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final studentProvider = context.read<StudentProvider>();
     final courseProvider = context.read<CourseProvider>();
 
-    // Wait a brief moment for Firebase to initialize
-    await Future.delayed(const Duration(milliseconds: 100));
+    // Wait for Firebase to initialize properly
+    await Future.delayed(const Duration(milliseconds: 200));
 
     if (!mounted) return;
 
@@ -45,18 +45,34 @@ class _AuthWrapperState extends State<AuthWrapper> {
       debugPrint('🔍 AuthWrapper: Fetching student data for user ${user.uid}');
       
       // User is signed in, check if they have completed signup
-      final studentExists = await studentProvider.fetchStudentData(user.uid);
+      // Try to fetch with retry for cache warming
+      bool studentExists = false;
+      int attempts = 0;
+      const maxAttempts = 2;
+      
+      while (!studentExists && attempts < maxAttempts) {
+        attempts++;
+        debugPrint('🔍 AuthWrapper: Fetch attempt $attempts of $maxAttempts');
+        
+        studentExists = await studentProvider.fetchStudentData(user.uid);
+        
+        // If first attempt failed, wait a bit for cache to warm up
+        if (!studentExists && attempts < maxAttempts) {
+          debugPrint('⏳ AuthWrapper: Waiting for cache to warm up...');
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+      }
 
       if (!mounted) return;
       
       debugPrint('🔍 AuthWrapper: Student exists: $studentExists, hasStudent: ${studentProvider.hasStudent}');
-      debugPrint('🔍 AuthWrapper: Student data: ${studentProvider.student?.toString()}');
+      debugPrint('🔍 AuthWrapper: Student data: ${studentProvider.student?.name}');
 
       if (studentExists && studentProvider.hasStudent) {
         debugPrint('✅ AuthWrapper: Existing user found, loading courses...');
         
         // Existing user - load courses and sync theme
-        await courseProvider.loadStudentCourses(user.uid);
+        await courseProvider.loadStudentCourses(studentProvider.student!.id);
         if (!mounted) return;
         await ThemeSyncService.syncStudentThemePreference(context);
         if (!mounted) return;
@@ -75,7 +91,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         Navigator.pushReplacementNamed(context, '/home_page');
       } else {
-        debugPrint('⚠️ AuthWrapper: User authenticated but no student profile found, navigating to signup');
+        debugPrint('⚠️ AuthWrapper: User authenticated but no student profile found after $attempts attempts');
+        debugPrint('⚠️ AuthWrapper: This user needs to complete signup');
         
         // User authenticated but hasn't completed signup
         setState(() {
