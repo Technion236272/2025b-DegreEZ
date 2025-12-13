@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_ai/firebase_ai.dart';
 import '../../models/chat/chat_message.dart';
 import '../ai/base_ai_service.dart';
@@ -39,15 +40,29 @@ class GeminiChatService extends BaseAiService {
     }
       // Let SDK handle the rest
     _chatSession = model.startChat(history: conversationHistory);
-  }
-  Stream<GenerateContentResponse> sendMessageStream(String message) {
+  }  Stream<GenerateContentResponse> sendMessageStream(String message) {
     return _chatSession.sendMessageStream(Content.text(message));
   }
+  
   Stream<GenerateContentResponse> sendMessageWithPdfStream(String message, File pdfFile) async* {
     try {
       // Read PDF as bytes
       final pdfBytes = await pdfFile.readAsBytes();
         // Use base class method for streaming with file
+      yield* generateContentStreamWithFile(
+        prompt: message,
+        fileBytes: pdfBytes,
+        mimeType: AiConfig.pdfMimeType,
+      );
+    } catch (e) {
+      throw Exception('Failed to process PDF: $e');
+    }
+  }
+  
+  // New method that accepts bytes directly (works for both web and mobile)
+  Stream<GenerateContentResponse> sendMessageWithPdfBytesStream(String message, Uint8List pdfBytes) async* {
+    try {
+      // Use base class method for streaming with file
       yield* generateContentStreamWithFile(
         prompt: message,
         fileBytes: pdfBytes,

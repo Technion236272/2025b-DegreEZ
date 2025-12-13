@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 class PdfAttachment {
-  final File file;
+  final File? file; // Nullable for web compatibility
+  final Uint8List? bytes; // For web platform
   final String fileName;
   final int fileSize;
   final int pageCount;
@@ -9,13 +11,14 @@ class PdfAttachment {
   final DateTime attachedAt;
   
   PdfAttachment({
-    required this.file,
+    this.file,
+    this.bytes,
     required this.fileName,
     required this.fileSize,
     required this.pageCount,
     required this.metadata,
     required this.attachedAt,
-  });
+  }) : assert(file != null || bytes != null, 'Either file or bytes must be provided');
   /// Get a summary for display in the UI
   String getSummary() {
     return '''
@@ -31,7 +34,6 @@ class PdfAttachment {
     if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
   }
-
   /// Convert to JSON for storage (without file reference for security)
   Map<String, dynamic> toJson() {
     return {
@@ -40,19 +42,30 @@ class PdfAttachment {
       'pageCount': pageCount,
       'metadata': metadata,
       'attachedAt': attachedAt.toIso8601String(),
-      'filePath': file.path,
+      'filePath': file?.path ?? '',
     };
   }
 
   /// Create from JSON
   static PdfAttachment fromJson(Map<String, dynamic> json) {
     return PdfAttachment(
-      file: File(json['filePath']),
+      file: json['filePath'] != null && json['filePath'].isNotEmpty ? File(json['filePath']) : null,
       fileName: json['fileName'],
       fileSize: json['fileSize'],
       pageCount: json['pageCount'],
       metadata: Map<String, dynamic>.from(json['metadata']),
       attachedAt: DateTime.parse(json['attachedAt']),
     );
+  }
+  
+  /// Get bytes for sending to AI (works on both mobile and web)
+  Future<Uint8List> getBytes() async {
+    if (bytes != null) {
+      return bytes!;
+    } else if (file != null) {
+      return await file!.readAsBytes();
+    } else {
+      throw Exception('No file or bytes available');
+    }
   }
 }

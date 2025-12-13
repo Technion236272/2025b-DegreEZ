@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../models/chat/chat_message.dart';
 import '../models/chat/pdf_attachment.dart';
@@ -182,9 +183,11 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       // Choose stream method based on PDF attachment
       Stream<GenerateContentResponse> responseStream;
       if (_currentPdfAttachment != null) {
-        responseStream = _chatService.sendMessageWithPdfStream(
+        // Get bytes from attachment (works for both web and mobile)
+        final pdfBytes = await _currentPdfAttachment!.getBytes();
+        responseStream = _chatService.sendMessageWithPdfBytesStream(
           finalMessage, 
-          _currentPdfAttachment!.file
+          pdfBytes
         );
       } else {
         responseStream = _chatService.sendMessageStream(finalMessage);
@@ -366,37 +369,66 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
       // Show loading indicator
       _showSnackBar('Selecting PDF file...');
       
-      // Pick PDF file
-      final file = await PdfService.pickPdfFile();
-      if (file == null) return;
-      
-      // Show processing indicator
-      _showSnackBar('Processing PDF file...');
-      
-      // Validate PDF
-      final isValid = await PdfService.isValidPdf(file);
-      if (!isValid) {
-        _showSnackBar('Selected file is not a valid PDF.');
-        return;
+      if (kIsWeb) {
+        // Web platform: use bytes-based approach
+        final pdfData = await PdfService.pickPdfBytes();
+        if (pdfData == null) return;
+        
+        // Show processing indicator
+        _showSnackBar('Processing PDF file...');
+        
+        // Create PDF attachment with bytes
+        final attachment = PdfAttachment(
+          bytes: pdfData['bytes'],
+          fileName: pdfData['fileName'],
+          fileSize: pdfData['fileSize'],
+          pageCount: 0,
+          metadata: {
+            'fileName': pdfData['fileName'],
+            'fileSize': pdfData['fileSize'],
+          },
+          attachedAt: DateTime.now(),
+        );
+        
+        setState(() {
+          _currentPdfAttachment = attachment;
+        });
+        
+        _showSnackBar('PDF attached successfully! ${attachment.fileName}');
+      } else {
+        // Mobile/Desktop platform: use file-based approach
+        final file = await PdfService.pickPdfFile();
+        if (file == null) return;
+        
+        // Show processing indicator
+        _showSnackBar('Processing PDF file...');
+        
+        // Validate PDF
+        final isValid = await PdfService.isValidPdf(file);
+        if (!isValid) {
+          _showSnackBar('Selected file is not a valid PDF.');
+          return;
+        }
+        
+        // Get PDF info
+        final pdfInfo = await PdfService.getPdfInfo(file);
+          
+        // Create PDF attachment with file
+        final attachment = PdfAttachment(
+          file: file,
+          fileName: pdfInfo['fileName'],
+          fileSize: pdfInfo['fileSize'],
+          pageCount: 0,
+          metadata: pdfInfo,
+          attachedAt: DateTime.now(),
+        );
+        
+        setState(() {
+          _currentPdfAttachment = attachment;
+        });
+        
+        _showSnackBar('PDF attached successfully! ${attachment.fileName}');
       }
-      
-      // Get PDF info (no text extraction needed)
-      final pdfInfo = await PdfService.getPdfInfo(file);
-        // Create PDF attachment
-      final attachment = PdfAttachment(
-        file: file,
-        fileName: pdfInfo['fileName'],
-        fileSize: pdfInfo['fileSize'],
-        pageCount: 0, // Not needed anymore
-        metadata: pdfInfo,
-        attachedAt: DateTime.now(),
-      );
-      
-      setState(() {
-        _currentPdfAttachment = attachment;
-      });
-      
-      _showSnackBar('PDF attached successfully! ${attachment.fileName}');
     } catch (e) {
       _showSnackBar('Error attaching PDF: ${e.toString()}');
     }
