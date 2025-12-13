@@ -1,0 +1,9 @@
+[33mcommit 36ab9c933c6ba92684077baf571ab32fda4dc8d7[m
+Author: ramzy ayan <ramsey@campus.technion.ac.il>
+Date:   Sun Dec 14 00:32:11 2025 +0200
+
+    updating packages versions
+
+ degreez/pubspec.lock | 56 [32m++++++++++++++++++++++++++[m[31m--------------------------[m
+ degreez/pubspec.yaml |  8 [32m++++[m[31m----[m
+ 2 files changed, 32 insertions(+), 32 deletions(-)
