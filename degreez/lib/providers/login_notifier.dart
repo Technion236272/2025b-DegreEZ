@@ -101,42 +101,13 @@ class LogInNotifier extends ChangeNotifier {
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      debugPrint("Got Google authentication tokens");
-
-      // Create new credential for Firebase
+      debugPrint("Got Google authentication tokens");      // Create new credential for Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Check if user is new
-
-      try {
-        final docSnapshot =
-            await FirebaseFirestore.instance
-                .collection('Students')
-                .doc(googleAuth.idToken)
-                .get();
-
-        debugPrint('googleAuth.idToken = ${googleAuth.idToken}');
-        debugPrint('docSnapshot = $docSnapshot');
-
-        if (docSnapshot.exists) {
-          debugPrint('This is a veteran Student');
-          _newUser = false;
-        } else {
-          debugPrint('Student not found');
-          _newUser = true;
-        }
-      } catch (e) {
-        debugPrint('Error fetching student data: $e');
-        _newUser = true;
-      } finally {
-        _isLoading = false;
-        notifyListeners();
-      }
-
-      // Sign in to Firebase with the Google OAuth credential
+      // Sign in to Firebase with the Google OAuth credential FIRST
       debugPrint("Signing in to Firebase with Google credential");
       if (_auth == null) {
         throw Exception('FirebaseAuth is not available on this platform.');
@@ -150,6 +121,32 @@ class LogInNotifier extends ChangeNotifier {
       debugPrint(
         "Firebase sign-in successful: ${_user?.displayName ?? _user?.email ?? 'Unknown user'}",
       );
+
+      // Check if user is new - using the CORRECT user.uid
+      try {
+        final docSnapshot =
+            await FirebaseFirestore.instance
+                .collection('Students')
+                .doc(_user!.uid)  // ✅ Use user.uid instead of idToken
+                .get();
+
+        debugPrint('Checking for existing student with uid = ${_user!.uid}');
+        debugPrint('Document exists: ${docSnapshot.exists}');
+
+        if (docSnapshot.exists) {
+          debugPrint('This is a veteran Student');
+          _newUser = false;
+        } else {
+          debugPrint('Student not found - new user');
+          _newUser = true;
+        }
+      } catch (e) {
+        debugPrint('Error fetching student data: $e');
+        _newUser = true;
+      } finally {
+        _isLoading = false;
+        notifyListeners();
+      }
 
       _setLoading(false);
       notifyListeners();

@@ -26,7 +26,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     super.initState();
     _checkAuthState();
   }
-
   Future<void> _checkAuthState() async {
     final loginNotifier = context.read<LogInNotifier>();
     final studentProvider = context.read<StudentProvider>();
@@ -38,20 +37,32 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (!mounted) return;
 
     final user = loginNotifier.user;
+    
+    debugPrint('🔍 AuthWrapper: Checking auth state...');
+    debugPrint('🔍 AuthWrapper: User is ${user != null ? "signed in (${user.uid})" : "not signed in"}');
 
     if (user != null) {
+      debugPrint('🔍 AuthWrapper: Fetching student data for user ${user.uid}');
+      
       // User is signed in, check if they have completed signup
       final studentExists = await studentProvider.fetchStudentData(user.uid);
 
       if (!mounted) return;
+      
+      debugPrint('🔍 AuthWrapper: Student exists: $studentExists, hasStudent: ${studentProvider.hasStudent}');
+      debugPrint('🔍 AuthWrapper: Student data: ${studentProvider.student?.toString()}');
 
       if (studentExists && studentProvider.hasStudent) {
+        debugPrint('✅ AuthWrapper: Existing user found, loading courses...');
+        
         // Existing user - load courses and sync theme
         await courseProvider.loadStudentCourses(user.uid);
         if (!mounted) return;
         await ThemeSyncService.syncStudentThemePreference(context);
         if (!mounted) return;
 
+        debugPrint('✅ AuthWrapper: Navigating to home page');
+        
         // Navigate to home page
         setState(() {
           _isInitializing = false;
@@ -64,6 +75,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         Navigator.pushReplacementNamed(context, '/home_page');
       } else {
+        debugPrint('⚠️ AuthWrapper: User authenticated but no student profile found, navigating to signup');
+        
         // User authenticated but hasn't completed signup
         setState(() {
           _isInitializing = false;
@@ -76,6 +89,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
         Navigator.pushReplacementNamed(context, '/sign_up_page');
       }
     } else {
+      debugPrint('ℹ️ AuthWrapper: No user signed in, showing login page');
+      
       // No user signed in, show login page
       setState(() {
         _isInitializing = false;
