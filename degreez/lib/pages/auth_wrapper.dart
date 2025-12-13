@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../providers/login_notifier.dart';
 import '../providers/student_provider.dart';
@@ -26,17 +27,27 @@ class _AuthWrapperState extends State<AuthWrapper> {
     super.initState();
     _checkAuthState();
   }
+
   Future<void> _checkAuthState() async {
     final loginNotifier = context.read<LogInNotifier>();
     final studentProvider = context.read<StudentProvider>();
     final courseProvider = context.read<CourseProvider>();
 
-    // Wait a brief moment for Firebase to initialize
-    await Future.delayed(const Duration(milliseconds: 100));
+    debugPrint('🔍 AuthWrapper: Waiting for Firebase Auth to initialize...');
+    
+    // Wait for Firebase Auth to properly restore the user session
+    // This is important on web refresh where the auth state needs time to be restored
+    User? user;
+    try {
+      // Use authStateChanges().first to wait for the initial auth state
+      // This properly waits for Firebase to restore the session from persistence
+      user = await FirebaseAuth.instance.authStateChanges().first;
+    } catch (e) {
+      debugPrint('⚠️ AuthWrapper: Error waiting for auth state: $e');
+      user = loginNotifier.user;
+    }
 
     if (!mounted) return;
-
-    final user = loginNotifier.user;
     
     debugPrint('🔍 AuthWrapper: Checking auth state...');
     debugPrint('🔍 AuthWrapper: User is ${user != null ? "signed in (${user.uid})" : "not signed in"}');
