@@ -1174,8 +1174,9 @@ class _CourseMapPageState extends State<CourseMapPage> {
     CourseMarkerData nextClass,
     ThemeProvider themeProvider,
   ) {
-    final distance = _calculateDistance(userLocation!, nextClass.point);
-    final walkingTime = distance != null ? (distance * 12).round() : 0;
+    final distance = userLocation != null 
+        ? _calculateDistance(userLocation!, nextClass.point) 
+        : null;
 
     showDialog(
       context: context,
@@ -1233,23 +1234,46 @@ class _CourseMapPageState extends State<CourseMapPage> {
                     ),
                     const SizedBox(height: 8),
                   ],
+                  // Building info
                   Row(
                     children: [
                       Icon(
-                        Icons.directions_walk,
+                        Icons.location_on,
                         color: nextClass.color,
                         size: 18,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        _formatDistance(distance),
-                        style: TextStyle(
-                          color: themeProvider.textSecondary,
-                          fontSize: 14,
+                      Expanded(
+                        child: Text(
+                          '${nextClass.buildingName}, Room ${nextClass.roomNumber}',
+                          style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],
                   ),
+                  if (distance != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.directions_walk,
+                          color: nextClass.color,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatDistance(distance),
+                          style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
