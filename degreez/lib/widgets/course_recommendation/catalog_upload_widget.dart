@@ -1,5 +1,6 @@
 // lib/widgets/course_recommendation/catalog_upload_widget.dart
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
@@ -110,7 +111,6 @@ class CatalogUploadWidget extends StatelessWidget {
   String _getFileName(String filePath) {
     return filePath.split('/').last;
   }
-
   void _pickFile() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -119,8 +119,25 @@ class CatalogUploadWidget extends StatelessWidget {
         allowMultiple: false,
       );
 
-      if (result != null && result.files.single.path != null) {
-        onFileSelected(result.files.single.path!);
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.single;
+        
+        // On web, path is null, so we use the file name
+        // On mobile, we use the actual file path
+        if (kIsWeb) {
+          // For web, we use the file name (since we can't access local file paths)
+          // The actual file bytes are available in file.bytes
+          debugPrint('Web: Selected file: ${file.name}');
+          onFileSelected(file.name);
+        } else {
+          // For mobile/desktop, use the file path
+          if (file.path != null) {
+            debugPrint('Mobile: Selected file path: ${file.path}');
+            onFileSelected(file.path!);
+          } else {
+            debugPrint('Error: File path is null on mobile');
+          }
+        }
       }
     } catch (e) {
       // Handle error - you might want to show a snackbar

@@ -501,7 +501,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
     return {
       'courseId': candidate['general']?['מספר מקצוע']?.toString() ?? '',
       'courseName': candidate['general']?['שם מקצוע']?.toString() ?? '',
-      'creditPoints': (candidate['general']?['נקודות זכות'] as num?)?.toDouble() ?? 3.0,
+      'creditPoints': (candidate['general']?['נקודות זכות'] as num?)?.toDouble() ?? 0.0,
       'faculty': candidate['general']?['פקולטה']?.toString() ?? '',
       'department': candidate['general']?['חוג']?.toString() ?? '',
     };

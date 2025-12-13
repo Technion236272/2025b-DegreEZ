@@ -7,12 +7,12 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     '01130013', // Introductory Physics 1
     '01130014', // Introductory Physics 2
     '01030015', // Introductory Mathematics 1
-    '03240433', // Holocaust in Cinema
-    '03200101', // Social Activities
-    '03200102', // Social Activities
-    '03240489', // The World's Best Designer
-    '03250000', // Sexual Harassment Awareness
-    '03200033', // Faculty Elective
+    '03240433', // השואה בראי קולנוע
+    '03200101', // פעילויות חברתיות
+    '03200102', // פעילויות חברתיות
+    '03240489', // המעצב הטוב בעולם
+    '03250000', // המודעות להטרדה מינית
+    '03200033', // בחירה פקולטית
   };
 
   /// Map of introductory course details
@@ -41,7 +41,7 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
       isExemption: true,
     ),    '03240433': IntroductoryCourseData(
       courseId: '03240433',
-      name: 'Holocaust in Cinema',
+      name: 'השואה בראי קולנוע',
       creditPoints: 2.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
@@ -49,7 +49,7 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     ),
     '03200101': IntroductoryCourseData(
       courseId: '03200101',
-      name: 'Social Activities',
+      name: 'פעילויות חברתיות',
       creditPoints: 1.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
@@ -57,7 +57,7 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     ),
     '03200102': IntroductoryCourseData(
       courseId: '03200102',
-      name: 'Social Activities',
+      name: 'פעילויות חברתיות',
       creditPoints: 1.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
@@ -65,7 +65,7 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     ),
     '03240489': IntroductoryCourseData(
       courseId: '03240489',
-      name: "The World's Best Designer",
+      name: "המעצב הטוב בעולם",
       creditPoints: 2.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
@@ -73,7 +73,7 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     ),
     '03250000': IntroductoryCourseData(
       courseId: '03250000',
-      name: 'Sexual Harassment Awareness',
+      name: 'המודעות להטרדה מינית',
       creditPoints: 0.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
@@ -81,7 +81,7 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     ),
     '03200033': IntroductoryCourseData(
       courseId: '03200033',
-      name: 'Faculty Elective',
+      name: 'בחירה פקולטית',
       creditPoints: 2.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',

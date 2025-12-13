@@ -307,7 +307,7 @@ Return your response as valid JSON with the required schema.
           allRecommendations.add(CourseRecommendation(
             courseId: course['courseId'],
             courseName: course['courseName'],
-            creditPoints: (course['creditPoints'] as num?)?.toDouble() ?? 3.0,
+            creditPoints: (course['creditPoints'] as num?)?.toDouble() ?? 0.0,
             reason: set['reasoning'] ?? 'AI recommended',
             priority: isPrimary ? 1 : (setIndex + 2), // Primary gets priority 1, others get 2,3
             category: isPrimary ? 'Primary Set' : 'Set ${setIndex + 1}',

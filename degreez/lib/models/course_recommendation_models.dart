@@ -196,7 +196,7 @@ class CourseRecommendationDetails {
     return CourseRecommendationDetails(
       courseId: enhancedCourseDetails.courseNumber,
       courseName: enhancedCourseDetails.name,
-      creditPoints: double.tryParse(enhancedCourseDetails.points) ?? 3.0,
+      creditPoints: double.tryParse(enhancedCourseDetails.points) ?? 0.0,
       prerequisites: enhancedCourseDetails.prerequisites,
       description: enhancedCourseDetails.syllabus,
       schedule: enhancedCourseDetails.schedule
