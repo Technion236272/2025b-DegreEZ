@@ -121,7 +121,7 @@ class MyApp extends StatelessWidget {
               theme: themeProvider.themeData,
               initialRoute: '/',
               routes: {
-                '/': (context) => const AuthWrapper(),
+                '/': (context) => AuthWrapper(),
                 '/login': (context) => const LoginPage(),
                 '/home_page': (context) => NavigatorPage(),
                 '/sign_up_page': (context) => const SignUpPage(),
