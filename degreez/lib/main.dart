@@ -57,13 +57,12 @@ Future<void> main() async {
         // This caches data in IndexedDB for faster subsequent loads
         if (kIsWeb) {
           try {
-            await FirebaseFirestore.instance.enablePersistence(
-              const PersistenceSettings(synchronizeTabs: true),
+            FirebaseFirestore.instance.settings = const Settings(
+              persistenceEnabled: true,
             );
             debugPrint('✅ Firestore persistence enabled for web');
           } catch (e) {
             // Persistence can fail if:
-            // - Multiple tabs are open
             // - Browser is in incognito mode
             // - IndexedDB is disabled
             debugPrint('⚠️ Could not enable Firestore persistence: $e');
