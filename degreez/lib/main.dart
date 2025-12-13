@@ -20,6 +20,7 @@ import 'providers/course_data_provider.dart';
 import 'providers/customized_diagram_notifier.dart';
 import 'providers/theme_provider.dart';
 
+import 'pages/auth_wrapper.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
 
@@ -97,14 +98,13 @@ class MyApp extends StatelessWidget {
             final brightness = MediaQuery.of(context).platformBrightness;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               themeProvider.updateSystemBrightness(brightness);
-            });
-
-            return MaterialApp(
+            });            return MaterialApp(
               title: 'DegreEZ',
               theme: themeProvider.themeData,
               initialRoute: '/',
               routes: {
-                '/': (context) => LoginPage(),
+                '/': (context) => const AuthWrapper(),
+                '/login': (context) => const LoginPage(),
                 '/home_page': (context) => NavigatorPage(),
                 '/sign_up_page': (context) => const SignUpPage(),
               },            );
