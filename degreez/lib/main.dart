@@ -3,7 +3,9 @@ import 'package:degreez/pages/navigator_page.dart';
 import 'package:degreez/providers/course_recommendation_provider.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:calendar_view/calendar_view.dart';
@@ -37,8 +39,7 @@ Future<void> main() async {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]);
-  // Initialize Firebase. If Firebase options for the current platform (web)
+  ]);  // Initialize Firebase. If Firebase options for the current platform (web)
   // are not configured, log and continue so the app UI can run (features
   // requiring Firebase will still be disabled).
     try {
@@ -51,6 +52,23 @@ Future<void> main() async {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
+        
+        // Enable Firestore offline persistence for web
+        // This caches data in IndexedDB for faster subsequent loads
+        if (kIsWeb) {
+          try {
+            await FirebaseFirestore.instance.enablePersistence(
+              const PersistenceSettings(synchronizeTabs: true),
+            );
+            debugPrint('✅ Firestore persistence enabled for web');
+          } catch (e) {
+            // Persistence can fail if:
+            // - Multiple tabs are open
+            // - Browser is in incognito mode
+            // - IndexedDB is disabled
+            debugPrint('⚠️ Could not enable Firestore persistence: $e');
+          }
+        }
       } catch (e) {
         // Fail gracefully when Firebase is not configured for the current
         // platform (common for web until FlutterFire is configured).

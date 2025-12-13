@@ -1,0 +1,5 @@
+[33m3b71287[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mhotfix/login-overhead[m[33m, [m[1;31morigin/hotfix/login-overhead[m[33m)[m Add hotfix/login-overhead branch to auto-deployment workflow
+[33mfd83528[m Fix: Implement AuthWrapper to eliminate login page flash and reduce loading time
+[33m09f743e[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m Add long-press class details dialog and instruction note on map page
+[33m7695007[m Merge remote-tracking branch 'origin/hotfix/adding_courses' into develop
+[33mcbf6766[m[33m ([m[1;31morigin/hotfix/adding_courses[m[33m, [m[1;32mhotfix/adding_courses[m[33m)[m adding demo of grade sheet
