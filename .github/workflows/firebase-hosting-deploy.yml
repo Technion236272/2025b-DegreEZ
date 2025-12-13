@@ -8,6 +8,7 @@ on:
       - web-version
       - release/2.1.2
       - develop
+      - hotfix/login-overhead
 
 jobs:
   build_and_deploy:
