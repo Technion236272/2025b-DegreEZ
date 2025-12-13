@@ -199,6 +199,32 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                           style: TextStyle(
                             color: themeProvider.secondaryColor,
                           ),
+                        ),                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: themeProvider.secondaryColor,
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Move to Semester Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _showMoveToSemesterDialog,
+                        icon: Icon(
+                          Icons.drive_file_move,
+                          color: themeProvider.secondaryColor,
+                        ),
+                        label: Text(
+                          'Move to Semester',
+                          style: TextStyle(
+                            color: themeProvider.secondaryColor,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
@@ -250,6 +276,135 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
         ),
       ),
     );
+  }
+  void _showMoveToSemesterDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final courseProvider = Provider.of<CourseProvider>(context, listen: false);
+    
+    // Get all available semesters except the current one
+    final allSemesters = courseProvider.coursesBySemester.keys.toList();
+    final availableSemesters = allSemesters.where((s) => s != widget.semester).toList();
+    
+    if (availableSemesters.isEmpty) {
+      _showErrorSnackBar('No other semesters available. Please create a new semester first.');
+      return;
+    }
+    
+    String? selectedSemester;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: themeProvider.mainColor,
+          title: Text(
+            'Move to Semester',
+            style: TextStyle(color: themeProvider.textPrimary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select the semester to move "${widget.course.name}" to:',
+                style: TextStyle(color: themeProvider.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: themeProvider.borderPrimary),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButton<String>(
+                  value: selectedSemester,
+                  hint: Text(
+                    'Select semester',
+                    style: TextStyle(color: themeProvider.textSecondary),
+                  ),
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  dropdownColor: themeProvider.surfaceColor,
+                  items: availableSemesters.map((semester) {
+                    return DropdownMenuItem<String>(
+                      value: semester,
+                      child: Text(
+                        semester,
+                        style: TextStyle(color: themeProvider.textPrimary),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedSemester = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: themeProvider.textSecondary),
+              ),
+            ),
+            TextButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeProvider.secondaryColor,
+                foregroundColor: themeProvider.primaryColor,
+              ),
+              onPressed: selectedSemester == null
+                  ? null
+                  : () async {
+                      Navigator.of(ctx).pop();
+                      await _moveCourse(selectedSemester!);
+                    },
+              child: Text(
+                'Move',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _moveCourse(String targetSemester) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final studentId = context.read<StudentProvider>().student!.id;
+      final success = await context.read<CourseProvider>().moveCourseToSemester(
+        studentId,
+        widget.semester,
+        targetSemester,
+        widget.course.courseId,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        widget.onCourseUpdated?.call();
+        Navigator.of(context).pop(); // Close main dialog
+        _showSuccessSnackBar('Course moved to $targetSemester successfully');
+      } else {
+        _showErrorSnackBar('Failed to move course');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorSnackBar('Error moving course: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _saveGrade() async {

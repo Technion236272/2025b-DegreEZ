@@ -920,6 +920,97 @@ class CourseProvider with ChangeNotifier {
     }
   }
 
+  // Move course from one semester to another while preserving all details
+  Future<bool> moveCourseToSemester(
+    String studentId,
+    String sourceSemester,
+    String targetSemester,
+    String courseId,
+  ) async {
+    // Validate source semester exists
+    final sourceCourses = _coursesBySemester[sourceSemester];
+    if (sourceCourses == null) {
+      _error = 'Source semester "$sourceSemester" does not exist';
+      notifyListeners();
+      return false;
+    }
+
+    // Validate target semester exists
+    if (!_coursesBySemester.containsKey(targetSemester)) {
+      _error = 'Target semester "$targetSemester" does not exist';
+      notifyListeners();
+      return false;
+    }
+
+    // Find course in source semester
+    final courseIndex = sourceCourses.indexWhere((c) => c.courseId == courseId);
+    if (courseIndex == -1) {
+      _error = 'Course not found in source semester';
+      notifyListeners();
+      return false;
+    }
+
+    // Check if course already exists in target semester
+    final targetCourses = _coursesBySemester[targetSemester]!;
+    if (targetCourses.any((c) => c.courseId == courseId)) {
+      _error = 'Course already exists in target semester';
+      notifyListeners();
+      return false;
+    }
+
+    // Store course for move (with all details preserved)
+    final courseToMove = sourceCourses[courseIndex];
+
+    // Optimistic update - remove from source and add to target
+    sourceCourses.removeAt(courseIndex);
+    targetCourses.add(courseToMove);
+    notifyListeners();
+
+    try {
+      final studentRef = FirebaseFirestore.instance
+          .collection('Students')
+          .doc(studentId);
+
+      // Delete from source semester
+      await studentRef
+          .collection('Courses-per-Semesters')
+          .doc(sourceSemester)
+          .collection('Courses')
+          .doc(courseId)
+          .delete();
+
+      // Add to target semester (preserve all course data)
+      final targetSemesterRef = studentRef
+          .collection('Courses-per-Semesters')
+          .doc(targetSemester);
+
+      // Ensure target semester document exists
+      final targetSemesterDoc = await targetSemesterRef.get();
+      if (!targetSemesterDoc.exists) {
+        await targetSemesterRef.set({
+          'semesterName': targetSemester,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Write course to target semester
+      await targetSemesterRef
+          .collection('Courses')
+          .doc(courseId)
+          .set(courseToMove.toFirestore());
+
+      _error = null;
+      return true;
+    } catch (e) {
+      // Rollback - restore course to source and remove from target
+      targetCourses.removeWhere((c) => c.courseId == courseId);
+      sourceCourses.insert(courseIndex, courseToMove);
+      _error = 'Failed to move course: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clear() {
     _coursesBySemester.clear();
     _loadingState = const CourseLoadingState();
