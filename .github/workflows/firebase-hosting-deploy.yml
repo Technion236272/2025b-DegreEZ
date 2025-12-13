@@ -9,6 +9,7 @@ on:
       - release/2.1.2
       - develop
       - hotfix/login-overhead
+      - feature/move-course-to-semester
 
 jobs:
   build_and_deploy:
