@@ -23,7 +23,7 @@ import 'prerequisite_chain_page.dart';
 
 
 class NavigatorPage extends StatefulWidget {
-  const NavigatorPage({super.key});
+  NavigatorPage({super.key});
 
   @override
   State<NavigatorPage> createState() => _NavigatorPageState();
