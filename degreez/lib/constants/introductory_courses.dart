@@ -13,6 +13,9 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
     '03240489', // המעצב הטוב בעולם
     '03250000', // המודעות להטרדה מינית
     '03200033', // בחירה פקולטית
+    '0123055', // introductory Chemistry 
+    '02740138', // medical science: anaylsis of signals and system a'
+    '02740166', // quantitative methoeds in med. science B
   };
 
   /// Map of introductory course details
@@ -83,6 +86,30 @@ class IntroductoryCourses {  /// Set of introductory course IDs that students co
       courseId: '03200033',
       name: 'בחירה פקולטית',
       creditPoints: 2.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '0123055': IntroductoryCourseData(
+      courseId: '0123055',
+      name: 'introductory Chemistry',
+      creditPoints: 0.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '02740138': IntroductoryCourseData(
+      courseId: '02740138',
+      name: "medical science: anaylsis of signals and system a'",
+      creditPoints: 4.0,
+      defaultSemester: 'Pre-Technion',
+      defaultYear: 'Preparation',
+      isExemption: true,
+    ),
+    '02740166': IntroductoryCourseData(
+      courseId: '02740166',
+      name: 'quantitative methoeds in med. science B',
+      creditPoints: 3.0,
       defaultSemester: 'Pre-Technion',
       defaultYear: 'Preparation',
       isExemption: true,
