@@ -1,6 +1,8 @@
 // lib/providers/course_recommendation_provider.dart
 
+import 'dart:typed_data';
 import 'package:degreez/providers/course_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../models/course_recommendation_models.dart';
 import '../services/course_recommendation_service.dart';
@@ -27,6 +29,7 @@ class CourseRecommendationProvider extends ChangeNotifier {
   int? _selectedYear;
   int? _selectedSemester;
   String? _catalogFilePath;
+  Uint8List? _catalogFileBytes; // NEW: Store file bytes for web platform
   List<Map<String, dynamic>> _availableSemesters = [];
   bool _fastMode = true; // NEW: Fast mode toggle - default to ON
 
@@ -121,8 +124,8 @@ class CourseRecommendationProvider extends ChangeNotifier {
   List<CourseRecommendationResponse> get previousRecommendations =>
       _previousRecommendations;
   int? get selectedYear => _selectedYear;
-  int? get selectedSemester => _selectedSemester;
-  String? get catalogFilePath => _catalogFilePath;
+  int? get selectedSemester => _selectedSemester;  String? get catalogFilePath => _catalogFilePath;
+  Uint8List? get catalogFileBytes => _catalogFileBytes; // NEW: Get file bytes for web
   List<Map<String, dynamic>> get availableSemesters => _availableSemesters;
   bool get fastMode => _fastMode; // NEW: Fast mode getter
 
@@ -147,10 +150,29 @@ class CourseRecommendationProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
-
   /// Set the catalog file path
   void setCatalogFilePath(String? filePath) {
     _catalogFilePath = filePath;
+    notifyListeners();
+  }
+
+  /// Set the catalog file bytes (for web platform)
+  void setCatalogFileBytes(Uint8List? bytes) {
+    _catalogFileBytes = bytes;
+    notifyListeners();
+  }
+
+  /// Set both catalog file path and bytes (convenience method)
+  void setCatalogFile(String? filePath, Uint8List? bytes) {
+    _catalogFilePath = filePath;
+    _catalogFileBytes = bytes;
+    notifyListeners();
+  }
+
+  /// Clear catalog file
+  void clearCatalogFile() {
+    _catalogFilePath = null;
+    _catalogFileBytes = null;
     notifyListeners();
   }
 
@@ -201,13 +223,12 @@ Future<void> loadSavedRecommendation() async {
 
     try {
       // Generate user context
-      final userContext = ContextGeneratorService.generateUserContext(context);
-
-      // Create recommendation request
+      final userContext = ContextGeneratorService.generateUserContext(context);      // Create recommendation request
       final request = CourseRecommendationRequest(
         year: _selectedYear!,
         semester: _selectedSemester!,
-        catalogFilePath: _catalogFilePath,
+        catalogFilePath: kIsWeb ? null : _catalogFilePath, // Only use path on non-web
+        catalogFileBytes: _catalogFileBytes, // NEW: Pass bytes for web platform
         userContext: userContext,
         requestTime: DateTime.now(),
         semesterDisplayName: getSemesterDisplayName(

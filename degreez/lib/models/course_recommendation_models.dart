@@ -1,10 +1,13 @@
 // lib/models/course_recommendation_models.dart
 
+import 'dart:typed_data';
+
 /// Model for course recommendation request
 class CourseRecommendationRequest {
   final int year;
   final int semester;
   final String? catalogFilePath;
+  final Uint8List? catalogFileBytes; // NEW: PDF bytes for web platform
   final String userContext;
   final DateTime requestTime;
   final String semesterDisplayName;
@@ -13,6 +16,7 @@ class CourseRecommendationRequest {
     required this.year,
     required this.semester,
     this.catalogFilePath,
+    this.catalogFileBytes,
     required this.userContext,
     required this.requestTime,
     required this.semesterDisplayName,
@@ -23,6 +27,7 @@ class CourseRecommendationRequest {
       year: json['year'],
       semester: json['semester'],
       catalogFilePath: json['catalogFilePath'],
+      // Note: bytes are not persisted in JSON
       userContext: json['userContext'],
       requestTime: DateTime.parse(json['requestTime']),
       semesterDisplayName: json['semesterDisplayName'],
@@ -34,11 +39,16 @@ class CourseRecommendationRequest {
       'year': year,
       'semester': semester,
       'catalogFilePath': catalogFilePath,
+      // Note: bytes are not persisted in JSON
       'userContext': userContext,
       'requestTime': requestTime.toIso8601String(),
       'semesterDisplayName': semesterDisplayName,
     };
   }
+
+  /// Check if a catalog file is available (either path or bytes)
+  bool get hasCatalog => (catalogFilePath != null && catalogFilePath!.isNotEmpty) || 
+                         (catalogFileBytes != null && catalogFileBytes!.isNotEmpty);
 }
 
 /// Model for a single course in a set

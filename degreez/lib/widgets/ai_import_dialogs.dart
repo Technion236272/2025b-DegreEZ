@@ -67,15 +67,7 @@ class AiImportDialogs {
                         color: themeProvider.primaryColor,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Ensure good lighting and clear text for best results',
-                          style: TextStyle(
-                            color: themeProvider.primaryColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
+                      
                     ],
                   ),
                 ),

@@ -2,7 +2,9 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:degreez/providers/course_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import '../models/course_recommendation_models.dart';
@@ -181,6 +183,7 @@ Each course must have both courseId (course number) and courseName (Hebrew name)
       candidateModel,
       prompt,
       request.catalogFilePath,
+      request.catalogFileBytes,
     );
 
     try {
@@ -287,6 +290,7 @@ Return your response as valid JSON with the required schema.
       finalSelectionModel,
       prompt,
       request.catalogFilePath,
+      request.catalogFileBytes,
     );
 
     try {
@@ -330,12 +334,24 @@ Return your response as valid JSON with the required schema.
   }
 
   /// Helper method to generate content with optional PDF
+  /// Supports both file path (for mobile/desktop) and bytes (for web)
   Future<GenerateContentResponse> _generateWithOptionalPdf(
     GenerativeModel model,
     String prompt,
     String? catalogFilePath,
+    Uint8List? catalogFileBytes,
   ) async {
-    if (catalogFilePath != null && catalogFilePath.isNotEmpty) {
+    // First, try to use provided bytes (works on all platforms including web)
+    if (catalogFileBytes != null && catalogFileBytes.isNotEmpty) {
+      debugPrint('🔧 Using provided PDF bytes (${catalogFileBytes.length} bytes)');
+      return await model.generateContent([
+        AiUtils.createPdfContent(prompt, catalogFileBytes),
+      ]);
+    }
+    
+    // Fall back to file path (only works on non-web platforms)
+    if (!kIsWeb && catalogFilePath != null && catalogFilePath.isNotEmpty) {
+      debugPrint('🔧 Using PDF file path: $catalogFilePath');
       final catalogFile = File(catalogFilePath);
 
       // Validate file before processing
@@ -351,9 +367,11 @@ Return your response as valid JSON with the required schema.
       return await model.generateContent([
         AiUtils.createPdfContent(prompt, catalogBytes),
       ]);
-    } else {
-      return await model.generateContent([Content.text(prompt)]);
     }
+    
+    // No PDF available, generate without it
+    debugPrint('🔧 Generating without PDF');
+    return await model.generateContent([Content.text(prompt)]);
   }
 
   /// NEW: Schema for 3 candidate course sets

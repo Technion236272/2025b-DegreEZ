@@ -1,6 +1,7 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_ai/firebase_ai.dart';
 import '../../models/course_recommendation_models.dart';
 import '../../models/optimization_models.dart';
@@ -130,6 +131,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
         evaluationModel,
         prompt,
         request.catalogFilePath,
+        request.catalogFileBytes,
       );
       
       debugPrint('🤖 AI evaluation response received');
@@ -211,6 +213,7 @@ Provide detailed scores (1-10) and specific improvement suggestions.
       modificationModel,
       prompt,
       request.catalogFilePath,
+      request.catalogFileBytes,
     );
     
     try {
@@ -453,14 +456,24 @@ Provide detailed scores (1-10) and specific improvement suggestions.
   }
   
   /// Helper method to generate content with optional PDF
+  /// Supports both file path (for mobile/desktop) and bytes (for web)
   Future<GenerateContentResponse> _generateWithOptionalPdf(
     GenerativeModel model,
     String prompt,
     String? catalogFilePath,
+    Uint8List? catalogFileBytes,
   ) async {
-    debugPrint('🔧 Generating AI content with PDF: ${catalogFilePath != null ? 'Yes' : 'No'}');
+    // First, try to use provided bytes (works on all platforms including web)
+    if (catalogFileBytes != null && catalogFileBytes.isNotEmpty) {
+      debugPrint('🔧 Using provided PDF bytes (${catalogFileBytes.length} bytes)');
+      return await model.generateContent([
+        AiUtils.createPdfContent(prompt, catalogFileBytes),
+      ]);
+    }
     
-    if (catalogFilePath != null && catalogFilePath.isNotEmpty) {
+    // Fall back to file path (only works on non-web platforms)
+    if (!kIsWeb && catalogFilePath != null && catalogFilePath.isNotEmpty) {
+      debugPrint('🔧 Generating AI content with PDF file path');
       final catalogFile = File(catalogFilePath);
 
       // Validate file before processing
@@ -480,10 +493,11 @@ Provide detailed scores (1-10) and specific improvement suggestions.
       return await model.generateContent([
         AiUtils.createPdfContent(prompt, catalogBytes),
       ]);
-    } else {
-      debugPrint('💭 Generating text-only content');
-      return await model.generateContent([Content.text(prompt)]);
     }
+    
+    // No PDF available, generate without it
+    debugPrint('💭 Generating text-only content (no PDF)');
+    return await model.generateContent([Content.text(prompt)]);
   }
   
   /// Convert CourseSet to JSON for AI processing

@@ -1,10 +1,12 @@
 // lib/widgets/course_recommendation/catalog_upload_widget.dart
 
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/course_recommendation_provider.dart';
 
 class CatalogUploadWidget extends StatelessWidget {
   final String? catalogFilePath;
@@ -51,7 +53,7 @@ class CatalogUploadWidget extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _pickFile,
+                  onPressed: () => _pickFile(context),
                   icon: const Icon(Icons.file_upload),
                   label: const Text('Select Catalog PDF'),
                   style: OutlinedButton.styleFrom(
@@ -95,7 +97,7 @@ class CatalogUploadWidget extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      onPressed: () => onFileSelected(null),
+                      onPressed: () => _clearFile(context),
                       icon: const Icon(Icons.close),
                       color: themeProvider.textSecondary,
                     ),
@@ -109,33 +111,47 @@ class CatalogUploadWidget extends StatelessWidget {
   }
 
   String _getFileName(String filePath) {
-    return filePath.split('/').last;
+    // Handle both path separators for cross-platform compatibility
+    final parts = filePath.split(RegExp(r'[/\\]'));
+    return parts.last;
   }
-  void _pickFile() async {
+
+  void _clearFile(BuildContext context) {
+    // Clear both path and bytes
+    context.read<CourseRecommendationProvider>().clearCatalogFile();
+  }
+
+  void _pickFile(BuildContext context) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         allowMultiple: false,
+        withData: true, // Always get bytes for web compatibility
       );
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.single;
+        final provider = context.read<CourseRecommendationProvider>();
         
-        // On web, path is null, so we use the file name
-        // On mobile, we use the actual file path
+        // Get file bytes (works on all platforms)
+        final Uint8List? bytes = file.bytes;
+        
         if (kIsWeb) {
-          // For web, we use the file name (since we can't access local file paths)
-          // The actual file bytes are available in file.bytes
-          debugPrint('Web: Selected file: ${file.name}');
-          onFileSelected(file.name);
+          // For web, we only have file name and bytes
+          debugPrint('Web: Selected file: ${file.name}, bytes: ${bytes?.length ?? 0}');
+          provider.setCatalogFile(file.name, bytes);
         } else {
-          // For mobile/desktop, use the file path
+          // For mobile/desktop, we can use both path and bytes
           if (file.path != null) {
-            debugPrint('Mobile: Selected file path: ${file.path}');
-            onFileSelected(file.path!);
+            debugPrint('Mobile: Selected file path: ${file.path}, bytes: ${bytes?.length ?? 0}');
+            provider.setCatalogFile(file.path!, bytes);
+          } else if (bytes != null) {
+            // Fallback to bytes only if path is somehow null
+            debugPrint('Mobile: File path is null, using bytes only');
+            provider.setCatalogFile(file.name, bytes);
           } else {
-            debugPrint('Error: File path is null on mobile');
+            debugPrint('Error: Both file path and bytes are null');
           }
         }
       }
