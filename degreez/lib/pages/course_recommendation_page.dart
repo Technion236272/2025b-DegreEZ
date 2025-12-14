@@ -103,7 +103,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - First, you need to add a new semester in customized diagram then come back here :) , and please wait until the AI finishes processing the file after you upload it, it may take several minutes.',
+                      '''the ai aint cheap, dont overuse it! \n - First, you need to add a new semester in customized diagram then come back here :) , and please wait until the AI finishes processing the file after you upload it, it may take several minutes.''',
                       style: TextStyle(
                         color: context.read<ThemeProvider>().textPrimary,
                         fontSize: 13,

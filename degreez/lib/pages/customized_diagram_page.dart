@@ -379,7 +379,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        ' - Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features! \n - Operations here can be a bit slow, be patient bro. \n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
+                                        ' - the ai aint cheap, dont overuse it! \n - Operations here can be a bit slow, be patient. \n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
                                         style: TextStyle(
                                           color: themeProvider.textPrimary,
                                           fontSize: 13,

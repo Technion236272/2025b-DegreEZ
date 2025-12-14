@@ -487,7 +487,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Please be mindful not to overuse AI services. My budget is limited, and I want everyone to enjoy the AI features!',
+                        'the ai aint cheap, dont overuse it!',
                         style: TextStyle(
                           color: themeProvider.textPrimary,
                           fontSize: 13,
