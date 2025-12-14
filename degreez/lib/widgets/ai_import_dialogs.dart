@@ -41,9 +41,8 @@ class AiImportDialogs {
                 const SizedBox(height: 8),
                 Text(
                   '1. Go to your SAP account and request your grade sheet. (תעודת ציונים)\n'
-                  '2. Once its approved you will have a version in english and in hebrew, select the ENGLISH version of your grade sheet and save it in your drive / phone\n'
-                  '3. import it here so the AI can extract course information automatically\n'
-                  '4. Review and import the extracted courses',
+                  '2. Once its approved you will have a version in english and in hebrew, SELECT THE ENGLISH VERSION OF YOUR תעודת ציונים AND SAVE IT ON YOUR DEVICE\n'
+                  '3. REALLY IMPORTANT TO FOLLOW THE INSTRUCTIONS!! ',
                   style: TextStyle(
                     color: themeProvider.textSecondary,
                     fontSize: 14,
@@ -101,7 +100,7 @@ class AiImportDialogs {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.asset(
-                      'assets/example of grade sheet.png',
+                      'assets/grades example.jpeg',
                       fit: BoxFit.contain,
                     ),
                   ),
