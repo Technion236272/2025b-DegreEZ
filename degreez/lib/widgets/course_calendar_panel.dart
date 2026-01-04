@@ -462,17 +462,16 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         themeProvider,
         _,
       ) {
-        // final allCourses = courseProvider.coursesBySemester.values
-        //     .expand((courses) => courses)
-        //     .toList();
-        // i want to show only the courses of the current semester
         final allCourses = courseProvider.getCoursesForSemester(
           widget.selectedSemester,
         );
         final totalCredits = allCourses.fold<double>(
           0.0,
-          (sum, course) => sum + (course.creditPoints ?? 0),
+          (sum, course) => sum + (course.creditPoints),
         );
+
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isSmallScreen = screenWidth < 380;
 
         return Column( 
         children: [
@@ -496,7 +495,10 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                 onTap: () => setState(() => _isExpanded = !_isExpanded),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 8.0 : 16.0, 
+                    vertical: 12.0
+                  ),
                   child: Row(
                     children: [
                       // Title on the left
@@ -512,7 +514,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                           color: themeProvider.primaryColor,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: isSmallScreen ? 8 : 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -552,7 +554,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   .length;
 
                           return Container(
-                            margin: const EdgeInsets.only(left: 12),
+                            margin: EdgeInsets.only(left: isSmallScreen ? 6 : 12),
                             child: InkWell(
                               onTap:
                                   () => _showExamDatesDialog(
@@ -561,8 +563,8 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   ),
                               borderRadius: BorderRadius.circular(20),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isSmallScreen ? 6 : 10,
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
@@ -580,9 +582,11 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                       color: Colors.orange,
                                       size: 14,
                                     ),
-                                    const SizedBox(width: 6),
+                                    SizedBox(width: isSmallScreen ? 4 : 6),
                                     Text(
-                                      '${examData.length} Exams',
+                                      isSmallScreen 
+                                          ? '${examData.length}' 
+                                          : '${examData.length} Exams',
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
@@ -591,7 +595,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                     ),
                                     if (periodAExams > 0 ||
                                         periodBExams > 0) ...[
-                                      const SizedBox(width: 6),
+                                      SizedBox(width: isSmallScreen ? 4 : 6),
                                       if (periodAExams > 0)
                                         Container(
                                           width: 6,
@@ -642,7 +646,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                       // Toggle button on the far right
                       if (widget.viewMode != null &&
                           widget.onToggleView != null) ...[
-                        const SizedBox(width: 12),
+                        SizedBox(width: isSmallScreen ? 6 : 12),
                         _buildViewToggleButton(),
                       ],
                     ],
@@ -1721,11 +1725,17 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
         final isWeekView = widget.viewMode == 0;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isSmallScreen = screenWidth < 380;
+        
         return InkWell(
           onTap: widget.onToggleView,
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 8 : 12, 
+              vertical: 6
+            ),
             decoration: BoxDecoration(
               color: themeProvider.primaryColor.withAlpha(25),
               borderRadius: BorderRadius.circular(20),
@@ -1741,15 +1751,17 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                   size: 16,
                   color: themeProvider.primaryColor,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  isWeekView ? 'Week' : 'Day',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: themeProvider.primaryColor,
+                if (!isSmallScreen) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    isWeekView ? 'Week' : 'Day',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: themeProvider.primaryColor,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

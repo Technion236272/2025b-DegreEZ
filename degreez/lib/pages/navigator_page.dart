@@ -733,44 +733,71 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
             themeProvider.isLightMode
                 ? AppColorsLightMode.textPrimary
                 : AppColorsDarkMode.secondaryColor;
+        
+        final dropdownBgColor = themeProvider.isLightMode
+            ? Colors.white
+            : const Color(0xFF2C2C2C);
 
-        return DropdownButton<String>(
-          value: _selectedSemester,
-          hint: Text(
-            "Select Semester",
-            style: TextStyle(fontSize: 16, color: textColor),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: themeProvider.isLightMode 
+                ? Colors.grey.withAlpha(25) 
+                : Colors.white.withAlpha(25),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: themeProvider.isLightMode 
+                  ? Colors.grey.withAlpha(50) 
+                  : Colors.white.withAlpha(50),
+              width: 1,
+            ),
           ),
-          underline: Container(), // Remove the default underline
-          dropdownColor: Theme.of(context).appBarTheme.backgroundColor,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedSemester,
+              hint: Text(
+                "Select Semester",
+                style: TextStyle(fontSize: 14, color: textColor),
+              ),
+              icon: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: textColor,
+                size: 20,
+              ),
+              dropdownColor: dropdownBgColor,
+              borderRadius: BorderRadius.circular(16),
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              isDense: true,
+              onChanged: (String? value) async {
+                if (value != null && value != _selectedSemester) {
+                  setState(() {
+                    _selectedSemester = value;
+                    _selectedCalendarSemester = value;
+                  });
+
+                  // Save preference
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('lastSelectedSemester', value);
+
+                  // The CalendarPage will handle the course loading when it receives the new semester
+                }
+              },
+              items:
+                  _allSemesters.map((sem) {
+                    return DropdownMenuItem<String>(
+                      value: sem,
+                      child: Text(
+                        sem,
+                        style: TextStyle(color: textColor, fontSize: 14),
+                      ),
+                    );
+                  }).toList(),
+            ),
           ),
-          onChanged: (String? value) async {
-            if (value != null && value != _selectedSemester) {
-              setState(() {
-                _selectedSemester = value;
-                _selectedCalendarSemester = value;
-              });
-
-              // Save preference
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('lastSelectedSemester', value);
-
-              // The CalendarPage will handle the course loading when it receives the new semester
-            }
-          },
-          items:
-              _allSemesters.map((sem) {
-                return DropdownMenuItem<String>(
-                  value: sem,
-                  child: Text(
-                    sem,
-                    style: TextStyle(color: textColor, fontSize: 16),
-                  ),
-                );
-              }).toList(),
         );
       },
     );

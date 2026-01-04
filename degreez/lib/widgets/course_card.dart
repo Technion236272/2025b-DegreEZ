@@ -140,21 +140,10 @@ class _CourseCardState extends State<CourseCard> {
                   children: [
                     // Main Content
                     Padding(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.fromLTRB(12, 26, 12, 12),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Course ID
-                          Text(
-                            widget.course.courseId,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: themeProvider.textSecondary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
                           // Course Name
                           Expanded(
                             child: Center(
@@ -174,6 +163,34 @@ class _CourseCardState extends State<CourseCard> {
                             ),
                           ),
                           const SizedBox(height: 4),
+
+                          // Grade Badge
+                          if (hasGrade) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: themeProvider.secondaryColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: themeProvider.secondaryColor.withOpacity(0.3),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                widget.course.finalGrade,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: themeProvider.secondaryColor,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                          ],
+
                           // Credits
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -197,46 +214,32 @@ class _CourseCardState extends State<CourseCard> {
                       ),
                     ),
 
-                    // Grade Badge (Top Right)
-                    if (hasGrade)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: themeProvider.secondaryColor.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: themeProvider.secondaryColor.withOpacity(0.3),
-                              width: 0.5,
+                    // Course ID and Note (Top Left)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Row(
+                        children: [
+                          if (_hasNote) ...[
+                            Icon(
+                              Icons.sticky_note_2_rounded,
+                              size: 14,
+                              color: themeProvider.accentColor,
                             ),
-                          ),
-                          child: Text(
-                            widget.course.finalGrade,
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            widget.course.courseId,
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: themeProvider.secondaryColor,
+                              fontWeight: FontWeight.w500,
+                              color: themeProvider.textSecondary,
+                              letterSpacing: 0.5,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-
-                    // Note Indicator (Top Left)
-                    if (_hasNote)
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Icon(
-                          Icons.sticky_note_2_rounded,
-                          size: 14,
-                          color: themeProvider.accentColor,
-                        ),
-                      ),
+                    ),
                   ],
                 ),
               ),
