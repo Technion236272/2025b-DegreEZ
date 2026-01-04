@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:calendar_view/calendar_view.dart';
 import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/student_provider.dart';
@@ -181,32 +179,40 @@ class _CalendarPageState extends State<CalendarPage>
         weekPageHeaderBuilder: WeekHeader.hidden,
         // add the month and year to the header but smaller to fit here in weekNumberBuilder
         weekNumberBuilder:
-            (date) => Center(
+            (date) => Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).dividerColor.withAlpha(25),
+                    width: 1,
+                  ),
+                ),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min, // shrink-wrap content
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Transform.rotate(
-                    angle: -pi / 6, // about -30 degrees
-                    child: Text(
-                      DateFormat('yyyy').format(date),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                  Text(
+                    DateFormat('MMM').format(date).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: themeProvider.textSecondary,
+                      letterSpacing: 1.0,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  Transform.rotate(
-                    angle: -pi / 6, // same angle to match above
-                    child: Text(
-                      '       ${DateFormat('MMM').format(date)}',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: themeProvider.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
+                  const SizedBox(height: 2),
+                  Text(
+                    DateFormat('yyyy').format(date),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: themeProvider.textSecondary.withAlpha(150),
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -858,7 +864,8 @@ class _CalendarPageState extends State<CalendarPage>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Course Details'),
+            backgroundColor: themeProvider.cardColor,
+            title: Text('Course Details', style: TextStyle(color: themeProvider.textPrimary)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,14 +891,15 @@ class _CalendarPageState extends State<CalendarPage>
                     children: [
                       Text(
                         'Event: ${event.title}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: themeProvider.textPrimary),
                       ),
                       if (event.description != null)
-                        Text('Description: ${event.description}'),
+                        Text('Description: ${event.description}', style: TextStyle(color: themeProvider.textSecondary)),
                       if (event.startTime != null && event.endTime != null)
                         // dont display seconds in time
                         Text(
                           'Time: ${DateFormat('HH:mm').format(event.startTime!)} - ${DateFormat('HH:mm').format(event.endTime!)}',
+                          style: TextStyle(color: themeProvider.textSecondary),
                         ),
                     ],
                   ),
@@ -901,7 +909,7 @@ class _CalendarPageState extends State<CalendarPage>
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close'),
+                child: Text('Close', style: TextStyle(color: themeProvider.primaryColor)),
               ),
             ],
           ),

@@ -51,17 +51,66 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: TabBar(
-          controller: _tabController,
-          labelColor: themeProvider.secondaryColor,
-          unselectedLabelColor: themeProvider.textPrimary,
-          indicatorColor: themeProvider.secondaryColor,
-          tabs: [
-            Tab(icon: Icon(Icons.search), text: 'Generate'),
-            Tab(icon: Icon(Icons.list), text: 'Results'),
-            Tab(icon: Icon(Icons.analytics), text: 'History'),
-          ],
+        title: Container(
+          decoration: BoxDecoration(
+            color: themeProvider.isDarkMode ? Colors.black26 : Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            labelColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+            unselectedLabelColor: themeProvider.textSecondary,
+            indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: themeProvider.secondaryColor,
+              boxShadow: [
+                BoxShadow(
+                  color: themeProvider.secondaryColor.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            tabs: const [
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 18),
+                    SizedBox(width: 8),
+                    Text('Generate'),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.list_alt, size: 18),
+                    SizedBox(width: 8),
+                    Text('Results'),
+                  ],
+                ),
+              ),
+              Tab(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.history, size: 18),
+                    SizedBox(width: 8),
+                    Text('History'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
       body: TabBarView(
         controller: _tabController,

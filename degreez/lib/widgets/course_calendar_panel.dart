@@ -477,24 +477,61 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
         return Column( 
         children: [
         Card(
-          elevation: 3,
-          margin: const EdgeInsets.all(8.0),
+          elevation: 0,
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: themeProvider.isDarkMode 
+                  ? Colors.white.withAlpha(25) 
+                  : Colors.black.withAlpha(13),
+              width: 1,
+            ),
+          ),
+          color: themeProvider.surfaceColor,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               InkWell(
                 onTap: () => setState(() => _isExpanded = !_isExpanded),
+                borderRadius: BorderRadius.circular(16),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: Row(
                     children: [
                       // Title on the left
-                      Text(
-                        'My Courses (${totalCredits.toStringAsFixed(1)} Credits)',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor.withAlpha(25),
+                          shape: BoxShape.circle,
                         ),
+                        child: Icon(
+                          Icons.school_outlined,
+                          size: 20,
+                          color: themeProvider.primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'My Courses',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            '${totalCredits.toStringAsFixed(1)} Credits',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: themeProvider.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                       // Exam dates icon next to title
                       FutureBuilder<List<ExamInfo>>(
@@ -515,22 +552,22 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   .length;
 
                           return Container(
-                            margin: const EdgeInsets.only(left: 8),
+                            margin: const EdgeInsets.only(left: 12),
                             child: InkWell(
                               onTap:
                                   () => _showExamDatesDialog(
                                     examData,
                                     themeProvider,
                                   ),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(20),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
+                                  horizontal: 10,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.orange.withAlpha(25),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: Colors.orange.withAlpha(75),
                                   ),
@@ -539,22 +576,22 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Icon(
-                                      Icons.schedule,
+                                      Icons.event_note,
                                       color: Colors.orange,
-                                      size: 16,
+                                      size: 14,
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      '${examData.length}',
+                                      '${examData.length} Exams',
                                       style: const TextStyle(
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.orange,
                                       ),
                                     ),
                                     if (periodAExams > 0 ||
                                         periodBExams > 0) ...[
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: 6),
                                       if (periodAExams > 0)
                                         Container(
                                           width: 6,
@@ -567,7 +604,7 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                       if (periodBExams > 0)
                                         Container(
                                           margin: EdgeInsets.only(
-                                            left: periodAExams > 0 ? 2 : 0,
+                                            left: periodAExams > 0 ? 4 : 0,
                                           ),
                                           width: 6,
                                           height: 6,
@@ -576,26 +613,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                                             shape: BoxShape.circle,
                                           ),
                                         ),
-                                      // if (midtermAExams > 0)
-                                      //   Container(
-                                      //     margin: EdgeInsets.only(left: (periodAExams > 0 || periodBExams > 0) ? 2 : 0),
-                                      //     width: 6,
-                                      //     height: 6,
-                                      //     decoration: const BoxDecoration(
-                                      //       color: Colors.orange,
-                                      //       shape: BoxShape.circle,
-                                      //     ),
-                                      //   ),
-                                      // if (midtermBExams > 0)
-                                      //   Container(
-                                      //     margin: EdgeInsets.only(left: (periodAExams > 0 || periodBExams > 0 || midtermAExams > 0) ? 2 : 0),
-                                      //     width: 6,
-                                      //     height: 6,
-                                      //     decoration: const BoxDecoration(
-                                      //       color: Colors.purple,
-                                      //       shape: BoxShape.circle,
-                                      //     ),
-                                      //   ),
                                     ],
                                   ],
                                 ),
@@ -606,15 +623,26 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                       ),
                       const Spacer(),
                       // Arrow in the middle-right
-                      Icon(
-                        _isExpanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: themeProvider.isDarkMode 
+                              ? Colors.white.withAlpha(13) 
+                              : Colors.black.withAlpha(5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: themeProvider.textSecondary,
+                        ),
                       ),
                       // Toggle button on the far right
                       if (widget.viewMode != null &&
                           widget.onToggleView != null) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         _buildViewToggleButton(),
                       ],
                     ],
@@ -1691,37 +1719,38 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
 
   Widget _buildViewToggleButton() {
     return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        final isLightMode = themeProvider.isLightMode;
-        final backgroundColor =
-            isLightMode
-                ? AppColorsLightMode.primaryColor
-                : AppColorsDarkMode.secondaryColor;
-        final borderColor =
-            isLightMode
-                ? AppColorsLightMode.secondaryColorDim
-                : AppColorsDarkMode.secondaryColorDim;
-        final iconColor =
-            isLightMode
-                ? AppColorsLightMode.mainColor
-                : AppColorsDarkMode.accentColor;
-
-        return GestureDetector(
+      builder: (context, themeProvider, _) {
+        final isWeekView = widget.viewMode == 0;
+        return InkWell(
           onTap: widget.onToggleView,
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            width: 32,
-            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: borderColor, width: 1),
+              color: themeProvider.primaryColor.withAlpha(25),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: themeProvider.primaryColor.withAlpha(50),
+              ),
             ),
-            child: Icon(
-              widget.viewMode == 0
-                  ? Icons.calendar_view_week
-                  : Icons.calendar_view_day,
-              size: 16,
-              color: iconColor,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isWeekView ? Icons.view_week : Icons.view_day,
+                  size: 16,
+                  color: themeProvider.primaryColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isWeekView ? 'Week' : 'Day',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+              ],
             ),
           ),
         );

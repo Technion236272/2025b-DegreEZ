@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../color/color_palette.dart';
 
 enum AppThemeMode {
@@ -145,6 +146,7 @@ class ThemeProvider with ChangeNotifier {
   Color get accentColorLight => isDarkMode ? AppColorsDarkMode.accentColorLight : AppColorsLightMode.accentColorLight;
   Color get textPrimary => isDarkMode ? AppColorsDarkMode.textPrimary : AppColorsLightMode.textPrimary;
   Color get textSecondary => isDarkMode ? AppColorsDarkMode.textSecondary : AppColorsLightMode.textSecondary;
+  Color get textTertiary => isDarkMode ? AppColorsDarkMode.textTertiary : AppColorsLightMode.textTertiary;
   Color get borderPrimary => isDarkMode ? AppColorsDarkMode.borderPrimary : AppColorsLightMode.borderPrimary;
     // State colors
   Color get successColor => isDarkMode ? AppColorsDarkMode.successColor : AppColorsLightMode.successColor;
@@ -289,16 +291,16 @@ class ThemeProvider with ChangeNotifier {
         primaryIconTheme: const IconThemeData(
           color: AppColorsDarkMode.secondaryColor,
         ),
-        textTheme: ThemeData.dark().textTheme.copyWith(
-          bodyLarge: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          bodyMedium: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          bodySmall: const TextStyle(color: AppColorsDarkMode.textSecondary),
-          headlineLarge: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          headlineMedium: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          headlineSmall: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          titleLarge: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          titleMedium: const TextStyle(color: AppColorsDarkMode.textPrimary),
-          titleSmall: const TextStyle(color: AppColorsDarkMode.textSecondary),
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
+          bodyLarge: GoogleFonts.poppins(color: AppColorsDarkMode.textPrimary),
+          bodyMedium: GoogleFonts.poppins(color: AppColorsDarkMode.textPrimary),
+          bodySmall: GoogleFonts.poppins(color: AppColorsDarkMode.textSecondary),
+          headlineLarge: GoogleFonts.outfit(color: AppColorsDarkMode.textPrimary, fontWeight: FontWeight.bold),
+          headlineMedium: GoogleFonts.outfit(color: AppColorsDarkMode.textPrimary, fontWeight: FontWeight.bold),
+          headlineSmall: GoogleFonts.outfit(color: AppColorsDarkMode.textPrimary, fontWeight: FontWeight.bold),
+          titleLarge: GoogleFonts.outfit(color: AppColorsDarkMode.textPrimary, fontWeight: FontWeight.w600),
+          titleMedium: GoogleFonts.outfit(color: AppColorsDarkMode.textPrimary, fontWeight: FontWeight.w600),
+          titleSmall: GoogleFonts.poppins(color: AppColorsDarkMode.textSecondary),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColorsDarkMode.mainColor,
@@ -339,16 +341,16 @@ class ThemeProvider with ChangeNotifier {
         primaryIconTheme: const IconThemeData(
           color: AppColorsLightMode.primaryColor,
         ),
-        textTheme: ThemeData.light().textTheme.copyWith(
-          bodyLarge: const TextStyle(color: AppColorsLightMode.textPrimary),
-          bodyMedium: const TextStyle(color: AppColorsLightMode.textPrimary),
-          bodySmall: const TextStyle(color: AppColorsLightMode.textSecondary),
-          headlineLarge: const TextStyle(color: AppColorsLightMode.textPrimary),
-          headlineMedium: const TextStyle(color: AppColorsLightMode.textPrimary),
-          headlineSmall: const TextStyle(color: AppColorsLightMode.textPrimary),
-          titleLarge: const TextStyle(color: AppColorsLightMode.textPrimary),
-          titleMedium: const TextStyle(color: AppColorsLightMode.textPrimary),
-          titleSmall: const TextStyle(color: AppColorsLightMode.textSecondary),
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme).copyWith(
+          bodyLarge: GoogleFonts.poppins(color: AppColorsLightMode.textPrimary),
+          bodyMedium: GoogleFonts.poppins(color: AppColorsLightMode.textPrimary),
+          bodySmall: GoogleFonts.poppins(color: AppColorsLightMode.textSecondary),
+          headlineLarge: GoogleFonts.outfit(color: AppColorsLightMode.textPrimary, fontWeight: FontWeight.bold),
+          headlineMedium: GoogleFonts.outfit(color: AppColorsLightMode.textPrimary, fontWeight: FontWeight.bold),
+          headlineSmall: GoogleFonts.outfit(color: AppColorsLightMode.textPrimary, fontWeight: FontWeight.bold),
+          titleLarge: GoogleFonts.outfit(color: AppColorsLightMode.textPrimary, fontWeight: FontWeight.w600),
+          titleMedium: GoogleFonts.outfit(color: AppColorsLightMode.textPrimary, fontWeight: FontWeight.w600),
+          titleSmall: GoogleFonts.poppins(color: AppColorsLightMode.textSecondary),
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColorsLightMode.surfaceColor,

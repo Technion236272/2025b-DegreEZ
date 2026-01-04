@@ -1,7 +1,6 @@
 import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/customized_diagram_notifier.dart';
 import 'package:degreez/providers/theme_provider.dart';
-import 'package:degreez/widgets/grade_sticker.dart';
 import 'package:degreez/widgets/course_actions_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -53,7 +52,7 @@ class _CourseCardState extends State<CourseCard> {
     StudentCourse course,
     EnhancedCourseDetails? courseDetails,
   ) {
-    if (widget.course.note!= null && widget.course.note != '') {
+    if (widget.course.note != null && widget.course.note != '') {
       setState(() {
         _hasNote = true;
       });
@@ -61,12 +60,21 @@ class _CourseCardState extends State<CourseCard> {
     // Check if the course has a grade that is int or double
     // Enhanced: Use a more robust check for grade presence
     final hasGrade = course.finalGrade.isNotEmpty;
-    
-    return Consumer<CustomizedDiagramNotifier>(
-      builder: (context, notifier, child) {
+
+    return Consumer2<CustomizedDiagramNotifier, ThemeProvider>(
+      builder: (context, notifier, themeProvider, child) {
         final isFocused =
             notifier.focusedCourseId == null ||
             notifier.highlightedCourseIds.contains(widget.course.courseId);
+
+        // Determine card color based on grade status
+        final cardColor = hasGrade
+            ? themeProvider.surfaceColor
+            : themeProvider.cardColor;
+
+        final borderColor = hasGrade
+            ? themeProvider.secondaryColor.withOpacity(0.3)
+            : themeProvider.borderPrimary.withOpacity(0.5);
 
         return Opacity(
           opacity: isFocused ? 1.0 : 0.2,
@@ -96,285 +104,146 @@ class _CourseCardState extends State<CourseCard> {
                       studentProvider.student!.id,
                     ); // ✅ Required
 
-                    // final refreshed = courseProvider.getCourseById(
-                    //   widget.semester,
-                    //   widget.course.courseId,
-                    // );
-
-                    // setState(() {
-                    //   _hasNote =
-                    //       refreshed?.note != null &&
-                    //       refreshed!.note!.trim().isNotEmpty;
-                    // });
+                    widget.onCourseUpdated?.call();
                   },
                 );
               },
-
-              onLongPress: () async {
+              onLongPress: () {
                 final courseProvider = Provider.of<CourseProvider>(
                   context,
                   listen: false,
                 );
-                final studentId =
-                    Provider.of<StudentProvider>(
-                      context,
-                      listen: false,
-                    ).student!.id;
-
-                // 🛠️ Force reload before accessing
-                await courseProvider.loadStudentCourses(studentId);
-
-          /*      final refreshed = courseProvider.getCourseById(
-                  widget.semester,
-                  widget.course.courseId,
+                notifier.focusOnCourseWithStoredPrereqs(
+                  widget.course,
+                  courseProvider.sortedCoursesBySemester,
                 );
-
-                debugPrint(
-                  '👀 course.prerequisites = ${refreshed?.prerequisites}',
-                );
-
-                if (refreshed != null) {*/
-                if (!context.mounted) return;
-                  final notifier = Provider.of<CustomizedDiagramNotifier>(
-                    context,
-                    listen: false,
-                  );
-                  notifier.focusOnCourseWithStoredPrereqs(
-                    widget.course, // ✅ already has prerequisites
-                    courseProvider.coursesBySemester,
-                  );
-               // }
               },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: borderColor,
+                    width: hasGrade ? 1.5 : 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeProvider.isDarkMode
+                          ? Colors.black.withOpacity(0.2)
+                          : Colors.grey.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    // Main Content
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Course ID
+                          Text(
+                            widget.course.courseId,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: themeProvider.textSecondary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Course Name
+                          Expanded(
+                            child: Center(
+                              child: AutoSizeText(
+                                widget.course.name,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: themeProvider.textPrimary,
+                                  height: 1.2,
+                                ),
+                                maxLines: 3,
+                                minFontSize: 9,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Credits
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: themeProvider.mainColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${widget.course.creditPoints} pts',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: themeProvider.textTertiary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
-              child: child!,
+                    // Grade Badge (Top Right)
+                    if (hasGrade)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: themeProvider.secondaryColor.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: themeProvider.secondaryColor.withOpacity(0.3),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Text(
+                            widget.course.finalGrade,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.secondaryColor,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Note Indicator (Top Left)
+                    if (_hasNote)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Icon(
+                          Icons.sticky_note_2_rounded,
+                          size: 14,
+                          color: themeProvider.accentColor,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         );
       },
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        // color: provider.cardColorPalette!.cardBG(course.courseId),
-        color: context
-            .watch<CustomizedDiagramNotifier>()
-            .cardColorPalette!
-            .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
-        child: Column(
-          children: [
-            //Card Top Bar (Course number and points)
-            Expanded(
-              flex: 2,
-              child: Container(
-                width: double.infinity, // ✅ full width
-                decoration: BoxDecoration(
-                  color:
-                      context
-                          .watch<CustomizedDiagramNotifier>()
-                          .cardColorPalette!
-                          .topBarBG(Provider.of<ThemeProvider>(context).isDarkMode),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      flex: 7, // 30%
-                      child: Padding(
-                        padding: EdgeInsets.only(left: 3),
-                        child: Text(
-                          course.courseId,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color:
-                                context
-                                    .watch<CustomizedDiagramNotifier>()
-                                    .cardColorPalette!
-                                    .topBarText(Provider.of<ThemeProvider>(context).isDarkMode),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),                    // Always show credit points if available from stored data
-                    if (course.creditPoints > 0)
-                      Expanded(
-                        flex: 3, // 30%
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color:
-                                context
-                                    .watch<CustomizedDiagramNotifier>()
-                                    .cardColorPalette!
-                                    .topBarMarkBG(Provider.of<ThemeProvider>(context).isDarkMode),
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(8),
-                            ),
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  flex: 2, // 30%
-                                  child: Icon(
-                                    Icons.school,
-                                    size: 8,
-                                    color:
-                                        context
-                                            .watch<CustomizedDiagramNotifier>()
-                                            .cardColorPalette!
-                                            .topBarMarkText(Provider.of<ThemeProvider>(context).isDarkMode),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 9,
-                                  child: Text(
-                                    course.creditPoints % 1 == 0 
-                                        ? "${course.creditPoints.toInt()}.0"
-                                        : course.creditPoints.toString(),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color:
-                                          context
-                                              .watch<
-                                                CustomizedDiagramNotifier
-                                              >()
-                                              .cardColorPalette!
-                                              .topBarMarkText(Provider.of<ThemeProvider>(context).isDarkMode),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ), // Replace with your widget
-                      ),
-                  ],
-                ),
-              ),
-            ),            //Card Middle (Course name and grade)
-            Expanded(
-              flex: 6,
-              child: Container(
-                padding: EdgeInsets.only(right: 3, left: 1, top: 3, bottom: 2),
-                width: double.infinity,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: AutoSizeText(
-                        maxLines: 2,
-                        minFontSize: 7,
-                        textDirection: TextDirection.rtl,
-                        course.name,                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color:
-                              context
-                                  .watch<CustomizedDiagramNotifier>()
-                                  .cardColorPalette!
-                                  .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
-                        ),
-                      ),
-                    ),
-                    if (hasGrade)
-                      Padding(
-                        padding: EdgeInsets.only(top: 2),
-                        child: GradeSticker(grade: course.finalGrade),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            //Card Bottom (Icons Tray)
-            Expanded(
-              flex: 2,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                  ),
-                ),
-                width: double.infinity,
-                child: Padding(
-                  padding: EdgeInsets.only(right: 1, left: 1),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,                    children: [
-                      Icon(
-                        Icons.work_off_outlined,
-                        color: context
-                            .watch<CustomizedDiagramNotifier>()
-                            .cardColorPalette!
-                            .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
-                        size: 18,
-                      ),
-
-                      _hasNote
-                          ? Icon(
-                            Icons.edit_note_rounded,
-                            color:
-                                context
-                                    .watch<CustomizedDiagramNotifier>()
-                                    .cardColorPalette!
-                                    .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
-                            size: 18,
-                          )
-                          : Icon(
-                            Icons.edit_note_rounded,
-                            color:                                    context
-                                    .watch<CustomizedDiagramNotifier>()
-                                    .cardColorPalette!
-                                    .cardFGdim(Provider.of<ThemeProvider>(context).isDarkMode),
-                            size: 18,
-                          ),
-                      // if hasGrade and grade is not a number then show the grade as a string
-                      if (hasGrade && double.tryParse(course.finalGrade) != null) ...[
-                          // Show check or clear icon based on grade
-                        (double.tryParse(course.finalGrade)! > 55)
-                            ? Icon(
-                              Icons.check_rounded,
-                              color:
-                                  context
-                                      .watch<CustomizedDiagramNotifier>()
-                                      .cardColorPalette!
-                                      .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
-                              size: 18,
-                            )
-                            : Icon(
-                              Icons.clear,
-                              color:
-                                  context
-                                      .watch<CustomizedDiagramNotifier>()
-                                      .cardColorPalette!
-                                      .cardFG(Provider.of<ThemeProvider>(context).isDarkMode),
-                              size: 18,
-                            ),
-                            
-                      ] else
-                        Icon(
-                          Icons.work_off_outlined,
-                          color: context
-                              .watch<CustomizedDiagramNotifier>()
-                              .cardColorPalette!
-                              .cardBG(course.courseId, Provider.of<ThemeProvider>(context).isDarkMode),
-                          size: 18,
-                        ),
-
-                      // NotePopupButton(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 2),
-          ],
-        ),
-      ),
     );
   }
 
@@ -427,7 +296,8 @@ class _CourseCardState extends State<CourseCard> {
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
-                    ),                  ),
+                    ),
+                  ),
                   if (course.creditPoints > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -439,7 +309,7 @@ class _CourseCardState extends State<CourseCard> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        course.creditPoints % 1 == 0 
+                        course.creditPoints % 1 == 0
                             ? course.creditPoints.toInt().toString()
                             : course.creditPoints.toString(),
                         style: const TextStyle(
@@ -465,7 +335,8 @@ class _CourseCardState extends State<CourseCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),              if (hasGrade)
+              ),
+              if (hasGrade)
                 Text(
                   course.finalGrade,
                   style: TextStyle(

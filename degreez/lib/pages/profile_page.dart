@@ -6,7 +6,6 @@ import 'package:degreez/providers/login_notifier.dart';
 import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/providers/theme_provider.dart';
-import 'package:degreez/services/theme_sync_service.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
 import 'package:degreez/widgets/delete_user_button.dart';
 import 'package:degreez/widgets/feedback_popup.dart';
@@ -31,8 +30,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // Calculate GPA from completed courses
-  // Get completion statistics
   Map<String, int> _getCompletionStats(
     Map<String, List<StudentCourse>> coursesBySemester,
   ) {
@@ -66,19 +63,13 @@ class _ProfilePageState extends State<ProfilePage> {
     };
   }
 
-  // Enhanced edit profile dialog
   void _showEditProfileDialog(BuildContext context, StudentProvider notifier) {
     final student = notifier.student!;
-    // Controllers for the form fields
-    // These controllers will be used to get the text input from the user
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: student.name);
     final preferencesController = TextEditingController(
       text: student.preferences,
     );
-
-    // Catalog Selection Not Implemented Yet
-    // final _catalogController = TextEditingController();
 
     context.read<SignUpProvider>().setSelectedCatalog(student.catalog);
     context.read<SignUpProvider>().setSelectedFaculty(student.faculty);
@@ -89,12 +80,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final RegExp nameValidator = RegExp(r'^(?!\s*$).+');
     final RegExp preferencesValidator = RegExp(r'^(.?)+$');
 
-    // Catalog Selection Not Implemented Yet
-    // final RegExp _catalogValidator = RegExp(r'');
-
-    // Dispose the controllers when the widget is removed from the widget tree
-    // This is important to free up resources and avoid memory leaks
-
     showDialog(
       context: context,
       builder: (context) {
@@ -104,7 +89,11 @@ class _ProfilePageState extends State<ProfilePage> {
           backgroundColor: themeProvider.surfaceColor,
           title: Text(
             'Edit Profile',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: themeProvider.textPrimary,),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: themeProvider.textPrimary,
+            ),
           ),
           content: Form(
             key: formKey,
@@ -169,18 +158,25 @@ class _ProfilePageState extends State<ProfilePage> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: context.read<ThemeProvider>().secondaryColor),
+                style: TextStyle(
+                  color: context.read<ThemeProvider>().secondaryColor,
+                ),
               ),
             ),
             TextButton(
               style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-      if (states.contains(WidgetState.pressed)) {
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
-      }
-        return context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().accentColor : context.read<ThemeProvider>().secondaryColor ;
-    }),
-                  ),
+                backgroundColor:
+                    MaterialStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(MaterialState.pressed)) {
+                    return context.read<ThemeProvider>().isLightMode
+                        ? context.read<ThemeProvider>().accentColor
+                        : context.read<ThemeProvider>().secondaryColor;
+                  }
+                  return context.read<ThemeProvider>().isLightMode
+                      ? context.read<ThemeProvider>().accentColor
+                      : context.read<ThemeProvider>().secondaryColor;
+                }),
+              ),
               onPressed: () {
                 if (formKey.currentState?.validate() != true) {
                   return;
@@ -193,15 +189,17 @@ class _ProfilePageState extends State<ProfilePage> {
                   preferences: preference,
                   faculty: context.read<SignUpProvider>().selectedFaculty ?? '',
                   catalog: context.read<SignUpProvider>().selectedCatalog ?? '',
-                  semester: context.read<SignUpProvider>().selectedSemester ?? '',
-                  university: context.read<SignUpProvider>().selectedUniversity ?? 'Technion',
+                  semester:
+                      context.read<SignUpProvider>().selectedSemester ?? '',
+                  university: context.read<SignUpProvider>().selectedUniversity ??
+                      'Technion',
                 );
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Profile updated successfully'),
-                    backgroundColor:  themeProvider.isDarkMode 
-                        ? AppColorsDarkMode.successColor 
+                    backgroundColor: themeProvider.isDarkMode
+                        ? AppColorsDarkMode.successColor
                         : AppColorsLightMode.successColor,
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -222,221 +220,211 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => BugReportNotifier()),
-        ChangeNotifierProvider(create: (_) => FeedbackNotifier()),
-        // You can add more here if needed
-      ],
-      builder: (context, child) {
-        return Consumer3<StudentProvider, CourseProvider, LogInNotifier>(
-          builder: (
-            context,
-            studentNotifier,
-            courseNotifier,
-            logInNotifier,
-            _,
-          ) {
-            final student = studentNotifier.student;
-            if (student == null) {
-              return Center(
-                child: Text(
-                  'No student profile found',
-                ),
-              );
-            }
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final studentProvider = Provider.of<StudentProvider>(context);
+    final courseProvider = Provider.of<CourseProvider>(context);
+    final loginNotifier = Provider.of<LogInNotifier>(context);
 
-            final totalCredits = courseNotifier.coursesBySemester.keys
-                .map(
-                  (semester) =>
-                      courseNotifier.getTotalCreditsForSemester(semester),
-                )
-                .fold<double>(0.0, (sum, credits) => sum + credits);
+    if (studentProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-            final gpa = calculateAverage(getCompletedCourses(
-                courseNotifier.sortedCoursesBySemester,
-                courseNotifier
-              )).gpa;
-            final stats = _getCompletionStats(courseNotifier.coursesBySemester);
-            final completionPercentage =
-                stats['total']! > 0
-                    ? stats['completed']! / stats['total']!
-                    : 0.0;
+    final student = studentProvider.student;
+    final user = loginNotifier.user;
 
-            return SingleChildScrollView(
+    if (student == null) {
+      return const Center(child: Text('No student data found'));
+    }
+
+    final stats = _getCompletionStats(courseProvider.coursesBySemester);
+    final gpa = calculateAverage(getCompletedCourses(
+            courseProvider.sortedCoursesBySemester, courseProvider))
+        .gpa;
+
+    return Scaffold(
+      backgroundColor: themeProvider.mainColor,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Enhanced Profile Header
-                  _buildProfileHeader(
-                    context,
-                    student,
-                    studentNotifier,
-                    logInNotifier.user,
+                  // Profile Header Card
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: themeProvider.isDarkMode
+                            ? [
+                                themeProvider.primaryColor,
+                                themeProvider.accentColor,
+                              ]
+                            : [
+                                themeProvider.primaryColor,
+                                themeProvider.secondaryColor,
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: themeProvider.primaryColor.withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: user?.photoURL != null
+                                      ? NetworkImage(user!.photoURL!)
+                                      : null,
+                                  child: user?.photoURL == null
+                                      ? Text(
+                                          student.name.isNotEmpty
+                                              ? student.name[0].toUpperCase()
+                                              : '?',
+                                          style: TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: themeProvider.primaryColor,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      student.name,
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      student.major,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'GPA: ${gpa.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => _showEditProfileDialog(
+                                  context,
+                                  studentProvider,
+                                ),
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.white,
+                                ),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(0.2),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // Academic Progress Section
-                  _buildAcademicProgress(
-                    context,
-                    gpa,
-                    completionPercentage,
-                    stats,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Enhanced Statistics Section
-                  _buildEnhancedStatistics(
-                    context,
-                    courseNotifier,
-                    totalCredits,
-                    stats,
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Academic Details Section
-                  _buildAcademicDetails(context, student),
-
-                  const SizedBox(height: 20),
-
-                  // Actions Section
-                  _buildActionsSection(context),
-
-                  const SizedBox(height: 80),
-
-                  DeleteUserButton(),
-                  
-                  const SizedBox(height: 80),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildProfileHeader(
-    BuildContext context,
-    student,
-    StudentProvider notifier,
-    user,
-  ) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
-            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Profile Avatar
-          user?.photoURL != null
-              ? Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: themeProvider.borderPrimary, // Border color
-                    width: 1.0, // Border width
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 39,
-                  backgroundImage: NetworkImage(user!.photoURL!),
-                ),
-              )
-              : Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      themeProvider.secondaryColor,
-                      themeProvider.borderPrimary,
+                  // Stats Grid
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.5,
+                    children: [
+                      _buildStatCard(
+                        context,
+                        'Completed Courses',
+                        stats['completed'].toString(),
+                        Icons.check_circle_outline,
+                        themeProvider.successColor,
+                      ),
+                      _buildStatCard(
+                        context,
+                        'Current Semester',
+                        student.semester,
+                        Icons.calendar_today,
+                        themeProvider.accentColor,
+                      ),
+                      _buildStatCard(
+                        context,
+                        'Faculty',
+                        student.faculty,
+                        Icons.school,
+                        themeProvider.primaryColor,
+                      ),
+                      _buildStatCard(
+                        context,
+                        'Catalog Year',
+                        student.catalog,
+                        Icons.menu_book,
+                        themeProvider.warningColor,
+                      ),
                     ],
                   ),
-                  border: Border.all(
-                    color: themeProvider.secondaryColor,
-                    width: 3,
-                  ),
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: 40,
-                  color: themeProvider.accentColor,
-                ),
-              ),
 
-          const SizedBox(width: 16),
+                  const SizedBox(height: 24),
 
-          // Profile Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AutoSizeText(
-                  student.name,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxFontSize: 24,
-                  minFontSize: 15,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 4),
-
-                AutoSizeText(
-                  '${student.faculty}',
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
-                  maxFontSize: 14,
-                  minFontSize: 9,
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 4),
-                AutoSizeText(
-                  '${student.major}',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                  maxFontSize: 14,
-                  minFontSize: 9,
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-
-          // Edit Button
-          IconButton(
-            onPressed: () => _showEditProfileDialog(context, notifier),
-            icon: Icon(Icons.edit, color: themeProvider.mainColor),
-            style: IconButton.styleFrom(
-              backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                  // Settings Section
+                  _buildSettingsSection(context, themeProvider),
+                ],
               ),
             ),
           ),
@@ -445,665 +433,167 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildAcademicProgress(
+  Widget _buildStatCard(
     BuildContext context,
-    double gpa,
-    double completionPercentage,
-    Map<String, int> stats,
-  ) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
-            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-                   BoxShadow(
-            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Academic Progress',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // GPA Display
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Current GPA',
-                      style: TextStyle(
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      gpa.toStringAsFixed(1),
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: _getGPAColor(gpa),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Completion Percentage
-              /* 
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Completion',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColorsDarkMode.secondaryColorDim,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: completionPercentage,
-                      backgroundColor: AppColorsDarkMode.mainColor,
-                      valueColor: AlwaysStoppedAnimation(AppColorsDarkMode.successColor),
-                      minHeight: 8,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(completionPercentage * 100).toInt()}%',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColorsDarkMode.secondaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            */
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Course Status Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatusChip(
-                'Completed',
-                stats['completed']!,
-                const Color.fromARGB(255, 109, 228, 115),
-              ),
-              _buildStatusChip(
-                'Passed',
-                stats['passed']!,
-                const Color.fromARGB(255, 68, 255, 55),
-              ),
-              _buildStatusChip(
-                'Failed',
-                stats['failed']!,
-                const Color.fromARGB(255, 255, 49, 49),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String label, int value, Color color) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: themeProvider.surfaceColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: themeProvider.borderPrimary),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value.toString(),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEnhancedStatistics(
-    BuildContext context,
-    CourseProvider courseNotifier,
-    double totalCredits,
-    Map<String, int> stats,
-  ) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
-            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Course Statistics',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildEnhancedStatCard(
-                Icons.calendar_today,
-                'Semesters',
-                courseNotifier.coursesBySemester.length.toString(),
-                themeProvider.secondaryColor,
-              ),
-              _buildEnhancedStatCard(
-                Icons.school,
-                'Total Courses',
-                stats['total'].toString(),
-                themeProvider.secondaryColor,
-              ),
-              _buildEnhancedStatCard(
-                Icons.star,
-                'Credits',
-                totalCredits.toStringAsFixed(1),
-                themeProvider.secondaryColor,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEnhancedStatCard(
-    IconData icon,
-    String label,
+    String title,
     String value,
+    IconData icon,
     Color color,
   ) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: themeProvider.surfaceColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: themeProvider.borderPrimary),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAcademicDetails(BuildContext context, student) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
-            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-            blurRadius: 3,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Academic Details',
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const Spacer(),
+            ],
+          ),
+          const Spacer(),
+          AutoSizeText(
+            value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: themeProvider.textPrimary,
             ),
+            maxLines: 1,
           ),
-          const SizedBox(height: 16),
-          // _buildDetailRow('Student ID', student.id),
-          _buildDetailRow('Enrollment Semester', student.semester.toString()),
-          // _buildDetailRow('Catalog Year', student.catalog),
-          if (student.preferences.isNotEmpty)
-            _buildDetailRow('Academic Preferences', student.preferences),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionsSection(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(            gradient: LinearGradient(
-              colors: [
-            themeProvider.isLightMode ? themeProvider.accentColorLight : themeProvider.mainColor ,
-            themeProvider.isLightMode ? themeProvider.accentColor : themeProvider.accentColorDark ,
-          ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: themeProvider.isDarkMode ? Colors.black : AppColorsLightMode.shadowColor,
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Appearance & Settings',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Theme Mode Toggle
-              _buildThemeToggleCard(themeProvider),
-              const SizedBox(height: 16),
-              // Color Theme Toggle
-              _buildColorThemeCard(themeProvider),
-              const SizedBox(height: 24),
-              Text(
-                'Support & Feedback',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              BugReportButton(),
-              const SizedBox(height: 16),
-              FeedbackButton(),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildThemeToggleCard(ThemeProvider themeProvider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: themeProvider.surfaceColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: themeProvider.borderPrimary,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                themeProvider.currentThemeIcon,
-                color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Theme Mode',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: themeProvider.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Text(
-            'Current: ${themeProvider.currentThemeName}',
+            title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               color: themeProvider.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildThemeButton(
-                themeProvider,
-                AppThemeMode.light,
-                Icons.light_mode,
-                'Light',
-              ),
-              _buildThemeButton(
-                themeProvider,
-                AppThemeMode.dark,
-                Icons.dark_mode,
-                'Dark',
-              ),
-              _buildThemeButton(
-                themeProvider,
-                AppThemeMode.system,
-                Icons.brightness_auto,
-                'System',
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildColorThemeCard(ThemeProvider themeProvider) {
+  Widget _buildSettingsSection(BuildContext context, ThemeProvider themeProvider) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: themeProvider.surfaceColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: themeProvider.borderPrimary,
-          width: 1,
-        ),
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                themeProvider.currentColorThemeIcon,
-                color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-                size: 24,
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Color Theme',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: themeProvider.textPrimary,
-                  ),
-                ),
+              child: Icon(
+                themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                color: themeProvider.primaryColor,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Current: ${themeProvider.currentColorThemeName}',
-            style: TextStyle(
-              fontSize: 14,
-              color: themeProvider.textSecondary,
+            ),
+            title: const Text('Appearance'),
+            subtitle: Text(themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode'),
+            trailing: Switch(
+              value: themeProvider.isDarkMode,
+              activeColor: themeProvider.primaryColor,
+              onChanged: (_) => themeProvider.toggleLightDark(),
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildColorThemeButton(
-                themeProvider,
-                ColorThemeMode.colorful,
-                Icons.palette,
-                'Colorful',
+          Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: themeProvider.accentColor.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              _buildColorThemeButton(
-                themeProvider,
-                ColorThemeMode.classic,
-                Icons.style,
-                'Classic',
+              child: Icon(Icons.bug_report, color: themeProvider.accentColor),
+            ),
+            title: const Text('Report a Bug'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => ChangeNotifierProvider(
+                create: (_) => BugReportNotifier(),
+                child: const BugReportPopup(),
               ),
-            ],
+            ),
+          ),
+          Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: themeProvider.successColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.feedback, color: themeProvider.successColor),
+            ),
+            title: const Text('Send Feedback'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => ChangeNotifierProvider(
+                create: (_) => FeedbackNotifier(),
+                child: const FeedbackPopup(),
+              ),
+            ),
+          ),
+          Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: themeProvider.errorColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_forever, color: themeProvider.errorColor),
+            ),
+            title: Text(
+              'Delete Account',
+              style: TextStyle(color: themeProvider.errorColor),
+            ),
+            onTap: () => showDialog(
+              context: context,
+              builder: (context) => const DeleteUserButton(),
+            ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildThemeButton(
-    ThemeProvider themeProvider,
-    AppThemeMode mode,
-    IconData icon,
-    String label,
-  ) {
-    final isSelected = themeProvider.currentThemeMode == mode;
-    return GestureDetector(
-      onTap: () async {
-        await themeProvider.setThemeMode(mode);
-        // Update student preference if logged in
-        if (!mounted) return;
-        final studentProvider = context.read<StudentProvider>();
-        if (studentProvider.hasStudent) {
-          await _updateStudentThemePreference(mode.name);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
-              : themeProvider.isLightMode ? themeProvider.cardColor : themeProvider.mainColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? themeProvider.primaryColor
-                : themeProvider.borderPrimary,
-            width: 1,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? themeProvider.mainColor
-                  : themeProvider.textSecondary,
-              size: 20,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: isSelected
-                    ? themeProvider.mainColor
-                    : themeProvider.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildColorThemeButton(
-    ThemeProvider themeProvider,
-    ColorThemeMode mode,
-    IconData icon,
-    String label,
-  ) {
-    final isSelected = themeProvider.currentColorMode == mode;
-    return GestureDetector(
-      onTap: () async {
-        await themeProvider.setColorMode(mode);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
-              : themeProvider.cardColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? themeProvider.primaryColor
-                : themeProvider.borderPrimary,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? themeProvider.mainColor
-                  : themeProvider.textSecondary,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: isSelected
-                    ? themeProvider.mainColor
-                    : themeProvider.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }  Future<void> _updateStudentThemePreference(String themeMode) async {
-    try {
-      await ThemeSyncService.updateStudentThemePreference(
-        context,
-        AppThemeMode.values.firstWhere((mode) => mode.name == themeMode),
-      );
-    } catch (e) {
-      debugPrint('Error updating student theme preference: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save theme preference: ${e.toString()}'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    }
-  }
-  Color _getGPAColor(double gpa) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    if (gpa >= 90) return const Color.fromARGB(255, 49, 200, 57);
-    if (gpa >= 80) {return themeProvider.isDarkMode 
-        ? AppColorsDarkMode.successColor 
-        : AppColorsLightMode.successColor;}
-    if (gpa >= 70) return themeProvider.primaryColor;
-    if (gpa >= 60) {return themeProvider.isDarkMode 
-        ? AppColorsDarkMode.warningColor 
-        : AppColorsLightMode.warningColor;}
-    return themeProvider.isDarkMode 
-        ? AppColorsDarkMode.errorColor 
-        : AppColorsLightMode.errorColor;
   }
 }

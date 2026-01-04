@@ -15,21 +15,41 @@ class GoogleSignInButton extends StatefulWidget {
 }
 
 class _GoogleSignInButtonState extends State<GoogleSignInButton> {
+  bool _isHovering = false;
+
   @override
   Widget build(BuildContext context) {
     final loginNotifier = context.watch<LogInNotifier>();
+    final themeProvider = context.read<ThemeProvider>();
+    final isLoading = loginNotifier.isLoading || context.watch<StudentProvider>().isLoading;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child:
-          loginNotifier.isLoading || context.watch<StudentProvider>().isLoading
-              ? LinearProgressIndicator(
-                color: context.read<ThemeProvider>().secondaryColor,
-                backgroundColor: context.read<ThemeProvider>().accentColor,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        transform: Matrix4.identity()..scale(_isHovering && !isLoading ? 1.02 : 1.0),
+        child: isLoading
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: themeProvider.primaryColor,
+                ),
               )
-              : TextButton(
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().primaryColor : context.read<ThemeProvider>().secondaryColor,
+            : ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.isDarkMode 
+                      ? Colors.white 
+                      : Colors.white,
+                  foregroundColor: Colors.black87,
+                  elevation: _isHovering ? 4 : 1,
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
                 ),
                 onPressed: () async {
                   try {
@@ -55,40 +75,30 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                     }
                   }
                 },
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      // Google logo image (using placeholder for simplicity)
-                      Container(
-                        height: 24.0,
-                        width: 24.0,
-                        decoration: BoxDecoration(
-                          color: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().mainColor : context.read<ThemeProvider>().primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: SizedBox(
-                            width: 300,
-                            height: 300,
-                            child: Image.asset('assets/google_g_icon.png'),
-                          ),
-                        ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    // Google logo image
+                    Image.asset(
+                      'assets/google_g_icon.png',
+                      height: 24.0,
+                      width: 24.0,
+                    ),
+                    const SizedBox(width: 12.0),
+                    const Text(
+                      'Sign in with Google',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Colors.black87, // Always black text on white button for Google standard
+                        fontFamily: 'Roboto', // Google standard font
                       ),
-                      const SizedBox(width: 12.0),
-                      Text(
-                        'Sign in with Google',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: context.read<ThemeProvider>().isLightMode ? context.read<ThemeProvider>().mainColor : context.read<ThemeProvider>().primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+      ),
     );
   }
 }

@@ -2,7 +2,6 @@
 // Copy the entire CalendarDarkThemeMixin from calendar_try1
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:calendar_view/calendar_view.dart';
-import 'package:degreez/color/color_palette.dart';
 import 'package:flutter/material.dart';
 
 mixin CalendarDarkThemeMixin {
@@ -81,39 +80,66 @@ mixin CalendarDarkThemeMixin {
   }
   
   /// Build a weekday header with dark theme styling
-  /// add also the day number
-  /// add also the day name , done manually 
-  /// put next to the day number
   Widget buildWeekDay(BuildContext context, DateTime date) {
+    final isToday = DateUtils.isSameDay(date, DateTime.now());
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onSurface;
+    
     return Container(
-      padding: const EdgeInsets.all(6),
-      color: getHeaderBackgroundColor(context),
-      child: Row(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: getHeaderBackgroundColor(context),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.dividerColor.withAlpha(25),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            getDayName(date),
-            textAlign: TextAlign.center,
+            getDayName(date).toUpperCase(),
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(179),
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
+              color: isToday ? theme.colorScheme.primary : textColor.withAlpha(153),
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(width: 1), // Space between day name and number
-          Text(
-            date.day.toString(),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
+          const SizedBox(height: 2),
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center, // Center the text within the container
+            decoration: isToday
+                ? BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withAlpha(100),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  )
+                : null,
+            child: Text(
+              date.day.toString(),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: isToday ? theme.colorScheme.onPrimary : textColor,
+              ),
             ),
           ),
-          
         ],
       ),
     );
   }
+  
   /// Build a day header with dark theme styling
   /// add the day name and the date
   Widget buildDayHeader(BuildContext context, DateTime date) {
@@ -147,34 +173,58 @@ mixin CalendarDarkThemeMixin {
     
     if (filteredEvents.isEmpty) return const SizedBox();
     
+    final event = filteredEvents.first;
+    final isSmallDuration = endDuration.difference(startDuration).inMinutes < 60;
+
     return GestureDetector(
-      onTap: onTap != null ? () => onTap(filteredEvents.first) : null,
-      onLongPress: onLongPress != null ? () => onLongPress(filteredEvents.first) : null,
+      onTap: onTap != null ? () => onTap(event) : null,
+      onLongPress: onLongPress != null ? () => onLongPress(event) : null,
       child: Container(
-        margin: const EdgeInsets.all(2),
-        padding: const EdgeInsets.only(left: 2,top: 2,bottom: 2,right: 5),
+        margin: const EdgeInsets.all(1),
+        padding: const EdgeInsets.fromLTRB(6, 4, 4, 4),
         decoration: BoxDecoration(
-           boxShadow: [
-      BoxShadow(
-        color: AppColorsDarkMode.shadowColorStrong, // shadow color
-        blurRadius: 4, // how blurry the shadow is
-        offset: Offset(-2, 2), // horizontal and vertical displacement
-      ),
-    ],
-          color: filteredEvents.first.color,
+          color: event.color.withAlpha(217), // ~0.85 opacity
           borderRadius: BorderRadius.circular(8),
-        ),
-        child: AutoSizeText(
-          filteredEvents.first.title,
-          // if the color is light, use black text, otherwise use white
-          textAlign:TextAlign.right,          
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.surface,
-            fontSize: 8,
-            fontWeight: FontWeight.w800,
+          border: Border.all(
+            color: event.color.withAlpha(128), // ~0.5 opacity
+            width: 1,
           ),
-          maxLines: 5,
-          minFontSize: 5,
+          boxShadow: [
+            BoxShadow(
+              color: event.color.withAlpha(51), // ~0.2 opacity
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: AutoSizeText(
+                event.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  height: 1.1,
+                ),
+                minFontSize: 8,
+                maxLines: isSmallDuration ? 1 : 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (!isSmallDuration)
+              Text(
+                '${event.startTime?.hour.toString().padLeft(2, '0')}:${event.startTime?.minute.toString().padLeft(2, '0')} - ${event.endTime?.hour.toString().padLeft(2, '0')}:${event.endTime?.minute.toString().padLeft(2, '0')}',
+                style: TextStyle(
+                  color: Colors.white.withAlpha(230),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
         ),
       ),
     );

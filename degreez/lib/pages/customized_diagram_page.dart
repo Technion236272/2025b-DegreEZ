@@ -9,7 +9,6 @@ import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/widgets/selectors/semester_season_selector.dart';
 import 'package:degreez/widgets/selectors/semester_year_selector.dart';
 import 'package:degreez/providers/theme_provider.dart';
-import 'package:degreez/widgets/semester_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/course_card.dart';
@@ -28,7 +27,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
   // Add the mixin here
   late ScrollController _scrollController;
   final List<GlobalKey> _semesterKeys = [];
-  int _currentSemesterIndex = 0;
   final formKey = GlobalKey<FormState>();
   bool loading = false;
 
@@ -51,64 +49,6 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     if (screenWidth > 800) return 5;
     if (screenWidth > 600) return 4;
     return 3;
-  }
-
-  // Helper method to scroll to specific semester
-  void _scrollToSemester(int index) {
-    if (index < _semesterKeys.length &&
-        _semesterKeys[index].currentContext != null) {
-      final context = _semesterKeys[index].currentContext!;
-      final renderBox = context.findRenderObject() as RenderBox;
-      final position = renderBox.localToGlobal(Offset.zero);
-
-      _scrollController.animateTo(
-        _scrollController.offset +
-            position.dy -
-            150, // Account for timeline height
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-
-      setState(() {
-        _currentSemesterIndex = index;
-      });
-    }
-  }
-
-  // Helper method to build timeline data
-  List<SemesterTimelineData> _buildTimelineData(
-    Map<String, List<StudentCourse>> semesters,
-  ) {
-    return semesters.entries.map((entry) {
-      final courses = entry.value;
-      final completedCourses =
-          courses.where((c) => c.finalGrade.isNotEmpty).length;
-
-      // Calculate total credits by summing up credit points from all courses
-      final totalCredits = courses.fold<double>(
-        0.0,
-        (sum, course) => sum + course.creditPoints,
-      );
-
-      SemesterStatus status;
-      if (courses.isEmpty) {
-        status = SemesterStatus.empty;
-      } else if (completedCourses == courses.length) {
-        status = SemesterStatus.completed;
-      } else if (completedCourses > 0) {
-        status = SemesterStatus.current;
-      } else {
-        status = SemesterStatus.planned;
-      }
-
-      return SemesterTimelineData(
-        name: entry.key,
-        status: status,
-        completedCourses: completedCourses,
-        totalCourses: courses.length,
-        totalCredits: totalCredits,
-      );
-    }).toList();
   }
 
   // Enhanced: Callback to refresh UI when course is updated
@@ -158,10 +98,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                themeProvider.isDarkMode
-                                    ? AppColorsDarkMode.shadowColor
-                                    : AppColorsLightMode.shadowColor,
+                            color: themeProvider.isDarkMode
+                                ? AppColorsDarkMode.shadowColor
+                                : AppColorsLightMode.shadowColor,
                             blurRadius: 8,
                             offset: Offset(0, 4),
                           ),
@@ -173,19 +112,17 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                           Icon(
                             Icons.error,
                             size: 64,
-                            color:
-                                themeProvider.isDarkMode
-                                    ? AppColorsDarkMode.errorColor
-                                    : AppColorsLightMode.errorColor,
+                            color: themeProvider.isDarkMode
+                                ? AppColorsDarkMode.errorColor
+                                : AppColorsLightMode.errorColor,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Error: ${studentNotifier.error}',
                             style: TextStyle(
-                              color:
-                                  themeProvider.isDarkMode
-                                      ? AppColorsDarkMode.errorColor
-                                      : AppColorsLightMode.errorColor,
+                              color: themeProvider.isDarkMode
+                                  ? AppColorsDarkMode.errorColor
+                                  : AppColorsLightMode.errorColor,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -214,10 +151,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                themeProvider.isDarkMode
-                                    ? AppColorsDarkMode.shadowColorStrong
-                                    : AppColorsLightMode.shadowColor,
+                            color: themeProvider.isDarkMode
+                                ? AppColorsDarkMode.shadowColorStrong
+                                : AppColorsLightMode.shadowColor,
                             blurRadius: 8,
                             offset: Offset(0, 4),
                           ),
@@ -251,10 +187,9 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                           SizedBox(height: 20),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  themeProvider.isLightMode
-                                      ? themeProvider.primaryColor
-                                      : themeProvider.secondaryColor,
+                              backgroundColor: themeProvider.isLightMode
+                                  ? themeProvider.primaryColor
+                                  : themeProvider.secondaryColor,
                               foregroundColor: themeProvider.mainColor,
                               padding: EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(
@@ -305,43 +240,43 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                       ((semesters.length <= 2 && allCoursesCount == 0) ||
                               allCoursesCount <= 3)
                           ? Padding(
-                            padding: EdgeInsets.only(
-                              left: 25,
-                              top: 10,
-                              bottom: 5,
-                              right: 5,
-                            ),
-                            child: AutoSizeText(
-                              'Tip: You can press the Robot in the corner to automatically upload your courses',
-                              style: TextStyle(
-                                color: themeProvider.textSecondary,
+                              padding: EdgeInsets.only(
+                                left: 25,
+                                top: 10,
+                                bottom: 5,
+                                right: 5,
                               ),
-                              minFontSize: 10,
-                              maxFontSize: 30,
-                              maxLines: 2,
-                            ),
-                          )
+                              child: AutoSizeText(
+                                'Tip: You can press the Robot in the corner to automatically upload your courses',
+                                style: TextStyle(
+                                  color: themeProvider.textSecondary,
+                                ),
+                                minFontSize: 10,
+                                maxFontSize: 30,
+                                maxLines: 2,
+                              ),
+                            )
                           : SizedBox(),
 
                       allCoursesCount != 0 && allCoursesCount <= 2
                           ? Padding(
-                            padding: EdgeInsets.only(
-                              left: 25,
-                              top: 5,
-                              bottom: 5,
-                              right: 5,
-                            ),
-                            child: AutoSizeText(
-                              'Tap a course for quick actions Long press to view prerequisites'
-                              '\n(Long press the same course to disable prerequisites view)',
-                              style: TextStyle(
-                                color: themeProvider.textSecondary,
+                              padding: EdgeInsets.only(
+                                left: 25,
+                                top: 5,
+                                bottom: 5,
+                                right: 5,
                               ),
-                              minFontSize: 10,
-                              maxFontSize: 30,
-                              maxLines: 2,
-                            ),
-                          )
+                              child: AutoSizeText(
+                                'Tap a course for quick actions Long press to view prerequisites'
+                                '\n(Long press the same course to disable prerequisites view)',
+                                style: TextStyle(
+                                  color: themeProvider.textSecondary,
+                                ),
+                                minFontSize: 10,
+                                maxFontSize: 30,
+                                maxLines: 2,
+                              ),
+                            )
                           : SizedBox(),
 
                       // Scrollable content with banner
@@ -352,38 +287,53 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                             // AI Budget Warning Banner as first item
                             SliverToBoxAdapter(
                               child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
+                                margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: themeProvider.warningColor.withOpacity(
-                                    0.1,
-                                  ),
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: themeProvider.warningColor
-                                          .withOpacity(0.3),
-                                      width: 1,
-                                    ),
+                                  color: themeProvider.warningColor.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: themeProvider.warningColor.withOpacity(0.2),
+                                    width: 1,
                                   ),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      color: themeProvider.warningColor,
-                                      size: 20,
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: themeProvider.warningColor.withOpacity(0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.auto_awesome,
+                                        color: themeProvider.warningColor,
+                                        size: 22,
+                                      ),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 16),
                                     Expanded(
-                                      child: Text(
-                                        ' - the ai aint cheap, dont overuse it! \n - Operations here can be a bit slow, be patient. \n -if you long press on any course, it will highlight its prerequisites courses / קדמים (long press again to disable it)',
-                                        style: TextStyle(
-                                          color: themeProvider.textPrimary,
-                                          fontSize: 13,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'AI Assistant Tips',
+                                            style: TextStyle(
+                                              color: themeProvider.warningColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '• Operations might take a moment\n• Long press a course to see prerequisites',
+                                            style: TextStyle(
+                                              color: themeProvider.textPrimary.withOpacity(0.8),
+                                              fontSize: 13,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -419,15 +369,15 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                                     child:
                                         orientation == Orientation.portrait
                                             ? _buildVerticalSemesterSection(
-                                              context,
-                                              semester,
-                                              studentNotifier,
-                                            )
+                                                context,
+                                                semester,
+                                                studentNotifier,
+                                              )
                                             : _buildVerticalSemesterSection(
-                                              context,
-                                              semester,
-                                              studentNotifier,
-                                            ),
+                                                context,
+                                                semester,
+                                                studentNotifier,
+                                              ),
                                   );
                                 }, childCount: semesters.length + 1),
                               ),
@@ -555,167 +505,225 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
             .read<CourseProvider>()
             .getTotalCreditsForSemester(semesterName);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 20, bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [themeProvider.mainColor, themeProvider.surfaceColor],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        themeProvider.isDarkMode
-                            ? Colors.black
-                            : AppColorsLightMode.shadowColor,
-                    blurRadius: 3,
-                    offset: Offset(0, 1),
+        final errorColor = themeProvider.isDarkMode
+            ? AppColorsDarkMode.errorColor
+            : AppColorsLightMode.errorColor;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Modern Header
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+                decoration: BoxDecoration(
+                  color: themeProvider.surfaceColor,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeProvider.isDarkMode
+                          ? Colors.black.withOpacity(0.2)
+                          : AppColorsLightMode.shadowColor.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: themeProvider.borderPrimary.withOpacity(0.5),
+                    width: 1,
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          semesterName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: themeProvider.secondaryColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${totalCredits.toStringAsFixed(1)} credits',
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            semesterName,
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color:
-                                  themeProvider.isDarkMode
-                                      ? AppColorsDarkMode.mainColor
-                                      : AppColorsLightMode.mainColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textPrimary,
+                              letterSpacing: 0.3,
                             ),
                           ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: themeProvider.secondaryColor
+                                  .withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${totalCredits.toStringAsFixed(1)} credits',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: themeProvider.secondaryColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildActionButton(
+                          context,
+                          icon: Icons.add_rounded,
+                          tooltip: 'Add Course',
+                          onTap: () {
+                            AddCourseDialog.show(
+                              context,
+                              semesterName,
+                              onCourseAdded: (_) => _onCourseUpdated(),
+                            );
+                          },
+                          themeProvider: themeProvider,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildActionButton(
+                          context,
+                          icon: Icons.delete_outline_rounded,
+                          tooltip: 'Delete Semester',
+                          isDestructive: true,
+                          onTap: () {
+                            _confirmDeleteSemester(
+                              context,
+                              semesterName,
+                              studentNotifier.student!.id,
+                            );
+                          },
+                          themeProvider: themeProvider,
+                          customColor: errorColor,
                         ),
                       ],
                     ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.add, color: themeProvider.textPrimary),
-                        tooltip: 'Add Course',
-                        onPressed: () {
-                          AddCourseDialog.show(
-                            context,
-                            semesterName,
-                            onCourseAdded: (_) => _onCourseUpdated(),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete,
-                          color: themeProvider.textPrimary,
-                        ),
-                        tooltip: 'Delete Semester',
-                        onPressed: () {
-                          _confirmDeleteSemester(
-                            context,
-                            semesterName,
-                            studentNotifier.student!.id,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ), // Display message if no courses
-            courses.isEmpty
-                ? Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 16.0,
-                    horizontal: 8.0,
-                  ),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: themeProvider.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: themeProvider.borderPrimary,
-                      width: 0.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            themeProvider.isDarkMode
-                                ? AppColorsDarkMode.shadowColor
-                                : AppColorsLightMode.shadowColor,
-                        blurRadius: 4,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'No courses in this semester',
-                      style: TextStyle(
-                        color: themeProvider.textSecondary,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                )
-                : GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: _getCrossAxisCount(
-                      context,
-                    ), // Enhanced: responsive grid
-                    childAspectRatio: 1,
-                    crossAxisSpacing: 2,
-                    mainAxisSpacing: 2,
-                  ),
-                  itemCount: courses.length,
-                  itemBuilder: (context, index) {
-                    final course = courses[index];
-                    final courseWithDetails = context
-                        .read<CourseProvider>()
-                        .getCourseWithDetails(semesterName, course.courseId);
-                    return CourseCard(
-                      direction: DirectionValues.vertical,
-                      course: course,
-                      courseDetails: courseWithDetails?.courseDetails,
-                      semester: semesterName,
-                      onCourseUpdated:
-                          _onCourseUpdated, // Enhanced: Add update callback
-                    );
-                  },
+                  ],
                 ),
-          ],
+              ),
+
+              // Courses Grid
+              courses.isEmpty
+                  ? _buildEmptySemesterState(context, themeProvider)
+                  : GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: _getCrossAxisCount(context),
+                        childAspectRatio: 1,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: courses.length,
+                      itemBuilder: (context, index) {
+                        final course = courses[index];
+                        final courseWithDetails = context
+                            .read<CourseProvider>()
+                            .getCourseWithDetails(
+                                semesterName, course.courseId);
+                        return CourseCard(
+                          direction: DirectionValues.vertical,
+                          course: course,
+                          courseDetails: courseWithDetails?.courseDetails,
+                          semester: semesterName,
+                          onCourseUpdated: _onCourseUpdated,
+                        );
+                      },
+                    ),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    required ThemeProvider themeProvider,
+    bool isDestructive = false,
+    Color? customColor,
+  }) {
+    final color = customColor ?? themeProvider.textPrimary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDestructive
+                ? color.withOpacity(0.1)
+                : themeProvider.mainColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDestructive
+                  ? color.withOpacity(0.3)
+                  : themeProvider.borderPrimary.withOpacity(0.5),
+            ),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySemesterState(
+      BuildContext context, ThemeProvider themeProvider) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: themeProvider.surfaceColor.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: themeProvider.borderPrimary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.school_outlined,
+            size: 48,
+            color: themeProvider.textSecondary.withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No courses yet',
+            style: TextStyle(
+              color: themeProvider.textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Add a course to start planning',
+            style: TextStyle(
+              color: themeProvider.textTertiary,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -728,78 +736,75 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
     final themeProvider = context.read<ThemeProvider>();
     showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            // shape: RoundedRectangleBorder(
-            //   side: BorderSide(
-            //     color: themeProvider.textSecondary,
-            //     width: 2,
-            //   ),
-            //   borderRadius: BorderRadius.circular(16),            ),
-            backgroundColor: themeProvider.mainColor,
-            title: Text(
-              'Delete Semester',
-              style: TextStyle(color: themeProvider.textPrimary),
-            ),
-            content: Text(
-              'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
-              style: TextStyle(color: themeProvider.textPrimary),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: context.read<ThemeProvider>().secondaryColor,
-                  ),
-                ),
+      builder: (ctx) => AlertDialog(
+        // shape: RoundedRectangleBorder(
+        //   side: BorderSide(
+        //     color: themeProvider.textSecondary,
+        //     width: 2,
+        //   ),
+        //   borderRadius: BorderRadius.circular(16),            ),
+        backgroundColor: themeProvider.mainColor,
+        title: Text(
+          'Delete Semester',
+          style: TextStyle(color: themeProvider.textPrimary),
+        ),
+        content: Text(
+          'Are you sure you want to delete "$semesterName"? This will remove all courses in it.',
+          style: TextStyle(color: themeProvider.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: context.read<ThemeProvider>().secondaryColor,
               ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color?>((
-                    Set<WidgetState> states,
-                  ) {
-                    var color =
-                        loading
-                            ? Colors.grey
-                            : context.read<ThemeProvider>().isLightMode
-                            ? context.read<ThemeProvider>().accentColor
-                            : context.read<ThemeProvider>().secondaryColor;
-                    return color;
-                  }),
-                ),
-                onPressed:
-                    loading
-                        ? null
-                        : () async {
-                          if (loading == true) return;
-
-                          setState(() {
-                            loading = true;
-                          });
-                          await Provider.of<CourseProvider>(
-                            context,
-                            listen: false,
-                          ).deleteSemester(studentId, semesterName);
-                          if (!ctx.mounted) return;
-                          Navigator.of(ctx).pop();
-                          // Enhanced: Trigger UI refresh
-                          _onCourseUpdated();
-                          setState(() {
-                            loading = false;
-                          });
-                        },
-                child: Text(
-                  'Delete',
-                  style: TextStyle(
-                    color: themeProvider.primaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                Set<WidgetState> states,
+              ) {
+                var color = loading
+                    ? Colors.grey
+                    : context.read<ThemeProvider>().isLightMode
+                        ? context.read<ThemeProvider>().accentColor
+                        : context.read<ThemeProvider>().secondaryColor;
+                return color;
+              }),
+            ),
+            onPressed: loading
+                ? null
+                : () async {
+                    if (loading == true) return;
+
+                    setState(() {
+                      loading = true;
+                    });
+                    await Provider.of<CourseProvider>(
+                      context,
+                      listen: false,
+                    ).deleteSemester(studentId, semesterName);
+                    if (!ctx.mounted) return;
+                    Navigator.of(ctx).pop();
+                    // Enhanced: Trigger UI refresh
+                    _onCourseUpdated();
+                    setState(() {
+                      loading = false;
+                    });
+                  },
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: themeProvider.primaryColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

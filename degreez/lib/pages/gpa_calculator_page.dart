@@ -1,13 +1,10 @@
 import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/student_model.dart';
 import '../providers/student_provider.dart';
 import '../providers/course_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/calculate_gpa_function.dart';
-
-
 
 class WhatIfCourse {
   final String name;
@@ -24,7 +21,6 @@ class WhatIfCourse {
     this.originalCourseId,
   });
 }
-
 
 class ModifiedCourse {
   final String originalCourseId;
