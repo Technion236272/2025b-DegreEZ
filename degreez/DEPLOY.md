@@ -33,22 +33,22 @@ firebase deploy --only hosting
    - Value: (paste the token from step 1)
    - Click "Add secret"
 
-3. **Push to `web-version` branch**:
+3. **Push to a deployment branch** (e.g., `develop`, `web-version`, or `main`):
    ```bash
    git add .
    git commit -m "Add web deployment configuration"
-   git push origin web-version
+   git push origin develop
    ```
 
 ### How It Works
 - GitHub Actions will automatically:
   - Build the Flutter web app
   - Deploy to Firebase Hosting
-  - Every time you push to the `web-version` branch
+  - Every time you push to `develop`, `web-version`, or `main`
 
 ### View Your Deployed Site
 After deployment completes (check Actions tab on GitHub):
-- **Live URL**: https://degreez-fbec6.web.app
+- **Live URL**: https://degreez.web.app
 - **Or**: https://degreez-fbec6.firebaseapp.com
 
 ---
@@ -78,7 +78,7 @@ flutter build web --release
 firebase deploy --only hosting
 ```
 
-Your site will be live at: https://degreez-fbec6.web.app
+Your site will be live at: https://degreez.web.app
 
 ---
 

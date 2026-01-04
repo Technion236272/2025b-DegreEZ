@@ -40,14 +40,14 @@ firebase login:ci
 cd "c:\Users\RAMZE\android projects\2025b-DegreEZ\degreez"
 git add .
 git commit -m "Add Firebase Hosting configuration for web deployment"
-git push origin web-version
+git push origin develop
 ```
 
 #### Step 5: Watch the Deployment
 - Go to: https://github.com/Technion236272/2025b-DegreEZ/actions
 - You'll see the build and deploy running
 - Wait ~2-3 minutes for completion
-- Your site will be live at: **https://degreez-fbec6.web.app**
+- Your site will be live at: **https://degreez.web.app**
 
 ---
 
@@ -71,12 +71,12 @@ flutter build web --release
 firebase deploy --only hosting
 ```
 
-Your site will be live at: **https://degreez-fbec6.web.app**
+Your site will be live at: **https://degreez.web.app**
 
 ---
 
 ## 🌐 Your Live URLs (after deployment)
-- **Primary**: https://degreez-fbec6.web.app
+- **Primary**: https://degreez.web.app
 - **Alternate**: https://degreez-fbec6.firebaseapp.com
 
 ---
@@ -111,7 +111,7 @@ If you run into any issues:
 
 ## 🎉 Next Steps After Deployment
 
-1. Test your live site at https://degreez-fbec6.web.app
+1. Test your live site at https://degreez.web.app
 2. Enable Google Sign-In for your production domain in Firebase Console
 3. Add authorized domains for OAuth (if needed)
 4. Monitor usage in Firebase Console
