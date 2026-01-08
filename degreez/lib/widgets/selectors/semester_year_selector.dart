@@ -74,7 +74,7 @@ class _SemesterYearSelectorState extends State<SemesterYearSelector> {
               borderSide: BorderSide(color: themeProvider.errorColor.withAlpha(170)),
             ),
             alignLabelWithHint: true,
-            labelText: "Enrollment Year",
+            labelText: "Enrollment Year / The year you started",
             labelStyle: TextStyle(
               color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,
               fontSize: 15,

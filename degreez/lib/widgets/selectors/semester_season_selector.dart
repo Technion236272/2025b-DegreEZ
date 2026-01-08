@@ -28,7 +28,7 @@ class _SemesterSeasonSelectorState extends State<SemesterSeasonSelector> {
           decoration: InputDecoration(
             filled: true,
             fillColor: themeProvider.surfaceColor,
-            labelText: "Enrollment Semester",
+            labelText: "Enrollment Semester / The semester you started",
             labelStyle: TextStyle(
               color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor ,
               fontSize: 13,
