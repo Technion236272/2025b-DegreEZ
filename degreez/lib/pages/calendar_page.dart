@@ -18,7 +18,16 @@ import '../services/course_service.dart';
 class CalendarPage extends StatefulWidget {
   final String? selectedSemester; // Receive selected semester from NavigatorPage
   final void Function(String selectedSemester)? onSemesterChanged; // Keep for compatibility
-  const CalendarPage({super.key, this.selectedSemester, this.onSemesterChanged});
+  final int? viewMode;
+  final VoidCallback? onToggleView;
+
+  const CalendarPage({
+    super.key,
+    this.selectedSemester,
+    this.onSemesterChanged,
+    this.viewMode,
+    this.onToggleView,
+  });
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -26,10 +35,9 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage>
     with CalendarDarkThemeMixin, CourseEventMixin, ScheduleSelectionMixin {
-  int _viewMode = 0; // 0: Week View, 1: Day View
   final TextEditingController _searchController = TextEditingController();
   final _searchQuery = '';
-  
+
   // Remove semester management - now handled by NavigatorPage
   // List<String> _allSemesters = [];
   // String? _selectedSemester;
@@ -118,8 +126,6 @@ class _CalendarPageState extends State<CalendarPage>
       onCourseRemovedFromCalendar: _markCourseAsRemovedFromCalendar,
       onCourseRestoredToCalendar: _restoreCourseToCalendar,
       isCourseRemovedFromCalendar: _isCourseRemovedFromCalendar,
-      viewMode: _viewMode,
-      onToggleView: () => setState(() => _viewMode = _viewMode == 0 ? 1 : 0),
     );
   }
 
@@ -158,7 +164,7 @@ class _CalendarPageState extends State<CalendarPage>
             // Course Panel with integrated Toggle Button
             _buildCoursePanelWithIntegratedToggle(courseProvider),            // Calendar Views - Full Width
             Expanded(
-              child: _viewMode == 0 ? _buildWeekView(themeProvider) : _buildDayView(themeProvider),
+              child: (widget.viewMode ?? 0) == 0 ? _buildWeekView(themeProvider) : _buildDayView(themeProvider),
             ),
           ],
         );

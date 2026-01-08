@@ -53,8 +53,6 @@ class CourseCalendarPanel extends StatefulWidget {
   final Function(String courseId)? onCourseRemovedFromCalendar;
   final Function(String courseId)? onCourseRestoredToCalendar;
   final bool Function(String courseId)? isCourseRemovedFromCalendar;
-  final int? viewMode;
-  final VoidCallback? onToggleView;
   const CourseCalendarPanel({
     super.key,
     required this.selectedSemester,
@@ -62,8 +60,6 @@ class CourseCalendarPanel extends StatefulWidget {
     this.onCourseRemovedFromCalendar,
     this.onCourseRestoredToCalendar,
     this.isCourseRemovedFromCalendar,
-    this.viewMode,
-    this.onToggleView,
   });
 
   @override
@@ -643,12 +639,6 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
                           color: themeProvider.textSecondary,
                         ),
                       ),
-                      // Toggle button on the far right
-                      if (widget.viewMode != null &&
-                          widget.onToggleView != null) ...[
-                        SizedBox(width: isSmallScreen ? 6 : 12),
-                        _buildViewToggleButton(),
-                      ],
                     ],
                   ),
                 ),
@@ -1719,54 +1709,5 @@ class _CourseCalendarPanelState extends State<CourseCalendarPanel>
       default:
         return CourseEventType.lecture; // Default fallback
     }
-  }
-
-  Widget _buildViewToggleButton() {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
-        final isWeekView = widget.viewMode == 0;
-        final screenWidth = MediaQuery.of(context).size.width;
-        final isSmallScreen = screenWidth < 380;
-        
-        return InkWell(
-          onTap: widget.onToggleView,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 8 : 12, 
-              vertical: 6
-            ),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withAlpha(25),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: themeProvider.primaryColor.withAlpha(50),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isWeekView ? Icons.view_week : Icons.view_day,
-                  size: 16,
-                  color: themeProvider.primaryColor,
-                ),
-                if (!isSmallScreen) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    isWeekView ? 'Week' : 'Day',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 }

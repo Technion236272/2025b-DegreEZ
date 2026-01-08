@@ -21,7 +21,6 @@ import 'package:degreez/pages/course_map_page.dart';
 import 'customized_diagram_page.dart';
 import 'prerequisite_chain_page.dart';
 
-
 class NavigatorPage extends StatefulWidget {
   const NavigatorPage({super.key});
 
@@ -33,10 +32,12 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
   String _currentPage = 'Calendar';
   bool _hasInitializedData = false;
   String? _selectedCalendarSemester;
+  int _calendarViewMode = 0; // 0: Week View, 1: Day View
 
   // Semester selection state (moved from CalendarPage)
   List<String> _allSemesters = [];
   String? _selectedSemester;
+
   @override
   void initState() {
     super.initState();
@@ -165,6 +166,12 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                   _selectedCalendarSemester = semester;
                 });
               },
+              viewMode: _calendarViewMode,
+              onToggleView: () {
+                setState(() {
+                  _calendarViewMode = _calendarViewMode == 0 ? 1 : 0;
+                });
+              },
             );
             break;
 
@@ -198,55 +205,51 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         }
         return Scaffold(
           appBar: AppBar(
-            title:
-                (_currentPage == 'Calendar' || _currentPage == 'Map')
-                    ? _buildSemesterDropdown()
-                    : AutoSizeText(
-                      _currentPage,
-                      minFontSize: 14,
-                      maxFontSize: 22,
-                    ),
+            title: (_currentPage == 'Calendar' || _currentPage == 'Map')
+                ? _buildSemesterDropdown()
+                : AutoSizeText(
+                    _currentPage,
+                    minFontSize: 14,
+                    maxFontSize: 22,
+                  ),
             centerTitle: true,
             actions: _buildAppBarActions(),
           ),
           drawer: _buildSideDrawer(context, loginNotifier, studentProvider),
-          body:
-              studentProvider.isLoading ||
-                      courseProvider.loadingState.isLoadingCourses
-                  ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading your data...'),
-                      ],
-                    ),
-                  )
-                  : body,
-          // Updated FAB - now navigates to AddCoursePage
-          floatingActionButton:
-              _currentPage == 'Calendar'
-                  ? FloatingActionButton(
-                    onPressed: () {
-                      if (_selectedCalendarSemester != null) {
-                        AddCourseDialog.show(
-                          context,
-                          _selectedCalendarSemester!,
-                          onCourseAdded: (courseId) {
-                            // Optional: trigger calendar refresh if needed
-                          },
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No semester selected')),
-                        );
-                      }
-                    },
-                    tooltip: 'Add Course',
-                    child: const Icon(Icons.add),
-                  )
-                  : null,
+          body: studentProvider.isLoading ||
+                  courseProvider.loadingState.isLoadingCourses
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading your data...'),
+                    ],
+                  ),
+                )
+              : body,
+          floatingActionButton: _currentPage == 'Calendar'
+              ? FloatingActionButton(
+                  onPressed: () {
+                    if (_selectedCalendarSemester != null) {
+                      AddCourseDialog.show(
+                        context,
+                        _selectedCalendarSemester!,
+                        onCourseAdded: (courseId) {
+                          // Optional: trigger calendar refresh if needed
+                        },
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No semester selected')),
+                      );
+                    }
+                  },
+                  tooltip: 'Add Course',
+                  child: const Icon(Icons.add),
+                )
+              : null,
         );
       },
     );
@@ -265,21 +268,37 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         ];
 
       case 'Calendar':
-        // For Course Recommendations page, maybe no additional AI button needed
         return [
-          IconButton(
-            icon: const Icon(Icons.bolt_sharp),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('AI Assistant coming soon!')),
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              final isWeekView = _calendarViewMode == 0;
+              return TextButton.icon(
+                // Use TextButton.icon to show text and icon together consistently
+                onPressed: () {
+                  setState(() {
+                    _calendarViewMode = _calendarViewMode == 0 ? 1 : 0;
+                  });
+                },
+                icon: Icon(
+                  isWeekView ? Icons.view_week : Icons.view_day,
+                  color: themeProvider.textPrimary, // Ensure visible color
+                ),
+                label: Text(
+                  isWeekView ? "Week" : "Day",
+                  style: TextStyle(
+                    color: themeProvider.textPrimary, // Ensure visible color
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                   // Adjust padding to make it look appropiate for AppBar
+                   padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
               );
             },
-            tooltip: 'AI Assistant',
           ),
         ];
 
       default:
-        // For other pages, show a generic AI assistant button
         return [];
     }
   }
@@ -316,7 +335,6 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Enhanced User Header with beautiful gradient and shadows
             Container(
               constraints: const BoxConstraints(
                 minHeight: 180,
@@ -389,57 +407,49 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                               : null,
                         ),
                       ),
-                      // Profile Picture with enhanced styling
                       const SizedBox(height: 12),
-                      // User Name - with proper text overflow handling
-                      
                       AutoSizeText(
-                          student?.name ?? user?.displayName ?? 'User',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          maxLines: 2,
-                          minFontSize: 10,
-                          maxFontSize: 25,
+                        student?.name ?? user?.displayName ?? 'User',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
+                        maxLines: 2,
+                        minFontSize: 10,
+                        maxFontSize: 25,
+                      ),
                       const SizedBox(height: 4),
-                      // Email - with proper text overflow handling
                       AutoSizeText(
-                          user?.email ?? '',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black26,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          maxLines: 2,
-                          minFontSize: 10,
-                          maxFontSize: 25,
+                        user?.email ?? '',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black26,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      
-                      // const SizedBox(height: 8),
+                        maxLines: 2,
+                        minFontSize: 10,
+                        maxFontSize: 25,
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-
-            // Navigation Items with enhanced styling
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Column(
@@ -495,10 +505,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-            
-            // Elegant Divider
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
@@ -516,10 +523,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 ),
               ),
             ),
-            
             const SizedBox(height: 16),
-            
-            // Bottom Section with subtle background
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 8.0),
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -559,38 +563,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                 ],
               ),
             ),
-            
             const SizedBox(height: 100),
-
-            // // Add Course - New menu item for easier access
-            // ListTile(
-            //   leading: const Icon(Icons.add_circle_outline),
-            //   title: const Text('Add Course'),
-            //   onTap: () {
-            //     Navigator.pop(context); // Close drawer
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => const AddCoursePage(),
-            //       ),
-            //     );
-            //   },
-            // ),
-
-            // const Divider(),
-
-            // Sign out
-            // ListTile(
-            //   leading: const Icon(Icons.logout, color: Colors.red),
-            //   title: const Text('Sign Out'),
-            //   onTap: () {
-            //     // Clear providers before signing out
-            //     context.read<StudentProvider>().clear();
-            //     context.read<CourseProvider>().clear();
-            //     loginNotifier.signOut();
-            //     Navigator.pop(context);
-            //   },
-            // ),
           ],
         ),
       ),
@@ -605,7 +578,7 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
     bool isLogout = false,
   }) {
     final isLightMode = Theme.of(context).brightness == Brightness.light;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       decoration: BoxDecoration(
@@ -729,11 +702,10 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
 
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        final textColor =
-            themeProvider.isLightMode
-                ? AppColorsLightMode.textPrimary
-                : AppColorsDarkMode.secondaryColor;
-        
+        final textColor = themeProvider.isLightMode
+            ? AppColorsLightMode.textPrimary
+            : AppColorsDarkMode.secondaryColor;
+
         final dropdownBgColor = themeProvider.isLightMode
             ? Colors.white
             : const Color(0xFF2C2C2C);
@@ -741,13 +713,13 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: themeProvider.isLightMode 
-                ? Colors.grey.withAlpha(25) 
+            color: themeProvider.isLightMode
+                ? Colors.grey.withAlpha(25)
                 : Colors.white.withAlpha(25),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: themeProvider.isLightMode 
-                  ? Colors.grey.withAlpha(50) 
+              color: themeProvider.isLightMode
+                  ? Colors.grey.withAlpha(50)
                   : Colors.white.withAlpha(50),
               width: 1,
             ),
@@ -786,16 +758,15 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
                   // The CalendarPage will handle the course loading when it receives the new semester
                 }
               },
-              items:
-                  _allSemesters.map((sem) {
-                    return DropdownMenuItem<String>(
-                      value: sem,
-                      child: Text(
-                        sem,
-                        style: TextStyle(color: textColor, fontSize: 14),
-                      ),
-                    );
-                  }).toList(),
+              items: _allSemesters.map((sem) {
+                return DropdownMenuItem<String>(
+                  value: sem,
+                  child: Text(
+                    sem,
+                    style: TextStyle(color: textColor, fontSize: 14),
+                  ),
+                );
+              }).toList(),
             ),
           ),
         );
