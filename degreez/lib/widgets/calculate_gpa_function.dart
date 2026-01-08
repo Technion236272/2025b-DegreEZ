@@ -69,7 +69,10 @@ GpaCalculationResult calculateAverage(List<GpaCalculationItem> courses) {
       'DEBUG: Final calculation - totalPoints: $totalPoints, totalCredits: $totalCredits, gpa: $gpa',
     );
 
-    return GpaCalculationResult(gpa: gpa, totalCredits: totalCredits);
+    // Round up to 1 decimal place (e.g., 87.61 -> 87.7, 86.63 -> 86.7)
+    final roundedGpa = (gpa * 10).ceilToDouble() / 10;
+
+    return GpaCalculationResult(gpa: roundedGpa, totalCredits: totalCredits);
   }
 
     List<GpaCalculationItem> getCompletedCourses(

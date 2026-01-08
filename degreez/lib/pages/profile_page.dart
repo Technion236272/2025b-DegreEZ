@@ -348,7 +348,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        'GPA: ${gpa.toStringAsFixed(2)}',
+                                        'GPA: ${gpa.toStringAsFixed(1)}',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
