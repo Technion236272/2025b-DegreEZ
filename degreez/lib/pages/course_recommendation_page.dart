@@ -51,6 +51,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Container(
           decoration: BoxDecoration(
             color: themeProvider.isDarkMode ? Colors.black26 : Colors.grey.shade200,
@@ -125,43 +126,43 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
         return Column(
           children: [
             // AI Budget Warning Banner (fixed at top)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: context.read<ThemeProvider>().warningColor.withOpacity(
-                  0.1,
-                ),
-                border: Border(
-                  bottom: BorderSide(
-                    color: context
-                        .read<ThemeProvider>()
-                        .warningColor
-                        .withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: context.read<ThemeProvider>().warningColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '''the ai aint cheap, dont overuse it! \n - First, you need to add a new semester in customized diagram then come back here :) , and please wait until the AI finishes processing the file after you upload it, it may take several minutes.''',
-                      style: TextStyle(
-                        color: context.read<ThemeProvider>().textPrimary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            //   decoration: BoxDecoration(
+            //     color: context.read<ThemeProvider>().warningColor.withOpacity(
+            //       0.1,
+            //     ),
+            //     border: Border(
+            //       bottom: BorderSide(
+            //         color: context
+            //             .read<ThemeProvider>()
+            //             .warningColor
+            //             .withOpacity(0.3),
+            //         width: 1,
+            //       ),
+            //     ),
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       Icon(
+            //         Icons.info_outline,
+            //         color: context.read<ThemeProvider>().warningColor,
+            //         size: 20,
+            //       ),
+            //       const SizedBox(width: 12),
+            //       Expanded(
+            //         child: Text(
+            //           '''the ai aint cheap, dont overuse it! \n - First, you need to add a new semester in customized diagram then come back here :) , and please wait until the AI finishes processing the file after you upload it, it may take several minutes.''',
+            //           style: TextStyle(
+            //             color: context.read<ThemeProvider>().textPrimary,
+            //             fontSize: 13,
+            //           ),
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
 
             // Scrollable content
             Expanded(
@@ -200,9 +201,15 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Get personalized course recommendations based on your academic history and degree requirements.',
+                              '''The courses that will be recommended are: 
+1. 📚 Courses that align with your catalog requirements. 
+2. 🎯 Courses that match your interests and career goals. (based on your preferences from your profile) 
+3. ✅ Courses that you have their prerequisites completed for. 
+4. 🗓️ Courses that are offered in the upcoming semesters.
+NOTE: Dont overuse the AI, we might run out of budget  :)
+''',
                               style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[600]),
+                                  ?.copyWith(color: Colors.black),
                             ),
                           ],
                         ),
@@ -250,8 +257,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                               ),
                               subtitle: Text(
                                 provider.fastMode
-                                    ? 'Quick recommendations  - ~1-2 minutes'
-                                    : 'AI-optimized recommendations (All phases) - ~10-12 minutes',
+                                    ? 'Quick recommendations (simple)  - ~1-2 minutes'
+                                    : 'AI-optimized recommendations (Uses Hill Climbing Optimization Algorithm with a hybrid approach of LLM\'s evaluation): ~10-12 minutes',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               value: provider.fastMode,
@@ -318,8 +325,8 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
                         label: Text(
                           provider.isLoading
                               ? (provider.fastMode
-                                  ? 'Generating Fast Recommendations...'
-                                  : 'Generating Optimized Recommendations...')
+                                  ? 'Generating Fast Recommendations... DONT CLOSE THE SCREEN'
+                                  : 'Generating Optimized Recommendations... DONT CLOSE THE SCREEN')
                               : 'Generate Recommendations',
                           style: const TextStyle(fontSize: 16),
                         ),
@@ -376,7 +383,6 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 
                     // Information Cards
                     const SizedBox(height: 32),
-                    _buildInfoCards(),
                   ],
                 ),
               ),
@@ -534,131 +540,6 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
     );
   }
 
-  Widget _buildInfoCards() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.psychology,
-                        color: context.read<ThemeProvider>().primaryColor,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'AI-Powered',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Advanced algorithms analyze your academic progress',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.person,
-                        color: context.read<ThemeProvider>().primaryColor,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Personalized',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Recommendations tailored to your major and preferences',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        color: context.read<ThemeProvider>().primaryColor,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Optimized',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Balanced workload and optimal credit distribution',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.track_changes,
-                        color: context.read<ThemeProvider>().primaryColor,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Progressive',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Considers prerequisites and degree progression',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   void _generateRecommendations(CourseRecommendationProvider provider) async {
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);

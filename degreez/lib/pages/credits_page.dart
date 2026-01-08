@@ -78,7 +78,7 @@ showCreditsPage(context) {
               ),
               
               const Text(
-                '© Ramzy Ayann\n',
+                '© 𝐑𝐚𝐦𝐳𝐲 𝐀𝐲𝐚𝐧\n',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -86,6 +86,14 @@ showCreditsPage(context) {
               ),
               const Text(
                 'Maintained and developed Solely by me since July 2025.',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+                ),
+                const SizedBox(height: 5), // Added spacing to fix layout
+                const Text(
+                '', // Empty string to satisfy the structure without breaking existing code
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -164,7 +172,14 @@ showCreditsPage(context) {
                 ),
               ),
               const SizedBox(height: 20),
-              
+                            // Divider
+              Divider(
+                height: 20,
+                thickness: 1,
+                color: Colors.grey[300],
+                indent: 20,
+                endIndent: 20,
+              ),
               // Course Info
               Text(
                 'This application started its development under the provision of Technion\'s Android course april 2025 - july 2025.\n\n',
