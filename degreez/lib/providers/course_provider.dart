@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/student_model.dart';
 import '../services/course_service.dart';
 import '../services/global_config_service.dart';
+import '../constants/introductory_courses.dart';
 
 class CourseLoadingState {
   final bool isLoadingCourses;
@@ -1144,14 +1145,18 @@ class CourseProvider with ChangeNotifier {
         return [];
       }
       final (year, semesterCode) = parsed;
-      return await CourseService.searchCourses(
+      final results = await CourseService.searchCourses(
         year: year,
         semester: semesterCode,
         courseId: courseId,
         courseName: courseName,
         faculty: faculty,
       );
-    }
+      
+      // Union with introductory courses
+      final introCourses = _searchIntroductoryCourses(courseId, courseName);
+      return [...introCourses, ...results];
+    } 
     if (_currentSemester == null) {
       await _fetchLatestSemester();
     }
@@ -1161,13 +1166,17 @@ class CourseProvider with ChangeNotifier {
     }
 
     if (pastSemestersToInclude == 0) {
-      return await CourseService.searchCourses(
+      final results = await CourseService.searchCourses(
         year: _currentSemester!.year,
         semester: _currentSemester!.semester,
         courseId: courseId,
         courseName: courseName,
         faculty: faculty,
       );
+
+      // Union with introductory courses
+      final introCourses = _searchIntroductoryCourses(courseId, courseName);
+      return [...introCourses, ...results];
     } else {
       // ✅ Fetch all semesters from API
       final allSemesters = await GlobalConfigService.getAvailableSemesters();
@@ -1252,9 +1261,56 @@ class CourseProvider with ChangeNotifier {
           resultMap.putIfAbsent(r.course.courseNumber, () => r);
         }
       }
+      
+      // Union with introductory courses for multi-semester search too
+      final introResults = _searchIntroductoryCourses(courseId, courseName);
+      for (final r in introResults) {
+        resultMap.putIfAbsent(r.course.courseNumber, () => r);
+      }
 
       return resultMap.values.toList();
     }
+  }
+
+  // New helper method to search introductory courses
+  List<CourseSearchResult> _searchIntroductoryCourses(String? courseId, String? courseName) {
+    final allIntro = IntroductoryCourses.getAllIntroductoryCourses();
+    final matches = <CourseSearchResult>[];
+
+    for (final intro in allIntro) {
+      bool match = true;
+      if (courseId != null && !intro.courseId.contains(courseId)) {
+        match = false;
+      }
+      if (courseName != null && !intro.name.toLowerCase().contains(courseName.toLowerCase())) {
+        match = false;
+      }
+
+      if (match) {
+        // Convert IntroductoryCourseData to CourseSearchResult
+        matches.add(CourseSearchResult(
+          matchScore: 100,
+          course: EnhancedCourseDetails(
+            courseNumber: intro.courseId,
+            name: intro.name,
+            
+            // Fill required fields with defaults since they aren't in intro data
+            points: intro.creditPoints.toString(),
+            faculty: 'General',
+            academicLevel: 'Introductory',
+            syllabus: '',
+            prerequisites: '',
+            adjacentCourses: '',
+            noAdditionalCredit: '',
+            responsible: '',
+            notes: 'Introductory Course',
+            exams: {},
+            schedule: [],
+          ),
+        ));
+      }
+    }
+    return matches;
   }
 
   // Fetch the latest available semester from the repository
