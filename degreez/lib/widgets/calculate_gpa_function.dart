@@ -25,7 +25,6 @@ class GpaCalculationItem {
   });
 }
 
-
 class GpaCalculationResult {
   final double gpa;
   final double totalCredits;
@@ -107,6 +106,13 @@ GpaCalculationResult calculateAverage(List<GpaCalculationItem> courses) {
         // Check if the course has a numerical grade
         if (course.finalGrade.isNotEmpty) {
           final grade = double.tryParse(course.finalGrade);
+          final isBinaryGrade = course.finalGrade == 'Pass' || course.finalGrade == 'Fail';
+          
+          if (isBinaryGrade) {
+             debugPrint('DEBUG: Skipping binary grade for ${course.name}: ${course.finalGrade}');
+             continue;
+          }
+
           debugPrint('DEBUG: Parsed grade for ${course.name}: $grade');
 
           if (grade != null && grade >= 0 && grade <= 100) {
@@ -116,13 +122,21 @@ GpaCalculationResult calculateAverage(List<GpaCalculationItem> courses) {
             debugPrint(
               'DEBUG: Adding course ${course.name} with grade $grade and credits $credits',
             );
-            for (final completedCourse in completedCourses.toList())
-            {
-              if(course.name == completedCourse.name)
+            // Check if course already exists and remove the old entry
+            // This ensures we keep only the latest instance (or last encountered)
+            // EXCEPTION: Courses starting with "0394" (Sports courses?) are allowed to be calculated multiple times.
+            if (!course.courseId.startsWith('0394')) {
+              for (final completedCourse in completedCourses.toList())
               {
-                completedCourses.removeWhere((val){return val.name==course.name;});
+                // Matching by ID to ensure correct unique identification of courses
+                if(course.courseId == completedCourse.courseId)
+                {
+                  debugPrint('DEBUG: Found duplicate course ${course.name} (${course.courseId}) and it is not a repeatable course. Keeping the latest one.');
+                  completedCourses.removeWhere((val){return val.courseId==course.courseId;});
+                }
               }
-
+            } else {
+               debugPrint('DEBUG: Course ${course.name} (${course.courseId}) is a repeatable course (starts with 0394). Allowing duplicates.');
             }
 
             completedCourses.add(

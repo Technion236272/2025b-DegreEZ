@@ -51,6 +51,10 @@ class _ProfilePageState extends State<ProfilePage> {
             } else {
               failedCourses++;
             }
+          } else if (course.finalGrade == 'Pass') {
+            passedCourses++;
+          } else if (course.finalGrade == 'Fail') {
+            failedCourses++;
           }
         }
       }

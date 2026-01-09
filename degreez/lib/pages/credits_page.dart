@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 showCreditsPage(context) {
   final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
   var image = themeProvider.isDarkMode 
@@ -22,7 +21,7 @@ showCreditsPage(context) {
               child: image,
             ),
             const SizedBox(width: 10),
-            const Text('DegreEZ v1.0.0'),
+            const Text('DegreEZ v3.0.0'),
           ],
         ),
         content: SingleChildScrollView(
@@ -40,7 +39,6 @@ showCreditsPage(context) {
               ),
               const SizedBox(height: 12),
               
-              
               const Text(
                 '© Ibraheem Akaree',
                 style: TextStyle(
@@ -57,7 +55,7 @@ showCreditsPage(context) {
                   }
                 },
                 child: const Text(
-                  'https://github.com/ibraheemak',
+                  'GitHub',
                   style: TextStyle(
                     color: Colors.blue,
                     decoration: TextDecoration.underline,
@@ -80,7 +78,7 @@ showCreditsPage(context) {
               const Text(
                 '© 𝐑𝐚𝐦𝐳𝐲 𝐀𝐲𝐚𝐧\n',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -91,49 +89,46 @@ showCreditsPage(context) {
                   fontWeight: FontWeight.bold,
                 ),
                 ),
-                const SizedBox(height: 5), // Added spacing to fix layout
-                const Text(
-                '', // Empty string to satisfy the structure without breaking existing code
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 5),
-              GestureDetector(
-                onTap: () async {
-                  final url = Uri.parse('https://www.linkedin.com/in/ramzyAyan');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
-                },
-                child: const Text(
-                  'https://www.linkedin.com/in/ramzyAyan',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
+                const SizedBox(height: 5), 
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final url = Uri.parse('https://www.linkedin.com/in/ramzyAyan');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text(
+                      'LinkedIn',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 5),
-              GestureDetector(
-                onTap: () async {
-                  final url = Uri.parse('https://github.com/RamzyAyan');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
-                },
-                child: const Text(
-                  'https://github.com/RamzyAyan',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
+                  const Text(' | '),
+                  GestureDetector(
+                    onTap: () async {
+                      final url = Uri.parse('https://github.com/RamzyAyan');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text(
+                      'GitHub',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 10),
               
@@ -154,22 +149,45 @@ showCreditsPage(context) {
                 ),
               ),
               const SizedBox(height: 5),
-              GestureDetector(
-                onTap: () async {
-                  final url = Uri.parse('https://github.com/MoamenKassem');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
-                },
-                child: const Text(
-                  'https://github.com/MoamenKassem',
-                  style: TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                    fontSize: 14,
-                    fontStyle: FontStyle.italic,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final url = Uri.parse('https://www.linkedin.com/in/moamen-kassem-213bb2395');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text(
+                      'LinkedIn',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
-                ),
+                  const Text(' | '),
+                  GestureDetector(
+                    onTap: () async {
+                      final url = Uri.parse('https://github.com/MoamenKassem');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text(
+                      'GitHub',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
                             // Divider

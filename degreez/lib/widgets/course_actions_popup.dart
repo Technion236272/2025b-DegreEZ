@@ -39,10 +39,11 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
     _gradeController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: themeProvider.mainColor,
@@ -62,7 +63,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [                        Text(
+                      children: [
+                        Text(
                           widget.course.courseId,
                           style: TextStyle(
                             fontSize: 16,
@@ -81,7 +83,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                         ),
                       ],
                     ),
-                  ),                  IconButton(
+                  ),
+                  IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: Icon(
                       Icons.close,
@@ -91,7 +94,9 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                 ],
               ),
 
-              const SizedBox(height: 20),              // Grade Input
+              const SizedBox(height: 20),
+
+              // Grade Input
               Text(
                 'Grade',
                 style: TextStyle(
@@ -101,37 +106,50 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _gradeController,
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: themeProvider.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Enter grade (0-100)',
-                  hintStyle: TextStyle(
-                    color: themeProvider.textSecondary,
-                  ),
-                  filled: true,
-                  fillColor: themeProvider.surfaceColor,
-                  border: OutlineInputBorder(
+
+              // Toggle between Numeric Grade and Pass/Fail
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: _buildGradeInput(themeProvider)),
+                  const SizedBox(width: 12),
+                  // Pass/Fail Toggle Button
+                  InkWell(
+                    onTap: () {
+                      if (_gradeController.text == 'Pass') {
+                        _gradeController.text = '';
+                      } else if (_gradeController.text == 'Fail') {
+                        _gradeController.text = '';
+                      } else {
+                        // If it's a number or empty, switch to Pass
+                        _gradeController.text = 'Pass';
+                      }
+                      setState(() {});
+                    },
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: themeProvider.borderPrimary,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: themeProvider.surfaceColor,
+                        border: Border.all(color: themeProvider.borderPrimary),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _isPassFail(_gradeController.text)
+                            ? 'Switch to 0-100'
+                            : 'Switch to Pass/Fail',
+                        style: TextStyle(
+                          color: themeProvider.secondaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: themeProvider.borderPrimary,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(
-                      color: themeProvider.secondaryColor,
-                      width: 2,
-                    ),
-                  ),
-                ),
+                ],
               ),
 
               const SizedBox(height: 20),
@@ -144,27 +162,27 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                   children: [
                     // Save Grade Button
                     SizedBox(
-                      width: double.infinity,                      
+                      width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _saveGrade,
                         icon: Icon(
                           Icons.save,
-                          color: themeProvider.isDarkMode 
-                            ? themeProvider.accentColor 
-                            : themeProvider.surfaceColor,
+                          color: themeProvider.isDarkMode
+                              ? themeProvider.accentColor
+                              : themeProvider.surfaceColor,
                         ),
                         label: Text(
                           'Save Grade',
                           style: TextStyle(
-                            color: themeProvider.isDarkMode 
-                              ? themeProvider.accentColor 
-                              : themeProvider.surfaceColor,
+                            color: themeProvider.isDarkMode
+                                ? themeProvider.accentColor
+                                : themeProvider.surfaceColor,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: themeProvider.isDarkMode 
-                            ? themeProvider.secondaryColor 
-                            : themeProvider.primaryColor,
+                          backgroundColor: themeProvider.isDarkMode
+                              ? themeProvider.secondaryColor
+                              : themeProvider.primaryColor,
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -190,7 +208,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                           if (result) {
                             widget.onCourseUpdated?.call(); // trigger refresh
                           }
-                        },                        icon: Icon(
+                        },
+                        icon: Icon(
                           Icons.note,
                           color: themeProvider.secondaryColor,
                         ),
@@ -199,7 +218,8 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                           style: TextStyle(
                             color: themeProvider.secondaryColor,
                           ),
-                        ),                        style: OutlinedButton.styleFrom(
+                        ),
+                        style: OutlinedButton.styleFrom(
                           side: BorderSide(
                             color: themeProvider.secondaryColor,
                           ),
@@ -242,25 +262,26 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: _confirmDeleteCourse,                        icon: Icon(
+                        onPressed: _confirmDeleteCourse,
+                        icon: Icon(
                           Icons.delete,
-                          color: themeProvider.isDarkMode 
-                            ? AppColorsDarkMode.errorColor 
-                            : AppColorsLightMode.errorColor,
+                          color: themeProvider.isDarkMode
+                              ? AppColorsDarkMode.errorColor
+                              : AppColorsLightMode.errorColor,
                         ),
                         label: Text(
                           'Delete Course',
                           style: TextStyle(
-                            color: themeProvider.isDarkMode 
-                              ? AppColorsDarkMode.errorColor 
-                              : AppColorsLightMode.errorColor,
+                            color: themeProvider.isDarkMode
+                                ? AppColorsDarkMode.errorColor
+                                : AppColorsLightMode.errorColor,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: themeProvider.isDarkMode 
-                              ? AppColorsDarkMode.errorColor 
-                              : AppColorsLightMode.errorColor,
+                            color: themeProvider.isDarkMode
+                                ? AppColorsDarkMode.errorColor
+                                : AppColorsLightMode.errorColor,
                           ),
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -277,21 +298,143 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
       ),
     );
   }
+
+  bool _isPassFail(String value) {
+    return value == 'Pass' || value == 'Fail';
+  }
+
+  Widget _buildGradeInput(ThemeProvider themeProvider) {
+    if (_isPassFail(_gradeController.text)) {
+      return Container(
+        height: 60, // Match typical input height
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: themeProvider.surfaceColor,
+          border: Border.all(color: themeProvider.borderPrimary),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _gradeController.text,
+            isExpanded: true,
+            dropdownColor: themeProvider.surfaceColor,
+            icon: Icon(Icons.arrow_drop_down, color: themeProvider.textSecondary),
+            items: ['Pass', 'Fail'].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(
+                  value,
+                  style: TextStyle(color: themeProvider.textPrimary),
+                ),
+              );
+            }).toList(),
+            onChanged: (newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _gradeController.text = newValue;
+                });
+              }
+            },
+          ),
+        ),
+      );
+    }
+
+    return TextField(
+      controller: _gradeController,
+      keyboardType: TextInputType.number,
+      style: TextStyle(color: themeProvider.textPrimary),
+      decoration: InputDecoration(
+        hintText: 'Enter grade (0-100)',
+        hintStyle: TextStyle(
+          color: themeProvider.textSecondary,
+        ),
+        filled: true,
+        fillColor: themeProvider.surfaceColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: themeProvider.borderPrimary,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: themeProvider.borderPrimary,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(
+            color: themeProvider.secondaryColor,
+            width: 2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveGrade() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final grade = _gradeController.text.trim();
+
+      // Validate grade
+      if (grade.isNotEmpty && !_isPassFail(grade)) {
+        final gradeValue = double.tryParse(grade);
+        if (gradeValue == null || gradeValue < 0 || gradeValue > 100) {
+          _showErrorSnackBar('Please enter a valid grade (0-100)');
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      final studentId = context.read<StudentProvider>().student!.id;
+      final success = await context.read<CourseProvider>().updateCourseGrade(
+            studentId,
+            widget.semester,
+            widget.course.courseId,
+            grade,
+          );
+
+      if (!mounted) return;
+
+      if (success) {
+        widget.onCourseUpdated?.call();
+        Navigator.of(context).pop();
+        _showSuccessSnackBar('Grade updated successfully');
+      } else {
+        _showErrorSnackBar('Failed to update grade');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorSnackBar('Error updating grade: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   void _showMoveToSemesterDialog() {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
-    
+
     // Get all available semesters except the current one
     final allSemesters = courseProvider.coursesBySemester.keys.toList();
-    final availableSemesters = allSemesters.where((s) => s != widget.semester).toList();
-    
+    final availableSemesters =
+        allSemesters.where((s) => s != widget.semester).toList();
+
     if (availableSemesters.isEmpty) {
-      _showErrorSnackBar('No other semesters available. Please create a new semester first.');
+      _showErrorSnackBar(
+          'No other semesters available. Please create a new semester first.');
       return;
     }
-    
+
     String? selectedSemester;
-    
+
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -381,11 +524,11 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
     try {
       final studentId = context.read<StudentProvider>().student!.id;
       final success = await context.read<CourseProvider>().moveCourseToSemester(
-        studentId,
-        widget.semester,
-        targetSemester,
-        widget.course.courseId,
-      );
+            studentId,
+            widget.semester,
+            targetSemester,
+            widget.course.courseId,
+          );
 
       if (!mounted) return;
 
@@ -407,65 +550,13 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
     }
   }
 
-  Future<void> _saveGrade() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final grade = _gradeController.text.trim();
-
-      // Validate grade
-      if (grade.isNotEmpty) {
-        final gradeValue = double.tryParse(grade);
-        if (gradeValue == null || gradeValue < 0 || gradeValue > 100) {
-          _showErrorSnackBar('Please enter a valid grade (0-100)');
-          setState(() => _isLoading = false);
-          return;
-        }
-      }
-
-      final studentId = context.read<StudentProvider>().student!.id;
-      final success = await context.read<CourseProvider>().updateCourseGrade(
-        studentId,
-        widget.semester,
-        widget.course.courseId,
-        grade,
-      );
-
-      if (!mounted) return;
-
-      if (success) {
-        widget.onCourseUpdated?.call();
-        Navigator.of(context).pop();
-        _showSuccessSnackBar('Grade updated successfully');
-      } else {
-        _showErrorSnackBar('Failed to update grade');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        _showErrorSnackBar('Error updating grade: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
   void _confirmDeleteCourse() {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: themeProvider.mainColor,
-        // shape: RoundedRectangleBorder(
-        //   borderRadius: BorderRadius.circular(12),
-        //   side: BorderSide(
-        //     color: themeProvider.isDarkMode 
-        //       ? AppColorsDarkMode.errorColor 
-        //       : AppColorsLightMode.errorColor, 
-        //     width: 2,
-        //   ),
-        // ),
         title: Text(
           'Delete Course',
           style: TextStyle(color: themeProvider.textPrimary),
@@ -484,9 +575,9 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
           ),
           TextButton(
             style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               Navigator.of(ctx).pop(); // Close confirmation dialog
               await _deleteCourse();
@@ -535,15 +626,16 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
       }
     }
   }
+
   void _showSuccessSnackBar(String message) {
     if (context.mounted) {
       final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: themeProvider.isDarkMode 
-            ? AppColorsDarkMode.successColor 
-            : AppColorsLightMode.successColor,
+          backgroundColor: themeProvider.isDarkMode
+              ? AppColorsDarkMode.successColor
+              : AppColorsLightMode.successColor,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -556,9 +648,9 @@ class _CourseActionsPopupState extends State<CourseActionsPopup> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: themeProvider.isDarkMode 
-            ? AppColorsDarkMode.errorColor 
-            : AppColorsLightMode.errorColor,
+          backgroundColor: themeProvider.isDarkMode
+              ? AppColorsDarkMode.errorColor
+              : AppColorsLightMode.errorColor,
           behavior: SnackBarBehavior.floating,
         ),
       );

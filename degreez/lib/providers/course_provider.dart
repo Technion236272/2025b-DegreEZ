@@ -343,6 +343,9 @@ class CourseProvider with ChangeNotifier {
       return false;
     } finally {
       // Remove loading state for this course
+      final newUpdatingGrades = Map<String, bool>.from(
+        _loadingState.updatingGrades,
+      );
       newUpdatingGrades.remove(courseId);
       _setLoadingState(
         _loadingState.copyWith(updatingGrades: newUpdatingGrades),
