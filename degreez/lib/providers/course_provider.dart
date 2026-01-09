@@ -1401,6 +1401,17 @@ class CourseProvider with ChangeNotifier {
             continue;
           }
 
+          // Special handling for introductory courses - they often have 0 points, which is correct
+          // We shouldn't try to fetch data for them or "update" them if they are already 0
+          // However, the original logic updated regardless. Let's keep it safe:
+          if (IntroductoryCourses.isIntroductoryCourse(course.courseId)) {
+             final introData = IntroductoryCourses.getIntroductoryCourseData(course.courseId);
+             if (introData != null && introData.creditPoints == 0.0) {
+               debugPrint('✅ Introductory course ${course.courseId} correctly has 0 points. Skipping migration.');
+               continue;
+             }
+          }
+
           debugPrint(
             '🔍 Migrating credit points for course: ${course.courseId}',
           );
@@ -1420,6 +1431,8 @@ class CourseProvider with ChangeNotifier {
                 '📚 Found credit points for ${course.courseId}: $creditPoints',
               );
             } else {
+              // Only overwrite if we found valid points. If API returns 0 or fails, keep existing (which is 0)
+              // But if we are here, we know existing is <= 0 from the check above.
               debugPrint(
                 '⚠️ No credit points found for ${course.courseId}, using default: $creditPoints',
               );
@@ -1428,6 +1441,12 @@ class CourseProvider with ChangeNotifier {
             debugPrint(
               '❌ Error fetching credit points for ${course.courseId}: $e',
             );
+          }
+          
+          // If we still have 0 points, and it's not an intro course (checked above), maybe we shouldn't update?
+          // However, the original logic updated regardless. Let's keep it safe:
+          if (creditPoints == 0.0) {
+             continue; // Don't write 0 back if we didn't find anything new.
           }
 
           // Update course with credit points
