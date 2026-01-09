@@ -11,7 +11,7 @@ class StudentModel {
   final String catalog; // selecting the catalog for the student
   final String university; // university field
   final String themeMode; // 'light', 'dark', or 'system' for theme preference
-  
+  final bool hasSeenTutorial;
 
   StudentModel({
     required this.id,
@@ -23,6 +23,7 @@ class StudentModel {
     required this.catalog,
     required this.university,
     this.themeMode = 'dark', // Default to dark mode for existing users
+    this.hasSeenTutorial = false,
   });
   // Factory constructor to create a StudentModel from Firestore data
   factory StudentModel.fromFirestore(
@@ -41,6 +42,7 @@ class StudentModel {
       catalog: data['Catalog'] ?? '',
       university: data['University'] ?? 'Technion', // Default to Technion
       themeMode: data['ThemeMode'] ?? 'dark', // Default to dark mode
+      hasSeenTutorial: data['hasSeenTutorial'] ?? false,
     );
   }
   // Method to convert the StudentModel to a Map for Firestore
@@ -55,6 +57,7 @@ class StudentModel {
       'Catalog': catalog,
       'University': university,
       'ThemeMode': themeMode,
+      'hasSeenTutorial': hasSeenTutorial,
     };
   }
   StudentModel copyWith({
@@ -66,6 +69,7 @@ class StudentModel {
     String? semester,
     String? university,
     String? themeMode,
+    bool? hasSeenTutorial,
   }) {
     return StudentModel(
       id: id,
@@ -77,6 +81,7 @@ class StudentModel {
       catalog: catalog ?? this.catalog,
       university: university ?? this.university,
       themeMode: themeMode ?? this.themeMode,
+      hasSeenTutorial: hasSeenTutorial ?? this.hasSeenTutorial,
     );
   }
 }

@@ -21,6 +21,7 @@ import 'package:degreez/widgets/text_form_field_with_style.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/calculate_gpa_function.dart';
+import 'package:degreez/widgets/tutorial_popup.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -215,6 +216,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         );
       },
+    );
+  }
+
+  // New method to trigger tutorial replay
+  void _showTutorial(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const TutorialPopup(),
     );
   }
 
@@ -538,6 +547,20 @@ class _ProfilePageState extends State<ProfilePage> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.help_outline_rounded, color: themeProvider.primaryColor),
+            ),
+            title: const Text('Show Tutorial'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showTutorial(context),
+          ),
+          Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
                 color: themeProvider.accentColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
@@ -591,6 +614,20 @@ class _ProfilePageState extends State<ProfilePage> {
               context: context,
               builder: (context) => const DeleteUserButton(),
             ),
+          ),
+          Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: themeProvider.accentColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.play_circle_fill, color: themeProvider.accentColor),
+            ),
+            title: const Text('Show Tutorial'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showTutorial(context),
           ),
         ],
       ),

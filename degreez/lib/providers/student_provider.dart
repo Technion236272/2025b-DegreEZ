@@ -51,6 +51,35 @@ class StudentProvider with ChangeNotifier {
     }
   }
 
+  // Update hasSeenTutorial status
+  Future<void> updateHasSeenTutorial(String userId, bool hasSeen) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('Students')
+          .doc(userId)
+          .update({'hasSeenTutorial': hasSeen});
+      
+      // Update local model
+      if (_student != null) {
+        _student = StudentModel(
+          id: _student!.id,
+          name: _student!.name,
+          major: _student!.major,
+          faculty: _student!.faculty,
+          preferences: _student!.preferences,
+          semester: _student!.semester,
+          catalog: _student!.catalog,
+          university: _student!.university,
+          themeMode: _student!.themeMode,
+          hasSeenTutorial: hasSeen,
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error updating tutorial status: $e');
+    }
+  }
+
   // Create student with optimistic update
   Future<bool> createStudent(StudentModel student) async {
     // Optimistic update

@@ -20,6 +20,7 @@ import '../services/global_config_service.dart';
 import 'package:degreez/pages/course_map_page.dart';
 import 'customized_diagram_page.dart';
 import 'prerequisite_chain_page.dart';
+import '../widgets/tutorial_popup.dart';
 
 class NavigatorPage extends StatefulWidget {
   const NavigatorPage({super.key});
@@ -46,8 +47,45 @@ class _NavigatorPageState extends State<NavigatorPage> with AiImportMixin {
         _hasInitializedData = true;
         _loadStudentDataIfNeeded();
         _initializeSemesters(); // Add semester initialization
+        _checkAndShowTutorial(); // Check if tutorial should be shown
       }
     });
+  }
+
+  /// Check if this is the first time launch and show tutorial
+  Future<void> _checkAndShowTutorial() async {
+    final loginNotifier = context.read<LogInNotifier>();
+    final studentProvider = context.read<StudentProvider>();
+    final user = loginNotifier.user;
+    
+    // If no user is logged in, we can't track per-user, so fallback to global or skip
+    if (user == null) return;
+
+    // Check local storage first (faster)
+    final prefs = await SharedPreferences.getInstance();
+    final storageKey = 'has_seen_tutorial_${user.uid}';
+    bool hasSeenTutorial = prefs.getBool(storageKey) ?? false;
+
+    // If local storage says false, check Firestore (in case user saw it on another device)
+    if (!hasSeenTutorial && studentProvider.hasStudent) {
+      if (studentProvider.student!.hasSeenTutorial) {
+        hasSeenTutorial = true;
+        // Sync local storage
+        await prefs.setBool(storageKey, true);
+      }
+    }
+
+    if (!hasSeenTutorial && mounted) {
+      // Delay slightly to ensure UI is ready
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false, // User must interact with tutorial
+          builder: (context) => const TutorialPopup(),
+        );
+      }
+    }
   }
 
   /// Initialize semester selection (moved from CalendarPage)
