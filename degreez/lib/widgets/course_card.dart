@@ -168,7 +168,7 @@ class _CourseCardState extends State<CourseCard> {
                           // Grade Badge
                           if (hasGrade) ...[
                             Flexible(
-                              flex: 1,
+                              flex: 2,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -200,26 +200,6 @@ class _CourseCardState extends State<CourseCard> {
                             ),
                             const SizedBox(height: 4),
                           ],
-
-                          // Credits
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: themeProvider.mainColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '${widget.course.creditPoints} pts',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: themeProvider.textTertiary,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -248,6 +228,30 @@ class _CourseCardState extends State<CourseCard> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+
+                    // Credits (Top Right)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: themeProvider.mainColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${widget.course.creditPoints} pts',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: themeProvider.textTertiary,
+                          ),
+                        ),
                       ),
                     ),
                   ],
