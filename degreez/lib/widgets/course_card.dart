@@ -146,6 +146,7 @@ class _CourseCardState extends State<CourseCard> {
                         children: [
                           // Course Name
                           Expanded(
+                            flex: 4,
                             child: Center(
                               child: AutoSizeText(
                                 widget.course.name,
@@ -166,25 +167,34 @@ class _CourseCardState extends State<CourseCard> {
 
                           // Grade Badge
                           if (hasGrade) ...[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: themeProvider.secondaryColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: themeProvider.secondaryColor.withOpacity(0.3),
-                                  width: 0.5,
+                            Flexible(
+                              flex: 1,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
                                 ),
-                              ),
-                              child: Text(
-                                widget.course.finalGrade,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: themeProvider.secondaryColor,
+                                decoration: BoxDecoration(
+                                  color: themeProvider.secondaryColor.withOpacity(
+                                    0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: themeProvider.secondaryColor
+                                        .withOpacity(0.3),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    widget.course.finalGrade,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: themeProvider.secondaryColor,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -340,12 +350,18 @@ class _CourseCardState extends State<CourseCard> {
                 ),
               ),
               if (hasGrade)
-                Text(
-                  course.finalGrade,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _getGradeColor(course.finalGrade),
-                    fontWeight: FontWeight.bold,
+                Flexible(
+                  flex: 1,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      course.finalGrade,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _getGradeColor(course.finalGrade),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
             ],
