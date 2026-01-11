@@ -218,6 +218,52 @@ NOTE: Dont overuse the AI, we might run out of budget  :)
 
                     const SizedBox(height: 24),
 
+                    // Preferences Display
+                    Consumer<StudentProvider>(
+                      builder: (context, studentProvider, child) {
+                        final student = studentProvider.student;
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.psychology,
+                                      color:
+                                          context
+                                              .read<ThemeProvider>()
+                                              .primaryColor,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Current Preferences',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  student?.preferences.isNotEmpty == true
+                                      ? student!.preferences
+                                      : 'No preferences set. Go to Profile to add them.',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // Fast Mode Toggle
                     Card(
                       child: Padding(

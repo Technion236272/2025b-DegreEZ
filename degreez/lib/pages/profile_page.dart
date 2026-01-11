@@ -435,10 +435,63 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   const SizedBox(height: 24),
 
+                  _buildPreferencesCard(context, student),
+
+                  const SizedBox(height: 24),
+
                   // Settings Section
                   _buildSettingsSection(context, themeProvider),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferencesCard(BuildContext context, StudentModel student) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.psychology, color: themeProvider.primaryColor),
+              const SizedBox(width: 12),
+              Text(
+                'My Preferences',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            student.preferences.isEmpty
+                ? 'No preferences set. Tap edit to add some!'
+                : student.preferences,
+            style: TextStyle(
+              fontSize: 14,
+              color: themeProvider.textSecondary,
+              height: 1.5,
             ),
           ),
         ],
