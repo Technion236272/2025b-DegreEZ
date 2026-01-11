@@ -49,28 +49,7 @@ class AiImportDialogs {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: themeProvider.primaryColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: themeProvider.primaryColor,
-                      ),
-                      const SizedBox(width: 8),
-                      
-                    ],
-                  ),
-                ),
+                
                 const SizedBox(height: 16),
                 Text(
                   'Example Grade Sheet:',

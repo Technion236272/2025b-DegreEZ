@@ -202,7 +202,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                               child: AutoSizeText(
                                 'Upload Grade Sheet to automatically add courses \n - PDF import now works on web! \n - MAKE SURE TO IMPORT ENGLISH VERSION \n ALSO, IF YOU ATTACH THE FILE THEN THE AGENT WILL START AND IT WILL TAKE TIME, be patient :)',
                                 style: TextStyle(
-                                  color: themeProvider.primaryColor,
+                                  color: themeProvider.mainColor, // Using mainColor which adapts to theme
                                 ),
                                 textAlign: TextAlign.center,
                                 maxLines: 2,

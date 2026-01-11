@@ -54,12 +54,12 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
         automaticallyImplyLeading: false,
         title: Container(
           decoration: BoxDecoration(
-            color: themeProvider.isDarkMode ? Colors.black26 : Colors.grey.shade200,
+            color: themeProvider.surfaceColor,
             borderRadius: BorderRadius.circular(25),
           ),
           child: TabBar(
             controller: _tabController,
-            labelColor: themeProvider.isDarkMode ? Colors.white : Colors.black,
+            labelColor: themeProvider.textPrimary,
             unselectedLabelColor: themeProvider.textSecondary,
             indicator: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
@@ -209,7 +209,7 @@ class _CourseRecommendationPageState extends State<CourseRecommendationPage>
 NOTE: Dont overuse the AI, we might run out of budget  :)
 ''',
                               style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.black),
+                                  ?.copyWith(color: context.read<ThemeProvider>().textPrimary),
                             ),
                           ],
                         ),
