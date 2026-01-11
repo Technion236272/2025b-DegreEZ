@@ -620,19 +620,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
-          ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: themeProvider.accentColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.play_circle_fill, color: themeProvider.accentColor),
-            ),
-            title: const Text('Show Tutorial'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showTutorial(context),
-          ),
+          
         ],
       ),
     );

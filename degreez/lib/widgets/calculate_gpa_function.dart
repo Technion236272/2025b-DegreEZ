@@ -69,7 +69,8 @@ GpaCalculationResult calculateAverage(List<GpaCalculationItem> courses) {
     );
 
     // Round up to 1 decimal place (e.g., 87.61 -> 87.7, 86.63 -> 86.7)
-    final roundedGpa = (gpa * 10).ceilToDouble() / 10;
+    // final roundedGpa = (gpa * 10).ceilToDouble() / 10;
+    final roundedGpa = gpa;
 
     return GpaCalculationResult(gpa: roundedGpa, totalCredits: totalCredits);
   }

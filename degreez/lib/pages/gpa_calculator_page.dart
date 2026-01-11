@@ -58,6 +58,8 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
   final Set<String> _excludedCourseIds = <String>{};
   final Map<String, ModifiedCourse> _modifiedCourses =
       <String, ModifiedCourse>{};
+  
+  bool _areAllSemestersExpanded = false;
 
   @override
   void initState() {
@@ -481,146 +483,169 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     double totalCompletedCredits,
     double totalProjectedCredits,
   ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [themeProvider.mainColor, themeProvider.cardColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xAA000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Current Average',
-                  style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  currentAverage.toStringAsFixed(1),
-                  style: TextStyle(
-                    color: _getGradeColor(currentAverage),
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _getGradeLabel(currentAverage),
-                  style: TextStyle(
-                    color: _getGradeColor(currentAverage),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$completedCoursesCount courses',
-                  style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                Text(
-                  '${totalCompletedCredits.toStringAsFixed(1)} credits',
-                  style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
+        ],
+        border: Border.all(
+          color: themeProvider.borderPrimary.withOpacity(0.5),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [themeProvider.mainColor, themeProvider.cardColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Current GPA',
+                      style: TextStyle(
+                        color: themeProvider.textSecondary,
+                        fontSize: 14,
+                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      currentAverage.toStringAsFixed(2),
+                      style: TextStyle(
+                        color: _getGradeColor(currentAverage),
+                        fontSize: 48,
+                        height: 1,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getGradeColor(currentAverage).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _getGradeColor(currentAverage).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        _getGradeLabel(currentAverage).toUpperCase(),
+                        style: TextStyle(
+                          color: _getGradeColor(currentAverage),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.school, size: 16, color: themeProvider.textSecondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$completedCoursesCount Courses',
+                           style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                         Container(width: 1, height: 12, color: themeProvider.borderPrimary),
+                        const SizedBox(width: 8),
+                         Icon(Icons.access_time_filled, size: 16, color: themeProvider.textSecondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${totalCompletedCredits.toStringAsFixed(1)} Credits',
+                           style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xAA000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 2),
+              if (_whatIfCourses.isNotEmpty) ...[
+                Container(width: 1, height: 140, color: themeProvider.borderPrimary),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Projected',
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
+                          fontSize: 14,
+                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                       const SizedBox(height: 12),
+                      Text(
+                        projectedAverage.toStringAsFixed(2),
+                        style: TextStyle(
+                          color: _getGradeColor(projectedAverage),
+                          fontSize: 48,
+                          height: 1,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                       const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getGradeColor(projectedAverage).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _getGradeColor(projectedAverage).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Text(
+                          _getGradeLabel(projectedAverage).toUpperCase(),
+                          style: TextStyle(
+                            color: _getGradeColor(projectedAverage),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                             letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '+${_whatIfCourses.length} What-If',
+                        style: TextStyle(
+                          color: themeProvider.primaryColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                         'Total: ${totalProjectedCredits.toStringAsFixed(1)} Credits',
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Projected Average',
-                  style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  projectedAverage.toStringAsFixed(1),
-                  style: TextStyle(
-                    color:
-                        _whatIfCourses.isNotEmpty
-                            ? _getGradeColor(projectedAverage)
-                            : _getGradeColor(currentAverage),
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _getGradeLabel(projectedAverage),
-                  style: TextStyle(
-                    color:
-                        _whatIfCourses.isNotEmpty
-                            ? _getGradeColor(projectedAverage)
-                            : _getGradeColor(currentAverage),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${completedCoursesCount + _whatIfCourses.length} courses',
-                  style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                Text(
-                  '${totalProjectedCredits.toStringAsFixed(1)} credits',
-                  style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -629,107 +654,120 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     List<GpaCalculationItem> completedCourses,
     List<WhatIfCourse> whatIfCourses,
   ) {
+    if (completedCourses.isEmpty) return const SizedBox.shrink();
+
     // Calculate grade distribution by ranges
     final gradeRanges = <String, int>{
-      '90-100': 0,
+      '90+': 0,
       '80-89': 0,
       '70-79': 0,
       '60-69': 0,
-      '0-59': 0,
+      '<60': 0,
     };
 
+    int maxCount = 0;
     for (final course in completedCourses) {
+      String key;
       if (course.grade >= 90) {
-        gradeRanges['90-100'] = gradeRanges['90-100']! + 1;
+        key = '90+';
       } else if (course.grade >= 80) {
-        gradeRanges['80-89'] = gradeRanges['80-89']! + 1;
+        key = '80-89';
       } else if (course.grade >= 70) {
-        gradeRanges['70-79'] = gradeRanges['70-79']! + 1;
+        key = '70-79';
       } else if (course.grade >= 60) {
-        gradeRanges['60-69'] = gradeRanges['60-69']! + 1;
+        key = '60-69';
       } else {
-        gradeRanges['0-59'] = gradeRanges['0-59']! + 1;
+        key = '<60';
       }
+      
+      gradeRanges[key] = (gradeRanges[key] ?? 0) + 1;
+      if (gradeRanges[key]! > maxCount) maxCount = gradeRanges[key]!;
     }
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [themeProvider.mainColor, themeProvider.cardColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(24),
+         border: Border.all(
+          color: themeProvider.borderPrimary.withOpacity(0.5),
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xAA000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Grade Distribution',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          if (completedCourses.isEmpty)
-            Text(
-              'No completed courses with grades',
-              style: TextStyle(
-                color: themeProvider.textSecondary,
-                fontSize: 14,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Grade Distribution',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: themeProvider.textPrimary),
               ),
-            )
-          else
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  gradeRanges.entries.where((entry) => entry.value > 0).map((
-                    entry,
-                  ) {
-                    Color rangeColor;
-                    if (entry.key == '90-100' || entry.key == '80-89') {
-                      rangeColor = themeProvider.successColor;
-                    } // Green for 80+
-                    else if (entry.key == '70-79') {
-                      rangeColor = themeProvider.primaryColor;
-                    } // Blue for 70-79
-                    else if (entry.key == '60-69') {
-                      rangeColor = themeProvider.warningColor;
-                    } // Orange for 60-69
-                    else {
-                      rangeColor = themeProvider.errorColor;
-                    } // Red for below 60
+              Icon(Icons.bar_chart, color: themeProvider.textSecondary, size: 20),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 140, // Increased height to prevent overflow
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: gradeRanges.entries.map((entry) {
+                final count = entry.value;
+                final percentage = maxCount > 0 ? count / maxCount : 0.0;
+                
+                Color rangeColor;
+                if (entry.key == '90+' || entry.key == '80-89') {
+                  rangeColor = themeProvider.successColor;
+                } else if (entry.key == '70-79') {
+                  rangeColor = themeProvider.primaryColor;
+                } else if (entry.key == '60-69') {
+                  rangeColor = themeProvider.warningColor;
+                } else {
+                  rangeColor = themeProvider.errorColor;
+                }
 
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: rangeColor.withAlpha(25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: rangeColor.withAlpha(75),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        '${entry.key}: ${entry.value}',
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (count > 0)
+                      Text(
+                        count.toString(),
                         style: TextStyle(
                           color: rangeColor,
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  }).toList(),
+                    const SizedBox(height: 4),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: percentage),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Container(
+                          width: 12,
+                          height: 80 * value + (count > 0 ? 4 : 2), // Min height
+                          decoration: BoxDecoration(
+                            color: count > 0 ? rangeColor : themeProvider.borderPrimary.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        );
+                      }
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      entry.key,
+                      style: TextStyle(
+                        color: themeProvider.textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
+          ),
         ],
       ),
     );
@@ -757,7 +795,7 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Tap to exclude • Long press to modify • Click refresh icon to reset individual course',
+                    'Tap to exclude • Long press to modify',
                     style: TextStyle(
                       color: themeProvider.textSecondary,
                       fontSize: 12,
@@ -767,6 +805,47 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ],
               ),
             ),
+            GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _areAllSemestersExpanded = !_areAllSemestersExpanded;
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: themeProvider.textSecondary.withAlpha(51),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: themeProvider.textSecondary.withAlpha(128),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _areAllSemestersExpanded ? Icons.unfold_less : Icons.unfold_more,
+                        size: 14,
+                        color: themeProvider.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _areAllSemestersExpanded ? 'Collapse All' : 'Expand All',
+                        style: TextStyle(
+                          color: themeProvider.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (hasModifications)
               GestureDetector(
                 onTap: _resetAllModifications,
@@ -843,21 +922,14 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         if (completedCourses.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [themeProvider.mainColor, themeProvider.cardColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: themeProvider.cardColor.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: themeProvider.borderPrimary.withOpacity(0.5),
+                style: BorderStyle.solid,
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xAA000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 2),
-                ),
-              ],
             ),
             child: Column(
               children: [
@@ -923,100 +995,76 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
       0.0,
       (sum, course) => sum + course.credits,
     );
+    
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [themeProvider.mainColor, themeProvider.cardColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: themeProvider.borderPrimary.withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: Color(0xAA000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: themeProvider.accentColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: Key('$semesterKey-$_areAllSemestersExpanded'), // Force rebuild when toggle changes
+          backgroundColor: themeProvider.cardColor,
+          collapsedBackgroundColor: themeProvider.cardColor,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          initiallyExpanded: _areAllSemestersExpanded,
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  semesterKey,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              if (activeCourses.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getGradeColor(semesterAverage).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _getGradeColor(semesterAverage).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    semesterAverage.toStringAsFixed(2),
+                     style: TextStyle(
+                      color: _getGradeColor(semesterAverage),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              activeCredits != totalCredits 
+                  ? '${activeCredits.toStringAsFixed(1)} / ${totalCredits.toStringAsFixed(1)} credits • ${courses.length - activeCourses.length} excluded'
+                  : '${totalCredits.toStringAsFixed(1)} credits',
+               style: TextStyle(
+                color: themeProvider.textSecondary,
+                fontSize: 12,
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    semesterKey,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                if (activeCourses.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: themeProvider.textSecondary.withAlpha(51),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: themeProvider.textSecondary.withAlpha(76),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      '${semesterAverage.toStringAsFixed(1)} avg',
-                      style: TextStyle(
-                        color: _getGradeColor(semesterAverage),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (activeCredits != totalCredits) ...[
-                      Text(
-                        '${activeCredits.toStringAsFixed(1)} / ${totalCredits.toStringAsFixed(1)} credits',
-                        style: TextStyle(
-                          color: themeProvider.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        '${courses.length - activeCourses.length} excluded',
-                        style: TextStyle(
-                          color: themeProvider.errorColor,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ] else
-                      Text(
-                        '${totalCredits.toStringAsFixed(1)} credits',
-                        style: TextStyle(
-                          color: themeProvider.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
           ),
-          ...courses.map((course) => _buildCourseCard(themeProvider, course)),
-        ],
+          children: courses.map((course) => _buildCourseCard(themeProvider, course)).toList(),
+        ),
       ),
     );
   }
@@ -1058,41 +1106,35 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
         if (_whatIfCourses.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [themeProvider.mainColor, themeProvider.cardColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: themeProvider.cardColor.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: themeProvider.borderPrimary.withOpacity(0.5),
+                style: BorderStyle.solid,
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0xAA000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 2),
-                ),
-              ],
             ),
             child: Column(
               children: [
                 Icon(
-                  Icons.psychology_outlined,
+                  Icons.auto_graph_outlined,
                   size: 48,
-                  color: themeProvider.textSecondary,
+                  color: themeProvider.primaryColor.withOpacity(0.5),
                 ),
                 SizedBox(height: 12),
                 Text(
-                  'No what-if courses added',
-                  style: TextStyle(fontSize: 16),
+                  'Explore "What-If" Scenarios',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: themeProvider.textPrimary),
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Use the form below to explore scenarios',
+                  'Add courses below to see potential GPA impact',
                   style: TextStyle(
                     color: themeProvider.textSecondary,
                     fontSize: 14,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -1114,44 +1156,46 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     final isExcluded = _excludedCourseIds.contains(course.courseId);
     final isModified = _modifiedCourses.containsKey(course.courseId);
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => _toggleCourseExclusion(course.courseId),
       onLongPress: () => _showModifyGradeDialog(course),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
+          color: isExcluded 
+              ? themeProvider.mainColor.withOpacity(0.5) 
+              : Colors.transparent,
           border: Border(
-            bottom: BorderSide(color: themeProvider.borderPrimary, width: 0.5),
+            top: BorderSide(color: themeProvider.borderPrimary.withOpacity(0.3), width: 1),
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: _getGradeColor(course.grade).withAlpha(25),
-                borderRadius: BorderRadius.circular(8),
+                color: _getGradeColor(course.grade).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _getGradeColor(course.grade),
-                  width: 1,
+                  color: _getGradeColor(course.grade).withOpacity(isExcluded ? 0.3 : 0.8),
+                  width: 1.5,
                 ),
               ),
               child: Center(
                 child: Text(
                   course.grade.toStringAsFixed(0),
                   style: TextStyle(
-                    color: _getGradeColor(course.grade),
-                    fontSize: 14,
+                    color: _getGradeColor(course.grade).withOpacity(isExcluded ? 0.5 : 1.0),
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     decoration: isExcluded ? TextDecoration.lineThrough : null,
                     decorationColor: themeProvider.errorColor,
-                    decorationThickness: 2,
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1159,46 +1203,39 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                   Text(
                     course.name,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      decoration:
-                          isExcluded ? TextDecoration.lineThrough : null,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isExcluded ? themeProvider.textSecondary : themeProvider.textPrimary,
+                      decoration: isExcluded ? TextDecoration.lineThrough : null,
                       decorationColor: themeProvider.errorColor,
-                      decorationThickness: 2,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(
-                        '${course.credits.toStringAsFixed(1)} credits',
-                        style: TextStyle(
-                          color: themeProvider.textSecondary,
-                          fontSize: 12,
-                          decoration:
-                              isExcluded ? TextDecoration.lineThrough : null,
-                          decorationColor: themeProvider.errorColor,
-                          decorationThickness: 2,
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: themeProvider.surfaceColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${course.credits} Cr',
+                          style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       if (course.courseId.isNotEmpty) ...[
-                        Text(
-                          ' • ',
-                          style: TextStyle(
-                            color: themeProvider.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
+                        const SizedBox(width: 8),
+                         Text(
                           course.courseId,
                           style: TextStyle(
-                            color: themeProvider.textSecondary,
-                            fontSize: 10,
+                            color: themeProvider.textTertiary,
+                            fontSize: 11,
                             fontFamily: 'monospace',
-                            decoration:
-                                isExcluded ? TextDecoration.lineThrough : null,
-                            decorationColor: themeProvider.errorColor,
-                            decorationThickness: 2,
                           ),
                         ),
                       ],
@@ -1207,83 +1244,61 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
                 ],
               ),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isExcluded)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: themeProvider.errorColor.withAlpha(51),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: themeProvider.errorColor.withAlpha(128),
-                        width: 1,
+             if (isExcluded || isModified)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (isExcluded)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
                       ),
-                    ),
-                    child: Text(
-                      'EXCLUDED',
-                      style: TextStyle(
-                        color: themeProvider.errorColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                if (isModified)
-                  Container(
-                    margin: EdgeInsets.only(left: isExcluded ? 8 : 0),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withAlpha(51),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: themeProvider.primaryColor.withAlpha(128),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      'MODIFIED',
-                      style: TextStyle(
-                        color: themeProvider.primaryColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                if (isExcluded || isModified) ...[
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      // Handle individual course reset
-                      _resetIndividualCourse(course.courseId);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
+                      margin: const EdgeInsets.only(bottom: 4),
                       decoration: BoxDecoration(
-                        color: themeProvider.primaryColor.withAlpha(51),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: themeProvider.primaryColor.withAlpha(128),
-                          width: 1,
+                        color: themeProvider.errorColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'EXC',
+                        style: TextStyle(
+                          color: themeProvider.errorColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      child: Icon(
-                        Icons.refresh,
-                        size: 16,
-                        color: themeProvider.primaryColor,
-                      ),
                     ),
-                  ),
+                  if (isModified)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                         Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'MOD',
+                            style: TextStyle(
+                              color: themeProvider.primaryColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => _resetIndividualCourse(course.courseId),
+                          child: Icon(Icons.refresh, size: 16, color: themeProvider.primaryColor),
+                        )
+                      ],
+                    ),
                 ],
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -1295,231 +1310,230 @@ class _GpaCalculatorPageState extends State<GpaCalculatorPage> {
     WhatIfCourse course,
     int index,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors:
-              course.isModified
-                  ? [
-                    themeProvider.primaryColor.withAlpha(26),
-                    themeProvider.primaryColor.withAlpha(13),
-                  ]
-                  : [themeProvider.mainColor, themeProvider.cardColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Dismissible(
+      key: ValueKey('whatif_$index'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: themeProvider.errorColor,
+          borderRadius: BorderRadius.circular(16),
         ),
-        borderRadius: BorderRadius.circular(16),
-        border:
-            course.isModified
-                ? Border.all(
-                  color: themeProvider.primaryColor.withAlpha(128),
-                  width: 1,
-                )
-                : null,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xAA000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 40,
-            decoration: BoxDecoration(
-              color: themeProvider.getGradeColor(course.grade).withAlpha(25),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: themeProvider.getGradeColor(course.grade),
-                width: 1,
-              ),
+      onDismissed: (_) {
+         if (course.isModified && course.originalCourseId != null) {
+            _removeModifiedCourse(course.originalCourseId!);
+         } else {
+            _removeWhatIfCourse(index);
+         }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: course.isModified 
+              ? themeProvider.primaryColor.withOpacity(0.05) 
+              : themeProvider.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: course.isModified
+                ? themeProvider.primaryColor.withOpacity(0.3)
+                : themeProvider.borderPrimary.withOpacity(0.5),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            child: Center(
-              child: Text(
-                course.grade.toStringAsFixed(0),
-                style: TextStyle(
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: themeProvider.getGradeColor(course.grade).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
                   color: themeProvider.getGradeColor(course.grade),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  width: 1.5,
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        course.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            course.isModified
-                                ? themeProvider.primaryColor.withAlpha(51)
-                                : themeProvider.textSecondary.withAlpha(51),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            course.isModified
-                                ? Border.all(
-                                  color: themeProvider.primaryColor.withAlpha(
-                                    125,
-                                  ),
-                                  width: 1,
-                                )
-                                : null,
-                      ),
-                      child: Text(
-                        course.isModified ? 'MODIFIED' : 'WHAT-IF',
-                        style: TextStyle(
-                          color:
-                              course.isModified
-                                  ? themeProvider.primaryColor
-                                  : themeProvider.textSecondary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${course.credits.toStringAsFixed(1)} credits',
+              child: Center(
+                child: Text(
+                  course.grade.toStringAsFixed(0),
                   style: TextStyle(
-                    color: themeProvider.textSecondary,
-                    fontSize: 12,
+                    color: themeProvider.getGradeColor(course.grade),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (course.isModified && course.originalCourseId != null)
-                GestureDetector(
-                  onTap: () => _resetIndividualCourse(course.originalCourseId!),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withAlpha(51),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: themeProvider.primaryColor.withAlpha(128),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.refresh,
-                      size: 16,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ),
-                ),
-              IconButton(
-                onPressed: () {
-                  if (course.isModified && course.originalCourseId != null) {
-                    _removeModifiedCourse(course.originalCourseId!);
-                  } else {
-                    _removeWhatIfCourse(index);
-                  }
-                },
-                icon: Icon(
-                  Icons.close,
-                  color: themeProvider.errorColor,
-                  size: 20,
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          course.name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (course.isModified)
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'MODIFIED',
+                          style: TextStyle(
+                            color: themeProvider.primaryColor,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                       Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: themeProvider.surfaceColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${course.credits} Cr',
+                          style: TextStyle(
+                            color: themeProvider.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                       Text(
+                        'What-If',
+                        style: TextStyle(
+                          color: themeProvider.textTertiary,
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+             IconButton(
+              onPressed: () {
+                if (course.isModified && course.originalCourseId != null) {
+                  _removeModifiedCourse(course.originalCourseId!);
+                } else {
+                  _removeWhatIfCourse(index);
+                }
+              },
+              icon: Icon(
+                Icons.close_rounded,
+                color: themeProvider.textSecondary.withOpacity(0.5),
+                size: 20,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAddCourseForm(ThemeProvider themeProvider) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [themeProvider.mainColor, themeProvider.cardColor],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: themeProvider.borderPrimary.withOpacity(0.5),
         ),
-        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Color(0xAA000000),
-            blurRadius: 3,
-            offset: Offset(0, 2),
+           BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Add What-If Course',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+               Icon(Icons.add_circle, color: themeProvider.primaryColor),
+               const SizedBox(width: 8),
+              Text(
+                'Add What-If Course',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           textFormFieldWithStyle(
             label: 'Course Name',
             controller: _courseNameController,
-            example: 'e.g., Introduction to Computer Science',
+            example: 'e.g., Advanced Mathematics',
             context: context,
           ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 flex: 2,
-                child: textFormFieldWithStyle(label: 'Credit Hours', controller: _creditsController, example: '3.0', context: context)
+                child: textFormFieldWithStyle(label: 'Credits', controller: _creditsController, example: '3.0', context: context)
               ),
               const SizedBox(width: 16),
               Expanded(
                 flex: 2,
-                child: textFormFieldWithStyle(label: 'Grade (0-100)', controller: _gradeController, example: '85', context: context)
+                child: textFormFieldWithStyle(label: 'Grade', controller: _gradeController, example: '95', context: context)
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            height: 48,
+            child: ElevatedButton(
               onPressed: _addWhatIfCourse,
               style: ElevatedButton.styleFrom(
-                backgroundColor: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-                foregroundColor: themeProvider.mainColor,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: themeProvider.primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text(
-                'Add What-If Course',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              child: const Text(
+                'Add & Calculate',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
