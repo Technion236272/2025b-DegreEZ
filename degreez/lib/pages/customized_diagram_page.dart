@@ -326,7 +326,7 @@ class _CustomizedDiagramPageState extends State<CustomizedDiagramPage>
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            '• Operations might take a moment\n• Long press a course to see prerequisites',
+                                            '• Operations might take a moment\n• Long press on a course to highlight / unhighlight prerequisites',
                                             style: TextStyle(
                                               color: themeProvider.textPrimary.withOpacity(0.8),
                                               fontSize: 13,

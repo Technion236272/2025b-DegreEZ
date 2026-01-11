@@ -287,7 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                               const SizedBox(height: 24),
                               
                               Text(
-                                'v2.2.1',
+                                'v3.0.0',
                                 style: TextStyle(
                                   color: themeProvider.textTertiary.withOpacity(0.5),
                                   fontSize: 12,

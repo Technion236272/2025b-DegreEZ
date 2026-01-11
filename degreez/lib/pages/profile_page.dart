@@ -7,7 +7,7 @@ import 'package:degreez/providers/sign_up_provider.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:degreez/providers/theme_provider.dart';
 import 'package:degreez/widgets/bug_report_popup.dart';
-import 'package:degreez/widgets/delete_user_button.dart';
+// import 'package:degreez/widgets/delete_user_button.dart'; // Removed as logic is now inline
 import 'package:degreez/widgets/feedback_popup.dart';
 import 'package:degreez/color/color_palette.dart';
 import 'package:degreez/models/student_model.dart';
@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/calculate_gpa_function.dart';
 import 'package:degreez/widgets/tutorial_popup.dart';
+import 'package:degreez/pages/deleting_account_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -212,6 +213,75 @@ class _ProfilePageState extends State<ProfilePage> {
               },
               child: Text(
                 'Save Changes',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Are you sure?',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Provider.of<ThemeProvider>(dialogContext).errorColor,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              'This action cannot be undone.\n\n'
+              'If you proceed, your account will be permanently deleted along with all associated data.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Provider.of<ThemeProvider>(dialogContext).textPrimary,
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Provider.of<ThemeProvider>(dialogContext).secondaryColor,
+                ),
+              ),
+            ),
+            TextButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                 Navigator.of(dialogContext).push(MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (_) => DeletingAccountPage(),
+                ));
+                
+                final rootNavigator = Navigator.of(dialogContext, rootNavigator: true);
+
+                await dialogContext.read<CourseProvider>().deleteStudentAndCourses(dialogContext.read<StudentProvider>().student!.id);
+                if (!dialogContext.mounted) return;
+                await dialogContext.read<LogInNotifier>().deleteUser();
+                if (!dialogContext.mounted) return;
+                await dialogContext.read<LogInNotifier>().signOut();
+                rootNavigator.pushNamedAndRemoveUntil('/', (route) => false);
+              },
+              child: const Text(
+                'Delete',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                 ),
@@ -667,10 +737,7 @@ class _ProfilePageState extends State<ProfilePage> {
               'Delete Account',
               style: TextStyle(color: themeProvider.errorColor),
             ),
-            onTap: () => showDialog(
-              context: context,
-              builder: (context) => const DeleteUserButton(),
-            ),
+            onTap: () => _showDeleteConfirmationDialog(context),
           ),
           Divider(height: 1, color: themeProvider.textSecondary.withOpacity(0.1)),
           
