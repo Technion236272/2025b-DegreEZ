@@ -126,7 +126,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 prefixIcon: Icon(Icons.search),
               ),
               onChanged: (value) {
-                if (value.length > 3) _search(value);
+                _search(value.trim()); // Trim whitespace to handle trailing spaces
               },
             ),
             const SizedBox(height: 12),

@@ -36,7 +36,7 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage>
     with CalendarDarkThemeMixin, CourseEventMixin, ScheduleSelectionMixin {
   final TextEditingController _searchController = TextEditingController();
-  final _searchQuery = '';
+  String _searchQuery = ''; // Remove final from _searchQuery to make it mutable
 
   // Remove semester management - now handled by NavigatorPage
   // List<String> _allSemesters = [];
