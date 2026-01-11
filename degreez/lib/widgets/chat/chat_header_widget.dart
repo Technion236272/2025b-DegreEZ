@@ -27,20 +27,17 @@ class ChatHeaderWidget extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           decoration: BoxDecoration(
             color: themeProvider.surfaceColor,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(30),
             ),
             boxShadow: [
               BoxShadow(
-                color: themeProvider.isDarkMode 
-                    ? Colors.black.withAlpha(76) 
-                    : Colors.grey.withAlpha(51),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -49,138 +46,78 @@ class ChatHeaderWidget extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(26) : themeProvider.secondaryColor.withAlpha(26),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(76) : themeProvider.secondaryColor.withAlpha(76),
-                      width: 1,
+                    gradient: LinearGradient(
+                      colors: themeProvider.isLightMode 
+                          ? [themeProvider.primaryColor, themeProvider.primaryColor.withOpacity(0.7)]
+                          : [themeProvider.secondaryColor, themeProvider.secondaryColor.withOpacity(0.7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.smart_toy,
-                    color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'AI Assistant',
+                        'DegreEZ AI',
                         style: TextStyle(
                           color: themeProvider.textPrimary,
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       Text(
-                        'Your academic companion',
+                        'Always here to help!',
                         style: TextStyle(
                           color: themeProvider.textSecondary,
-                          fontSize: 12,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                // User context toggle button
-                Tooltip(
-                  message: includeUserContext 
-                      ? 'Context mode enabled - AI can access your course data\nTap to disable'
-                      : 'Context mode disabled - AI works with general knowledge only\nTap to enable',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: includeUserContext 
-                          ? themeProvider.isLightMode ? themeProvider.primaryColor.withAlpha(26) : themeProvider.secondaryColor.withAlpha(26)
-                          : themeProvider.cardColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: includeUserContext 
-                            ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
-                            : themeProvider.borderPrimary,
-                        width: 1,
-                      ),
+                Row(
+                  children: [
+                    _buildActionButton(
+                      context: context,
+                      themeProvider: themeProvider,
+                      icon: includeUserContext ? Icons.school : Icons.school_outlined,
+                      isActive: includeUserContext,
+                      onTap: onToggleContext,
+                      tooltip: includeUserContext ? 'Context Active, let AI read your academic data' : 'Enable Context',
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: onToggleContext,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(
-                            includeUserContext ? Icons.school : Icons.school_outlined,
-                            color: includeUserContext 
-                                ? themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor
-                                : themeProvider.textSecondary,
-                            size: 20,
-                          ),
-                        ),
-                      ),
+                    const SizedBox(width: 8),
+                    _buildActionButton(
+                      context: context,
+                      themeProvider: themeProvider,
+                      icon: Icons.data_usage,
+                      isActive: false, 
+                      onTap: onShowContextDialog,
+                      tooltip: 'View Data',
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Preview context data button
-                Tooltip(
-                  message: 'Preview what data can be shared with AI',
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: themeProvider.cardColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: themeProvider.borderPrimary,
-                        width: 1,
-                      ),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: onShowContextDialog,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.preview,
-                            color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Clear chat button
-                Container(
-                  decoration: BoxDecoration(
-                    color: themeProvider.cardColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: themeProvider.borderPrimary,
-                      width: 1,
-                    ),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
+                    const SizedBox(width: 8),
+                    _buildActionButton(
+                      context: context,
+                      themeProvider: themeProvider,
+                      icon: Icons.delete_outline,
+                      isActive: false,
+                      isDestructive: true,
                       onTap: () => _showClearChatDialog(context, themeProvider),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.refresh,
-                          color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
-                          size: 20,
-                        ),
-                      ),
+                      tooltip: 'Clear Chat',
                     ),
-                  ),            
+                  ],
                 ),
               ],
             ),
@@ -190,40 +127,118 @@ class ChatHeaderWidget extends StatelessWidget {
     );
   }
 
-  void _showClearChatDialog(BuildContext context, ThemeProvider themeProvider) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: themeProvider.cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(
-          'Clear Chat History',
-          style: TextStyle(color: themeProvider.textPrimary),
-        ),
-        content: Text(
-          'Are you sure you want to clear all chat messages?',
-          style: TextStyle(color: themeProvider.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: themeProvider.textSecondary),
+  Widget _buildActionButton({
+    required BuildContext context,
+    required ThemeProvider themeProvider,
+    required IconData icon,
+    required VoidCallback onTap,
+    required String tooltip,
+    bool isActive = false,
+    bool isDestructive = false,
+  }) {
+    final Color iconColor = isDestructive 
+        ? Colors.red.withOpacity(0.7)
+        : isActive 
+          ? (themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor)
+          : themeProvider.textSecondary;
+          
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isActive 
+                  ? iconColor.withOpacity(0.1) 
+                  : themeProvider.cardColor.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isActive ? iconColor.withOpacity(0.2) : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 20,
             ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              onClearChat();
-            },
-            child: Text(
-              'Clear',
-              style: TextStyle(color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor),
-            ),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  void _showClearChatDialog(BuildContext context, ThemeProvider themeProvider) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) => Container(),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          child: AlertDialog(
+            backgroundColor: themeProvider.surfaceColor,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: themeProvider.borderPrimary.withOpacity(0.5), width: 1),
+            ),
+            title: Row(
+               children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Clear History',
+                    style: TextStyle(
+                        color: themeProvider.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold
+                    ),
+                  ),
+               ],
+            ),
+            content: Text(
+              'Are you sure you want to delete all messages? This action cannot be undone.',
+              style: TextStyle(color: themeProvider.textSecondary, fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: themeProvider.textSecondary),
+                ),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  onClearChat();
+                },
+                style: FilledButton.styleFrom(
+                   backgroundColor: Colors.red.withOpacity(0.9),
+                   foregroundColor: Colors.white,
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Delete All'),
+              ),
+            ],
+            actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          ),
+        );
+      },
     );
   }
 }

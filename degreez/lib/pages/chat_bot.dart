@@ -285,55 +285,96 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
     final userContext = await _getCombinedUserContext();
     if (!mounted) return;
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    showDialog(
-      context: context,      builder: (dialogContext) => AlertDialog(
-        backgroundColor: themeProvider.mainColor, // Changed to use theme provider
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.school,
-              color: themeProvider.primaryColor,
-              size: 24,
+    
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (context, animation, secondaryAnimation) => Container(),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          child: AlertDialog(
+            backgroundColor: themeProvider.surfaceColor,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: themeProvider.borderPrimary.withOpacity(0.5), width: 1),
             ),
-            const SizedBox(width: 8),
-            Text(
-              'Your Academic Data',
-              style: TextStyle(color: themeProvider.textPrimary),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.data_object,
+                    color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Context Data',
+                  style: TextStyle(
+                    color: themeProvider.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),        content: Container(
-          constraints: const BoxConstraints(maxHeight: 600, maxWidth: 500),
-          decoration: BoxDecoration(
-            color: themeProvider.surfaceColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: themeProvider.borderPrimary,
-              width: 1,
-            ),
-          ),
-          padding: const EdgeInsets.all(12),
-          child: SingleChildScrollView(
-            child: Text(
-              userContext.isEmpty ? 'No academic data available to share.' : userContext,
-              style: TextStyle(
-                color: themeProvider.textSecondary,
-                fontSize: 12,
-                fontFamily: 'monospace',
+            content: Container(
+              width: double.maxFinite,
+              constraints: const BoxConstraints(maxHeight: 400),
+              decoration: BoxDecoration(
+                color: themeProvider.mainColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: themeProvider.borderPrimary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    userContext.isEmpty ? 'No academic data available to share.' : userContext,
+                    style: TextStyle(
+                      color: themeProvider.textSecondary,
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      height: 1.4,
+                    ),
+                  ),
+                ),
               ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  backgroundColor: (themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor).withOpacity(0.1),
+                ),
+                child: Text(
+                  'Close',
+                  style: TextStyle(
+                    color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Close',
-              style: TextStyle(color: themeProvider.secondaryColor),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -464,40 +505,7 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
                 parentContext: context,
               ),
               
-              // AI Budget Warning Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: themeProvider.warningColor.withOpacity(0.1),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: themeProvider.warningColor.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: themeProvider.warningColor,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'the ai aint cheap, dont overuse it!',
-                        style: TextStyle(
-                          color: themeProvider.textPrimary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
+
               // Chat messages
               Expanded(
                 child: ListView.builder(

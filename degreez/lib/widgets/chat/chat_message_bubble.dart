@@ -13,45 +13,41 @@ class ChatMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 24),
           child: Row(
             mainAxisAlignment:
                 message.isUser
                     ? MainAxisAlignment.end
                     : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (!message.isUser) ...[
-                Container(
-                  margin: const EdgeInsets.only(right: 8, top: 4),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: themeProvider.surfaceColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color:
-                          themeProvider.isLightMode
-                              ? themeProvider.primaryColor.withAlpha(76)
-                              : themeProvider.secondaryColor.withAlpha(76),
-                      width: 1,
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: themeProvider.isLightMode 
+                        ? themeProvider.primaryColor.withOpacity(0.1) 
+                        : themeProvider.secondaryColor.withOpacity(0.1),
+                    child: Icon(
+                      Icons.smart_toy_outlined,
+                      color: themeProvider.isLightMode 
+                          ? themeProvider.primaryColor 
+                          : themeProvider.secondaryColor,
+                      size: 18,
                     ),
-                  ),
-                  child: Icon(
-                    Icons.smart_toy,
-                    color:
-                        themeProvider.isLightMode
-                            ? themeProvider.primaryColor
-                            : themeProvider.secondaryColor,
-                    size: 16,
                   ),
                 ),
               ],
               Flexible(
                 child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                  ),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                    horizontal: 20,
+                    vertical: 16,
                   ),
                   decoration: BoxDecoration(
                     color:
@@ -61,19 +57,16 @@ class ChatMessageBubble extends StatelessWidget {
                                 : themeProvider.accentColor
                             : themeProvider.surfaceColor,
                     borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(20),
-                      topRight: const Radius.circular(20),
-                      bottomLeft: Radius.circular(message.isUser ? 20 : 4),
-                      bottomRight: Radius.circular(message.isUser ? 4 : 20),
+                      topLeft: const Radius.circular(24),
+                      topRight: const Radius.circular(24),
+                      bottomLeft: Radius.circular(message.isUser ? 24 : 4),
+                      bottomRight: Radius.circular(message.isUser ? 4 : 24),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            themeProvider.isDarkMode
-                                ? Colors.black.withAlpha(51)
-                                : Colors.grey.withAlpha(51),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -91,8 +84,9 @@ class ChatMessageBubble extends StatelessWidget {
                               message.isUser
                                   ? Colors.white
                                   : themeProvider.textPrimary,
-                          fontSize: 16,
-                          height: 1.4,
+                          fontSize: 15,
+                          height: 1.5,
+                          fontWeight: FontWeight.w400,
                         ),
                         contextMenuBuilder: (context, editableTextState) {
                           return AdaptiveTextSelectionToolbar.buttonItems(
@@ -107,52 +101,49 @@ class ChatMessageBubble extends StatelessWidget {
                       if (!message.isUser && message.pdfAttachment != null)
                         _buildPdfAttachment(themeProvider),
 
-                      const SizedBox(height: 4),
-                      Row(children: [
-                      Text(
-                        _formatTime(message.timestamp),
-                        style: TextStyle(
-                          color:
-                              message.isUser
-                                  ? Colors.white.withAlpha(204)
-                                  : themeProvider.textSecondary,
-                          fontSize: 12,
-                        ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatTime(message.timestamp),
+                            style: TextStyle(
+                              color:
+                                  message.isUser
+                                      ? Colors.white.withOpacity(0.7)
+                                      : themeProvider.textSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (!message.isUser) ...[
+                             const SizedBox(width: 8),
+                            InkWell(
+                              onTap: (){
+                                Clipboard.setData(ClipboardData(text: message.text));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Copied to clipboard!", style: TextStyle(color: Colors.white)),
+                                    backgroundColor: Colors.black87,
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Icon(
+                                Icons.copy_rounded,
+                                size: 14,
+                                color: themeProvider.textSecondary.withOpacity(0.5),
+                              ),
+                            ),
+                          ]
+                        ],
                       ),
-                      IconButton(onPressed: () {
-            Clipboard.setData(ClipboardData(text: message.text));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Copied to clipboard!")),
-            );
-          }, 
-                      icon: Icon(Icons.copy,size: 15,))
-                      ],),
-
                     ],
                   ),
                 ),
               ),
-              if (message.isUser) ...[
-                Container(
-                  margin: const EdgeInsets.only(left: 8, top: 4),
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color:
-                        themeProvider.isLightMode
-                            ? themeProvider.secondaryColor
-                            : themeProvider.accentColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color:
-                          themeProvider.isLightMode
-                              ? themeProvider.secondaryColor.withAlpha(76)
-                              : themeProvider.accentColor.withAlpha(76),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(Icons.person, color: Colors.white, size: 16),
-                ),
-              ],
+              // Removed the redundant user icon
             ],
           ),
         );

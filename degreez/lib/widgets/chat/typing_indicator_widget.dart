@@ -15,43 +15,41 @@ class TypingIndicatorWidget extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 24),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: themeProvider.surfaceColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: themeProvider.primaryColor.withAlpha(76),
-                    width: 1,
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: themeProvider.isLightMode 
+                        ? themeProvider.primaryColor.withOpacity(0.1) 
+                        : themeProvider.secondaryColor.withOpacity(0.1),
+                    child: Icon(
+                      Icons.smart_toy_outlined,
+                      color: themeProvider.isLightMode 
+                          ? themeProvider.primaryColor 
+                          : themeProvider.secondaryColor,
+                      size: 18,
                   ),
-                ),
-                child: Icon(
-                  Icons.smart_toy,
-                  color: themeProvider.primaryColor,
-                  size: 16,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
                   color: themeProvider.surfaceColor,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                     bottomLeft: Radius.circular(4),
-                    bottomRight: Radius.circular(20),
+                    bottomRight: Radius.circular(24),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: themeProvider.isDarkMode 
-                          ? Colors.black.withAlpha(51)
-                          : Colors.grey.withAlpha(51),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -59,31 +57,36 @@ class TypingIndicatorWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (int i = 0; i < 3; i++)
-                      AnimatedBuilder(
-                        animation: animationController,
-                        builder: (context, child) {
-                          final delay = i * 0.2;
-                          final animationValue = (animationController.value - delay).clamp(0.0, 1.0);
-                          return Container(
-                            margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
-                            child: Transform.translate(
-                              offset: Offset(0, -4 * (1 - (1 - animationValue).abs())),
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: themeProvider.textSecondary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                      _buildDot(i, themeProvider),
                   ],
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDot(int index, ThemeProvider themeProvider) {
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, child) {
+        return Container(
+          margin: EdgeInsets.only(right: index < 2 ? 4 : 0),
+          child: Transform.translate(
+            offset: Offset(0, -4 * (0.5 + 0.5 * (1.0 - (animationController.value * 3 - index).abs().clamp(0.0, 1.0)))),
+            child: Opacity(
+              opacity: 0.6 + 0.4 * (1.0 - (animationController.value * 3 - index).abs().clamp(0.0, 1.0)),
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: themeProvider.isLightMode ? themeProvider.primaryColor : themeProvider.secondaryColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
           ),
         );
       },
