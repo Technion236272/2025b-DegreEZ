@@ -1,10 +1,8 @@
-import 'package:degreez/models/student_model.dart';
 import 'package:degreez/providers/student_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../services/course_service.dart';
-import '../widgets/add_course_dialog.dart';
 import '../widgets/prerequisite_graph.dart';
 import '../services/global_config_service.dart';
 import '../pages/FullScreenGraphPage.dart';
@@ -16,7 +14,7 @@ class PrerequisiteChainPage extends StatefulWidget {
   State<PrerequisiteChainPage> createState() => _PrerequisiteChainPageState();
 }
 
-class _PrerequisiteChainPageState extends State<PrerequisiteChainPage> 
+class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
@@ -41,13 +39,9 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -64,41 +58,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
       body: CustomScrollView(
         slivers: [
           // Modern App Bar
-        /*  SliverAppBar(
-            expandedHeight: 120,
-            pinned: true,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'Prerequisite Explorer',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primaryContainer,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.account_tree,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.onPrimary.withAlpha(61),
-                  ),
-                ),
-              ),
-            ),
-          ),
-*/
+
           // Search Section
           SliverToBoxAdapter(
             child: Container(
@@ -121,11 +81,9 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
               ),
             ),
 
-          if (searchResults.isNotEmpty)
-            _buildSearchResultsSection(),
+          if (searchResults.isNotEmpty) _buildSearchResultsSection(),
 
-          if (selectedCourse != null)
-            _buildSelectedCourseSection(),
+          if (selectedCourse != null) _buildSelectedCourseSection(),
         ],
       ),
     );
@@ -140,34 +98,36 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
             const SizedBox(height: 12),
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by course ID or name (e.g., "02340123" or "calculus")',
+                hintText:
+                    'Search by course ID or name (e.g., "02340123" or "calculus")',
                 hintStyle: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 prefixIcon: const Icon(Icons.school),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            searchResults.clear();
-                            isSearchExpanded = false;
-                          });
-                        },
-                      )
-                    : null,
+                suffixIcon:
+                    _searchController.text.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              searchResults.clear();
+                              isSearchExpanded = false;
+                            });
+                          },
+                        )
+                        : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                fillColor:
+                    Theme.of(context).colorScheme.surfaceContainerHighest,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -186,7 +146,8 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                 }
               },
             ),
-            if (_searchController.text.isNotEmpty && _searchController.text.length < 3)
+            if (_searchController.text.isNotEmpty &&
+                _searchController.text.length < 3)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
@@ -209,7 +170,9 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
         margin: const EdgeInsets.all(16),
         child: Card(
           elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -254,27 +217,28 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
     ];
 
     return Column(
-      children: features.map((feature) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              Icon(
-                feature.$2,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
+      children:
+          features.map((feature) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    feature.$2,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      feature.$1,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  feature.$1,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
@@ -284,7 +248,9 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
         margin: const EdgeInsets.symmetric(horizontal: 16),
         child: Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -359,14 +325,15 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: index < searchResults.length - 1
-              ? Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    width: 0.2,
-                  ),
-                )
-              : null,
+          border:
+              index < searchResults.length - 1
+                  ? Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      width: 0.2,
+                    ),
+                  )
+                  : null,
         ),
         child: Row(
           children: [
@@ -379,7 +346,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
               ),
               child: Center(
                 child: Text(
-                  course.courseNumber.length >= 2 
+                  course.courseNumber.length >= 2
                       ? course.courseNumber.substring(0, 2)
                       : course.courseNumber,
                   style: TextStyle(
@@ -415,7 +382,10 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
                     runSpacing: 4,
                     children: [
                       _buildInfoTag('${course.points} credits', Icons.star),
-                      _buildInfoTag(_shortenFacultyName(course.faculty), Icons.school),
+                      _buildInfoTag(
+                        _shortenFacultyName(course.faculty),
+                        Icons.school,
+                      ),
                     ],
                   ),
                 ],
@@ -444,7 +414,7 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -468,303 +438,302 @@ class _PrerequisiteChainPageState extends State<PrerequisiteChainPage>
       ),
     );
   }
-Widget _buildSelectedCourseSection() {
-  return SliverToBoxAdapter(
-    child: FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildSelectedCourseHeader(),
-            const SizedBox(height: 16),
-            if (coursePrereqs.isNotEmpty) ...[
-              _buildPrerequisiteGraph(),
+
+  Widget _buildSelectedCourseSection() {
+    return SliverToBoxAdapter(
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildSelectedCourseHeader(),
               const SizedBox(height: 16),
-              
-              // Enhanced button row with multiple options
-              Row(
+              if (coursePrereqs.isNotEmpty) ...[
+                _buildPrerequisiteGraph(),
+                const SizedBox(height: 16),
+
+                // Enhanced button row with multiple options
+                Row(
+                  children: [
+                    // Fullscreen button
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.fullscreen, size: 20),
+                        label: const Text('Fullscreen'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        onPressed: () => _openFullscreenGraph(),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Quick action buttons
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withAlpha(76),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 1,
+                            height: 24,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withAlpha(76),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Graph statistics
+                const SizedBox(height: 12),
+                _buildGraphStatistics(),
+              ] else
+                _buildNoPrerequisitesCard(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openFullscreenGraph() {
+    // Ensure we have the required data
+    if (selectedCourse == null || coursePrereqs.isEmpty) {
+      _showErrorSnackBar('Graph data not available');
+      return;
+    }
+
+    // Add loading indicator for better UX
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => Dialog(
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surface.withAlpha(230),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Fullscreen button
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.fullscreen, size: 20),
-                      label: const Text('Fullscreen'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      onPressed: () => _openFullscreenGraph(),
-                    ),
+                  CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                  
-                  const SizedBox(width: 8),
-                  
-                  // Quick action buttons
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline.withAlpha(76),
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 1,
-                          height: 24,
-                          color: Theme.of(context).colorScheme.outline.withAlpha(76),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Opening fullscreen view...',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
               ),
-              
-              // Graph statistics
-              const SizedBox(height: 12),
-             // _buildGraphStatistics(),
-            ] else
-              _buildNoPrerequisitesCard(),
-          ],
-        ),
-      ),
-    ),
-  );
-}
+            ),
+          ),
+    );
 
-void _openFullscreenGraph() {
-  // Ensure we have the required data
-  if (selectedCourse == null || coursePrereqs.isEmpty) {
-    _showErrorSnackBar('Graph data not available');
-    return;
+    // Small delay to show loading indicator
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder:
+                (context, animation, secondaryAnimation) => FullScreenGraphPage(
+                  rootCourseId: selectedCourse!.courseNumber,
+                  studentFaculty:
+                      context.read<StudentProvider>().student?.faculty ?? '',
+                  courseNames: courseIdToName,
+                  courseFaculties: courseFaculties,
+                  coursePrereqs: coursePrereqs,
+                ),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              // Smooth fade transition
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      }
+    });
   }
 
-  // Add loading indicator for better UX
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => Dialog(
-      backgroundColor: Theme.of(context).colorScheme.surface.withAlpha(230),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
+  void _showGraphHelp() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.help_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                const Text('How to Use the Graph'),
+              ],
             ),
-            const SizedBox(height: 16),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHelpSection('Navigation', [
+                    'Tap numbered buttons to switch between prerequisite paths',
+                    'Each path shows a different way to complete prerequisites',
+                    'Use the fullscreen button for a better view',
+                  ], Icons.navigation),
+                  const SizedBox(height: 16),
+                  _buildHelpSection('Fullscreen Mode', [
+                    'Pan: Drag to move around the graph',
+                    'Zoom: Pinch to zoom in/out',
+                    'Better visibility for complex graphs',
+                  ], Icons.fullscreen),
+                  const SizedBox(height: 16),
+                  _buildHelpSection('Understanding the Graph', [
+                    'Boxes represent courses',
+                    'Lines show prerequisite relationships',
+                    'Multiple paths show alternative prerequisites',
+                  ], Icons.account_tree),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Got it'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildHelpSection(String title, List<String> points, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
             Text(
-              'Opening fullscreen view...',
-              style: Theme.of(context).textTheme.bodyMedium,
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ],
         ),
-      ),
-    ),
-  );
-
-  // Small delay to show loading indicator
-  Future.delayed(const Duration(milliseconds: 300), () {
-    if (context.mounted) {
-      Navigator.of(context).pop(); // Close loading dialog
-      
-      Navigator.of(context).push(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => FullScreenGraphPage(
-            rootCourseId: selectedCourse!.courseNumber,
-            studentFaculty: context.read<StudentProvider>().student?.faculty ?? '',
-            courseNames: courseIdToName,
-            courseFaculties: courseFaculties,
-            coursePrereqs: coursePrereqs,
+        const SizedBox(height: 8),
+        ...points.map(
+          (point) => Padding(
+            padding: const EdgeInsets.only(left: 26, bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '• ',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    point,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Smooth fade transition
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
-    }
-  });
-}
-
-
-void _showGraphHelp() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            Icons.help_outline,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 8),
-          const Text('How to Use the Graph'),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHelpSection(
-              'Navigation',
-              [
-                'Tap numbered buttons to switch between prerequisite paths',
-                'Each path shows a different way to complete prerequisites',
-                'Use the fullscreen button for a better view',
-              ],
-              Icons.navigation,
-            ),
-            const SizedBox(height: 16),
-            _buildHelpSection(
-              'Fullscreen Mode',
-              [
-                'Pan: Drag to move around the graph',
-                'Zoom: Pinch to zoom in/out',
-                'Better visibility for complex graphs',
-              ],
-              Icons.fullscreen,
-            ),
-            const SizedBox(height: 16),
-            _buildHelpSection(
-              'Understanding the Graph',
-              [
-                'Boxes represent courses',
-                'Lines show prerequisite relationships',
-                'Multiple paths show alternative prerequisites',
-              ],
-              Icons.account_tree,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Got it'),
         ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildHelpSection(String title, List<String> points, IconData icon) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        children: [
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: color,
           ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      ...points.map((point) => Padding(
-        padding: const EdgeInsets.only(left: 26, bottom: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '• ',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                point,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
         ),
-      )),
-    ],
-  );
-}
-
-
-
-Widget _buildStatItem(String label, String value, IconData icon, Color color) {
-  return Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, color: color, size: 20),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-          color: color,
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
-      ),
-      Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
-void _showErrorSnackBar(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      backgroundColor: Theme.of(context).colorScheme.error,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-    ),
-  );
-}
+    );
+  }
 
-void _showSuccessSnackBar(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildSelectedCourseHeader() {
     return Card(
@@ -811,14 +780,16 @@ void _showSuccessSnackBar(String message) {
                         selectedCourse!.courseNumber,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         selectedCourse!.name,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -847,8 +818,8 @@ void _showSuccessSnackBar(String message) {
                 const SizedBox(width: 8),
                 _buildInfoTag(selectedCourse!.faculty, Icons.school),
                 const SizedBox(width: 8),
-            //    if (missingIds.isNotEmpty)
-            //      _buildInfoTag('${missingIds.length} missing', Icons.warning),
+                //    if (missingIds.isNotEmpty)
+                //      _buildInfoTag('${missingIds.length} missing', Icons.warning),
               ],
             ),
           ],
@@ -863,12 +834,13 @@ void _showSuccessSnackBar(String message) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Container(
+        child: SizedBox(
           height: 500,
           child: PrerequisiteGraph(
             key: ValueKey(selectedCourse!.courseNumber),
             rootCourseId: selectedCourse!.courseNumber,
-            studentFaculty: context.read<StudentProvider>().student?.faculty ?? '',
+            studentFaculty:
+                context.read<StudentProvider>().student?.faculty ?? '',
             courseNames: courseIdToName,
             courseFaculties: courseFaculties,
             coursePrereqs: coursePrereqs,
@@ -894,9 +866,9 @@ void _showSuccessSnackBar(String message) {
             const SizedBox(height: 16),
             Text(
               'No Prerequisites Required',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
@@ -939,7 +911,7 @@ void _showSuccessSnackBar(String message) {
 
   Future<void> _handleCourseSelected(EnhancedCourseDetails course) async {
     debugPrint('Selected course: ${course.courseNumber} - ${course.name}');
-    
+
     // Show loading state
     setState(() {
       selectedCourse = course;
@@ -952,15 +924,18 @@ void _showSuccessSnackBar(String message) {
     final flattened = _flattenEnriched(parsed);
     final courseProvider = context.read<CourseProvider>();
 
-    final takenCourseIds = courseProvider.sortedCoursesBySemester.values
-        .expand((s) => s)
-        .map((c) => c.courseId)
-        .toSet();
+    final takenCourseIds =
+        courseProvider.sortedCoursesBySemester.values
+            .expand((s) => s)
+            .map((c) => c.courseId)
+            .toSet();
 
     final allMentioned = flattened.expand((e) => e).toSet();
 
     final nameMap = {
-      for (var c in courseProvider.sortedCoursesBySemester.values.expand((x) => x))
+      for (var c in courseProvider.sortedCoursesBySemester.values.expand(
+        (x) => x,
+      ))
         c.courseId: c.name,
     };
 
@@ -992,9 +967,11 @@ void _showSuccessSnackBar(String message) {
       try {
         return raw
             .cast<Map>()
-            .map((e) => Map<String, List<String>>.from(
-                  e.map((k, v) => MapEntry(k as String, List<String>.from(v))),
-                ))
+            .map(
+              (e) => Map<String, List<String>>.from(
+                e.map((k, v) => MapEntry(k as String, List<String>.from(v))),
+              ),
+            )
             .toList();
       } catch (e) {
         debugPrint('⚠️ Failed to parse enriched prerequisites: $e');
@@ -1010,7 +987,9 @@ void _showSuccessSnackBar(String message) {
     return [];
   }
 
-  List<List<String>> _flattenEnriched(List<Map<String, List<String>>> enriched) {
+  List<List<String>> _flattenEnriched(
+    List<Map<String, List<String>>> enriched,
+  ) {
     return enriched.map((group) {
       final flat = <String>[];
       for (final entry in group.entries) {
@@ -1071,7 +1050,11 @@ void _showSuccessSnackBar(String message) {
         if (parsed == null) continue;
         final (year, semCode) = parsed;
 
-        final details = await CourseService.getCourseDetails(year, semCode, courseId);
+        final details = await CourseService.getCourseDetails(
+          year,
+          semCode,
+          courseId,
+        );
         if (details == null) continue;
 
         nameMap[courseId] = details.name;
@@ -1096,5 +1079,84 @@ void _showSuccessSnackBar(String message) {
       courseFaculties = facultyMap;
       coursePrereqs = prereqMap;
     });
+  }
+
+  Widget _buildGraphStatistics() {
+    int maxDepth = _calculateMaxDepth(selectedCourse!.courseNumber, {});
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withAlpha(128),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withAlpha(25),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem(
+            'Total Courses',
+            '${courseIdToName.length}',
+            Icons.format_list_numbered,
+            Theme.of(context).colorScheme.primary,
+          ),
+          Container(
+            width: 1,
+            height: 32,
+            color: Theme.of(context).colorScheme.outline.withAlpha(50),
+          ),
+          _buildStatItem(
+            'Chain Depth',
+            '$maxDepth',
+            Icons.layers,
+            Theme.of(context).colorScheme.secondary,
+          ),
+          Container(
+            width: 1,
+            height: 32,
+            color: Theme.of(context).colorScheme.outline.withAlpha(50),
+          ),
+          _buildStatItem(
+            'Direct Prereqs',
+            '${coursePrereqs[selectedCourse!.courseNumber]?.length ?? 0}',
+            Icons.account_tree_outlined,
+            Theme.of(context).colorScheme.tertiary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _calculateMaxDepth(String currentId, Set<String> visited) {
+    if (visited.contains(currentId)) return 0;
+
+    final prereqs = coursePrereqs[currentId];
+    if (prereqs == null || prereqs.isEmpty) return 0;
+
+    int maxChildDepth = 0;
+    final newVisited = {...visited, currentId};
+
+    for (final group in prereqs) {
+      for (final children in group.values) {
+        for (final childId in children) {
+          if (RegExp(r'^\d{8}$').hasMatch(childId)) {
+            int d = _calculateMaxDepth(childId, newVisited);
+            if (d > maxChildDepth) maxChildDepth = d;
+          }
+        }
+      }
+      for (final key in group.keys) {
+        if (RegExp(r'^\d{8}$').hasMatch(key)) {
+          int d = _calculateMaxDepth(key, newVisited);
+          if (d > maxChildDepth) maxChildDepth = d;
+        }
+      }
+    }
+
+    return 1 + maxChildDepth;
   }
 }
